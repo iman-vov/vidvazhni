@@ -39,9 +39,10 @@ const CLIP_PATTERNS = [
   ['death', /dead|death|dying|die\b/i],
   ['hit', /hit|react|damage|hurt/i],
   ['cast', /cast|spell/i],
-  ['attack', /attack|slash|punch|swing|stab|strike|shoot|throw|kick/i],
+  ['attack', /attack|slash|punch|swing|stab|strike|shoot|shot|archery|throw|kick/i],
   ['run', /run|sprint/i],
-  ['walk', /walk/i],
+  // Meshy's quadruped rig ships its only clip, Walking, as "Armature|Unreal Take|baselayer".
+  ['walk', /walk|unreal take/i],
   ['idle', /idle|breath|stand/i],
 ];
 /** Clips that may move the root on the horizontal plane; everything else plays in place. */
