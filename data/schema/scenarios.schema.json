@@ -562,9 +562,23 @@
               "properties": {
                 "hex": { "$ref": "#/definitions/hex" },
                 "id": { "type": "string", "minLength": 1 },
-                "kind": { "type": "string", "minLength": 1 }
+                "kind": { "type": "string", "minLength": 1 },
+                "state": { "type": "string", "minLength": 1 },
+                "blocks": { "type": "boolean" }
               },
               "required": ["hex", "id", "kind"],
+              "additionalProperties": false
+            }
+          },
+          "drops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "monster": { "type": "string", "minLength": 1 },
+                "questItem": { "type": "string", "minLength": 1 }
+              },
+              "required": ["monster", "questItem"],
               "additionalProperties": false
             }
           }
@@ -583,7 +597,8 @@
       },
       "required": ["goldEach"],
       "additionalProperties": false
-    }
+    },
+    "draft": { "type": "boolean" }
   },
   "required": ["id", "number", "goal", "startRoom", "startHexes", "rooms", "introduces", "reward"],
   "additionalProperties": false

@@ -266,8 +266,11 @@ export interface RoomDef {
   coins?: Hex[];
   /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
   chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
-  /** Named objects (важіль, жаровня, руни) handled by scenario specials. */
-  objects?: { hex: Hex; id: string; kind: string }[];
+  /** Named objects (важіль, жаровня, руни) handled by scenario specials.
+   *  `state` = initial state (`unlit`, `up`); `blocks` = impassable like an obstacle (lever, brazier). */
+  objects?: { hex: Hex; id: string; kind: string; state?: string; blocks?: boolean }[];
+  /** Story items dropped by the last figure of `monster` in this room to die (ключ від ярусу). */
+  drops?: { monster: string; questItem: string }[];
 }
 
 export type ScenarioGoal =
@@ -289,6 +292,8 @@ export interface ScenarioDef {
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
   reward: { goldEach: number; items?: string[]; unlock?: string[] };
+  /** Drafted in the map editor, not yet playtested or balanced. */
+  draft?: boolean;
 }
 
 export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';

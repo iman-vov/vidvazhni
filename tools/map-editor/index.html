@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Редактор мап — Відважні</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Редактор мап</strong>
+      <button id="new">Нова</button>
+      <select id="files" title="data/scenarios/*.json"></select>
+      <button id="open">Відкрити файл…</button>
+      <input id="file" type="file" accept=".json,application/json" hidden />
+      <button id="save" title="Ctrl+S">Зберегти…</button>
+      <button id="download">Завантажити JSON</button>
+      <span class="sep"></span>
+      <button id="undo" title="Ctrl+Z">↶</button>
+      <button id="redo" title="Ctrl+Y / Ctrl+Shift+Z">↷</button>
+      <span class="sep"></span>
+      <label>Герої <select id="heroes">
+        <option value="all">усі (2/3/4)</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select></label>
+      <label><input id="coords" type="checkbox" /> координати</label>
+      <label title="Стіни на межах кімнат, крім дверей, ставляться самі"><input id="autoseal" type="checkbox" checked /> авто-стіни</label>
+      <span id="status"></span>
+    </header>
+    <main>
+      <aside id="tools"></aside>
+      <section id="board"></section>
+      <aside id="side"></aside>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
