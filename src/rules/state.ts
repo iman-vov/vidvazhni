@@ -80,6 +80,26 @@ export interface HeroState extends FigureBase {
   provokeRadius?: number | null;
   /** Chest ids (scenario items) looted in this scenario. */
   chests?: string[];
+  /** Items the hero carries into the scenario (absent = none). */
+  items?: HeroItemState[];
+  /** Fork «Наснага»: ongoing bonuses granted by the class Порив (its `active` steps), until used
+   *  up or the end of the round. */
+  surgeGrants?: SurgeGrant[];
+  /** Item «Шкіряний шолом»: the next attack against this hero this round has disadvantage. */
+  attackedDisadvantage?: boolean;
+}
+
+/** One carried item: `ready` can be used, `spent` comes back with a long rest, `lost` is gone
+ *  for the scenario. Passive items stay `ready` and always apply. */
+export interface HeroItemState {
+  id: string;
+  state: 'ready' | 'spent' | 'lost';
+}
+
+export interface SurgeGrant {
+  on: 'attack' | 'rangedAttack' | 'attacked';
+  usesLeft: number;
+  grant: { advantage?: boolean; conditions?: ConditionId[]; shield?: number; range?: number };
 }
 
 export interface MonsterState extends FigureBase {
@@ -138,7 +158,10 @@ export interface BehaviourDeckState {
 export type ElementLevel = 'inert' | 'waning' | 'strong';
 
 export interface OrbState {
+  /** The figure the orb floats above, or a scenario source (`scenario`, `millstones`, …). */
   ownerId: FigureId;
+  /** Scenario orbs placed on a hex instead of above a figure. */
+  hex?: Hex;
   /** 0 = created this round, 1 = dimmed; extinguished at the end of the round when already 1. */
   age: 0 | 1;
 }
@@ -173,6 +196,10 @@ export interface HalfInProgress {
   committed: boolean;
   /** Played as the basic action (top Атака 2 / bottom Рух 2); `cardId` is the card spent on it. */
   basic?: boolean;
+  /** Fork «Наснага»: the class Порив played on its own (`cardId` = `surge`); no card moves. */
+  surge?: boolean;
+  /** Fork «Наснага»: steps `[from, to)` of this half were put in by a Порив used during it. */
+  surgeRange?: [number, number];
 }
 
 export interface GameState {
@@ -197,7 +224,8 @@ export interface GameState {
   turnOrder: TurnEntry[];
   turnIndex: number;
   half: HalfInProgress | null;
-  /** Fork «Наснага»: Порив used this turn adds its steps in front of the current half. */
+  /** Every event so far. (Fork «Наснага»: a Порив used during a half puts its steps in front of
+   *  the half's current step; used between halves it is played as a half of its own.) */
   log: GameEvent[];
   /** Engine work still to do (monster turns, damage awaiting «уникнути шкоди», …). Engine-internal;
    *  absent = empty. Lets every interruption resume deterministically from plain JSON. */
@@ -219,6 +247,8 @@ export interface AttackSpec {
   curse: boolean;
   advantage: boolean;
   disadvantage: boolean;
+  /** Fork «Підхоплення»: the attack got the follow-up bonus (already in `value`). */
+  followUp?: boolean;
 }
 
 /** Engine-internal unit of work, processed front to back by turn.ts. */
@@ -272,6 +302,8 @@ export type Action =
   | { type: 'surge'; heroId: FigureId }
   /** Fork «Підняти друга»: spend the top or bottom action of a card to raise an adjacent downed ally. */
   | { type: 'reviveAlly'; heroId: FigureId; cardId: CardId; half: 'top' | 'bottom'; targetId: FigureId }
+  /** Uses a carried item during the hero's own turn; an attack or move bonus applies to the pending step. */
+  | { type: 'useItem'; heroId: FigureId; itemId: string }
   | { type: 'undo' };
 
 // ─── Events ────────────────────────────────────────────────────────────────
@@ -326,6 +358,8 @@ export type GameEvent =
   | { type: 'damageAvoided'; heroId: FigureId; amount: number; lost: CardId[] }
   | { type: 'trapPlaced'; hex: Hex }
   | { type: 'roundEnded'; round: number }
+  | { type: 'itemUsed'; heroId: FigureId; itemId: string; to: 'spent' | 'lost' }
+  | { type: 'itemsRefreshed'; heroId: FigureId; itemIds: string[] }
   | { type: 'undone' };
 
 // ─── Engine API (implemented in engine.ts) ─────────────────────────────────
@@ -333,7 +367,8 @@ export type GameEvent =
 export interface GameSetup {
   scenarioId: string;
   seed: number;
-  heroes: { classId: string; playerId: string; level: number; perks?: string[] }[];
+  /** `items`: ids from `content.items` the hero carries (scenario data gives none yet). */
+  heroes: { classId: string; playerId: string; level: number; perks?: string[]; items?: string[] }[];
   difficulty: 'easy' | 'normal' | 'hard';
   variants: Variants;
 }

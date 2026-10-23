@@ -1,13 +1,16 @@
 // Attacks. Order: base → card and item bonuses (and poison) → modifier → target shield reduced by
 // pierce. Then conditions, curse, push/pull and finally the target's retaliate.
-// Fork «Підхоплення» (variants.followUp) would add its bonus in `attackSpecFor`.
+// Fork «Підхоплення» (variants.followUp): +1 when another hero already attacked the target this round.
 
 import type { AttackBonus, AttackBonusCondition, ConditionId, Step } from '../content';
 import { addCondition } from '../conditions';
 import { areaHexes } from '../geometry';
 import { areAdjacent, distance, hexEquals } from '../hex';
 import { applyModifier, drawForAttack } from '../modifiers';
+import { findCard } from '../damage';
+import { passiveItemValue } from '../items';
 import { moveActiveOut } from '../round';
+import { FOLLOW_UP_BONUS } from '../variants';
 import type { AttackSpec, EngineTask, Figure, HeroState, ModifierDeck, StepChoice } from '../state';
 import { emit, enemiesOf, figureAt, isPresent, schedule, wallBetween, type Ctx } from './context';
 import { autoForcedPath, forcedMove, validForcedPath } from './move';
@@ -38,24 +41,60 @@ function bonusHolds(ctx: Ctx, attacker: Figure, target: Figure, cond: AttackBonu
   }
 }
 
-/** Active-card grants that apply to this attack (Пташиний зір: next 2 ranged attacks with advantage). */
-function activeGrants(ctx: Ctx, h: HeroState, ranged: boolean): { cardId: string; advantage: boolean; conditions: ConditionId[] }[] {
-  const out = [];
+interface Grant {
+  /** The active card that carries the grant, or its index in `surgeGrants` (fork «Наснага»). */
+  cardId?: string;
+  surge?: number;
+  advantage: boolean;
+  conditions: ConditionId[];
+  range: number;
+}
+
+function heroCardSteps(ctx: Ctx, h: HeroState, cardId: string, half: 'top' | 'bottom'): Step[] {
+  return ctx.c.heroes[h.classId]?.cards.some((c) => c.id === cardId) ? findCard(ctx, h, cardId)[half].steps : [];
+}
+
+/** Active-card grants that apply to this attack (Пташиний зір: next 2 ranged attacks with advantage),
+ *  plus the grants of a Порив used this round. */
+function activeGrants(ctx: Ctx, h: HeroState, ranged: boolean): Grant[] {
+  const out: Grant[] = [];
+  const applies = (on: string) => on !== 'attacked' && (on !== 'rangedAttack' || ranged);
   for (const a of h.active) {
-    const card = ctx.c.heroes[h.classId]?.cards.find((c) => c.id === a.cardId);
-    for (const st of card?.[a.half].steps ?? []) {
-      if (st.type !== 'active' || st.on === 'attacked') continue;
-      if (st.on === 'rangedAttack' && !ranged) continue;
-      out.push({ cardId: a.cardId, advantage: !!st.grant.advantage, conditions: st.grant.conditions ?? [] });
+    for (const st of heroCardSteps(ctx, h, a.cardId, a.half)) {
+      if (st.type !== 'active' || !applies(st.on)) continue;
+      out.push({ cardId: a.cardId, advantage: !!st.grant.advantage, conditions: st.grant.conditions ?? [], range: st.grant.range ?? 0 });
     }
   }
+  (h.surgeGrants ?? []).forEach((g, i) => {
+    if (!applies(g.on)) return;
+    out.push({ surge: i, advantage: !!g.grant.advantage, conditions: g.grant.conditions ?? [], range: g.grant.range ?? 0 });
+  });
   return out;
 }
 
 /** One use of every applicable active grant is spent per attack step. */
 export function spendActiveGrants(ctx: Ctx, f: Figure, step: AttackStep): void {
   if (f.kind !== 'hero') return;
-  for (const g of activeGrants(ctx, f, isRanged(step))) spendActiveUse(ctx, f, g.cardId);
+  const grants = activeGrants(ctx, f, isRanged(step));
+  for (const g of grants) if (g.cardId) spendActiveUse(ctx, f, g.cardId);
+  spendSurgeGrants(f, grants.flatMap((g) => (g.surge !== undefined ? [g.surge] : [])));
+}
+
+function spendSurgeGrants(h: HeroState, indexes: number[]): void {
+  if (indexes.length === 0 || !h.surgeGrants) return;
+  for (const i of indexes) {
+    const g = h.surgeGrants[i];
+    if (g) g.usesLeft--;
+  }
+  h.surgeGrants = h.surgeGrants.filter((g) => g.usesLeft > 0);
+}
+
+/** A hero's ranged attack step with the range of its grants and passive items added. */
+export function withRangeGrants(ctx: Ctx, f: Figure, step: AttackStep): AttackStep {
+  if (f.kind !== 'hero' || step.range === undefined) return step;
+  let add = passiveItemValue(ctx, f, 'rangedRangeBonus');
+  for (const g of activeGrants(ctx, f, true)) add += g.range;
+  return add > 0 ? { ...step, range: step.range + add } : step;
 }
 
 export function spendActiveUse(ctx: Ctx, h: HeroState, cardId: string): void {
@@ -94,6 +133,10 @@ export function attackSpecFor(ctx: Ctx, attacker: Figure, target: Figure, step: 
     const traits = ctx.c.monsters[target.typeId]?.traits ?? [];
     if (traits.some((t) => t.trait === 'rangedAttacksAgainstHaveDisadvantage')) disadvantage = true;
   }
+  if (target.kind === 'hero' && target.attackedDisadvantage) disadvantage = true;
+  const followUp =
+    ctx.s.variants.followUp && attacker.kind === 'hero' && target.kind === 'monster' && target.attackedBy.some((id) => id !== attacker.id);
+  if (followUp) value += FOLLOW_UP_BONUS;
   return {
     value,
     ranged,
@@ -104,6 +147,7 @@ export function attackSpecFor(ctx: Ctx, attacker: Figure, target: Figure, step: 
     curse: !!step.curse,
     advantage,
     disadvantage,
+    ...(followUp ? { followUp: true } : {}),
   };
 }
 
@@ -115,8 +159,9 @@ export function canTarget(ctx: Ctx, attacker: Figure, target: Figure, step: Atta
 }
 
 /** A hero's (or a summon's chosen) attack: validates targets and schedules one attack per target. */
-export function performAttack(ctx: Ctx, f: Figure, step: AttackStep, choice: StepChoice): StepResult {
+export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice: StepChoice): StepResult {
   if (f.conditions.disarm) return 'disarmed';
+  const step = withRangeGrants(ctx, f, baseStep);
   let targets: Figure[];
   if (step.targetAll === 'adjacentEnemies') {
     targets = enemiesOf(ctx.s, f).filter((e) => areAdjacent(e.hex, f.hex) && !wallBetween(ctx.s, e.hex, f.hex) && !e.conditions.invisible);
@@ -169,16 +214,19 @@ export function modifierDeckOf(ctx: Ctx, f: Figure): ModifierDeck {
   return ctx.s.monsterDeck;
 }
 
-/** Active cards that shield their hero while attacked (Кам'яна шкіра: Щит 1 for 4 attacks). */
-function attackedGrants(ctx: Ctx, f: Figure): { cardId: string; shield: number }[] {
+/** Active cards that shield their hero while attacked (Кам'яна шкіра: Щит 1 for 4 attacks), and
+ *  the same grants of a Порив. */
+function attackedGrants(ctx: Ctx, f: Figure): { cardId?: string; surge?: number; shield: number }[] {
   if (f.kind !== 'hero') return [];
-  const out = [];
+  const out: { cardId?: string; surge?: number; shield: number }[] = [];
   for (const a of f.active) {
-    const card = ctx.c.heroes[f.classId]?.cards.find((c) => c.id === a.cardId);
-    for (const st of card?.[a.half].steps ?? []) {
+    for (const st of heroCardSteps(ctx, f, a.cardId, a.half)) {
       if (st.type === 'active' && st.on === 'attacked' && st.grant.shield) out.push({ cardId: a.cardId, shield: st.grant.shield });
     }
   }
+  (f.surgeGrants ?? []).forEach((g, i) => {
+    if (g.on === 'attacked' && g.grant.shield) out.push({ surge: i, shield: g.grant.shield });
+  });
   return out;
 }
 
@@ -201,9 +249,24 @@ export function runAttackTarget(ctx: Ctx, task: AttackTask): void {
   const afterModifier = applyModifier(chosen, value);
   const shield = shieldOf(target, ctx);
   const damage = Math.max(0, afterModifier - Math.max(0, shield - spec.pierce));
-  emit(ctx, { type: 'attacked', attackerId: attacker.id, targetId: target.id, base: spec.value, modifiers: drawn, chosen, shield, damage });
+  emit(ctx, {
+    type: 'attacked',
+    attackerId: attacker.id,
+    targetId: target.id,
+    base: spec.value,
+    modifiers: drawn,
+    chosen,
+    shield,
+    damage,
+    ...(spec.followUp ? { followUp: true } : {}),
+  });
   spendShieldUses(ctx, target);
-  if (target.kind === 'hero') for (const g of attackedGrants(ctx, target)) spendActiveUse(ctx, target, g.cardId);
+  if (target.kind === 'hero') {
+    const grants = attackedGrants(ctx, target);
+    for (const g of grants) if (g.cardId) spendActiveUse(ctx, target, g.cardId);
+    spendSurgeGrants(target, grants.flatMap((g) => (g.surge !== undefined ? [g.surge] : [])));
+    delete target.attackedDisadvantage;
+  }
   if (target.kind === 'monster' && attacker.kind === 'hero' && !target.attackedBy.includes(attacker.id)) target.attackedBy.push(attacker.id);
   schedule(
     ctx,

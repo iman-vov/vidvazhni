@@ -38,8 +38,10 @@ export function heroes(s: GameState): HeroState[] {
   return Object.values(s.figures).filter((f): f is HeroState => f.kind === 'hero');
 }
 
+/** Heroes still in play: not exhausted and not downed (fork «Підняти друга»). They select cards,
+ *  take turns and rest; when none is left the scenario is lost. */
 export function activeHeroes(s: GameState): HeroState[] {
-  return heroes(s).filter((h) => !h.exhausted);
+  return heroes(s).filter((h) => !h.exhausted && !h.downed);
 }
 
 export function monsters(s: GameState): MonsterState[] {
@@ -68,8 +70,14 @@ export function alliesOf(s: GameState, f: Figure): Figure[] {
   return Object.values(s.figures).filter((o) => isPresent(o) && o.id !== f.id && !areEnemies(f, o));
 }
 
+/** A downed hero (fork «Підняти друга») cannot be affected but still occupies its hex. */
+export function occupiesHex(f: Figure): boolean {
+  return (f.kind === 'hero' && f.downed && !f.exhausted) || isPresent(f);
+}
+
+/** The figure standing on a hex (downed heroes included). */
 export function figureAt(s: GameState, hex: Hex): Figure | undefined {
-  return Object.values(s.figures).find((f) => isPresent(f) && hexEquals(f.hex, hex));
+  return Object.values(s.figures).find((f) => occupiesHex(f) && hexEquals(f.hex, hex));
 }
 
 export function tileAt(s: GameState, hex: Hex): Tile | undefined {

@@ -74,7 +74,7 @@ export function performStep(ctx: Ctx, f: Figure, step: Step, choice: StepChoice,
   // Infusing with an `any` element uses `choice.element`; a consume of `any` must not reuse it.
   const result = dispatch(ctx, f, actual, choice, src);
   if (typeof result === 'string') return result;
-  for (const e of paid) consume(ctx, e);
+  for (const e of paid) consume(ctx, e, f.id);
   result();
   if (paid.length > 0 && bonus?.then) {
     for (const extra of bonus.then) {
@@ -115,7 +115,7 @@ function dispatch(ctx: Ctx, f: Figure, step: Step, choice: StepChoice, src: Effe
     case 'trap':
       return performTrap(ctx, f, step, choice);
     case 'active':
-      return performActive(ctx, f);
+      return performActive(ctx, f, step, src);
     case 'teleport':
       return performTeleport(ctx, f, step, choice);
     case 'special':

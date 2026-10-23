@@ -6,6 +6,8 @@ import type { Ctx } from '../effects/context';
 import type { EffectSource, StepResult } from '../effects/support';
 import type { Figure, StepChoice } from '../state';
 import { elementalSphere } from './elementalSphere';
+import { retreat } from './retreat';
+import { transmuteOrb } from './transmuteOrb';
 
 type SpecialStep = Extract<Step, { type: 'special' }>;
 export type SpecialFn = (ctx: Ctx, f: Figure, step: SpecialStep, choice: StepChoice, src: EffectSource) => StepResult;
@@ -13,6 +15,8 @@ export type SpecialFn = (ctx: Ctx, f: Figure, step: SpecialStep, choice: StepCho
 export const SPECIALS: Record<string, SpecialFn> = {
   recoverLost: elementalSphere,
   elementalSphere,
+  transmuteOrb,
+  retreat,
 };
 
 /** Specials whose card always goes to the lost pile, whatever the half says. */

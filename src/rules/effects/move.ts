@@ -3,6 +3,7 @@
 import type { Step } from '../content';
 import { validatePath } from '../geometry';
 import { DIRECTIONS, add, areAdjacent, distance, hexEquals, type Hex } from '../hex';
+import { passiveItemValue } from '../items';
 import { addNewGroupsToOrder } from '../round';
 import { revealRoom } from '../setup';
 import type { EngineTask, Figure, FigureId, StepChoice } from '../state';
@@ -17,7 +18,8 @@ export function performMove(ctx: Ctx, f: Figure, step: S<'move'>, choice: StepCh
   if (f.conditions.immobilize) return 'immobilized';
   const path = choice.path ?? [];
   if (path.length === 0) return 'choose a path';
-  const result = validatePath(ctx.s, path, step.value + bonus, {
+  const penalty = f.kind === 'hero' ? passiveItemValue(ctx, f, 'movePenalty') : 0;
+  const result = validatePath(ctx.s, path, Math.max(0, step.value + bonus - penalty), {
     figureId: f.id,
     ...(step.jump ? { jump: true } : {}),
     ...(step.fly ? { fly: true } : {}),

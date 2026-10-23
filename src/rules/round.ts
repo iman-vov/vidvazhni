@@ -3,11 +3,11 @@
 import type { MonsterCard } from './content';
 import { exhaust, findCard, loseScenario } from './damage';
 import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
-import { decayAtEndOfRound } from './elements';
+import { decayAtEndOfRound, scenarioOrbs } from './elements';
 import { hexEquals } from './hex';
 import { shuffleIfNeeded } from './modifiers';
-import { shuffle } from './rng';
-import type { CardId, HeroState, TurnEntry } from './state';
+import { nextInt, shuffle } from './rng';
+import type { BehaviourDeckState, CardId, HeroState, TurnEntry } from './state';
 
 // ─── Card selection ────────────────────────────────────────────────────────
 
@@ -76,6 +76,7 @@ export function revealIfReady(ctx: Ctx): void {
     }
   }
   for (const typeId of typesOnBoard(ctx)) drawBehaviour(ctx, typeId);
+  returnUnusedIntents(ctx);
   ctx.s.turnOrder = buildTurnOrder(ctx);
   ctx.s.turnIndex = -1;
   ctx.s.phase = 'turns';
@@ -86,35 +87,75 @@ export function revealIfReady(ctx: Ctx): void {
 
 // ─── Behaviour cards and turn order ────────────────────────────────────────
 
-function typesOnBoard(ctx: Ctx): string[] {
+export function typesOnBoard(ctx: Pick<Ctx, 's'>): string[] {
   const out: string[] = [];
   for (const m of monsters(ctx.s)) if (isPresent(m) && !out.includes(m.typeId)) out.push(m.typeId);
   return out;
 }
 
-export function behaviourCard(ctx: Ctx, typeId: string, cardId: string): MonsterCard {
+/** A card of the type's behaviour deck (template cards, or the type's own fork cards). */
+export function behaviourCard(ctx: Pick<Ctx, 'c'>, typeId: string, cardId: string): MonsterCard {
   const deckId = ctx.c.monsters[typeId]?.deck ?? ctx.c.bosses[typeId]?.deck;
-  const card = deckId ? ctx.c.decks[deckId]?.cards.find((c) => c.id === cardId) : undefined;
+  const card =
+    (deckId ? ctx.c.decks[deckId]?.cards.find((c) => c.id === cardId) : undefined) ??
+    ctx.c.monsters[typeId]?.forkCards?.find((c) => c.id === cardId);
   if (!card) throw new Error(`unknown behaviour card ${cardId} for ${typeId}`);
   return card;
 }
 
 /** Monster initiative = card + type offset, within 1–99. */
-export function monsterInitiative(ctx: Ctx, typeId: string, card: MonsterCard): number {
+export function monsterInitiative(ctx: Pick<Ctx, 'c'>, typeId: string, card: MonsterCard): number {
   const offset = ctx.c.monsters[typeId]?.initiativeOffset ?? 0;
   return Math.min(99, Math.max(1, card.initiative + offset));
 }
 
-/** Draws this round's card for a monster type. Hook for fork «Три можливі наміри» (variants.threeIntents):
- *  the card would be picked from `intents` here instead of the top of the pile. */
-export function drawBehaviour(ctx: Ctx, typeId: string): void {
-  const deck = ctx.s.behaviourDecks[typeId];
-  if (!deck || deck.current) return;
+/** Takes the top card of a behaviour pile; an empty pile is reshuffled from the discard first. */
+function takeBehaviourCard(ctx: Ctx, deck: BehaviourDeckState): string | undefined {
   if (deck.draw.length === 0) {
     deck.draw = shuffle(ctx.s.rng, deck.discard);
     deck.discard = [];
   }
-  const cardId = deck.draw.shift();
+  return deck.draw.shift();
+}
+
+/** Fork «Три можливі наміри»: before card selection every monster type on the board shows 3
+ *  possible behaviour cards. */
+export function drawIntents(ctx: Ctx): void {
+  if (!ctx.s.variants.threeIntents) return;
+  for (const typeId of typesOnBoard(ctx)) {
+    const deck = ctx.s.behaviourDecks[typeId];
+    if (!deck || deck.current || deck.intents.length > 0) continue;
+    for (let i = 0; i < 3; i++) {
+      const cardId = takeBehaviourCard(ctx, deck);
+      if (cardId) deck.intents.push(cardId);
+    }
+    emit(ctx, { type: 'intentsDrawn', typeId, cards: [...deck.intents] });
+  }
+}
+
+/** Intents of types that left the board before the reveal go back into their pile. */
+function returnUnusedIntents(ctx: Ctx): void {
+  for (const deck of Object.values(ctx.s.behaviourDecks)) {
+    if (deck.intents.length === 0) continue;
+    deck.draw = shuffle(ctx.s.rng, [...deck.draw, ...deck.intents]);
+    deck.intents = [];
+  }
+}
+
+/** Draws this round's card for a monster type. Fork «Три можливі наміри»: one of the three intents
+ *  is picked at random, the other two go back and the pile is shuffled. */
+export function drawBehaviour(ctx: Ctx, typeId: string): void {
+  const deck = ctx.s.behaviourDecks[typeId];
+  if (!deck || deck.current) return;
+  let cardId: string | undefined;
+  if (deck.intents.length > 0) {
+    const [picked] = deck.intents.splice(nextInt(ctx.s.rng, deck.intents.length), 1);
+    cardId = picked;
+    deck.draw = shuffle(ctx.s.rng, [...deck.draw, ...deck.intents]);
+    deck.intents = [];
+  } else {
+    cardId = takeBehaviourCard(ctx, deck);
+  }
   if (!cardId) return;
   deck.current = cardId;
   const card = behaviourCard(ctx, typeId, cardId);
@@ -191,14 +232,29 @@ export function nextTurn(ctx: Ctx): void {
   }
   if (entry.kind === 'hero') {
     const h = s.figures[entry.figureId];
-    if (h?.kind === 'hero' && !h.exhausted) schedule(ctx, { t: 'startHeroTurn', heroId: h.id });
-    else schedule(ctx, { t: 'nextTurn' });
+    if (h?.kind === 'hero' && !h.exhausted && !h.downed) schedule(ctx, { t: 'startHeroTurn', heroId: h.id });
+    else {
+      if (h?.kind === 'hero' && h.downed) discardSelection(ctx, h);
+      schedule(ctx, { t: 'nextTurn' });
+    }
   } else if (entry.kind === 'summon') {
     if (isPresent(s.figures[entry.figureId])) schedule(ctx, { t: 'figureTurn', figureId: entry.figureId });
     schedule(ctx, { t: 'nextTurn' });
   } else {
     schedule(ctx, { t: 'monsterGroup', typeId: entry.typeId }, { t: 'nextTurn' });
   }
+}
+
+/** A downed hero's turn is skipped: the selected cards not yet played go to the discard. */
+export function discardSelection(ctx: Ctx, h: HeroState): void {
+  if (h.selection?.kind !== 'cards') return;
+  for (const cardId of h.selection.cards) {
+    if (h.playedThisTurn.some((p) => p.cardId === cardId) || h.discard.includes(cardId) || h.lost.includes(cardId)) continue;
+    if (h.active.some((a) => a.cardId === cardId)) continue;
+    h.discard.push(cardId);
+    emit(ctx, { type: 'cardMoved', heroId: h.id, cardId, to: 'discard' });
+  }
+  h.selection = null;
 }
 
 // ─── End of round ──────────────────────────────────────────────────────────
@@ -213,6 +269,8 @@ export function endRound(ctx: Ctx): void {
     f.retaliates = f.retaliates.filter((x) => x.until !== 'round');
     if (f.kind === 'hero') {
       f.provokeRadius = null;
+      delete f.surgeGrants;
+      delete f.attackedDisadvantage;
       for (const a of [...f.active]) {
         if (activeEndsWithRound(ctx, f, a.cardId, a.half, a.usesLeft)) moveActiveOut(ctx, f, a.cardId);
       }
@@ -285,6 +343,8 @@ export function startRound(ctx: Ctx): void {
   s.phase = 'selectCards';
   s.pending = { kind: 'selectCards', heroIds: activeHeroes(s).map((h) => h.id) };
   emit(ctx, { type: 'roundStarted', round: s.round });
+  scenarioOrbs(ctx, 'eachRound');
+  drawIntents(ctx);
 }
 
 // ─── Scenario goals ────────────────────────────────────────────────────────

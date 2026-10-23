@@ -1,16 +1,26 @@
 // Damage, «уникнути шкоди», death of monsters and summons, exhaustion of heroes, scenario loss.
 
-import { addCondition } from './conditions';
+import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
 import type { CardId, EngineTask, Figure, HeroState } from './state';
+import type { Variants } from './variants';
 
 type DamageTask = Extract<EngineTask, { t: 'damage' }>;
+
+/** The card as played under these rules: with the orbs fork its `fork` initiative and halves
+ *  replace the base ones (a half absent from `fork` stays as it is). */
+export function effectiveCard(card: HeroCard, variants: Variants): HeroCard {
+  if (!variants.orbs || !card.fork) return card;
+  const f = card.fork;
+  if (f.initiative === undefined && !f.top && !f.bottom) return card;
+  return { ...card, initiative: f.initiative ?? card.initiative, top: f.top ?? card.top, bottom: f.bottom ?? card.bottom };
+}
 
 export function findCard(ctx: Ctx, h: HeroState, cardId: CardId): HeroCard {
   const card = ctx.c.heroes[h.classId]?.cards.find((c) => c.id === cardId);
   if (!card) throw new Error(`unknown card ${cardId}`);
-  return card;
+  return effectiveCard(card, ctx.s.variants);
 }
 
 /** A hero may cancel one source of damage by losing 1 card from hand or 2 from the discard. */
@@ -83,9 +93,16 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
   else killFigure(ctx, f);
 }
 
-/** Hook for fork «Підняти друга»: with `variants.reviveAlly` a hero would be downed here instead. */
+/** At 0 hp a hero is exhausted. Fork «Підняти друга»: a hero never raised before is downed
+ *  instead — stays on its hex, skips turns, cannot be targeted; the second fall exhausts. */
 function heroAtZero(ctx: Ctx, h: HeroState): void {
-  exhaust(ctx, h, 'damage');
+  if (!ctx.s.variants.reviveAlly || h.revived || h.downed) return exhaust(ctx, h, 'damage');
+  h.downed = true;
+  h.hp = 0;
+  h.provokeRadius = null;
+  for (const c of Object.keys(h.conditions) as ConditionId[]) removeCondition(ctx, h, c);
+  emit(ctx, { type: 'heroDowned', heroId: h.id });
+  if (activeHeroes(ctx.s).length === 0) loseScenario(ctx);
 }
 
 export function killFigure(ctx: Ctx, f: Figure): void {

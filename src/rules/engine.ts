@@ -8,7 +8,8 @@ import { chooseHand, declareLongRest, revealIfReady, selectCards } from './round
 import { longRestLoss, shortRest, shortRestReroll } from './rest';
 import { createGame as buildGame } from './setup';
 import type { Action, ApplyResult, GameSetup, GameState } from './state';
-import { endTurn, resolveStep, run, skipStep, startHalf } from './turn';
+import { endTurn, resolveStep, reviveAlly, run, skipStep, startHalf, surge } from './turn';
+import { useItem } from './items';
 
 /** Builds the initial state: start room revealed, monsters spawned, decks shuffled with the seed,
  *  phase `selectCards` (or `chooseHandBeforeScenario` when a hand is smaller than the deck). */
@@ -71,9 +72,11 @@ function dispatch(ctx: Ctx, action: Exclude<Action, { type: 'undo' }>): string |
       return resolveAvoidDamage(ctx, action.heroId, action.choice);
     }
     case 'surge':
-      return ctx.s.variants.momentum ? 'not implemented yet: «Наснага»' : 'variant «Наснага» is off';
+      return surge(ctx, action.heroId);
     case 'reviveAlly':
-      return ctx.s.variants.reviveAlly ? 'not implemented yet: «Підняти друга»' : 'variant «Підняти друга» is off';
+      return reviveAlly(ctx, action.heroId, action.cardId, action.half, action.targetId);
+    case 'useItem':
+      return useItem(ctx, action.heroId, action.itemId);
   }
 }
 

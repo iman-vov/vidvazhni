@@ -2,7 +2,10 @@
 
 import type { Content, HeroClass, ScenarioDef } from './content';
 import { emit, isPresent, monsters, scaleMonsterStats, trapDamage, type Ctx } from './effects/context';
-import { initialElements } from './elements';
+import { initialElements, scenarioOrbs } from './elements';
+import { setupItems } from './items';
+import { drawIntents } from './round';
+import { MONSTER_HP_BONUS_WITH_INTENTS } from './variants';
 import { hexKey, type Hex } from './hex';
 import { createModifierDeck } from './modifiers';
 import { shuffle } from './rng';
@@ -109,10 +112,14 @@ export function createGame(setup: GameSetup, content: Content): GameState {
       chests: [],
     };
     s.figures[id] = hero;
+    setupItems(ctx, hero, h.items ?? []);
     if (cards.length > cls.handSize) needsChoice.push(id);
   });
 
   revealRoom(ctx, scenario, scenario.startRoom);
+  scenarioOrbs(ctx, 'atStart');
+  scenarioOrbs(ctx, 'eachRound');
+  drawIntents(ctx);
   s.pending =
     needsChoice.length > 0
       ? { kind: 'chooseHandBeforeScenario', heroIds: needsChoice }
@@ -202,6 +209,7 @@ export function spawnMonster(
     shield = stats.shield ?? 0;
     retaliate = stats.retaliate ?? 0;
   }
+  if (s.variants.threeIntents) hp = withIntentsHpBonus(hp);
   const m: MonsterState = {
     id,
     kind: 'monster',
@@ -226,8 +234,9 @@ export function spawnMonster(
   if (!s.behaviourDecks[typeId]) {
     const deck = ctx.c.decks[boss ? boss.deck : type!.deck];
     if (!deck) throw new Error(`unknown behaviour deck for ${typeId}`);
+    const own = s.variants.threeIntents ? (type?.forkCards ?? []) : [];
     s.behaviourDecks[typeId] = {
-      draw: shuffle(s.rng, deck.cards.map((c) => c.id)),
+      draw: shuffle(s.rng, [...deck.cards, ...own].map((c) => c.id)),
       discard: [],
       current: null,
       intents: [],
@@ -236,6 +245,11 @@ export function spawnMonster(
   }
   emit(ctx, { type: 'figureSpawned', figureId: id });
   return m;
+}
+
+/** Fork «Три можливі наміри»: monster (and boss) health +10%, rounded up. */
+export function withIntentsHpBonus(hp: number): number {
+  return Math.ceil(Math.round(hp * (1 + MONSTER_HP_BONUS_WITH_INTENTS) * 1e6) / 1e6);
 }
 
 /** Living monsters of a type that are on the board. */

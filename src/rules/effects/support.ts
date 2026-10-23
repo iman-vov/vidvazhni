@@ -4,7 +4,7 @@
 
 import { addCondition, removeCondition } from '../conditions';
 import { NEGATIVE_CONDITIONS, type ConditionId, type ElementId, type Step, type TargetSpec } from '../content';
-import { infuse } from '../elements';
+import { elementIds, infuse } from '../elements';
 import { hasLineOfSight } from '../geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from '../hex';
 import { addToDeck } from '../modifiers';
@@ -21,6 +21,8 @@ export interface EffectSource {
   cardId?: string;
   /** Extra chosen targets granted by a consume bonus. */
   extraTargets?: number;
+  /** Fork «Наснага»: the step belongs to the class Порив (its `active` steps become surge grants). */
+  surge?: boolean;
 }
 
 export function effectSourceId(src: EffectSource): string {
@@ -187,10 +189,11 @@ export function performBless(ctx: Ctx, f: Figure, step: S<'bless'>, choice: Step
 
 // ─── Elements ──────────────────────────────────────────────────────────────
 
-export function performInfuse(ctx: Ctx, _f: Figure, step: S<'infuse'>, choice: StepChoice): StepResult {
+export function performInfuse(ctx: Ctx, f: Figure, step: S<'infuse'>, choice: StepChoice): StepResult {
   const element: ElementId | undefined = step.element === 'any' ? choice.element : step.element;
   if (!element) return 'choose an element';
-  return () => infuse(ctx, element);
+  if (step.element === 'any' && !elementIds(ctx.s).includes(element)) return 'no such element';
+  return () => infuse(ctx, element, f.id);
 }
 
 // ─── Loot ──────────────────────────────────────────────────────────────────
@@ -291,8 +294,11 @@ export function performTeleport(ctx: Ctx, f: Figure, step: S<'teleport'>, choice
   };
 }
 
-/** `active` steps only mark the card; the bonus is read from the active area when attacking. */
-export function performActive(_ctx: Ctx, f: Figure): StepResult {
+/** `active` steps only mark the card; the bonus is read from the active area when attacking.
+ *  A Порив has no card: its `active` steps are kept on the hero until used up or the round ends. */
+export function performActive(_ctx: Ctx, f: Figure, step: S<'active'>, src: EffectSource = {}): StepResult {
   if (f.kind !== 'hero') return 'only heroes have active cards';
-  return () => {};
+  return () => {
+    if (src.surge) (f.surgeGrants ??= []).push({ on: step.on, usesLeft: step.uses, grant: structuredClone(step.grant) });
+  };
 }

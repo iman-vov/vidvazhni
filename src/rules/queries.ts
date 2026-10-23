@@ -1,16 +1,20 @@
 // Read-only queries for bots and the debug UI.
 
-import type { Content, ElementId, Step } from './content';
-import { canAvoidDamage } from './damage';
+import type { Content, ElementId, ItemDef, ItemSlot, Step, StepType } from './content';
+import { canAvoidDamage, effectiveCard } from './damage';
 import { attackSpecFor, shieldOf } from './effects/attack';
 import { alliesOf, enemiesOf, isFreeHex, isPresent, type Ctx } from './effects/context';
-import { availableElements, ELEMENTS } from './elements';
+import { withConsumeBonus } from './effects/index';
+import { availableElements, canConsume, elementIds, ORBS } from './elements';
 import { apply } from './engine';
 import { reachableHexes } from './geometry';
-import { hexesInRadius, neighbors, type Hex } from './hex';
+import { areAdjacent, hexesInRadius, neighbors, type Hex } from './hex';
+import { itemDef, itemEffect } from './items';
+import { behaviourCard, monsterInitiative, typesOnBoard } from './round';
 import { availableCards } from './setup';
-import type { Action, Figure, GameEvent, GameState, HeroState, StepChoice } from './state';
+import type { Action, CardId, Figure, FigureId, GameEvent, GameState, HeroState, StepChoice } from './state';
 import { figureSteps } from './turn';
+import { MOMENTUM_MAX } from './variants';
 
 const EMPTY_CONTENT: Content = { heroes: {}, monsters: {}, bosses: {}, decks: {}, scenarios: {} };
 /** Cap on attack target combinations per step, to keep the list small for bots. */
@@ -53,13 +57,23 @@ function candidateActions(state: GameState, content: Content): Action[] {
             out.push({ type: 'startHalf', heroId: h.id, cardId, half, basic: true });
           }
         }
+        if (state.variants.reviveAlly) {
+          for (const t of Object.values(state.figures)) {
+            if (t.kind !== 'hero' || !t.downed || t.revived || !areAdjacent(t.hex, h.hex)) continue;
+            for (const cardId of h.selection.cards) {
+              for (const half of ['top', 'bottom'] as const) out.push({ type: 'reviveAlly', heroId: h.id, cardId, half, targetId: t.id });
+            }
+          }
+        }
       }
+      ownTurnExtras(state, h, out);
       out.push({ type: 'endTurn', heroId: h.id });
       break;
     }
     case 'stepChoice': {
       out.push({ type: 'skipStep' });
       for (const choice of stepChoices(state, content, hero(p.heroId), p.step)) out.push({ type: 'resolveStep', choice });
+      ownTurnExtras(state, hero(p.heroId), out);
       break;
     }
     case 'avoidDamage': {
@@ -88,6 +102,12 @@ function candidateActions(state: GameState, content: Content): Action[] {
   }
   if (state.undoPoint) out.push({ type: 'undo' });
   return out;
+}
+
+/** Порив (fork «Наснага») and carried items, offered during the hero's own turn. */
+function ownTurnExtras(state: GameState, h: HeroState, out: Action[]): void {
+  if (state.variants.momentum && h.momentum >= MOMENTUM_MAX) out.push({ type: 'surge', heroId: h.id });
+  for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
 }
 
 /** Every action that `apply` accepts right now. Choices are enumerated (move destinations,
@@ -160,8 +180,15 @@ function stepChoices(state: GameState, content: Content, h: HeroState, step: Ste
       break;
     }
     case 'infuse':
-      if (step.element === 'any') for (const e of ELEMENTS) base.push({ element: e });
+      if (step.element === 'any') for (const e of elementIds(state)) base.push({ element: e });
       else base.push({});
+      break;
+    case 'special':
+      if (step.name === 'transmuteOrb') {
+        for (const from of ORBS) for (const to of ORBS) if (from !== to && state.orbs[from]) base.push({ elements: [from, to] });
+      } else {
+        base.push({});
+      }
       break;
     case 'summon':
     case 'trap':
@@ -237,4 +264,239 @@ export function previewAttack(
     advantage: spec.advantage,
     disadvantage: spec.disadvantage,
   };
+}
+
+// ─── Fork queries for the UI ───────────────────────────────────────────────
+
+function readCtx(state: GameState, content: Content): Ctx {
+  return { s: state, c: content, ev: [], out: [] };
+}
+
+function heroCard(content: Content, state: GameState, h: HeroState, cardId: CardId) {
+  const card = content.heroes[h.classId]?.cards.find((c) => c.id === cardId);
+  return card ? effectiveCard(card, state.variants) : undefined;
+}
+
+/** Hero tie order: the order of the heroes in the state. */
+function heroOrder(state: GameState, id: FigureId): number {
+  return Object.keys(state.figures).indexOf(id);
+}
+
+export type ForecastEntry =
+  | { kind: 'hero'; figureId: FigureId; initiative: number; self?: true }
+  | { kind: 'monsterIntent'; typeId: string; cardId: string; initiative: number };
+
+export interface InitiativeForecast {
+  heroId: FigureId;
+  cardId: CardId;
+  initiative: number;
+  /** 0-based place among the heroes that already chose (and this hero). */
+  position: number;
+  /** This hero, the allies that already chose and every possible monster card, in turn order
+   *  (heroes before monsters on equal initiative). */
+  order: ForecastEntry[];
+  /** Per monster type on the board: its possible cards (three with «Три можливі наміри», the
+   *  drawn one after the reveal) with whether the hero acts first; `null` = unknown until the reveal. */
+  monsters: { typeId: string; intents: { cardId: string; initiative: number; heroFirst: boolean }[] | null }[];
+}
+
+/** Fork «Прогноз раунду»: where the hero would stand in this round's order with `leadingCardId`
+ *  as the leading card. Null when the variant is off or the card is not the hero's. */
+export function forecastInitiative(state: GameState, content: Content, heroId: FigureId, leadingCardId: CardId): InitiativeForecast | null {
+  if (!state.variants.roundForecast) return null;
+  const h = state.figures[heroId];
+  if (h?.kind !== 'hero') return null;
+  const inHand = h.hand.includes(leadingCardId) || (h.selection?.kind === 'cards' && h.selection.cards.includes(leadingCardId));
+  const card = inHand ? heroCard(content, state, h, leadingCardId) : undefined;
+  if (!card) return null;
+  const initiative = card.initiative;
+  const ctx = readCtx(state, content);
+  const heroes: Extract<ForecastEntry, { kind: 'hero' }>[] = [{ kind: 'hero', figureId: heroId, initiative, self: true }];
+  for (const f of Object.values(state.figures)) {
+    if (f.kind !== 'hero' || f.id === heroId || f.exhausted || f.downed || f.initiative === null) continue;
+    heroes.push({ kind: 'hero', figureId: f.id, initiative: f.initiative });
+  }
+  heroes.sort((a, b) => a.initiative - b.initiative || heroOrder(state, a.figureId) - heroOrder(state, b.figureId));
+  const monsters: InitiativeForecast['monsters'] = [];
+  const intents: Extract<ForecastEntry, { kind: 'monsterIntent' }>[] = [];
+  for (const typeId of typesOnBoard(ctx)) {
+    const deck = state.behaviourDecks[typeId];
+    const ids = deck?.current ? [deck.current] : (deck?.intents ?? []);
+    if (ids.length === 0) {
+      monsters.push({ typeId, intents: null });
+      continue;
+    }
+    const list = ids.map((cardId) => {
+      const ini = monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, cardId));
+      intents.push({ kind: 'monsterIntent', typeId, cardId, initiative: ini });
+      return { cardId, initiative: ini, heroFirst: initiative <= ini };
+    });
+    monsters.push({ typeId, intents: list });
+  }
+  const order: ForecastEntry[] = [...heroes, ...intents].sort(
+    (a, b) => a.initiative - b.initiative || (a.kind === 'hero' ? 0 : 1) - (b.kind === 'hero' ? 0 : 1),
+  );
+  return { heroId, cardId: leadingCardId, initiative, position: heroes.findIndex((e) => e.self), order, monsters };
+}
+
+export interface OrbBonusPreview {
+  cardId: CardId;
+  half: 'top' | 'bottom';
+  stepIndex: number;
+  stepType: StepType;
+  /** What the bonus consumes (`any` = the player's choice). */
+  element: ElementId | 'any';
+  count: number;
+  /** The bonus can be paid on the hero's turn: the element is there now or will be infused by a
+   *  figure acting earlier (someone may still consume it first). */
+  available: boolean;
+  /** Available right now. */
+  now: boolean;
+  /** Figures (or monster types) acting before the hero whose cards this round infuse the element. */
+  from: FigureId[];
+  /** The step's number without and with the bonus («Атака 3 → 5»), when it has one. */
+  value?: number;
+  boosted?: number;
+}
+
+function infuses(steps: Step[], e: ElementId | 'any'): boolean {
+  return steps.some((st) => st.type === 'infuse' && (st.element === 'any' || e === 'any' || st.element === e));
+}
+
+function stepNumber(step: Step): number | undefined {
+  return 'value' in step && typeof step.value === 'number' ? step.value : undefined;
+}
+
+/** For every card the hero can still play this round: which consume bonuses will be payable on the
+ *  hero's turn, given the elements (orbs) present now and the infusions of figures acting earlier.
+ *  The hero's initiative is the chosen one, or (while choosing) that card's as the leading card. */
+export function orbBonusPreview(state: GameState, content: Content, heroId: FigureId): OrbBonusPreview[] {
+  const h = state.figures[heroId];
+  if (h?.kind !== 'hero') return [];
+  const ctx = readCtx(state, content);
+  const selected = h.selection?.kind === 'cards' ? h.selection.cards : [];
+  const cards = [...h.hand, ...selected.filter((c) => !h.hand.includes(c) && !h.playedThisTurn.some((p) => p.cardId === c))];
+  const acted = new Set(
+    state.turnOrder.slice(0, Math.max(0, state.turnIndex + 1)).map((e) => (e.kind === 'monsterGroup' ? e.typeId : e.figureId)),
+  );
+  const out: OrbBonusPreview[] = [];
+  for (const cardId of cards) {
+    const card = heroCard(content, state, h, cardId);
+    if (!card) continue;
+    const myIni = h.initiative ?? card.initiative;
+    // Figures acting before the hero, with the steps they may play this round.
+    const earlier: { id: FigureId; steps: Step[] }[] = [];
+    if (state.phase === 'selectCards' || state.phase === 'turns') {
+      for (const f of Object.values(state.figures)) {
+        if (f.kind !== 'hero' || f.id === heroId || f.exhausted || f.downed || f.initiative === null) continue;
+        if (f.selection?.kind !== 'cards' || acted.has(f.id)) continue;
+        const before = f.initiative < myIni || (f.initiative === myIni && heroOrder(state, f.id) < heroOrder(state, heroId));
+        if (!before) continue;
+        const steps = f.selection.cards.flatMap((c) => {
+          const fc = heroCard(content, state, f, c);
+          return fc ? [...fc.top.steps, ...fc.bottom.steps] : [];
+        });
+        earlier.push({ id: f.id, steps });
+      }
+      if (!state.variants.orbs) {
+        for (const typeId of typesOnBoard(ctx)) {
+          const current = state.behaviourDecks[typeId]?.current;
+          if (!current || acted.has(typeId)) continue;
+          const mc = behaviourCard(ctx, typeId, current);
+          if (monsterInitiative(ctx, typeId, mc) < myIni) earlier.push({ id: typeId, steps: [...mc.steps, ...(mc.otherwise ?? [])] });
+        }
+      }
+    }
+    for (const half of ['top', 'bottom'] as const) {
+      card[half].steps.forEach((step, stepIndex) => {
+        const bonus = step.consume;
+        if (!bonus) return;
+        const count = bonus.count ?? 1;
+        const now = bonus.element === 'any' ? availableElements(ctx).length >= count : canConsume(ctx, bonus.element);
+        const from = earlier.filter((e) => infuses(e.steps, bonus.element)).map((e) => e.id);
+        const entry: OrbBonusPreview = {
+          cardId,
+          half,
+          stepIndex,
+          stepType: step.type,
+          element: bonus.element,
+          count,
+          available: now || (count === 1 && from.length > 0),
+          now,
+          from,
+        };
+        const value = stepNumber(step);
+        const boosted = stepNumber(withConsumeBonus(step, bonus).step);
+        if (value !== undefined && boosted !== undefined) {
+          entry.value = value;
+          entry.boosted = boosted;
+        }
+        out.push(entry);
+      });
+    }
+  }
+  return out;
+}
+
+export interface UsableItem {
+  itemId: string;
+  /** i18n key of the item's name. */
+  nameKey: string;
+  slot: ItemSlot;
+  use: ItemDef['use'];
+  effect: Step[];
+}
+
+const ATTACK_ITEM_SPECIALS = ['meleeAttackBonus'];
+const MOVE_ITEM_SPECIALS = ['moveBonus', 'jumpOnMove'];
+
+function itemTouches(effect: Step[], context: 'attack' | 'move'): boolean {
+  return effect.some((st) =>
+    context === 'attack'
+      ? (st.type === 'special' && ATTACK_ITEM_SPECIALS.includes(st.name)) || (st.type === 'condition' && st.condition === 'strengthen')
+      : st.type === 'special' && MOVE_ITEM_SPECIALS.includes(st.name),
+  );
+}
+
+/** Fork «Предмети-кнопки»: the hero's items that can be used right now (the buttons that light up).
+ *  `context` keeps only the items that help the pending attack or move. Empty when the variant is off. */
+export function usableItems(state: GameState, content: Content, heroId: FigureId, context?: 'attack' | 'move'): UsableItem[] {
+  if (!state.variants.itemPrompts) return [];
+  const h = state.figures[heroId];
+  if (h?.kind !== 'hero') return [];
+  const out: UsableItem[] = [];
+  for (const it of h.items ?? []) {
+    const def = itemDef({ c: content }, it.id);
+    if (!def || it.state !== 'ready' || def.use === 'passive') continue;
+    const effect = itemEffect({ s: state }, def);
+    if (context && !itemTouches(effect, context)) continue;
+    if (!apply(state, { type: 'useItem', heroId, itemId: it.id }, content).ok) continue;
+    out.push({ itemId: it.id, nameKey: `item.${it.id}`, slot: def.slot, use: def.use, effect });
+  }
+  return out;
+}
+
+export interface AttackPrompt extends UsableItem {
+  /** Attack value against the target before the modifier, without and with the item. */
+  value: number;
+  boosted: number;
+  advantage: boolean;
+}
+
+/** Fork «Предмети-кнопки»: before the hero's pending attack on `targetId`, the items worth offering
+ *  («Кинджал: +1 Атака?») with the attack value without and with each. */
+export function attackPrompts(state: GameState, content: Content, heroId: FigureId, targetId: FigureId): AttackPrompt[] {
+  const p = state.pending;
+  if (p?.kind !== 'stepChoice' || p.heroId !== heroId || p.step.type !== 'attack') return [];
+  const before = previewAttack(state, heroId, targetId, content);
+  if (!before) return [];
+  const out: AttackPrompt[] = [];
+  for (const item of usableItems(state, content, heroId, 'attack')) {
+    const r = apply(state, { type: 'useItem', heroId, itemId: item.itemId }, content);
+    if (!r.ok) continue;
+    const after = previewAttack(r.state, heroId, targetId, content);
+    if (!after) continue;
+    out.push({ ...item, value: before.value, boosted: after.value, advantage: after.advantage && !after.disadvantage });
+  }
+  return out;
 }

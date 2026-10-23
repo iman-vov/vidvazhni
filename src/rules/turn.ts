@@ -7,17 +7,18 @@ import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
 import { findCard, runDamage } from './damage';
 import { attackSpecFor, canTarget, runAfterHit, runAttackTarget, runRetaliate } from './effects/attack';
-import { emit, hero, isPresent, monsterStats, schedule, type Ctx } from './effects/context';
+import { emit, hero, isPresent, monsterStats, schedule, wallBetween, type Ctx } from './effects/context';
 import { performStep, withConsumeBonus } from './effects/index';
 import { runMove } from './effects/move';
 import { lootHex } from './effects/support';
 import { canConsume, consume, endTurnInfusions } from './elements';
 import { runShortRests } from './rest';
-import { behaviourCard, endRound, finishRound, nextTurn } from './round';
+import { behaviourCard, discardSelection, endRound, finishRound, nextTurn } from './round';
 import { monstersOfType } from './setup';
 import { LOSS_SPECIALS } from './special';
 import { distance } from './hex';
-import type { CardId, EngineTask, Figure, GameState, HeroState, MonsterState, StepChoice } from './state';
+import type { CardId, EngineTask, Figure, GameState, HalfInProgress, HeroState, MonsterState, StepChoice } from './state';
+import { MOMENTUM_MAX, REVIVE_HP } from './variants';
 
 function isOver(s: GameState): boolean {
   return s.phase === 'won' || s.phase === 'lost';
@@ -116,7 +117,9 @@ function startHeroTurn(ctx: Ctx, heroId: string): void {
 
 function heroReady(ctx: Ctx, heroId: string): void {
   const h = hero(ctx.s, heroId);
-  if (h.exhausted) {
+  if (h.exhausted || h.downed) {
+    // Downed by a wound at the start of the turn: the selected cards are discarded.
+    if (h.downed) discardSelection(ctx, h);
     schedule(ctx, { t: 'nextTurn' });
     return;
   }
@@ -135,13 +138,85 @@ export function startHalf(ctx: Ctx, heroId: string, cardId: CardId, half: 'top' 
   if (h.selection?.kind !== 'cards' || !h.selection.cards.includes(cardId)) return 'card not selected';
   if (h.playedThisTurn.some((p) => p.cardId === cardId)) return 'card already played';
   if (h.playedThisTurn.some((p) => p.half === half)) return `${half} action already played`;
-  const snapshot = structuredClone({ ...s, log: [], undoPoint: null }) as GameState;
-  const steps = basic ? (half === 'top' ? BASIC_TOP : BASIC_BOTTOM) : findCard(ctx, h, cardId)[half].steps;
-  // Hook for fork «Наснага» (variants.momentum): a lightning-marked card would add a charge here.
+  const snapshot = undoSnapshot(s);
+  const card = findCard(ctx, h, cardId);
+  const steps = basic ? (half === 'top' ? BASIC_TOP : BASIC_BOTTOM) : card[half].steps;
   h.playedThisTurn.push({ cardId, half });
+  // Fork «Наснага»: a half of a lightning-marked card adds a charge (the basic action does not).
+  if (s.variants.momentum && !basic && card.fork?.momentum && h.momentum < MOMENTUM_MAX) {
+    h.momentum++;
+    emit(ctx, { type: 'momentumGained', heroId, charges: h.momentum });
+  }
   s.half = { heroId, cardId, half, steps: structuredClone(steps), stepIndex: 0, committed: false, ...(basic ? { basic: true } : {}) };
   s.undoPoint = snapshot;
   enterStep(ctx);
+  return null;
+}
+
+function undoSnapshot(s: GameState): GameState {
+  return structuredClone({ ...s, log: [], undoPoint: null }) as GameState;
+}
+
+/** Whether the step at `index` of the half belongs to a Порив (fork «Наснага»). */
+function isSurgeStep(half: HalfInProgress, index: number): boolean {
+  return !!half.surge || (!!half.surgeRange && index >= half.surgeRange[0] && index < half.surgeRange[1]);
+}
+
+/** Fork «Наснага»: at 3 charges, during the hero's own turn, the class Порив is played and the
+ *  scale goes back to 0. Between halves it is a half of its own; during a half its steps come
+ *  before the pending step. */
+export function surge(ctx: Ctx, heroId: string): string | null {
+  const s = ctx.s;
+  if (!s.variants.momentum) return 'variant «Наснага» is off';
+  const p = s.pending;
+  const own = (p?.kind === 'heroTurn' && p.heroId === heroId && !s.half) || (p?.kind === 'stepChoice' && p.heroId === heroId && !!s.half);
+  if (!own) return 'Порив is used on your own turn';
+  const h = hero(s, heroId);
+  if (h.conditions.stun) return 'stunned';
+  if (h.momentum < MOMENTUM_MAX) return `Порив needs ${MOMENTUM_MAX} charges`;
+  const steps = structuredClone(ctx.c.heroes[h.classId]?.surge ?? []);
+  if (steps.length === 0) return 'the class has no Порив';
+  if (!s.half) s.undoPoint = undoSnapshot(s);
+  h.momentum = 0;
+  emit(ctx, { type: 'surgeUsed', heroId });
+  if (s.half) {
+    const at = s.half.stepIndex;
+    const prev = s.half.surgeRange;
+    s.half.steps.splice(at, 0, ...steps);
+    // An earlier Порив in this half that is still ahead shifts behind the new steps.
+    s.half.surgeRange = prev && prev[1] > at ? [at, prev[1] + steps.length] : [at, at + steps.length];
+  } else {
+    s.half = { heroId, cardId: 'surge', half: 'top', steps, stepIndex: 0, committed: false, surge: true };
+  }
+  enterStep(ctx);
+  return null;
+}
+
+/** Fork «Підняти друга»: the hero spends the top or bottom action of one of the selected cards to
+ *  raise an adjacent downed ally with 3 hp and the same hand. The card goes to the discard, or to
+ *  the lost pile when that half is a loss. */
+export function reviveAlly(ctx: Ctx, heroId: string, cardId: CardId, half: 'top' | 'bottom', targetId: string): string | null {
+  const s = ctx.s;
+  if (!s.variants.reviveAlly) return 'variant «Підняти друга» is off';
+  if (s.pending?.kind !== 'heroTurn' || s.pending.heroId !== heroId || s.half) return 'not this hero’s turn';
+  const h = hero(s, heroId);
+  if (h.conditions.stun) return 'stunned: end the turn';
+  if (h.selection?.kind !== 'cards' || !h.selection.cards.includes(cardId)) return 'card not selected';
+  if (h.playedThisTurn.some((x) => x.cardId === cardId)) return 'card already played';
+  if (h.playedThisTurn.some((x) => x.half === half)) return `${half} action already played`;
+  const t = s.figures[targetId];
+  if (!t || t.kind !== 'hero' || !t.downed || t.exhausted) return 'nobody to raise there';
+  if (t.revived) return 'a hero can be raised only once';
+  if (distance(t.hex, h.hex) !== 1 || wallBetween(s, t.hex, h.hex)) return 'the ally must be adjacent';
+  s.undoPoint = undoSnapshot(s);
+  h.playedThisTurn.push({ cardId, half });
+  const cardHalf = findCard(ctx, h, cardId)[half];
+  const loss = !!cardHalf.loss || cardHalf.steps.some((st) => st.type === 'special' && LOSS_SPECIALS.includes(st.name));
+  placeCard(ctx, h, cardId, loss ? 'lost' : 'discard');
+  t.downed = false;
+  t.revived = true;
+  t.hp = Math.min(REVIVE_HP, t.maxHp);
+  emit(ctx, { type: 'heroRevived', heroId: t.id, byId: h.id });
   return null;
 }
 
@@ -161,7 +236,8 @@ export function resolveStep(ctx: Ctx, choice: StepChoice): string | null {
   const h = hero(s, half.heroId);
   const step = half.steps[half.stepIndex];
   if (!step) return 'no step';
-  const err = performStep(ctx, h, step, choice, half.basic ? {} : { cardId: half.cardId });
+  const src = isSurgeStep(half, half.stepIndex) ? { surge: true } : half.basic ? {} : { cardId: half.cardId };
+  const err = performStep(ctx, h, step, choice, src);
   if (err) return err;
   if (step.xp) {
     h.xp += step.xp;
@@ -183,8 +259,18 @@ function stepDone(ctx: Ctx): void {
   const half = ctx.s.half;
   if (!half) return;
   const h = hero(ctx.s, half.heroId);
-  if (h.exhausted) {
+  if (h.exhausted || h.downed) {
     ctx.s.half = null;
+    // A hero downed on its own turn: the half's card and the other selected card are discarded.
+    if (h.downed) {
+      if (!half.surge) {
+        const to = half.basic ? 'discard' : cardLoss(ctx, h, half.cardId, half.half) ? 'lost' : 'discard';
+        placeCard(ctx, h, half.cardId, to);
+      }
+      discardSelection(ctx, h);
+    }
+    ctx.s.pending = null;
+    ctx.s.undoPoint = null;
     schedule(ctx, { t: 'endFigureTurn', figureId: h.id }, { t: 'nextTurn' });
     return;
   }
@@ -199,9 +285,10 @@ function finishHalf(ctx: Ctx): void {
   const h = hero(ctx.s, half.heroId);
   ctx.s.half = null;
   ctx.s.pending = { kind: 'heroTurn', heroId: h.id };
+  if (half.surge) return;
   if (half.basic) return placeCard(ctx, h, half.cardId, 'discard');
   const cardHalf = findCard(ctx, h, half.cardId)[half.half];
-  const loss = !!cardHalf.loss || cardHalf.steps.some((st) => st.type === 'special' && LOSS_SPECIALS.includes(st.name));
+  const loss = cardLoss(ctx, h, half.cardId, half.half);
   if (cardHalf.active) {
     let usesLeft: number | undefined;
     for (const st of cardHalf.steps) {
@@ -213,6 +300,11 @@ function finishHalf(ctx: Ctx): void {
     return;
   }
   placeCard(ctx, h, half.cardId, loss ? 'lost' : 'discard');
+}
+
+function cardLoss(ctx: Ctx, h: HeroState, cardId: CardId, half: 'top' | 'bottom'): boolean {
+  const cardHalf = findCard(ctx, h, cardId)[half];
+  return !!cardHalf.loss || cardHalf.steps.some((st) => st.type === 'special' && LOSS_SPECIALS.includes(st.name));
 }
 
 function placeCard(ctx: Ctx, h: HeroState, cardId: CardId, to: 'discard' | 'lost'): void {
@@ -282,11 +374,25 @@ export function figureSteps(ctx: Ctx, f: Figure): Step[] {
   } else {
     return [];
   }
+  if (ctx.s.variants.orbs) {
+    // Fork «Три стихії-сфери»: monsters neither create nor consume orbs.
+    steps = steps.filter((st) => st.type !== 'infuse').map((st) => (st.consume ? withoutConsume(st) : st));
+  }
   steps = steps.map((st) => {
     if (!st.consume || st.consume.element === 'any' || !canConsume(ctx, st.consume.element)) return st;
     return withConsumeBonus(st, st.consume).step;
   });
-  return steps.filter((st) => !(st.type === 'move' && f.conditions.immobilize) && !(st.type === 'attack' && f.conditions.disarm));
+  return steps.filter(
+    (st) =>
+      !((st.type === 'move' || (st.type === 'special' && st.name === 'retreat')) && f.conditions.immobilize) &&
+      !(st.type === 'attack' && f.conditions.disarm),
+  );
+}
+
+function withoutConsume(st: Step): Step {
+  const copy = { ...st };
+  delete copy.consume;
+  return copy;
 }
 
 function cardSteps(ctx: Ctx, m: MonsterState, card: MonsterCard): Step[] {

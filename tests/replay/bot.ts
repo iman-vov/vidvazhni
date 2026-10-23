@@ -1,5 +1,6 @@
 // A simple greedy bot for replay tests: every choice comes from `legalActions`; a half is chosen
-// by playing it out greedily and scoring the result.
+// by playing it out greedily and scoring the result. With the fork variants it also weighs a
+// Порив («Наснага», played out the same way) and raising a downed ally («Підняти друга»).
 
 import type { Content } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
@@ -21,7 +22,7 @@ export function score(s: GameState, heroId?: string): number {
   for (const m of monsters) v += 3 * (m.maxHp - m.hp);
   for (const f of Object.values(s.figures)) {
     if (f.kind !== 'hero') continue;
-    v += f.exhausted ? -200 : 2 * f.hp;
+    v += f.exhausted ? -200 : f.downed ? -120 : 2 * f.hp;
     v -= 2 * f.lost.length;
   }
   const me = heroId ? hero(s, heroId) : undefined;
@@ -116,8 +117,8 @@ export function chooseAction(s: GameState, content: Content): Action {
       let best: Action = { type: 'endTurn', heroId: p.heroId };
       let bestScore = score(s, p.heroId) - 0.25;
       for (const { action: a, state: t } of legalActionResults(s, content)) {
-        if (a.type !== 'startHalf') continue;
-        const v = score(finishHalf(t, content, p.heroId), p.heroId) - (a.basic ? 0.1 : 0);
+        if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly') continue;
+        const v = score(a.type === 'reviveAlly' ? t : finishHalf(t, content, p.heroId), p.heroId) - (a.type === 'startHalf' && a.basic ? 0.1 : 0);
         if (v > bestScore) {
           bestScore = v;
           best = a;

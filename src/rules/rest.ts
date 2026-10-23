@@ -3,6 +3,7 @@
 import { takeDamage } from './damage';
 import { activeHeroes, emit, hero, schedule, type Ctx } from './effects/context';
 import { healFigure } from './effects/support';
+import { refreshSpentItems } from './items';
 import { nextInt } from './rng';
 import type { CardId, EngineTask, HeroState } from './state';
 
@@ -88,7 +89,7 @@ export function longRestLoss(ctx: Ctx, heroId: string, cardId: CardId): string |
   ctx.s.pending = null;
   finishRest(ctx, h, cardId, 'long');
   healFigure(ctx, h, LONG_REST_HEAL);
-  // Spent items would be refreshed here once items exist in the state.
+  refreshSpentItems(ctx, h);
   schedule(ctx, { t: 'endFigureTurn', figureId: h.id }, { t: 'nextTurn' });
   return null;
 }
