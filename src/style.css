@@ -1,0 +1,36 @@
+:root {
+  --bg: #1d2433;
+  --panel: rgba(20, 26, 38, 0.88);
+  --ink: #eef1f6;
+  --quiet: #9aa6bb;
+  --accent: #ffc457;
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#board {
+  position: fixed;
+  inset: 0;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+#overlay > * {
+  pointer-events: auto;
+}
