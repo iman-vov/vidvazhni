@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Моделі (dev)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1d2433; color: #e8ecf4; font: 14px system-ui, sans-serif; overflow: hidden; }
+      #view { position: absolute; inset: 0; }
+      #panel { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 24px); }
+      #panel button, #panel select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid #56647a; background: #2a3346; color: inherit; }
+      #panel button[aria-pressed='true'] { background: #ffc457; color: #1d2433; }
+      #info { position: absolute; left: 12px; bottom: 12px; white-space: pre; font: 12px ui-monospace, monospace; opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only model check: /vidvazhni/dev/models.html?model=warden. Not part of the production build. -->
+    <div id="view"></div>
+    <div id="panel"></div>
+    <div id="info"></div>
+    <script type="module" src="/src/render/modelViewer.ts"></script>
+  </body>
+</html>

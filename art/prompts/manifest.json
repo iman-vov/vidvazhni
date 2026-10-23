@@ -86,7 +86,7 @@
         "model": "warden",
         "hand": "left",
         "bones": [
-          "LeftHand"
+          "mixamorig:LeftHand"
         ]
       }
     },
@@ -169,7 +169,7 @@
         "model": "wind-archer",
         "hand": "left",
         "bones": [
-          "LeftHand"
+          "mixamorig:LeftHand"
         ]
       }
     },
@@ -299,7 +299,7 @@
         "model": "gremlin",
         "hand": "left",
         "bones": [
-          "LeftHand"
+          "mixamorig:LeftHand"
         ]
       }
     },
@@ -383,7 +383,7 @@
         "model": "herbalist",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -466,8 +466,8 @@
         "model": "rogue",
         "hand": "both",
         "bones": [
-          "LeftHand",
-          "RightHand"
+          "mixamorig:LeftHand",
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -594,7 +594,7 @@
         "model": "tinker",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -814,7 +814,7 @@
         "model": "bandit-brute",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -900,7 +900,7 @@
         "model": "bandit-crossbow",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -1076,7 +1076,7 @@
         "model": "gloom-cultist",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
@@ -1208,7 +1208,7 @@
         "model": "bog-miller",
         "hand": "right",
         "bones": [
-          "RightHand"
+          "mixamorig:RightHand"
         ]
       }
     },
