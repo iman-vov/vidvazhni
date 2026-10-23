@@ -1,0 +1,226 @@
+// HTML layer over the board canvas: health bars and condition icons above figures, floating damage
+// numbers and labels, movement costs and expected damage. HTML keeps text sharp at any pixel ratio;
+// the board positions every item from its world point after each rendered frame. The layer never
+// takes pointer events, so taps reach the canvas.
+
+import * as THREE from 'three';
+import type { ConditionId } from '../rules/content';
+
+/** Condition icons differ by shape, not only colour (style guide). 24×24 viewBox. */
+export const CONDITION_ICONS: Record<ConditionId, { color: string; svg: string }> = {
+  poison: { color: '#4fb04a', svg: '<path d="M12 2 C12 2 5 10.5 5 15 a7 7 0 0 0 14 0 C19 10.5 12 2 12 2Z"/>' },
+  wound: { color: '#c0504d', svg: '<path d="M12 21 L3.5 12.5 A5 5 0 0 1 12 6 A5 5 0 0 1 20.5 12.5Z"/><path d="M12 6 L10 11 L14 13 L11.5 20" fill="none" stroke="#fff" stroke-width="1.6"/>' },
+  immobilize: { color: '#5b7da8', svg: '<rect x="2.5" y="8" width="10" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="11.5" y="8" width="10" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>' },
+  disarm: { color: '#b07a3a', svg: '<path d="M5 19 L17 7 L19 3 L15 5 L3 17Z"/><path d="M4 4 L20 20" stroke="#fff" stroke-width="2.4"/>' },
+  stun: { color: '#e6c229', svg: '<path d="M12 1 L14.5 9.5 L23 12 L14.5 14.5 L12 23 L9.5 14.5 L1 12 L9.5 9.5Z"/>' },
+  muddle: { color: '#9b6ad1', svg: '<path d="M12 12 m0 -1.5 a1.5 1.5 0 1 1 -1.5 1.5 a3.5 3.5 0 1 1 3.5 3.5 a5.5 5.5 0 1 1 5.5 -5.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' },
+  invisible: { color: '#a7b4c6', svg: '<path d="M2 12 C6 5 18 5 22 12 C18 19 6 19 2 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="3 2.4"/><circle cx="12" cy="12" r="3"/>' },
+  strengthen: { color: '#e0582b', svg: '<path d="M12 2 L21 12 H15.5 V22 H8.5 V12 H3Z"/>' },
+};
+
+const SHIELD_SVG = '<path d="M12 2 L20 5 V11 C20 16.5 16.5 20.5 12 22 C7.5 20.5 4 16.5 4 11 V5Z"/>';
+
+export function conditionIconSvg(c: ConditionId, size = 18): string {
+  const icon = CONDITION_ICONS[c];
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="currentColor" style="color:${icon.color}" aria-hidden="true">${icon.svg}</svg>`;
+}
+
+const CSS = `
+.bv-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;font:600 13px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#f4f1e8;user-select:none;-webkit-user-select:none}
+.bv-item{position:absolute;left:0;top:0;will-change:transform}
+.bv-fig{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translate(-50%,-100%)}
+.bv-hp{position:relative;width:46px;height:9px;border-radius:5px;background:rgba(20,22,30,.78);box-shadow:0 0 0 1.5px rgba(20,22,30,.6);overflow:hidden}
+.bv-hp>i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#7fdc6a,#3d9a3a);transition:width .25s}
+.bv-hp.mid>i{background:linear-gradient(#f2d260,#c99a22)}
+.bv-hp.low>i{background:linear-gradient(#ff8b6b,#c4452e)}
+.bv-hp>b{position:absolute;inset:0;font-size:8px;line-height:9px;text-align:center;color:#fff;text-shadow:0 0 2px #000}
+.bv-fig.hero .bv-hp{width:56px;height:11px}.bv-fig.hero .bv-hp>b{font-size:9.5px;line-height:11px}
+.bv-conds{display:flex;gap:1px;min-height:0}
+.bv-conds>span{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:rgba(20,22,30,.72);transition:transform .2s}
+.bv-conds>span.pop{animation:bv-pop .45s ease-out}
+.bv-conds>span.shield{border-radius:4px;width:auto;padding:0 3px;gap:1px;font-size:11px;color:#dfe6f2}
+.bv-fig.dim{opacity:.55}
+.bv-float{transform:translate(-50%,-175%)}
+.bv-float>span{display:block;white-space:nowrap;font-size:26px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.45),0 0 6px rgba(0,0,0,.6)}
+.bv-float.dmg>span{color:#ff6b57}.bv-float.heal>span{color:#7ee07a}.bv-float.miss>span{color:#d7dbe4;font-size:18px}
+.bv-float.x2>span{color:#ffd23f;font-size:20px}.bv-float.shield>span{color:#a9c6ff;font-size:17px}.bv-float.coin>span{color:#ffd54a;font-size:18px}
+.bv-float.info>span{color:#f4f1e8;font-size:15px}
+.bv-cost{transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#3a2a08;background:rgba(255,226,140,.92);border-radius:8px;padding:0 5px;line-height:16px}
+.bv-exp{transform:translate(-50%,-100%);font-size:14px;font-weight:800;color:#fff;background:rgba(196,60,40,.92);border-radius:9px;padding:1px 7px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+@keyframes bv-pop{0%{transform:scale(.2)}60%{transform:scale(1.4)}100%{transform:scale(1)}}
+`;
+
+export interface OverlayItem {
+  el: HTMLElement;
+  /** World point the item is pinned to (read every frame, so it can follow a moving figure). */
+  anchor: () => THREE.Vector3 | null;
+  /** Floating labels: board time (s) it appeared and how long it lives; removed after that. */
+  born?: number;
+  life?: number;
+}
+
+/** Rise-and-fade of a floating label at k = 0..1 of its life: [translateY px, scale, opacity]. */
+export function floatPose(k: number): [number, number, number] {
+  if (k < 0.15) {
+    const u = k / 0.15;
+    return [6 - 6 * u, 0.6 + 0.55 * u, u];
+  }
+  if (k < 0.3) {
+    const u = (k - 0.15) / 0.15;
+    return [-4 * u, 1.15 - 0.15 * u, 1];
+  }
+  const u = (k - 0.3) / 0.7;
+  return [-4 - 34 * u, 1, 1 - u * u];
+}
+
+export class BoardOverlay {
+  readonly layer: HTMLDivElement;
+  private readonly items = new Set<OverlayItem>();
+  private readonly v = new THREE.Vector3();
+  /** Board time in seconds (advanced by the board with the speed setting applied). */
+  time = 0;
+
+  constructor(parent: HTMLElement) {
+    if (!document.getElementById('bv-style')) {
+      const style = document.createElement('style');
+      style.id = 'bv-style';
+      style.textContent = CSS;
+      document.head.appendChild(style);
+    }
+    this.layer = document.createElement('div');
+    this.layer.className = 'bv-layer';
+    parent.appendChild(this.layer);
+  }
+
+  add(el: HTMLElement, anchor: () => THREE.Vector3 | null, life?: number): OverlayItem {
+    el.classList.add('bv-item');
+    const item: OverlayItem = { el, anchor, ...(life ? { born: this.time, life } : {}) };
+    this.items.add(item);
+    this.layer.appendChild(el);
+    return item;
+  }
+
+  remove(item: OverlayItem | null | undefined): void {
+    if (!item || !this.items.delete(item)) return;
+    item.el.remove();
+  }
+
+  /** Floating text that rises and fades (damage, heal, «промах», ×2, coins). */
+  float(text: string, cls: string, anchor: () => THREE.Vector3 | null, seconds: number): void {
+    const el = document.createElement('div');
+    el.className = `bv-float ${cls}`;
+    const span = document.createElement('span');
+    span.textContent = text;
+    el.appendChild(span);
+    this.add(el, anchor, seconds);
+  }
+
+  /** Removes every float (skip ends them at once). */
+  clearFloats(): void {
+    for (const item of [...this.items]) if (item.el.classList.contains('bv-float')) this.remove(item);
+  }
+
+  /** Projects every item with the camera; `w`/`h` = canvas CSS size. */
+  update(camera: THREE.Camera, w: number, h: number): void {
+    for (const item of [...this.items]) {
+      if (item.life !== undefined && item.born !== undefined) {
+        const k = (this.time - item.born) / item.life;
+        if (k >= 1) {
+          this.remove(item);
+          continue;
+        }
+        const [y, scale, opacity] = floatPose(Math.max(0, k));
+        const span = item.el.firstElementChild as HTMLElement | null;
+        if (span) {
+          span.style.transform = `translateY(${y.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+          span.style.opacity = opacity.toFixed(3);
+        }
+      }
+      const p = item.anchor();
+      if (!p) {
+        item.el.style.display = 'none';
+        continue;
+      }
+      const v = this.v;
+      v.copy(p).project(camera);
+      if (v.z > 1) {
+        item.el.style.display = 'none';
+        continue;
+      }
+      item.el.style.display = '';
+      item.el.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px)`;
+    }
+  }
+
+  /** Whether any timed item is still showing (the board keeps rendering until they expire). */
+  get hasTimed(): boolean {
+    for (const item of this.items) if (item.life !== undefined) return true;
+    return false;
+  }
+
+  dispose(): void {
+    this.items.clear();
+    this.layer.remove();
+  }
+}
+
+/** Health bar + condition row for one figure. */
+export class FigureBadge {
+  readonly el: HTMLDivElement;
+  private readonly bar: HTMLDivElement;
+  private readonly fill: HTMLElement;
+  private readonly text: HTMLElement;
+  private readonly conds: HTMLDivElement;
+  private shown = new Set<string>();
+
+  constructor(hero: boolean) {
+    this.el = document.createElement('div');
+    this.el.className = `bv-fig${hero ? ' hero' : ''}`;
+    this.conds = document.createElement('div');
+    this.conds.className = 'bv-conds';
+    this.bar = document.createElement('div');
+    this.bar.className = 'bv-hp';
+    this.fill = document.createElement('i');
+    this.text = document.createElement('b');
+    this.bar.append(this.fill, this.text);
+    this.el.append(this.conds, this.bar);
+  }
+
+  setHp(hp: number, maxHp: number): void {
+    const k = maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0;
+    this.fill.style.width = `${k * 100}%`;
+    this.text.textContent = `${hp}/${maxHp}`;
+    this.bar.classList.toggle('mid', k <= 0.6 && k > 0.3);
+    this.bar.classList.toggle('low', k <= 0.3);
+  }
+
+  /** Condition ids plus an optional shield value; new icons pop in. */
+  setConditions(conditions: readonly ConditionId[], shield: number, pop = false): void {
+    const key = (c: string) => c;
+    const next = new Set<string>(conditions.map(key));
+    if (shield > 0) next.add(`shield:${shield}`);
+    const same = next.size === this.shown.size && [...next].every((k) => this.shown.has(k));
+    if (same) return;
+    const old = this.shown;
+    this.shown = next;
+    this.conds.textContent = '';
+    for (const c of conditions) {
+      const span = document.createElement('span');
+      span.innerHTML = conditionIconSvg(c, 15);
+      span.title = c;
+      if (pop && !old.has(c)) span.classList.add('pop');
+      this.conds.appendChild(span);
+    }
+    if (shield > 0) {
+      const span = document.createElement('span');
+      span.className = 'shield';
+      span.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="#8fb0e8">${SHIELD_SVG}</svg>${shield}`;
+      if (pop && !old.has(`shield:${shield}`)) span.classList.add('pop');
+      this.conds.appendChild(span);
+    }
+  }
+
+  setDim(dim: boolean): void {
+    this.el.classList.toggle('dim', dim);
+  }
+}

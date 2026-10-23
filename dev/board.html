@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Дошка (dev)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1b1d27; color: #e8ecf4; font: 14px system-ui, sans-serif; overflow: hidden; }
+      #view { position: absolute; inset: 0; }
+      #panel { position: absolute; left: 10px; top: 10px; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 20px); z-index: 2; }
+      #panel button, #panel select { font: inherit; min-height: 36px; padding: 4px 10px; border-radius: 8px; border: 1px solid #56647a; background: rgba(42, 51, 70, 0.92); color: inherit; }
+      #panel button[aria-pressed='true'] { background: #ffc457; color: #1d2433; }
+      #info { position: absolute; left: 10px; bottom: 10px; white-space: pre; font: 12px ui-monospace, monospace; background: rgba(20, 22, 30, 0.7); padding: 4px 8px; border-radius: 6px; z-index: 2; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only board check: /vidvazhni/dev/board.html. Not part of the production build.
+         ?heroes=warden,wind-archer,herbalist,rogue  &fork=1  &quality=low|medium|high  &speed=2  &play=1 -->
+    <div id="view"></div>
+    <div id="panel"></div>
+    <div id="info"></div>
+    <script type="module" src="/src/render/boardDev.ts"></script>
+  </body>
+</html>

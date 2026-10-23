@@ -24,6 +24,10 @@ export interface BoardViewOptions {
   quality?: GraphicsQuality;
   /** Language for floating labels (damage numbers use digits only). */
   lang?: 'uk' | 'de' | 'en';
+  /** Animation speed: 1 (default) or 2. Also settable later with setSpeed. */
+  speed?: number;
+  /** Heroes a double tap focuses on (this device's players). Default: every hero. */
+  ownHeroes?: FigureId[];
 }
 
 export interface BoardView {
@@ -37,6 +41,7 @@ export interface BoardView {
   skip(): void;
   highlight(h: BoardHighlights): void;
   clearHighlights(): void;
+  /** A tap on a board hex. A tap on a figure fires onFigureTap and then onHexTap with its hex. */
   onHexTap(cb: (hex: Hex) => void): () => void;
   onFigureTap(cb: (figureId: FigureId) => void): () => void;
   /** Long press on a figure (UI shows its details). */
@@ -44,5 +49,7 @@ export interface BoardView {
   /** Smoothly centres the camera on a figure (double tap on own hero does this too). */
   focus(figureId: FigureId): void;
   setQuality(quality: GraphicsQuality): void;
+  /** Animation speed setting (1× or 2×); applies to the running queue at once. */
+  setSpeed?(speed: number): void;
   dispose(): void;
 }
