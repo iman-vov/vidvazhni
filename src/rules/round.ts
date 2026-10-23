@@ -1,0 +1,327 @@
+// The round: card selection, reveal, turn order, end of round, scenario goals.
+
+import type { MonsterCard } from './content';
+import { exhaust, findCard, loseScenario } from './damage';
+import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
+import { decayAtEndOfRound } from './elements';
+import { hexEquals } from './hex';
+import { shuffleIfNeeded } from './modifiers';
+import { shuffle } from './rng';
+import type { CardId, HeroState, TurnEntry } from './state';
+
+// ─── Card selection ────────────────────────────────────────────────────────
+
+/** A hero who can neither play 2 cards nor rest is exhausted. */
+export function canPlayOrRest(h: HeroState): boolean {
+  return h.hand.length >= 2 || h.discard.length >= 2;
+}
+
+export function selectCards(ctx: Ctx, heroId: string, cards: [CardId, CardId], leading: CardId): string | null {
+  const err = selectionError(ctx, heroId);
+  if (err) return err;
+  const h = hero(ctx.s, heroId);
+  const [a, b] = cards;
+  if (a === b) return 'two different cards needed';
+  if (!h.hand.includes(a) || !h.hand.includes(b)) return 'card not in hand';
+  if (leading !== a && leading !== b) return 'leading card must be one of the two';
+  h.selection = { kind: 'cards', cards: [a, b], leading };
+  h.initiative = findCard(ctx, h, leading).initiative;
+  return null;
+}
+
+export function declareLongRest(ctx: Ctx, heroId: string): string | null {
+  const err = selectionError(ctx, heroId);
+  if (err) return err;
+  const h = hero(ctx.s, heroId);
+  if (h.discard.length < 2) return 'long rest needs at least 2 discarded cards';
+  h.selection = { kind: 'longRest' };
+  h.initiative = 99;
+  return null;
+}
+
+function selectionError(ctx: Ctx, heroId: string): string | null {
+  if (ctx.s.pending?.kind !== 'selectCards') return 'not selecting cards now';
+  const h = ctx.s.figures[heroId];
+  if (!h || h.kind !== 'hero' || h.exhausted) return 'no such hero';
+  return null;
+}
+
+export function chooseHand(ctx: Ctx, heroId: string, cards: CardId[]): string | null {
+  const p = ctx.s.pending;
+  if (p?.kind !== 'chooseHandBeforeScenario' || !p.heroIds.includes(heroId)) return 'not choosing a hand now';
+  const h = hero(ctx.s, heroId);
+  const cls = ctx.c.heroes[h.classId];
+  if (!cls) return 'unknown class';
+  if (new Set(cards).size !== cards.length || cards.length !== cls.handSize) return `choose ${cls.handSize} cards`;
+  if (cards.some((c) => !cls.cards.some((card) => card.id === c && card.level <= Math.max(1, h.level)))) {
+    return 'card not available';
+  }
+  h.hand = [...cards];
+  p.heroIds = p.heroIds.filter((id) => id !== heroId);
+  if (p.heroIds.length === 0) ctx.s.pending = { kind: 'selectCards', heroIds: activeHeroes(ctx.s).map((x) => x.id) };
+  return null;
+}
+
+/** When every hero has chosen, reveal and start the turns. */
+export function revealIfReady(ctx: Ctx): void {
+  const all = activeHeroes(ctx.s);
+  if (all.some((h) => h.selection === null)) {
+    if (ctx.s.pending?.kind === 'selectCards') ctx.s.pending.heroIds = all.filter((h) => !h.selection).map((h) => h.id);
+    return;
+  }
+  for (const h of all) {
+    if (h.selection?.kind === 'cards') {
+      const [a, b] = h.selection.cards;
+      h.hand = h.hand.filter((c) => c !== a && c !== b);
+    }
+  }
+  for (const typeId of typesOnBoard(ctx)) drawBehaviour(ctx, typeId);
+  ctx.s.turnOrder = buildTurnOrder(ctx);
+  ctx.s.turnIndex = -1;
+  ctx.s.phase = 'turns';
+  ctx.s.pending = null;
+  emit(ctx, { type: 'cardsRevealed', order: ctx.s.turnOrder });
+  schedule(ctx, { t: 'nextTurn' });
+}
+
+// ─── Behaviour cards and turn order ────────────────────────────────────────
+
+function typesOnBoard(ctx: Ctx): string[] {
+  const out: string[] = [];
+  for (const m of monsters(ctx.s)) if (isPresent(m) && !out.includes(m.typeId)) out.push(m.typeId);
+  return out;
+}
+
+export function behaviourCard(ctx: Ctx, typeId: string, cardId: string): MonsterCard {
+  const deckId = ctx.c.monsters[typeId]?.deck ?? ctx.c.bosses[typeId]?.deck;
+  const card = deckId ? ctx.c.decks[deckId]?.cards.find((c) => c.id === cardId) : undefined;
+  if (!card) throw new Error(`unknown behaviour card ${cardId} for ${typeId}`);
+  return card;
+}
+
+/** Monster initiative = card + type offset, within 1–99. */
+export function monsterInitiative(ctx: Ctx, typeId: string, card: MonsterCard): number {
+  const offset = ctx.c.monsters[typeId]?.initiativeOffset ?? 0;
+  return Math.min(99, Math.max(1, card.initiative + offset));
+}
+
+/** Draws this round's card for a monster type. Hook for fork «Три можливі наміри» (variants.threeIntents):
+ *  the card would be picked from `intents` here instead of the top of the pile. */
+export function drawBehaviour(ctx: Ctx, typeId: string): void {
+  const deck = ctx.s.behaviourDecks[typeId];
+  if (!deck || deck.current) return;
+  if (deck.draw.length === 0) {
+    deck.draw = shuffle(ctx.s.rng, deck.discard);
+    deck.discard = [];
+  }
+  const cardId = deck.draw.shift();
+  if (!cardId) return;
+  deck.current = cardId;
+  const card = behaviourCard(ctx, typeId, cardId);
+  if (card.shuffle) deck.needsShuffle = true;
+  emit(ctx, { type: 'behaviourDrawn', typeId, cardId, initiative: monsterInitiative(ctx, typeId, card) });
+}
+
+/** Sort key: initiative; on ties heroes (and their summons, right before the owner) go before
+ *  monsters; heroes tie by hero list order; monster types by first appearance. */
+function orderKey(ctx: Ctx, e: TurnEntry): number[] {
+  const ids = Object.keys(ctx.s.figures);
+  if (e.kind === 'monsterGroup') {
+    const first = ids.findIndex((id) => ctx.s.figures[id]?.kind === 'monster' && (ctx.s.figures[id] as { typeId: string }).typeId === e.typeId);
+    return [e.initiative, 1, first, 0];
+  }
+  const f = ctx.s.figures[e.figureId];
+  const ownerId = f?.kind === 'summon' ? f.ownerId : e.figureId;
+  return [e.initiative, 0, ids.indexOf(ownerId), e.kind === 'summon' ? 0 : 1];
+}
+
+function compareKeys(a: number[], b: number[]): number {
+  for (let i = 0; i < a.length; i++) {
+    const d = (a[i] ?? 0) - (b[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
+function groupEntry(ctx: Ctx, typeId: string): TurnEntry | null {
+  const current = ctx.s.behaviourDecks[typeId]?.current;
+  if (!current) return null;
+  return { kind: 'monsterGroup', typeId, initiative: monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, current)) };
+}
+
+export function buildTurnOrder(ctx: Ctx): TurnEntry[] {
+  const entries: TurnEntry[] = [];
+  for (const h of activeHeroes(ctx.s)) {
+    if (h.initiative === null) continue;
+    entries.push({ kind: 'hero', figureId: h.id, initiative: h.initiative });
+    for (const f of Object.values(ctx.s.figures)) {
+      if (f.kind === 'summon' && f.ownerId === h.id) entries.push({ kind: 'summon', figureId: f.id, initiative: h.initiative });
+    }
+  }
+  for (const typeId of typesOnBoard(ctx)) {
+    const e = groupEntry(ctx, typeId);
+    if (e) entries.push(e);
+  }
+  return entries.sort((a, b) => compareKeys(orderKey(ctx, a), orderKey(ctx, b)));
+}
+
+/** Monster types revealed mid-round (door) draw a card and join the remaining order; a type whose
+ *  initiative has already passed acts right after the current turn. */
+export function addNewGroupsToOrder(ctx: Ctx): void {
+  if (ctx.s.phase !== 'turns') return;
+  for (const typeId of typesOnBoard(ctx)) {
+    if (ctx.s.turnOrder.some((e) => e.kind === 'monsterGroup' && e.typeId === typeId)) continue;
+    drawBehaviour(ctx, typeId);
+    const entry = groupEntry(ctx, typeId);
+    if (!entry) continue;
+    let at = ctx.s.turnIndex + 1;
+    while (at < ctx.s.turnOrder.length && compareKeys(orderKey(ctx, ctx.s.turnOrder[at]!), orderKey(ctx, entry)) <= 0) at++;
+    ctx.s.turnOrder.splice(at, 0, entry);
+  }
+}
+
+/** Task: move to the next entry of the turn order (or end the round). */
+export function nextTurn(ctx: Ctx): void {
+  const s = ctx.s;
+  s.turnIndex++;
+  const entry = s.turnOrder[s.turnIndex];
+  if (!entry) {
+    schedule(ctx, { t: 'endRound' });
+    return;
+  }
+  if (entry.kind === 'hero') {
+    const h = s.figures[entry.figureId];
+    if (h?.kind === 'hero' && !h.exhausted) schedule(ctx, { t: 'startHeroTurn', heroId: h.id });
+    else schedule(ctx, { t: 'nextTurn' });
+  } else if (entry.kind === 'summon') {
+    if (isPresent(s.figures[entry.figureId])) schedule(ctx, { t: 'figureTurn', figureId: entry.figureId });
+    schedule(ctx, { t: 'nextTurn' });
+  } else {
+    schedule(ctx, { t: 'monsterGroup', typeId: entry.typeId }, { t: 'nextTurn' });
+  }
+}
+
+// ─── End of round ──────────────────────────────────────────────────────────
+
+/** Task: elements decay, round effects end, then short rests and the next round. */
+export function endRound(ctx: Ctx): void {
+  const s = ctx.s;
+  s.phase = 'endOfRound';
+  decayAtEndOfRound(ctx);
+  for (const f of Object.values(s.figures)) {
+    f.shields = f.shields.filter((x) => x.until !== 'round');
+    f.retaliates = f.retaliates.filter((x) => x.until !== 'round');
+    if (f.kind === 'hero') {
+      f.provokeRadius = null;
+      for (const a of [...f.active]) {
+        if (activeEndsWithRound(ctx, f, a.cardId, a.half, a.usesLeft)) moveActiveOut(ctx, f, a.cardId);
+      }
+    }
+  }
+  schedule(ctx, { t: 'shortRests' }, { t: 'finishRound' });
+}
+
+function activeEndsWithRound(ctx: Ctx, h: HeroState, cardId: CardId, half: 'top' | 'bottom', usesLeft?: number): boolean {
+  if (usesLeft !== undefined) return false;
+  const steps = findCard(ctx, h, cardId)[half].steps;
+  return !steps.some(
+    (st) =>
+      st.type === 'summon' ||
+      ('duration' in st && (st.duration === 'persistent' || st.duration === 'scenario' || typeof st.duration === 'object')),
+  );
+}
+
+/** An active card leaves the active area: to the lost pile if it was a loss card, else discard. */
+export function moveActiveOut(ctx: Ctx, h: HeroState, cardId: CardId): void {
+  const idx = h.active.findIndex((a) => a.cardId === cardId);
+  const entry = h.active[idx];
+  if (!entry) return;
+  h.active.splice(idx, 1);
+  const source = `card:${cardId}`;
+  h.shields = h.shields.filter((x) => x.source !== source);
+  h.retaliates = h.retaliates.filter((x) => x.source !== source);
+  const to = entry.lossOnEnd ? 'lost' : 'discard';
+  h[to].push(cardId);
+  emit(ctx, { type: 'cardMoved', heroId: h.id, cardId, to });
+}
+
+/** Task: shuffle decks, check the goal, start the next round. */
+export function finishRound(ctx: Ctx): void {
+  const s = ctx.s;
+  if (shuffleIfNeeded(s.rng, s.monsterDeck)) emit(ctx, { type: 'deckShuffled', deck: 'monsters' });
+  for (const h of heroes(s)) {
+    if (shuffleIfNeeded(s.rng, h.modifierDeck)) emit(ctx, { type: 'deckShuffled', deck: h.id });
+  }
+  for (const [typeId, deck] of Object.entries(s.behaviourDecks)) {
+    if (deck.current) deck.discard.push(deck.current);
+    deck.current = null;
+    if (deck.needsShuffle) {
+      deck.draw = shuffle(s.rng, [...deck.draw, ...deck.discard]);
+      deck.discard = [];
+      deck.needsShuffle = false;
+      emit(ctx, { type: 'deckShuffled', deck: typeId });
+    }
+  }
+  emit(ctx, { type: 'roundEnded', round: s.round });
+  if (goalReached(ctx)) return winScenario(ctx);
+  startRound(ctx);
+}
+
+export function startRound(ctx: Ctx): void {
+  const s = ctx.s;
+  s.round++;
+  s.turnOrder = [];
+  s.turnIndex = -1;
+  for (const f of Object.values(s.figures)) {
+    if (f.kind === 'monster') f.attackedBy = [];
+    if (f.kind !== 'hero') continue;
+    f.selection = null;
+    f.initiative = null;
+    f.playedThisTurn = [];
+    f.wantsShortRest = false;
+  }
+  for (const h of activeHeroes(s)) if (!canPlayOrRest(h)) exhaust(ctx, h, 'cards');
+  if (s.phase === 'lost') return;
+  s.phase = 'selectCards';
+  s.pending = { kind: 'selectCards', heroIds: activeHeroes(s).map((h) => h.id) };
+  emit(ctx, { type: 'roundStarted', round: s.round });
+}
+
+// ─── Scenario goals ────────────────────────────────────────────────────────
+
+export function goalReached(ctx: Ctx): boolean {
+  const s = ctx.s;
+  const scenario = ctx.c.scenarios[s.scenarioId];
+  if (!scenario) return false;
+  const goal = scenario.goal;
+  const living = activeHeroes(s);
+  switch (goal.type) {
+    case 'killAll':
+      return s.board.revealedRooms.length === scenario.rooms.length && !monsters(s).some(isPresent);
+    case 'killBoss':
+      return (
+        scenario.rooms.some((r) => s.board.revealedRooms.includes(r.id) && r.spawns?.some((sp) => sp.monster === goal.boss)) &&
+        !monsters(s).some((m) => m.typeId === goal.boss && isPresent(m))
+      );
+    case 'reachExit':
+      return living.length > 0 && living.every((h) => goal.hexes.some((x) => hexEquals(x, h.hex)));
+    case 'carryItem':
+      return living.some((h) => (h.chests ?? []).includes(goal.item) && goal.to.some((x) => hexEquals(x, h.hex)));
+  }
+}
+
+export function winScenario(ctx: Ctx): void {
+  const s = ctx.s;
+  s.phase = 'won';
+  s.pending = null;
+  s.queue = [];
+  ctx.out.length = 0;
+  const bonus = victoryXp(s.level);
+  for (const h of heroes(s)) {
+    h.xp += bonus;
+    emit(ctx, { type: 'xpGained', heroId: h.id, amount: bonus });
+  }
+  emit(ctx, { type: 'scenarioWon' });
+}
+
+export { loseScenario };

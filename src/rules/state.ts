@@ -76,6 +76,10 @@ export interface HeroState extends FigureBase {
   playedThisTurn: { cardId: CardId; half: 'top' | 'bottom' }[];
   /** Short rest declared for end of round. */
   wantsShortRest: boolean;
+  /** «Виклик» Вартового: radius until the end of the round; absent/null = not provoking. */
+  provokeRadius?: number | null;
+  /** Chest ids (scenario items) looted in this scenario. */
+  chests?: string[];
 }
 
 export interface MonsterState extends FigureBase {
@@ -87,6 +91,8 @@ export interface MonsterState extends FigureBase {
   summonedRound?: number;
   /** Heroes that attacked this monster this round (fork «Підхоплення»). */
   attackedBy: FigureId[];
+  /** The monster that summoned this one (культист: max summons per figure). */
+  summonerId?: FigureId;
 }
 
 export interface SummonState extends FigureBase {
@@ -165,6 +171,8 @@ export interface HalfInProgress {
   stepIndex: number;
   /** True once anything random happened (modifier drawn, room opened): undo stops here. */
   committed: boolean;
+  /** Played as the basic action (top Атака 2 / bottom Рух 2); `cardId` is the card spent on it. */
+  basic?: boolean;
 }
 
 export interface GameState {
@@ -191,7 +199,48 @@ export interface GameState {
   half: HalfInProgress | null;
   /** Fork «Наснага»: Порив used this turn adds its steps in front of the current half. */
   log: GameEvent[];
+  /** Engine work still to do (monster turns, damage awaiting «уникнути шкоди», …). Engine-internal;
+   *  absent = empty. Lets every interruption resume deterministically from plain JSON. */
+  queue?: EngineTask[];
+  /** Snapshot taken when the current half started; `undo` restores it. Null once something random
+   *  happened (modifier drawn, room revealed) or the turn ended. */
+  undoPoint?: GameState | null;
 }
+
+/** Resolved numbers of one attack against one target (after card, item and consume bonuses). */
+export interface AttackSpec {
+  /** Attack value before poison, modifier and shield. */
+  value: number;
+  ranged: boolean;
+  pierce: number;
+  push: number;
+  pull: number;
+  conditions: ConditionId[];
+  curse: boolean;
+  advantage: boolean;
+  disadvantage: boolean;
+}
+
+/** Engine-internal unit of work, processed front to back by turn.ts. */
+export type EngineTask =
+  | { t: 'nextTurn' }
+  | { t: 'startHeroTurn'; heroId: FigureId }
+  | { t: 'heroReady'; heroId: FigureId }
+  | { t: 'monsterGroup'; typeId: string }
+  | { t: 'figureTurn'; figureId: FigureId }
+  | { t: 'figureAct'; figureId: FigureId }
+  | { t: 'figureStep'; figureId: FigureId; step: Step; targets: FigureId[] }
+  | { t: 'endFigureTurn'; figureId: FigureId }
+  | { t: 'move'; figureId: FigureId; path: Hex[]; jump?: boolean; fly?: boolean; forced?: 'push' | 'pull' }
+  | { t: 'attackTarget'; attackerId: FigureId; targetId: FigureId; spec: AttackSpec; pushPath?: Hex[] }
+  | { t: 'afterHit'; attackerId: FigureId; targetId: FigureId; spec: AttackSpec; pushPath?: Hex[] }
+  | { t: 'retaliate'; attackerId: FigureId; targetId: FigureId }
+  | { t: 'damage'; targetId: FigureId; amount: number; source: string; avoidable: boolean; conditions?: ConditionId[] }
+  | { t: 'stepDone' }
+  | { t: 'endRound' }
+  /** `heroIds` = heroes still to decide; absent until the offer is made. */
+  | { t: 'shortRests'; heroIds?: FigureId[] }
+  | { t: 'finishRound' };
 
 // ─── Actions ────────────────────────────────────────────────────────────────
 
@@ -204,6 +253,7 @@ export interface StepChoice {
   element?: ElementId; // `any` infuse/consume
   consume?: boolean; // use the step's consume bonus
   pushPaths?: Record<FigureId, Hex[]>; // push/pull destinations per target
+  elements?: ElementId[]; // consume of `count` > 1 `any` elements (Буря стихій)
 }
 
 export type Action =
@@ -271,7 +321,12 @@ export type GameEvent =
   | { type: 'xpGained'; heroId: FigureId; amount: number }
   | { type: 'deckShuffled'; deck: string }
   | { type: 'scenarioWon' }
-  | { type: 'scenarioLost' };
+  | { type: 'scenarioLost' }
+  | { type: 'behaviourDrawn'; typeId: string; cardId: string; initiative: number }
+  | { type: 'damageAvoided'; heroId: FigureId; amount: number; lost: CardId[] }
+  | { type: 'trapPlaced'; hex: Hex }
+  | { type: 'roundEnded'; round: number }
+  | { type: 'undone' };
 
 // ─── Engine API (implemented in engine.ts) ─────────────────────────────────
 
