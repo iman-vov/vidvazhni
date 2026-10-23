@@ -6,14 +6,17 @@
 //   &hand=right            put a marker box on that hand bone (checks attachToBone)
 //   &weapon=warden-shield  attach a weapon model with attachWeapon
 //   &scale=0.8             model scale on the board
-//   &compare=1             raw Meshy file (art/meshy-source) beside the optimized one, same lights
+//   &quality=low           model tier: low, medium or high (default: the device's graphics quality)
+//   &compare=raw           raw Meshy file (art/meshy-source) on the left, same lights; idle only
+//   &compare=low           another tier on the left, playing the same clips
 //   &env=1                 add a room environment map (metal looks dark without one)
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
-import { attachToBone, attachWeapon, listModels, loadModel, type Model } from './models';
+import { attachToBone, attachWeapon, listModels, loadModel, MODEL_CACHE, prefetchModels, type Model } from './models';
+import { GRAPHICS_QUALITIES, type GraphicsQuality } from './quality';
 
 // Same look as render/board.ts so the check shows the model as it will appear in the game.
 const BACKGROUND = '#1d2433';
@@ -51,7 +54,9 @@ for (const [q, r] of [[0, 0], [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]
 }
 
 if (params.get('env')) scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
-const compare = params.get('compare') !== null;
+const compare = params.get('compare');
+const asQuality = (v: string | null): GraphicsQuality | undefined =>
+  GRAPHICS_QUALITIES.find((q) => q === v);
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 100);
 let close = params.get('view') === 'close';
@@ -100,14 +105,23 @@ async function main(): Promise<void> {
   });
   panel.appendChild(picker);
 
-  const model: Model = await loadModel(id);
+  const model: Model = await loadModel(id, { quality: asQuality(params.get('quality')) });
   model.scene.scale.setScalar(Number(params.get('scale') ?? 1));
   model.scene.position.y = PLATE_HEIGHT;
   scene.add(model.scene);
-  Object.assign(window, { viewerModel: model }); // for browser automation
+  Object.assign(window, { viewerModel: model, prefetchModels, MODEL_CACHE }); // for browser automation
 
   let raw: THREE.AnimationMixer | null = null;
-  if (compare) {
+  let other: Model | null = null;
+  const otherQuality = asQuality(compare);
+  if (otherQuality) {
+    other = await loadModel(id, { quality: otherQuality });
+    other.scene.position.set(-0.8, PLATE_HEIGHT, 0);
+    other.scene.scale.copy(model.scene.scale);
+    model.scene.position.x = 0.8;
+    scene.add(other.scene);
+    Object.assign(window, { viewerOther: other });
+  } else if (compare) {
     // Vite's dev server serves the raw download straight from art/meshy-source (dev only).
     const gltf = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}art/meshy-source/${id}/${id}.glb`);
     gltf.scene.position.set(-0.8, PLATE_HEIGHT, 0);
@@ -165,6 +179,7 @@ async function main(): Promise<void> {
   let clipEnds = 0;
   function start(name: string): void {
     model.play(name, { then: cycling ? null : undefined });
+    other?.play(name, { then: cycling ? null : undefined });
     const duration = model.clips[name]?.duration ?? 1;
     // Loops get two passes before the cycle moves on; one-shots hold their last frame briefly.
     clipEnds = clock.elapsedTime + (['idle', 'walk', 'run'].includes(name) ? duration * 2 : duration + 0.6);
@@ -184,9 +199,10 @@ async function main(): Promise<void> {
     }
     model.update(dt);
     raw?.update(dt);
+    other?.update(dt);
     renderer.render(scene, camera);
     info.textContent =
-      `${id} (${model.meta.kind})  clip: ${model.current}  ${(model.mixer.time % 100).toFixed(1)} s\n` +
+      `${id} (${model.meta.kind}, ${model.quality}${other ? ` vs ${other.quality} on the left` : ''})  clip: ${model.current}  ${(model.mixer.time % 100).toFixed(1)} s\n` +
       `${triangles} tris, textures ${[...textures].join(', ') || 'none'}, clips ${Object.keys(model.clips).join(' ')}`;
   });
 }

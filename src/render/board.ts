@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { HEX_SIZE, hexKey, hexToWorld, worldToHex } from './hexLayout';
+import { onGraphicsQualityChange, rendererPreset } from './quality';
 
 export type Hex = [number, number];
 
@@ -67,8 +68,10 @@ interface Tween {
 }
 
 export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Graphics quality preset (render/quality.ts). Antialiasing is fixed when the WebGL context is
+  // created, so a change of it applies to the next board; pixel ratio and shadows apply at once.
+  const renderer = new THREE.WebGLRenderer({ antialias: rendererPreset().antialias });
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const canvas = renderer.domElement;
   canvas.style.display = 'block';
   canvas.style.width = '100%';
@@ -80,8 +83,7 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
   scene.background = new THREE.Color(BACKGROUND);
   scene.add(new THREE.HemisphereLight('#dfe7ff', '#262d3d', 1.4));
   const sun = new THREE.DirectionalLight('#ffffff', 1.8);
-  sun.position.set(-4, 10, 6);
-  scene.add(sun);
+  scene.add(sun, sun.target);
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 500);
 
@@ -110,6 +112,7 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
   });
   if (hexes.length === 0) bounds.set(new THREE.Vector2(0, 0), new THREE.Vector2(0, 0));
   bounds.expandByScalar(HEX_SIZE);
+  plates.receiveShadow = true;
   scene.add(plates);
 
   const boardCentre = new THREE.Vector3();
@@ -117,6 +120,40 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
     const c = bounds.getCenter(new THREE.Vector2());
     boardCentre.set(c.x, 0, c.y);
   }
+
+  // The sun keeps its direction but follows the board, so its shadow camera can cover the board.
+  sun.target.position.copy(boardCentre);
+  sun.position.copy(boardCentre).add(new THREE.Vector3(-4, 10, 6));
+  {
+    const half = Math.max(bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y) / 2 + 2 * HEX_SIZE;
+    const cam = sun.shadow.camera;
+    cam.left = cam.bottom = -half;
+    cam.right = cam.top = half;
+    cam.near = 0.5;
+    cam.far = 40;
+    cam.updateProjectionMatrix();
+    sun.shadow.bias = -0.0005;
+  }
+
+  function applyQuality(): void {
+    const preset = rendererPreset();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, preset.maxPixelRatio));
+    const shadows = preset.shadows !== 'none';
+    if (renderer.shadowMap.enabled !== shadows) {
+      renderer.shadowMap.enabled = shadows;
+      scene.traverse((o) => {
+        const material = (o as THREE.Mesh).material;
+        for (const m of Array.isArray(material) ? material : material ? [material] : []) m.needsUpdate = true;
+      });
+    }
+    sun.castShadow = shadows;
+    if (shadows && sun.shadow.mapSize.x !== preset.shadowMapSize) {
+      sun.shadow.mapSize.set(preset.shadowMapSize, preset.shadowMapSize);
+      sun.shadow.map?.dispose();
+      sun.shadow.map = null;
+    }
+  }
+  applyQuality();
 
   // --- Camera state: a target on the ground, a distance along a fixed pitch.
 
@@ -261,6 +298,11 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(container);
   resize();
+
+  const stopQuality = onGraphicsQualityChange(() => {
+    applyQuality();
+    resize();
+  });
 
   // --- Picking: intersect the plate tops' plane, then snap to the nearest hex.
 
@@ -512,6 +554,7 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     resizeObserver.disconnect();
+    stopQuality();
     canvas.removeEventListener('pointerdown', onPointerDown);
     canvas.removeEventListener('pointermove', onPointerMove);
     canvas.removeEventListener('pointerup', onPointerUp);

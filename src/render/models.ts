@@ -1,11 +1,16 @@
-// Loads the game's GLB models (assets/models/<id>/<id>.glb, made by `npm run models`) and plays
-// their clips. Each GLB is fetched and parsed once; every loadModel call returns its own clone with
-// its own skeleton and AnimationMixer, sharing geometry, textures and clips with the others.
+// Loads the game's GLB models (made by `npm run models`) and plays their clips. Every model comes in
+// three tiers, picked by the graphics quality (render/quality.ts):
+//   low    assets/models/<id>/<id>.low.glb  textures ≤ 512, mesh simplified to ~50%; precached by the PWA
+//   medium assets/models/<id>/<id>.glb      textures ≤ 1024
+//   high   assets/models/<id>/<id>.hq.glb   source textures up to 4096
+// Each GLB is fetched and parsed once; every loadModel call returns its own clone with its own
+// skeleton and AnimationMixer, sharing geometry, textures and clips with the other clones.
 
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { castsShadow, getGraphicsQuality, rendererPreset, type GraphicsQuality } from './quality';
 
 /** The game's clip names; `npm run models` renames Meshy's clips to these. */
 export type ClipName = 'idle' | 'walk' | 'run' | 'attack' | 'hit' | 'cast' | 'death';
@@ -31,8 +36,15 @@ export interface PlayOptions {
   then?: string | null;
 }
 
+export interface LoadOptions {
+  /** Model tier. Default: the current graphics quality. A missing tier falls back to medium, then low. */
+  quality?: GraphicsQuality;
+}
+
 export interface Model {
   id: string;
+  /** Tier actually loaded (after fallback). */
+  quality: GraphicsQuality;
   /** Add this to the scene. Feet stand at y = 0 and the model faces +Z. */
   scene: THREE.Group;
   mixer: THREE.AnimationMixer;
@@ -46,43 +58,88 @@ export interface Model {
   update(dt: number): void;
 }
 
-// Vite emits each GLB as a hashed asset; the PWA precaches them. Interim *-1k files are left out.
+// Vite emits each GLB as a hashed asset. The PWA precaches only the low tier (vite.config.ts);
+// prefetchModels() puts the selected tier into a runtime cache. Interim *-1k files are left out.
 const MODEL_URLS = import.meta.glob<string>(['/assets/models/*/*.glb', '!/assets/models/*/*-1k.glb'], {
   query: '?url',
   import: 'default',
   eager: true,
 });
 
+const TIER_SUFFIX: Record<GraphicsQuality, string> = { low: '.low', medium: '', high: '.hq' };
+const FALLBACK: Record<GraphicsQuality, GraphicsQuality[]> = {
+  low: ['low', 'medium'],
+  medium: ['medium', 'low'],
+  high: ['high', 'medium', 'low'],
+};
+/** Runtime cache for medium/high GLBs; vite.config.ts serves *.glb CacheFirst from the same name. */
+export const MODEL_CACHE = 'vidvazhni-models';
+
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = new Map<string, Promise<GLTF>>();
 
-/** URL of a model's optimized GLB, or undefined if `npm run models` has not produced it. */
-export function modelUrl(id: string): string | undefined {
-  return MODEL_URLS[`/assets/models/${id}/${id}.glb`];
+/** URL of a model's GLB in exactly this tier, or undefined if `npm run models` has not produced it. */
+export function modelUrl(id: string, quality: GraphicsQuality = 'medium'): string | undefined {
+  return MODEL_URLS[`/assets/models/${id}/${id}${TIER_SUFFIX[quality]}.glb`];
 }
 
-/** Ids of every optimized model in the build. */
+/** The tier loadModel will use for this request, after fallback; undefined if the model is missing. */
+export function resolveTier(id: string, quality: GraphicsQuality): GraphicsQuality | undefined {
+  return FALLBACK[quality].find((q) => modelUrl(id, q));
+}
+
+/** Ids of every model in the build (any tier). */
 export function listModels(): string[] {
-  return Object.keys(MODEL_URLS)
-    .map((path) => /^\/assets\/models\/([^/]+)\/\1\.glb$/.exec(path)?.[1])
-    .filter((id): id is string => id !== undefined)
-    .sort();
+  const ids = new Set<string>();
+  for (const path of Object.keys(MODEL_URLS)) {
+    const id = /^\/assets\/models\/([^/]+)\/\1(?:\.low|\.hq)?\.glb$/.exec(path)?.[1];
+    if (id) ids.add(id);
+  }
+  return [...ids].sort();
 }
 
-function loadGltf(id: string): Promise<GLTF> {
-  let pending = cache.get(id);
+function loadGltf(id: string, quality: GraphicsQuality): Promise<GLTF> {
+  const key = `${id}@${quality}`;
+  let pending = cache.get(key);
   if (!pending) {
-    const url = modelUrl(id);
-    if (!url) return Promise.reject(new Error(`No optimized model "${id}"; run npm run models ${id}`));
+    const url = modelUrl(id, quality);
+    if (!url) return Promise.reject(new Error(`No ${quality} model "${id}"; run npm run models ${id}`));
     pending = loader.loadAsync(url);
-    pending.catch(() => cache.delete(id));
-    cache.set(id, pending);
+    pending.catch(() => cache.delete(key));
+    cache.set(key, pending);
   }
   return pending;
 }
 
-export async function loadModel(id: string): Promise<Model> {
-  const gltf = await loadGltf(id);
+/**
+ * Downloads every model of the tier into the runtime cache so it works offline from the next
+ * launch, and drops cached files of other tiers. The low tier is precached by the service worker,
+ * so it needs nothing here. Safe to call on every start; already cached files are skipped.
+ */
+export async function prefetchModels(quality = getGraphicsQuality()): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  const store = await caches.open(MODEL_CACHE);
+  const wanted = new Set<string>();
+  for (const id of quality === 'low' ? [] : listModels()) {
+    const tier = resolveTier(id, quality);
+    const url = tier && tier !== 'low' ? modelUrl(id, tier) : undefined;
+    if (url) wanted.add(new URL(url, location.href).href);
+  }
+  for (const request of await store.keys()) if (!wanted.has(request.url)) await store.delete(request);
+  for (const url of wanted) {
+    if (await store.match(url)) continue;
+    try {
+      await store.add(url);
+    } catch {
+      // Offline or the server is gone: try again on the next start.
+    }
+  }
+}
+
+export async function loadModel(id: string, opts: LoadOptions = {}): Promise<Model> {
+  const quality = resolveTier(id, opts.quality ?? getGraphicsQuality());
+  if (!quality) throw new Error(`No optimized model "${id}"; run npm run models ${id}`);
+  const gltf = await loadGltf(id, quality);
   const scene = cloneSkinned(gltf.scene) as THREE.Group;
   const meta: ModelMeta = (gltf.scene.userData['vidvazhni'] as ModelMeta | undefined) ?? {
     id,
@@ -90,6 +147,10 @@ export async function loadModel(id: string): Promise<Model> {
     clips: gltf.animations.map((c) => c.name),
     attachTo: null,
   };
+  const shadow = castsShadow(rendererPreset(), meta.kind);
+  scene.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.castShadow = shadow;
+  });
   const clips = Object.fromEntries(gltf.animations.map((clip) => [clip.name, clip]));
   const mixer = new THREE.AnimationMixer(scene);
   let current: string | null = null;
@@ -131,6 +192,7 @@ export async function loadModel(id: string): Promise<Model> {
 
   return {
     id,
+    quality,
     scene,
     mixer,
     clips,
@@ -159,7 +221,7 @@ export interface AttachOptions {
  * so both spellings are accepted. Returns the attached objects.
  */
 export async function attachWeapon(model: Model, weaponId: string, opts: AttachOptions = {}): Promise<THREE.Object3D[]> {
-  const weapon = await loadModel(weaponId);
+  const weapon = await loadModel(weaponId, { quality: model.quality });
   const bones = opts.bones ?? weapon.meta.attachTo?.bones ?? [];
   if (!bones.length) throw new Error(`Weapon "${weaponId}" has no attachTo bones`);
   return bones.map((boneName, i) => {

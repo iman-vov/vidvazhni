@@ -28,8 +28,21 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,json,glb,webp,ogg,mp3}'],
+        // Models: only the low tier is precached, so the game always works offline after the first
+        // visit. The medium/high tier is put into the runtime cache by prefetchModels()
+        // (src/render/models.ts) and served from it here.
+        globPatterns: ['**/*.{js,css,html,svg,png,json,webp,ogg,mp3}', '**/*.low-*.glb'],
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: /\.glb$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vidvazhni-models', // MODEL_CACHE in src/render/models.ts
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

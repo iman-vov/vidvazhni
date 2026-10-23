@@ -1,17 +1,19 @@
-// Turns raw Meshy downloads into light game-ready GLBs.
+// Turns raw Meshy downloads into light game-ready GLBs, in three graphics tiers.
 //
-//   npm run models            every art/meshy-source/<id>/<id>.glb
-//   npm run models warden     only the given ids
+//   npm run models                    every art/meshy-source/<id>/<id>.glb, all tiers
+//   npm run models warden             only the given ids
+//   npm run models warden --tiers=low only some tiers (low, medium, high)
 //
-// Writes assets/models/<id>/<id>.glb: textures resized (1024 px, 512 for weapons and props) and
-// re-encoded as WebP, mesh welded and meshopt-compressed, clips renamed to idle/walk/run/attack/
-// hit/death with horizontal root motion removed (except walk/run). Never decimates: a model over
-// its manifest triangle budget only gets a warning (reduce it in Blender or with Meshy Remesh).
+// Writes assets/models/<id>/<id>.low.glb, <id>.glb (medium) and <id>.hq.glb (high). All three share
+// the clip fixes (names normalised to idle/walk/run/attack/hit/death, horizontal root motion removed
+// except in walk/run), WebP textures and meshopt compression; they differ in texture size, and the
+// low tier also gets a simplified mesh. Never reduces medium/high below the source: a model over its
+// manifest triangle budget only gets a warning (reduce it in Blender or with Meshy Remesh).
 
 import { Logger, NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP } from '@gltf-transform/extensions';
-import { dedup, listTextureSlots, meshopt, prune, resample, weld } from '@gltf-transform/functions';
-import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
+import { cloneDocument, compactPrimitive, dedup, listTextureSlots, meshopt, prune, resample, weld } from '@gltf-transform/functions';
+import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -20,8 +22,16 @@ const SOURCE_DIR = 'art/meshy-source';
 const OUT_DIR = 'assets/models';
 const MANIFEST = 'art/prompts/manifest.json';
 
-const TEXTURE_MAX = { weapon: 512, prop: 512 };
-const TEXTURE_MAX_DEFAULT = 1024;
+/**
+ * Graphics tiers (src/render/quality.ts picks one per device). textureMax is per manifest kind.
+ * simplify: fraction of triangles the low tier aims to keep; the error cap may stop it earlier.
+ */
+const TIERS = [
+  { name: 'low', suffix: '.low', textureMax: { weapon: 256, prop: 256, default: 512 }, simplify: 0.5 },
+  { name: 'medium', suffix: '', textureMax: { weapon: 512, prop: 512, default: 1024 } },
+  { name: 'high', suffix: '.hq', textureMax: { default: 4096 } },
+];
+const SIMPLIFY_ERROR = 0.01; // fraction of the mesh radius
 const WEBP_QUALITY = { normalTexture: 90, default: 85 };
 
 /** Clip names the game asks for, and the Meshy/Mixamo names that map to them. Order matters: first match wins. */
@@ -37,7 +47,14 @@ const CLIP_PATTERNS = [
 /** Clips that may move the root on the horizontal plane; everything else plays in place. */
 const ROOT_MOTION_CLIPS = new Set(['walk', 'run']);
 
-const args = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const tierArg = argv.find((a) => a.startsWith('--tiers='));
+const tiers = tierArg ? TIERS.filter((t) => tierArg.slice(8).split(',').includes(t.name)) : TIERS;
+const args = argv.filter((a) => !a.startsWith('--'));
+if (!tiers.length) {
+  console.error(`--tiers takes a comma-separated list of ${TIERS.map((t) => t.name).join(', ')}`);
+  process.exit(1);
+}
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
 const entries = new Map(manifest.models.map((m) => [m.id, m]));
 
@@ -57,6 +74,7 @@ const io = new NodeIO()
   .setLogger(new Logger(Logger.Verbosity.WARN))
   .registerExtensions(ALL_EXTENSIONS)
   .registerDependencies({ 'meshopt.decoder': MeshoptDecoder, 'meshopt.encoder': MeshoptEncoder });
+await MeshoptSimplifier.ready;
 
 const rows = [];
 let failed = 0;
@@ -70,14 +88,17 @@ for (const id of ids) {
 }
 
 if (rows.length) {
-  console.log('\n| Модель | Трикутники | Текстури | Кліпи | Було | Стало |');
-  console.log('|---|---|---|---|---|---|');
+  const cols = tiers.map((t) => t.name);
+  console.log(`
+| Модель | Трикутники (${cols.join(' / ')}) | Сирий | ${cols.join(' | ')} |`);
+  console.log(`|---|---|---|${cols.map(() => '---').join('|')}|`);
   for (const r of rows) {
-    console.log(`| \`${r.id}\` | ${r.triangles} | ${r.textures || '—'} | ${r.clips || '—'} | ${mb(r.before)} | ${mb(r.after)} |`);
+    const tris = r.tiers.map((t) => t.triangles).join(' / ');
+    console.log(`| \`${r.id}\` | ${tris} | ${mb(r.before)} | ${r.tiers.map((t) => mb(t.size)).join(' | ')} |`);
   }
-  const before = rows.reduce((s, r) => s + r.before, 0);
-  const after = rows.reduce((s, r) => s + r.after, 0);
-  console.log(`| **Разом (${rows.length})** | | | | ${mb(before)} | ${mb(after)} |`);
+  const sum = (f) => rows.reduce((s, r) => s + f(r), 0);
+  const totals = tiers.map((_, i) => mb(sum((r) => r.tiers[i].size)));
+  console.log(`| **Разом (${rows.length})** | | ${mb(sum((r) => r.before))} | ${totals.join(' | ')} |`);
 }
 process.exit(failed ? 1 : 0);
 
@@ -89,24 +110,19 @@ async function optimize(id) {
   const kind = entry?.kind ?? 'hero';
   const warnings = [];
 
-  const doc = await io.read(src);
-  const root = doc.getRoot();
-
-  const clips = normaliseClips(doc, warnings);
-  lockRootMotion(doc);
-
-  await doc.transform(dedup(), prune(), weld(), resample());
-  const textures = await compressTextures(doc, TEXTURE_MAX[kind] ?? TEXTURE_MAX_DEFAULT, warnings);
-  await doc.transform(prune(), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
-
+  // Steps every tier shares.
+  const base = await io.read(src);
+  const clips = normaliseClips(base, warnings);
+  lockRootMotion(base);
+  await base.transform(dedup(), prune(), weld(), resample());
   // Metadata for the loader: GLTFLoader copies scene extras into scene.userData.
   const attachTo = entry?.attachTo ? { hand: entry.attachTo.hand, bones: entry.attachTo.bones } : null;
-  root.getDefaultScene()?.setExtras({ vidvazhni: { id, kind, clips, attachTo } });
+  base.getRoot().getDefaultScene()?.setExtras({ vidvazhni: { id, kind, clips, attachTo } });
 
-  const triangles = countTriangles(doc);
+  const sourceTriangles = countTriangles(base);
   const budget = entry?.triangleBudget;
-  if (budget?.max && triangles > budget.max) {
-    warnings.push(`${triangles} triangles is over the ${kind} budget of ${budget.max}; reduce it in Blender or Meshy Remesh`);
+  if (budget?.max && sourceTriangles > budget.max) {
+    warnings.push(`${sourceTriangles} triangles is over the ${kind} budget of ${budget.max}; reduce it in Blender or Meshy Remesh`);
   }
   if (entry?.rig && entry.rig !== 'none') {
     const missing = (entry.animations ?? []).filter((name) => !clips.includes(name));
@@ -115,14 +131,60 @@ async function optimize(id) {
 
   const outDir = join(OUT_DIR, id);
   mkdirSync(outDir, { recursive: true });
-  const out = join(outDir, `${id}.glb`);
-  writeFileSync(out, await io.writeBinary(doc));
+  const results = [];
+  for (const tier of tiers) {
+    const doc = cloneDocument(base);
+    if (tier.simplify) {
+      simplifyMeshes(doc, tier.simplify);
+    }
+    const textures = await compressTextures(doc, tier.textureMax[kind] ?? tier.textureMax.default, warnings);
+    await doc.transform(prune(), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
+    const out = join(outDir, `${id}${tier.suffix}.glb`);
+    writeFileSync(out, await io.writeBinary(doc));
+    results.push({ tier: tier.name, triangles: countTriangles(doc), textures, size: statSync(out).size });
+  }
 
   const before = statSync(src).size;
-  const after = statSync(out).size;
-  console.log(`✓ ${id}: ${mb(before)} → ${mb(after)}, ${triangles} tris, textures ${textures || 'none'}, clips ${clips.join(' ') || 'none'}`);
-  for (const w of warnings) console.warn(`  ! ${w}`);
-  return { id, triangles, textures, clips: clips.join(', '), before, after };
+  console.log(`✓ ${id}: raw ${mb(before)}, clips ${clips.join(' ') || 'none'}`);
+  for (const r of results) console.log(`    ${r.tier.padEnd(6)} ${mb(r.size).padStart(9)}  ${r.triangles} tris, textures ${r.textures || 'none'}`);
+  for (const w of new Set(warnings)) console.warn(`  ! ${w}`);
+  return { id, before, tiers: results };
+}
+
+/**
+ * Reduces every triangle mesh towards `ratio` of its triangles. Unlike glTF-Transform's simplify,
+ * which only sees positions, this passes normals and UVs to meshoptimizer and allows collapses
+ * across UV seams ('Permissive'); Meshy's fragmented UV islands otherwise lock most edges. Skin
+ * weights are vertex attributes, so surviving vertices keep their joints and weights.
+ */
+function simplifyMeshes(doc, ratio) {
+  for (const mesh of doc.getRoot().listMeshes()) {
+    for (const prim of mesh.listPrimitives()) {
+      const indices = prim.getIndices();
+      const position = prim.getAttribute('POSITION');
+      if (prim.getMode() !== 4 || !indices || !position) continue;
+      const count = position.getCount();
+      const normal = prim.getAttribute('NORMAL');
+      const uv = prim.getAttribute('TEXCOORD_0');
+      const attributes = new Float32Array(count * 5);
+      const n = [];
+      const t = [];
+      for (let i = 0; i < count; i++) {
+        if (normal) normal.getElement(i, n);
+        if (uv) uv.getElement(i, t);
+        attributes.set([n[0] ?? 0, n[1] ?? 0, n[2] ?? 0, t[0] ?? 0, t[1] ?? 0], i * 5);
+      }
+      const src = new Uint32Array(indices.getArray());
+      const target = Math.floor((ratio * src.length) / 3) * 3;
+      const [dst] = MeshoptSimplifier.simplifyWithAttributes(
+        src, new Float32Array(position.getArray()), 3, attributes, 5, [0.5, 0.5, 0.5, 1, 1], null, target, SIMPLIFY_ERROR, ['Permissive'],
+      );
+      const out = doc.createAccessor().setType('SCALAR').setArray(count <= 65535 ? new Uint16Array(dst) : dst).setBuffer(indices.getBuffer());
+      prim.setIndices(out);
+      if (indices.listParents().length === 1) indices.dispose();
+      compactPrimitive(prim);
+    }
+  }
 }
 
 /** Renames clips to the game's names (Idle_02 → idle, Hit_Reaction → hit, Dead → death). Returns the new names. */

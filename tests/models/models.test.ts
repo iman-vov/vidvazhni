@@ -1,6 +1,7 @@
-// Checks every optimized model (assets/models/<id>/<id>.glb, made by `npm run models`) against the
-// game's budgets: it loads, rigged characters have the six game clips, textures fit, triangles fit
-// the manifest budget, and weapons' attachTo bones exist in their owner's skeleton.
+// Checks every optimized model (made by `npm run models`) in all three tiers against the game's
+// budgets: each tier loads, rigged characters have the six game clips, textures fit the tier,
+// triangles fit the manifest budget, the tiers share clips and bones, and weapons' attachTo bones
+// exist in their owner's skeleton.
 
 import { describe, expect, it } from 'vitest';
 import { NodeIO, type Document } from '@gltf-transform/core';
@@ -11,8 +12,16 @@ import { join } from 'node:path';
 
 const MODELS_DIR = 'assets/models';
 const REQUIRED_CLIPS = ['idle', 'walk', 'run', 'attack', 'hit', 'death'];
-const TEXTURE_MAX: Record<string, number> = { weapon: 512, prop: 512 };
-const ASSET_BUDGET_BYTES = 60 * 1024 * 1024; // osnova.md «Робота без інтернету»: all assets except voice
+// osnova.md «Робота без інтернету»: all assets except voice ≤ 60 MB. The low tier is the first
+// download (precached), and medium is the default tier on tablets, so both must fit.
+const ASSET_BUDGET_BYTES = 60 * 1024 * 1024;
+
+const TIERS = [
+  { name: 'low', suffix: '.low', textureMax: { weapon: 256, prop: 256, default: 512 }, budgeted: true },
+  { name: 'medium', suffix: '', textureMax: { weapon: 512, prop: 512, default: 1024 }, budgeted: true },
+  { name: 'high', suffix: '.hq', textureMax: { default: 4096 }, budgeted: false },
+] as const;
+type Tier = (typeof TIERS)[number];
 
 interface ManifestEntry {
   id: string;
@@ -28,16 +37,18 @@ const entries = new Map(manifest.models.map((m) => [m.id, m]));
 const ids = existsSync(MODELS_DIR)
   ? readdirSync(MODELS_DIR).filter((id) => existsSync(join(MODELS_DIR, id, `${id}.glb`)))
   : [];
-const path = (id: string): string => join(MODELS_DIR, id, `${id}.glb`);
+const path = (id: string, tier: Tier): string => join(MODELS_DIR, id, `${id}${tier.suffix}.glb`);
+const medium = TIERS[1];
 
 const docs = new Map<string, Promise<Document>>();
-function read(id: string): Promise<Document> {
-  let doc = docs.get(id);
+function read(id: string, tier: Tier): Promise<Document> {
+  const key = path(id, tier);
+  let doc = docs.get(key);
   if (!doc) {
     doc = MeshoptDecoder.ready.then(() =>
-      new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder }).read(path(id)),
+      new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder }).read(key),
     );
-    docs.set(id, doc);
+    docs.set(key, doc);
   }
   return doc;
 }
@@ -54,10 +65,12 @@ function triangles(doc: Document): number {
 }
 
 describe('optimized models', () => {
-  it('all fit in the offline asset budget', () => {
-    const total = ids.reduce((sum, id) => sum + statSync(path(id)).size, 0);
-    expect(total).toBeLessThanOrEqual(ASSET_BUDGET_BYTES);
-  });
+  for (const tier of TIERS.filter((t) => t.budgeted)) {
+    it(`${tier.name} tier fits in the offline asset budget`, () => {
+      const total = ids.reduce((sum, id) => sum + statSync(path(id, tier)).size, 0);
+      expect(total).toBeLessThanOrEqual(ASSET_BUDGET_BYTES);
+    });
+  }
 
   describe.each(ids.length ? ids : ['(none)'])('%s', (id) => {
     if (id === '(none)') {
@@ -70,39 +83,59 @@ describe('optimized models', () => {
       expect(entry, `${id} missing from art/prompts/manifest.json`).toBeDefined();
     });
 
-    it('loads, is meshopt-compressed and uses WebP textures', async () => {
-      const doc = await read(id);
-      const used = doc.getRoot().listExtensionsUsed().map((e) => e.extensionName);
-      expect(used).toContain('EXT_meshopt_compression');
-      for (const texture of doc.getRoot().listTextures()) expect(texture.getMimeType()).toBe('image/webp');
+    it('has all three tiers', () => {
+      for (const tier of TIERS) expect(existsSync(path(id, tier)), path(id, tier)).toBe(true);
     });
 
-    it('has textures within the size limit', async () => {
-      const limit = TEXTURE_MAX[entry?.kind ?? ''] ?? 1024;
-      for (const texture of (await read(id)).getRoot().listTextures()) {
-        const size = texture.getSize();
-        expect(size, `${texture.getName()} has no readable size`).not.toBeNull();
-        expect(Math.max(...size!), texture.getName()).toBeLessThanOrEqual(limit);
-      }
+    describe.each(TIERS)('$name tier', (tier) => {
+      it('loads, is meshopt-compressed and uses WebP textures', async () => {
+        const doc = await read(id, tier);
+        const used = doc.getRoot().listExtensionsUsed().map((e) => e.extensionName);
+        expect(used).toContain('EXT_meshopt_compression');
+        for (const texture of doc.getRoot().listTextures()) expect(texture.getMimeType()).toBe('image/webp');
+      });
+
+      it('has textures within the tier limit', async () => {
+        const limits: Record<string, number> = tier.textureMax;
+        const limit = limits[entry?.kind ?? ''] ?? tier.textureMax.default;
+        for (const texture of (await read(id, tier)).getRoot().listTextures()) {
+          const size = texture.getSize();
+          expect(size, `${texture.getName()} has no readable size`).not.toBeNull();
+          expect(Math.max(...size!), texture.getName()).toBeLessThanOrEqual(limit);
+        }
+      });
+
+      it('is within its triangle budget', async () => {
+        const max = entry?.triangleBudget?.max;
+        if (!max) return;
+        expect(triangles(await read(id, tier))).toBeLessThanOrEqual(max);
+      });
+
+      it('has the game clip names if rigged', async () => {
+        const root = (await read(id, tier)).getRoot();
+        if (!root.listSkins().length) return;
+        const clips = root.listAnimations().map((a) => a.getName());
+        for (const name of REQUIRED_CLIPS) expect(clips, `${id} clips`).toContain(name);
+      });
+
+      it('shares clip and node names with the medium tier', async () => {
+        if (tier === medium) return;
+        const names = (doc: Document) => ({
+          clips: doc.getRoot().listAnimations().map((a) => a.getName()).sort(),
+          nodes: doc.getRoot().listNodes().map((n) => n.getName()).sort(),
+        });
+        expect(names(await read(id, tier))).toEqual(names(await read(id, medium)));
+      });
     });
 
-    it('is within its triangle budget', async () => {
-      const max = entry?.triangleBudget?.max;
-      if (!max) return;
-      expect(triangles(await read(id))).toBeLessThanOrEqual(max);
-    });
-
-    it('has the game clip names if rigged', async () => {
-      const root = (await read(id)).getRoot();
-      if (!root.listSkins().length) return;
-      const clips = root.listAnimations().map((a) => a.getName());
-      for (const name of REQUIRED_CLIPS) expect(clips, `${id} clips`).toContain(name);
+    it('has fewer triangles in the low tier than in medium', async () => {
+      expect(triangles(await read(id, TIERS[0]))).toBeLessThan(triangles(await read(id, medium)));
     });
 
     it("attaches to bones that exist in its owner's skeleton", async () => {
       const attach = entry?.attachTo;
       if (!attach || !ids.includes(attach.model)) return;
-      const owner = await read(attach.model);
+      const owner = await read(attach.model, medium);
       const names = new Set(owner.getRoot().listNodes().map((n) => n.getName()));
       for (const bone of attach.bones) expect(names, `${attach.model} bones`).toContain(bone);
     });
