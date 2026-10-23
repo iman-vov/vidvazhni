@@ -457,7 +457,7 @@ export function createBoard(container: HTMLElement, opts: BoardOptions): Board {
     const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false });
     const sprite = new THREE.Sprite(material);
     sprite.scale.set((LABEL_HEIGHT * c.width) / c.height, LABEL_HEIGHT, 1);
-    sprite.position.y = PLATE_HEIGHT + TOKEN_HEIGHT + LABEL_HEIGHT * 0.9;
+    sprite.position.y = PLATE_HEIGHT + TOKEN_HEIGHT + LABEL_HEIGHT * 1.2;
     sprite.renderOrder = 10;
     return sprite;
   }

@@ -1,0 +1,1804 @@
+{
+  "version": 1,
+  "source": "docs/design/osnova.md — «Арт-пайплайн», «Промпти для ChatGPT», «Додаток: код-блоки документа»",
+  "notes": {
+    "triangleBudget": "heroes/monsters/bosses from the doc's architecture section; weapon and prop budgets are estimates (estimate: true)",
+    "attachTo.bones": "Expected bone names in the Meshy humanoid rig; verify against the exported GLB",
+    "codeAnimations": "Unrigged creatures (slime, ghost) are animated in three.js code"
+  },
+  "models": [
+    {
+      "id": "warden",
+      "nameUk": "Вартовий",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/warden.md",
+      "conceptDir": "art/concepts/warden/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 1,
+      "wave": 1,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/warden.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "warden-shield"
+      ]
+    },
+    {
+      "id": "warden-shield",
+      "nameUk": "Щит-двері Вартового",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/warden-shield.md",
+      "conceptDir": "art/concepts/warden-shield/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 2,
+      "wave": 1,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/warden-shield.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "warden",
+        "hand": "left",
+        "bones": [
+          "LeftHand"
+        ]
+      }
+    },
+    {
+      "id": "wind-archer",
+      "nameUk": "Лучниця Вітру",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/wind-archer.md",
+      "conceptDir": "art/concepts/wind-archer/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 3,
+      "wave": 1,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/wind-archer.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "wind-archer-bow"
+      ]
+    },
+    {
+      "id": "wind-archer-bow",
+      "nameUk": "Лук Лучниці",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/wind-archer-bow.md",
+      "conceptDir": "art/concepts/wind-archer-bow/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 4,
+      "wave": 1,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/wind-archer-bow.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "wind-archer",
+        "hand": "left",
+        "bones": [
+          "LeftHand"
+        ]
+      }
+    },
+    {
+      "id": "cellar-rat",
+      "nameUk": "Пацюк-злодюжка",
+      "kind": "monster",
+      "styleBlock": "B",
+      "promptFile": "art/prompts/monsters/cellar-rat.md",
+      "conceptDir": "art/concepts/cellar-rat/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 5,
+      "wave": 1,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/cellar-rat.glb",
+      "rig": "quadruped",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "gremlin",
+      "nameUk": "Гремлін-пакостник",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/gremlin.md",
+      "conceptDir": "art/concepts/gremlin/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 6,
+      "wave": 1,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/gremlin.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "gremlin-slingshot"
+      ]
+    },
+    {
+      "id": "gremlin-slingshot",
+      "nameUk": "Рогатка гремліна",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/gremlin-slingshot.md",
+      "conceptDir": "art/concepts/gremlin-slingshot/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 7,
+      "wave": 1,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/gremlin-slingshot.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "gremlin",
+        "hand": "left",
+        "bones": [
+          "LeftHand"
+        ]
+      }
+    },
+    {
+      "id": "herbalist",
+      "nameUk": "Травниця",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/herbalist.md",
+      "conceptDir": "art/concepts/herbalist/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 8,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/herbalist.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "cast",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "herbalist-staff"
+      ]
+    },
+    {
+      "id": "herbalist-staff",
+      "nameUk": "Терновий посох Травниці",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/herbalist-staff.md",
+      "conceptDir": "art/concepts/herbalist-staff/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 9,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/herbalist-staff.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "herbalist",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "rogue",
+      "nameUk": "Пройда",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/rogue.md",
+      "conceptDir": "art/concepts/rogue/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 10,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/rogue.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "rogue-dagger"
+      ]
+    },
+    {
+      "id": "rogue-dagger",
+      "nameUk": "Кинджал Пройди",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/rogue-dagger.md",
+      "conceptDir": "art/concepts/rogue-dagger/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 11,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/rogue-dagger.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "rogue",
+        "hand": "both",
+        "bones": [
+          "LeftHand",
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "elementalist",
+      "nameUk": "Стихійник",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/elementalist.md",
+      "conceptDir": "art/concepts/elementalist/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 12,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/elementalist.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "cast",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tinker",
+      "nameUk": "Майстер",
+      "kind": "hero",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/heroes/tinker.md",
+      "conceptDir": "art/concepts/tinker/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 13,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/tinker.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 8000,
+        "max": 15000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "tinker-wrench"
+      ]
+    },
+    {
+      "id": "tinker-wrench",
+      "nameUk": "Гайковий ключ Майстра",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/tinker-wrench.md",
+      "conceptDir": "art/concepts/tinker-wrench/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 14,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/tinker-wrench.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "tinker",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "tinker-button",
+      "nameUk": "Ґудзик",
+      "kind": "hero",
+      "styleBlock": "B",
+      "promptFile": "art/prompts/heroes/tinker-button.md",
+      "conceptDir": "art/concepts/tinker-button/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 15,
+      "wave": 2,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "summonOf": "tinker",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/tinker-button.glb",
+      "rig": "quadruped",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "thornling",
+      "nameUk": "Терновик",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/thornling.md",
+      "conceptDir": "art/concepts/thornling/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 16,
+      "wave": 3,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/thornling.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "grey-wolf",
+      "nameUk": "Сірий вовк",
+      "kind": "monster",
+      "styleBlock": "B",
+      "promptFile": "art/prompts/monsters/grey-wolf.md",
+      "conceptDir": "art/concepts/grey-wolf/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 17,
+      "wave": 3,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/grey-wolf.glb",
+      "rig": "quadruped",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "bandit-brute",
+      "nameUk": "Розбійник-громило",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/bandit-brute.md",
+      "conceptDir": "art/concepts/bandit-brute/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 18,
+      "wave": 3,
+      "scenarios": [
+        2,
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/bandit-brute.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "bandit-club"
+      ]
+    },
+    {
+      "id": "bandit-club",
+      "nameUk": "Кийок розбійника",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/bandit-club.md",
+      "conceptDir": "art/concepts/bandit-club/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 19,
+      "wave": 3,
+      "scenarios": [
+        2,
+        3
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/bandit-club.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "bandit-brute",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "bandit-crossbow",
+      "nameUk": "Розбійник-арбалетник",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/bandit-crossbow.md",
+      "conceptDir": "art/concepts/bandit-crossbow/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 20,
+      "wave": 3,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/bandit-crossbow.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "crossbow"
+      ]
+    },
+    {
+      "id": "crossbow",
+      "nameUk": "Арбалет розбійника",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/crossbow.md",
+      "conceptDir": "art/concepts/crossbow/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 21,
+      "wave": 3,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/crossbow.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "bandit-crossbow",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "bog-slime",
+      "nameUk": "Болотяний слиз",
+      "kind": "monster",
+      "styleBlock": "C",
+      "promptFile": "art/prompts/monsters/bog-slime.md",
+      "conceptDir": "art/concepts/bog-slime/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 22,
+      "wave": 3,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/bog-slime.glb",
+      "rig": "none",
+      "animations": [],
+      "codeAnimations": [
+        "bob",
+        "squash-stretch",
+        "flicker"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "stone-sentinel",
+      "nameUk": "Кам'яний вартовий",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/stone-sentinel.md",
+      "conceptDir": "art/concepts/stone-sentinel/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 23,
+      "wave": 3,
+      "scenarios": [
+        4
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/stone-sentinel.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "gloom-cultist",
+      "nameUk": "Культист Мороку",
+      "kind": "monster",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/monsters/gloom-cultist.md",
+      "conceptDir": "art/concepts/gloom-cultist/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 24,
+      "wave": 3,
+      "scenarios": [
+        4,
+        5
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/gloom-cultist.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "cast",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "cultist-staff"
+      ]
+    },
+    {
+      "id": "cultist-staff",
+      "nameUk": "Посох культиста",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/cultist-staff.md",
+      "conceptDir": "art/concepts/cultist-staff/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 25,
+      "wave": 3,
+      "scenarios": [
+        4,
+        5
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/cultist-staff.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "gloom-cultist",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "shadow-wraith",
+      "nameUk": "Тіньовий привид",
+      "kind": "monster",
+      "styleBlock": "C",
+      "promptFile": "art/prompts/monsters/shadow-wraith.md",
+      "conceptDir": "art/concepts/shadow-wraith/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 26,
+      "wave": 3,
+      "scenarios": [
+        4,
+        5
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/shadow-wraith.glb",
+      "rig": "none",
+      "animations": [],
+      "codeAnimations": [
+        "bob",
+        "squash-stretch",
+        "flicker"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "bog-miller",
+      "nameUk": "Мірошник-Болотяник",
+      "kind": "boss",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/bosses/bog-miller.md",
+      "conceptDir": "art/concepts/bog-miller/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 27,
+      "wave": 4,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/bog-miller.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "cast",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": null,
+        "max": 25000
+      },
+      "textureMax": 1024,
+      "attachTo": null,
+      "items": [
+        "flour-sack"
+      ]
+    },
+    {
+      "id": "flour-sack",
+      "nameUk": "Мішок Мірошника",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/weapons/flour-sack.md",
+      "conceptDir": "art/concepts/flour-sack/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 28,
+      "wave": 4,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/flour-sack.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "bog-miller",
+        "hand": "right",
+        "bones": [
+          "RightHand"
+        ]
+      }
+    },
+    {
+      "id": "shadowhand",
+      "nameUk": "Тінерук",
+      "kind": "boss",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/bosses/shadowhand.md",
+      "conceptDir": "art/concepts/shadowhand/",
+      "conceptFiles": [
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 29,
+      "wave": 4,
+      "scenarios": [
+        5
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/shadowhand.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "cast",
+        "death"
+      ],
+      "attackStyle": "ranged",
+      "triangleBudget": {
+        "min": null,
+        "max": 25000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "barrel",
+      "nameUk": "Бочка",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/barrel.md",
+      "conceptDir": "art/concepts/barrel/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 30,
+      "wave": 5,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/barrel.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "crate",
+      "nameUk": "Ящик",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/crate.md",
+      "conceptDir": "art/concepts/crate/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 31,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/crate.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "chest",
+      "nameUk": "Скриня",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/chest.md",
+      "conceptDir": "art/concepts/chest/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 32,
+      "wave": 5,
+      "scenarios": [
+        1,
+        4
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/chest.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "dungeon-door",
+      "nameUk": "Двері",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/dungeon-door.md",
+      "conceptDir": "art/concepts/dungeon-door/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 33,
+      "wave": 5,
+      "scenarios": [
+        1,
+        4
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/dungeon-door.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "floor-lever",
+      "nameUk": "Важіль",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/floor-lever.md",
+      "conceptDir": "art/concepts/floor-lever/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 34,
+      "wave": 5,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/floor-lever.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "brazier",
+      "nameUk": "Жаровня",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/brazier.md",
+      "conceptDir": "art/concepts/brazier/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 35,
+      "wave": 5,
+      "scenarios": [
+        5
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/brazier.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "rune-stone",
+      "nameUk": "Рунний камінь",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/rune-stone.md",
+      "conceptDir": "art/concepts/rune-stone/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 36,
+      "wave": 5,
+      "scenarios": [
+        4
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/rune-stone.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "bear-trap",
+      "nameUk": "Капкан",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/bear-trap.md",
+      "conceptDir": "art/concepts/bear-trap/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 37,
+      "wave": 5,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/bear-trap.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "thorn-bush",
+      "nameUk": "Тернові зарості",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/thorn-bush.md",
+      "conceptDir": "art/concepts/thorn-bush/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 38,
+      "wave": 5,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/thorn-bush.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "mill-wheel",
+      "nameUk": "Мельничне колесо",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/mill-wheel.md",
+      "conceptDir": "art/concepts/mill-wheel/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 39,
+      "wave": 5,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/mill-wheel.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tavern-table",
+      "nameUk": "Стіл корчми",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/tavern-table.md",
+      "conceptDir": "art/concepts/tavern-table/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 40,
+      "wave": 5,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/tavern-table.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "lantern-shard",
+      "nameUk": "Уламок Ліхтаря",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/lantern-shard.md",
+      "conceptDir": "art/concepts/lantern-shard/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 41,
+      "wave": 5,
+      "scenarios": [
+        1,
+        4
+      ],
+      "descriptionSource": "new",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/lantern-shard.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-cobblestone",
+      "nameUk": "Бруківка підземелля",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-cobblestone.md",
+      "conceptDir": "art/concepts/tex-cobblestone/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 42,
+      "wave": 5,
+      "scenarios": [
+        1,
+        4
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/cobblestone.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-tavern-planks",
+      "nameUk": "Дошки льоху корчми",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-tavern-planks.md",
+      "conceptDir": "art/concepts/tex-tavern-planks/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 43,
+      "wave": 5,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/tavern-planks.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-forest-floor",
+      "nameUk": "Лісова підстилка",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-forest-floor.md",
+      "conceptDir": "art/concepts/tex-forest-floor/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 44,
+      "wave": 5,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/forest-floor.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-shallow-water",
+      "nameUk": "Мілка вода",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-shallow-water.md",
+      "conceptDir": "art/concepts/tex-shallow-water/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 45,
+      "wave": 5,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/shallow-water.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-swamp-mud",
+      "nameUk": "Болото",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-swamp-mud.md",
+      "conceptDir": "art/concepts/tex-swamp-mud/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 46,
+      "wave": 5,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/swamp-mud.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tex-cave-rock",
+      "nameUk": "Камінь печери",
+      "kind": "texture",
+      "styleBlock": "E",
+      "promptFile": "art/prompts/textures/tex-cave-rock.md",
+      "conceptDir": "art/concepts/tex-cave-rock/",
+      "conceptFiles": [
+        "front.png"
+      ],
+      "order": 47,
+      "wave": 5,
+      "scenarios": [
+        5
+      ],
+      "descriptionSource": "design-doc",
+      "meshy": null,
+      "textureFile": "assets/textures/cave-rock.png",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": null,
+      "textureMax": 1024,
+      "attachTo": null
+    }
+  ]
+}
