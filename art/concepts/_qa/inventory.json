@@ -1,0 +1,1111 @@
+[
+  {
+    "id": "warden",
+    "promptFile": "heroes/warden.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\warden\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\warden\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\warden\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\warden\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": true,
+    "threadId": "01a169fe-637a-7773-8de1-8c563f128680",
+    "archived": true
+  },
+  {
+    "id": "warden-shield",
+    "promptFile": "weapons/warden-shield.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\warden-shield\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a12-66a0-7f11-9fd0-fc74a79ccffd",
+    "archived": true
+  },
+  {
+    "id": "wind-archer",
+    "promptFile": "heroes/wind-archer.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\wind-archer\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\wind-archer\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\wind-archer\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\wind-archer\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": true,
+    "threadId": "01a169ff-cb48-7cc2-a784-759dc4a154f4",
+    "archived": true
+  },
+  {
+    "id": "wind-archer-bow",
+    "promptFile": "weapons/wind-archer-bow.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\wind-archer-bow\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a12-7977-7761-ba04-5137aad30848",
+    "archived": true
+  },
+  {
+    "id": "cellar-rat",
+    "promptFile": "monsters/cellar-rat.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\cellar-rat\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\cellar-rat\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\cellar-rat\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": true,
+    "threadId": "01a16a00-ee97-77d0-9043-6edcf41c0afd",
+    "archived": true
+  },
+  {
+    "id": "gremlin",
+    "promptFile": "monsters/gremlin.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\gremlin\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\gremlin\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\gremlin\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": true,
+    "threadId": "01a16a02-30c1-76d1-9458-c61e7b9d7e1f",
+    "archived": true
+  },
+  {
+    "id": "gremlin-slingshot",
+    "promptFile": "weapons/gremlin-slingshot.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\gremlin-slingshot\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a12-9027-7802-95c1-d6630fe05229",
+    "archived": true
+  },
+  {
+    "id": "herbalist",
+    "promptFile": "heroes/herbalist.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\herbalist\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a14-8392-7a60-8236-547054b9e7a3",
+    "archived": true
+  },
+  {
+    "id": "herbalist-staff",
+    "promptFile": "weapons/herbalist-staff.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\herbalist-staff\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a14-94ed-7db2-8d15-6c9e49442c63",
+    "archived": true
+  },
+  {
+    "id": "rogue",
+    "promptFile": "heroes/rogue.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\rogue\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a14-aba0-7a32-a3e6-31d38a3c933d",
+    "archived": true
+  },
+  {
+    "id": "rogue-dagger",
+    "promptFile": "weapons/rogue-dagger.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\rogue-dagger\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a14-bfe1-72a0-a08b-283f2b8c8c40",
+    "archived": true
+  },
+  {
+    "id": "elementalist",
+    "promptFile": "heroes/elementalist.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\elementalist\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a14-dbf6-7740-a052-1c0fa78e86f7",
+    "archived": true
+  },
+  {
+    "id": "tinker",
+    "promptFile": "heroes/tinker.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tinker\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a14-f7d3-7b81-9730-844f8901ece3",
+    "archived": true
+  },
+  {
+    "id": "tinker-wrench",
+    "promptFile": "weapons/tinker-wrench.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tinker-wrench\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a15-1e74-7913-9fce-4cf8550e3b9e",
+    "archived": true
+  },
+  {
+    "id": "tinker-button",
+    "promptFile": "heroes/tinker-button.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tinker-button\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a15-397e-7191-94d3-0ac0e136c9a5",
+    "archived": true
+  },
+  {
+    "id": "thornling",
+    "promptFile": "monsters/thornling.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\thornling\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a17-ef77-75b1-82dc-42596437df21",
+    "archived": true
+  },
+  {
+    "id": "grey-wolf",
+    "promptFile": "monsters/grey-wolf.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\grey-wolf\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-00e7-7823-8f4e-4b06b38c3d86",
+    "archived": true
+  },
+  {
+    "id": "bandit-brute",
+    "promptFile": "monsters/bandit-brute.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bandit-brute\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-1433-74f3-b554-828552a1f684",
+    "archived": true
+  },
+  {
+    "id": "bandit-club",
+    "promptFile": "weapons/bandit-club.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bandit-club\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a18-2745-7581-86c3-3f6c0d6cfd67",
+    "archived": true
+  },
+  {
+    "id": "bandit-crossbow",
+    "promptFile": "monsters/bandit-crossbow.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bandit-crossbow\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-3f43-7c93-841b-0e7096d68611",
+    "archived": true
+  },
+  {
+    "id": "crossbow",
+    "promptFile": "weapons/crossbow.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\crossbow\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a18-5675-7e73-b287-95cbe7f87dd0",
+    "archived": true
+  },
+  {
+    "id": "bog-slime",
+    "promptFile": "monsters/bog-slime.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bog-slime\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-73f4-7281-8ecf-60ce00fa86fa",
+    "archived": true
+  },
+  {
+    "id": "stone-sentinel",
+    "promptFile": "monsters/stone-sentinel.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\stone-sentinel\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-8f56-7082-9bfa-6bece1c29b87",
+    "archived": true
+  },
+  {
+    "id": "gloom-cultist",
+    "promptFile": "monsters/gloom-cultist.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\gloom-cultist\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-adc0-7252-ba24-f4468d72dfb6",
+    "archived": true
+  },
+  {
+    "id": "cultist-staff",
+    "promptFile": "weapons/cultist-staff.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\cultist-staff\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a18-cb27-7d21-8c96-40ea81af76ee",
+    "archived": true
+  },
+  {
+    "id": "shadow-wraith",
+    "promptFile": "monsters/shadow-wraith.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\shadow-wraith\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a18-f0a9-7c83-904f-de6c7474bb2a",
+    "archived": true
+  },
+  {
+    "id": "bog-miller",
+    "promptFile": "bosses/bog-miller.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bog-miller\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a1c-3750-7ed0-a8f7-ef6eefcace9c",
+    "archived": true
+  },
+  {
+    "id": "flour-sack",
+    "promptFile": "weapons/flour-sack.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\flour-sack\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a1c-a570-7980-b03f-7ccbc657ae3b",
+    "archived": true
+  },
+  {
+    "id": "shadowhand",
+    "promptFile": "bosses/shadowhand.md",
+    "requiredViews": [
+      "front",
+      "side",
+      "back",
+      "portrait"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\shadowhand\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [
+      "side",
+      "back",
+      "portrait"
+    ],
+    "frontApproved": false,
+    "threadId": "01a16a1d-32a2-7381-99ab-6e77fb5728bf",
+    "archived": true
+  },
+  {
+    "id": "barrel",
+    "promptFile": "props/barrel.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\barrel\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a20-a162-7f92-9f98-2586ec0b72d7",
+    "archived": true
+  },
+  {
+    "id": "crate",
+    "promptFile": "props/crate.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\crate\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a20-ce54-7583-95bc-f6a3aeafd9b5",
+    "archived": true
+  },
+  {
+    "id": "chest",
+    "promptFile": "props/chest.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\chest\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a21-056a-7373-ae44-b67a45e3a76f",
+    "archived": true
+  },
+  {
+    "id": "dungeon-door",
+    "promptFile": "props/dungeon-door.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\dungeon-door\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a21-55a2-7550-bc08-a711c8b2a234",
+    "archived": true
+  },
+  {
+    "id": "floor-lever",
+    "promptFile": "props/floor-lever.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\floor-lever\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a21-8491-7372-8f64-f05ff513c07c",
+    "archived": true
+  },
+  {
+    "id": "brazier",
+    "promptFile": "props/brazier.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\brazier\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a21-dac8-7c21-9d6b-7e3bf59f0bdb",
+    "archived": true
+  },
+  {
+    "id": "rune-stone",
+    "promptFile": "props/rune-stone.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\rune-stone\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a23-e320-73f2-8372-cedc5e30286f",
+    "archived": true
+  },
+  {
+    "id": "bear-trap",
+    "promptFile": "props/bear-trap.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\bear-trap\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a23-f683-7d42-95b4-896f54c46db9",
+    "archived": true
+  },
+  {
+    "id": "thorn-bush",
+    "promptFile": "props/thorn-bush.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\thorn-bush\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a24-0a4c-7d41-9474-31e49fcb890e",
+    "archived": true
+  },
+  {
+    "id": "mill-wheel",
+    "promptFile": "props/mill-wheel.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\mill-wheel\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a24-1dc3-7ff1-8c0c-4fc760bf3a0e",
+    "archived": true
+  },
+  {
+    "id": "tavern-table",
+    "promptFile": "props/tavern-table.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tavern-table\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a24-32f0-7c81-b7c3-e37f2ad70e77",
+    "archived": true
+  },
+  {
+    "id": "lantern-shard",
+    "promptFile": "props/lantern-shard.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\lantern-shard\\front.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a24-4d2a-7c22-9e3b-28f2f353cd37",
+    "archived": true
+  },
+  {
+    "id": "tex-cobblestone",
+    "promptFile": "textures/tex-cobblestone.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-cobblestone\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a26-92ff-7343-93fa-b692ca5394fc",
+    "archived": true
+  },
+  {
+    "id": "tex-tavern-planks",
+    "promptFile": "textures/tex-tavern-planks.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-tavern-planks\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a26-a6b5-76f2-b122-a72e48bd1e0a",
+    "archived": true
+  },
+  {
+    "id": "tex-forest-floor",
+    "promptFile": "textures/tex-forest-floor.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-forest-floor\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a26-bbe1-7e52-a0a1-ecaaf02893d6",
+    "archived": true
+  },
+  {
+    "id": "tex-shallow-water",
+    "promptFile": "textures/tex-shallow-water.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-shallow-water\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a26-d50d-7b83-a12d-1de67fc07a92",
+    "archived": true
+  },
+  {
+    "id": "tex-swamp-mud",
+    "promptFile": "textures/tex-swamp-mud.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-swamp-mud\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a26-f044-7380-8d66-3c40d57c07d6",
+    "archived": true
+  },
+  {
+    "id": "tex-cave-rock",
+    "promptFile": "textures/tex-cave-rock.md",
+    "requiredViews": [
+      "front"
+    ],
+    "existingViews": [
+      {
+        "view": "front",
+        "path": "C:\\Braves\\art\\concepts\\tex-cave-rock\\front.png",
+        "width": 1024,
+        "height": 1024,
+        "square": true
+      }
+    ],
+    "missingViews": [],
+    "frontApproved": false,
+    "threadId": "01a16a27-0c55-7153-b9c3-f6e275f4a750",
+    "archived": true
+  }
+]

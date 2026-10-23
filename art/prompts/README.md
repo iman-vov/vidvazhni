@@ -68,53 +68,53 @@ art/concepts/<id>/portrait.png   (лише герої й боси)
 
 | № | id | назва | тип | блок | статус |
 |---|---|---|---|---|---|
-| 1 | [`warden`](heroes/warden.md) | Вартовий | герой | A | фронт прийнято |
-| 2 | [`warden-shield`](weapons/warden-shield.md) | Щит-двері Вартового | зброя | D | |
-| 3 | [`wind-archer`](heroes/wind-archer.md) | Лучниця Вітру | герой | A | перегенерувати фронт |
-| 4 | [`wind-archer-bow`](weapons/wind-archer-bow.md) | Лук Лучниці | зброя | D | |
-| 5 | [`cellar-rat`](monsters/cellar-rat.md) | Пацюк-злодюжка | монстр | B | перегенерувати фронт |
-| 6 | [`gremlin`](monsters/gremlin.md) | Гремлін-пакостник | монстр | A | перегенерувати фронт |
-| 7 | [`gremlin-slingshot`](weapons/gremlin-slingshot.md) | Рогатка гремліна ✱ | зброя | D | |
-| 8 | [`herbalist`](heroes/herbalist.md) | Травниця | герой | A | |
-| 9 | [`herbalist-staff`](weapons/herbalist-staff.md) | Терновий посох Травниці | зброя | D | |
-| 10 | [`rogue`](heroes/rogue.md) | Пройда | герой | A | |
-| 11 | [`rogue-dagger`](weapons/rogue-dagger.md) | Кинджал Пройди ✱ | зброя | D | |
-| 12 | [`elementalist`](heroes/elementalist.md) | Стихійник | герой | A | |
-| 13 | [`tinker`](heroes/tinker.md) | Майстер | герой | A | |
-| 14 | [`tinker-wrench`](weapons/tinker-wrench.md) | Гайковий ключ Майстра | зброя | D | |
-| 15 | [`tinker-button`](heroes/tinker-button.md) | Ґудзик | герой (виклик) | B | |
-| 16 | [`thornling`](monsters/thornling.md) | Терновик | монстр | A | |
-| 17 | [`grey-wolf`](monsters/grey-wolf.md) | Сірий вовк | монстр | B | |
-| 18 | [`bandit-brute`](monsters/bandit-brute.md) | Розбійник-громило | монстр | A | |
-| 19 | [`bandit-club`](weapons/bandit-club.md) | Кийок розбійника ✱ | зброя | D | |
-| 20 | [`bandit-crossbow`](monsters/bandit-crossbow.md) | Розбійник-арбалетник | монстр | A | |
-| 21 | [`crossbow`](weapons/crossbow.md) | Арбалет розбійника ✱ | зброя | D | |
-| 22 | [`bog-slime`](monsters/bog-slime.md) | Болотяний слиз | монстр | C | |
-| 23 | [`stone-sentinel`](monsters/stone-sentinel.md) | Кам'яний вартовий | монстр | A | |
-| 24 | [`gloom-cultist`](monsters/gloom-cultist.md) | Культист Мороку | монстр | A | |
-| 25 | [`cultist-staff`](weapons/cultist-staff.md) | Посох культиста ✱ | зброя | D | |
-| 26 | [`shadow-wraith`](monsters/shadow-wraith.md) | Тіньовий привид | монстр | C | |
-| 27 | [`bog-miller`](bosses/bog-miller.md) | Мірошник-Болотяник | бос | A | |
-| 28 | [`flour-sack`](weapons/flour-sack.md) | Мішок Мірошника ✱ | зброя | D | |
-| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | |
-| 30 | [`barrel`](props/barrel.md) | Бочка | пропс | D | |
-| 31 | [`crate`](props/crate.md) | Ящик | пропс | D | |
-| 32 | [`chest`](props/chest.md) | Скриня | пропс | D | |
-| 33 | [`dungeon-door`](props/dungeon-door.md) | Двері | пропс | D | |
-| 34 | [`floor-lever`](props/floor-lever.md) | Важіль | пропс | D | |
-| 35 | [`brazier`](props/brazier.md) | Жаровня | пропс | D | |
-| 36 | [`rune-stone`](props/rune-stone.md) | Рунний камінь | пропс | D | |
-| 37 | [`bear-trap`](props/bear-trap.md) | Капкан | пропс | D | |
-| 38 | [`thorn-bush`](props/thorn-bush.md) | Тернові зарості | пропс | D | |
-| 39 | [`mill-wheel`](props/mill-wheel.md) | Мельничне колесо | пропс | D | |
-| 40 | [`tavern-table`](props/tavern-table.md) | Стіл корчми | пропс | D | |
-| 41 | [`lantern-shard`](props/lantern-shard.md) | Уламок Ліхтаря ✱ | пропс | D | |
-| 42 | [`tex-cobblestone`](textures/tex-cobblestone.md) | Бруківка підземелля | текстура | E | |
-| 43 | [`tex-tavern-planks`](textures/tex-tavern-planks.md) | Дошки льоху корчми | текстура | E | |
-| 44 | [`tex-forest-floor`](textures/tex-forest-floor.md) | Лісова підстилка | текстура | E | |
-| 45 | [`tex-shallow-water`](textures/tex-shallow-water.md) | Мілка вода | текстура | E | |
-| 46 | [`tex-swamp-mud`](textures/tex-swamp-mud.md) | Болото | текстура | E | |
-| 47 | [`tex-cave-rock`](textures/tex-cave-rock.md) | Камінь печери | текстура | E | |
+| 1 | [`warden`](heroes/warden.md) | Вартовий | герой | A | перегенерувати side |
+| 2 | [`warden-shield`](weapons/warden-shield.md) | Щит-двері Вартового | зброя | D | усі ракурси готові |
+| 3 | [`wind-archer`](heroes/wind-archer.md) | Лучниця Вітру | герой | A | усі ракурси прийняті |
+| 4 | [`wind-archer-bow`](weapons/wind-archer-bow.md) | Лук Лучниці | зброя | D | усі ракурси готові |
+| 5 | [`cellar-rat`](monsters/cellar-rat.md) | Пацюк-злодюжка | монстр | B | усі ракурси прийняті |
+| 6 | [`gremlin`](monsters/gremlin.md) | Гремлін-пакостник | монстр | A | усі ракурси прийняті |
+| 7 | [`gremlin-slingshot`](weapons/gremlin-slingshot.md) | Рогатка гремліна ✱ | зброя | D | усі ракурси готові |
+| 8 | [`herbalist`](heroes/herbalist.md) | Травниця | герой | A | фронт прийнято |
+| 9 | [`herbalist-staff`](weapons/herbalist-staff.md) | Терновий посох Травниці | зброя | D | усі ракурси готові |
+| 10 | [`rogue`](heroes/rogue.md) | Пройда | герой | A | фронт прийнято |
+| 11 | [`rogue-dagger`](weapons/rogue-dagger.md) | Кинджал Пройди ✱ | зброя | D | усі ракурси готові |
+| 12 | [`elementalist`](heroes/elementalist.md) | Стихійник | герой | A | фронт прийнято |
+| 13 | [`tinker`](heroes/tinker.md) | Майстер | герой | A | фронт прийнято |
+| 14 | [`tinker-wrench`](weapons/tinker-wrench.md) | Гайковий ключ Майстра | зброя | D | усі ракурси готові |
+| 15 | [`tinker-button`](heroes/tinker-button.md) | Ґудзик | герой (виклик) | B | фронт прийнято |
+| 16 | [`thornling`](monsters/thornling.md) | Терновик | монстр | A | фронт прийнято |
+| 17 | [`grey-wolf`](monsters/grey-wolf.md) | Сірий вовк | монстр | B | фронт прийнято |
+| 18 | [`bandit-brute`](monsters/bandit-brute.md) | Розбійник-громило | монстр | A | фронт прийнято |
+| 19 | [`bandit-club`](weapons/bandit-club.md) | Кийок розбійника ✱ | зброя | D | усі ракурси готові |
+| 20 | [`bandit-crossbow`](monsters/bandit-crossbow.md) | Розбійник-арбалетник | монстр | A | фронт прийнято |
+| 21 | [`crossbow`](weapons/crossbow.md) | Арбалет розбійника ✱ | зброя | D | усі ракурси готові |
+| 22 | [`bog-slime`](monsters/bog-slime.md) | Болотяний слиз | монстр | C | фронт прийнято |
+| 23 | [`stone-sentinel`](monsters/stone-sentinel.md) | Кам'яний вартовий | монстр | A | фронт прийнято |
+| 24 | [`gloom-cultist`](monsters/gloom-cultist.md) | Культист Мороку | монстр | A | фронт прийнято |
+| 25 | [`cultist-staff`](weapons/cultist-staff.md) | Посох культиста ✱ | зброя | D | усі ракурси готові |
+| 26 | [`shadow-wraith`](monsters/shadow-wraith.md) | Тіньовий привид | монстр | C | фронт прийнято |
+| 27 | [`bog-miller`](bosses/bog-miller.md) | Мірошник-Болотяник | бос | A | фронт прийнято |
+| 28 | [`flour-sack`](weapons/flour-sack.md) | Мішок Мірошника ✱ | зброя | D | усі ракурси готові |
+| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | фронт прийнято |
+| 30 | [`barrel`](props/barrel.md) | Бочка | пропс | D | усі ракурси готові |
+| 31 | [`crate`](props/crate.md) | Ящик | пропс | D | усі ракурси готові |
+| 32 | [`chest`](props/chest.md) | Скриня | пропс | D | усі ракурси готові |
+| 33 | [`dungeon-door`](props/dungeon-door.md) | Двері | пропс | D | усі ракурси готові |
+| 34 | [`floor-lever`](props/floor-lever.md) | Важіль | пропс | D | усі ракурси готові |
+| 35 | [`brazier`](props/brazier.md) | Жаровня | пропс | D | усі ракурси готові |
+| 36 | [`rune-stone`](props/rune-stone.md) | Рунний камінь | пропс | D | усі ракурси готові |
+| 37 | [`bear-trap`](props/bear-trap.md) | Капкан | пропс | D | усі ракурси готові |
+| 38 | [`thorn-bush`](props/thorn-bush.md) | Тернові зарості | пропс | D | усі ракурси готові |
+| 39 | [`mill-wheel`](props/mill-wheel.md) | Мельничне колесо | пропс | D | усі ракурси готові |
+| 40 | [`tavern-table`](props/tavern-table.md) | Стіл корчми | пропс | D | усі ракурси готові |
+| 41 | [`lantern-shard`](props/lantern-shard.md) | Уламок Ліхтаря ✱ | пропс | D | усі ракурси готові |
+| 42 | [`tex-cobblestone`](textures/tex-cobblestone.md) | Бруківка підземелля | текстура | E | усі ракурси готові |
+| 43 | [`tex-tavern-planks`](textures/tex-tavern-planks.md) | Дошки льоху корчми | текстура | E | усі ракурси готові |
+| 44 | [`tex-forest-floor`](textures/tex-forest-floor.md) | Лісова підстилка | текстура | E | усі ракурси готові |
+| 45 | [`tex-shallow-water`](textures/tex-shallow-water.md) | Мілка вода | текстура | E | усі ракурси готові |
+| 46 | [`tex-swamp-mud`](textures/tex-swamp-mud.md) | Болото | текстура | E | усі ракурси готові |
+| 47 | [`tex-cave-rock`](textures/tex-cave-rock.md) | Камінь печери | текстура | E | усі ракурси готові |
 
 ## Для ChatGPT
 
