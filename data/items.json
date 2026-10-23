@@ -1,0 +1,102 @@
+[
+  {
+    "id": "leather-helmet",
+    "slot": "head",
+    "price": 20,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }]
+  },
+  {
+    "id": "chainmail",
+    "slot": "body",
+    "price": 25,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+  },
+  {
+    "id": "swift-boots",
+    "slot": "legs",
+    "price": 20,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 2 } }]
+  },
+  {
+    "id": "dagger",
+    "slot": "hand",
+    "price": 15,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 1 } }]
+  },
+  {
+    "id": "buckler",
+    "slot": "hand",
+    "price": 20,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+  },
+  {
+    "id": "healing-potion",
+    "slot": "small",
+    "price": 10,
+    "unlockedAfter": 0,
+    "use": "lost",
+    "effect": [{ "type": "heal", "value": 3, "target": "self" }]
+  },
+  {
+    "id": "strength-potion",
+    "slot": "small",
+    "price": 15,
+    "unlockedAfter": 0,
+    "use": "lost",
+    "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }]
+  },
+  {
+    "id": "grappling-rope",
+    "slot": "small",
+    "price": 15,
+    "unlockedAfter": 0,
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "jumpOnMove" }]
+  },
+  {
+    "id": "light-amulet",
+    "slot": "small",
+    "price": 30,
+    "unlockedAfter": 3,
+    "use": "lost",
+    "effect": [{ "type": "infuse", "element": "light" }],
+    "forkEffect": [{ "type": "infuse", "element": "earth" }]
+  },
+  {
+    "id": "shadow-cloak",
+    "slot": "body",
+    "price": 40,
+    "unlockedAfter": 3,
+    "use": "lost",
+    "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }]
+  },
+  {
+    "id": "yew-bow",
+    "slot": "twoHands",
+    "price": 35,
+    "unlockedAfter": 3,
+    "use": "passive",
+    "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 1 } }]
+  },
+  {
+    "id": "heavy-armor",
+    "slot": "body",
+    "price": 45,
+    "unlockedAfter": 3,
+    "use": "passive",
+    "effect": [
+      { "type": "shield", "value": 1, "target": "self", "duration": "persistent" },
+      { "type": "special", "name": "movePenalty", "params": { "value": 1 } }
+    ]
+  }
+]

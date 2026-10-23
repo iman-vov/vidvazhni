@@ -1,0 +1,170 @@
+{
+  "id": "herbalist",
+  "complexity": "medium",
+  "hpByLevel": [8, 9, 11, 12, 14],
+  "handSize": 10,
+  "classElement": "light",
+  "classOrb": "earth",
+  "surge": [
+    { "type": "heal", "value": 2, "target": "self" },
+    { "type": "heal", "value": 2, "target": "ally", "range": 2 }
+  ],
+  "cards": [
+    {
+      "id": "herbalist.healing-salve",
+      "level": 1,
+      "initiative": 15,
+      "top": { "steps": [{ "type": "heal", "value": 3, "target": "allyOrSelf", "range": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "herbalist.poison-brew",
+      "level": 1,
+      "initiative": 25,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 3, "conditions": ["poison"] }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 2,
+              "range": 3,
+              "conditions": ["poison"],
+              "consume": { "element": "fire", "add": { "value": 1 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "herbalist.blessing",
+      "level": 1,
+      "initiative": 20,
+      "top": { "steps": [{ "type": "bless", "target": "ally", "range": 3, "xp": 1 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "heal", "value": 1, "target": "self" }] }
+    },
+    {
+      "id": "herbalist.thorn-staff",
+      "level": 1,
+      "initiative": 40,
+      "top": { "steps": [{ "type": "attack", "value": 3 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }, { "type": "infuse", "element": "earth" }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "herbalist.blooming-circle",
+      "level": 1,
+      "initiative": 30,
+      "top": {
+        "steps": [{ "type": "heal", "value": 2, "target": "alliesInRadius", "radius": 2, "xp": 1 }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "fork": {
+        "bottom": { "steps": [{ "type": "move", "value": 2, "consume": { "element": "air", "add": { "move": 2 } } }] }
+      }
+    },
+    {
+      "id": "herbalist.roots",
+      "level": 1,
+      "initiative": 50,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "conditions": ["immobilize"],
+            "consume": { "element": "earth", "add": { "targets": 1 } }
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "herbalist.morning-dew",
+      "level": 1,
+      "initiative": 10,
+      "top": {
+        "steps": [
+          { "type": "heal", "value": 2, "target": "allyOrSelf", "range": 3, "removeNegative": 1 },
+          { "type": "infuse", "element": "light" }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "momentum": true,
+        "top": {
+          "steps": [
+            { "type": "heal", "value": 2, "target": "allyOrSelf", "range": 3, "removeNegative": 1 },
+            { "type": "infuse", "element": "earth" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "herbalist.sun-brew",
+      "level": 1,
+      "initiative": 35,
+      "top": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "strengthen",
+            "target": "ally",
+            "range": 2,
+            "consume": { "element": "light", "extraTarget": true }
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }] },
+      "fork": {
+        "momentum": true,
+        "top": {
+          "steps": [
+            {
+              "type": "condition",
+              "condition": "strengthen",
+              "target": "ally",
+              "range": 2,
+              "consume": { "element": "earth", "extraTarget": true }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "herbalist.stinging-nettle",
+      "level": 1,
+      "initiative": 45,
+      "top": { "steps": [{ "type": "attack", "value": 3, "conditions": ["wound"], "xp": 1 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 3,
+              "conditions": ["wound"],
+              "xp": 1,
+              "consume": { "element": "fire", "add": { "value": 1 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "herbalist.forest-gift",
+      "level": 1,
+      "initiative": 65,
+      "top": {
+        "steps": [{ "type": "heal", "value": 5, "target": "allyOrSelf", "range": 3, "bless": true, "xp": 2 }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
+      "fork": { "momentum": true }
+    }
+  ]
+}

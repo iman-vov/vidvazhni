@@ -1,0 +1,18 @@
+{
+  "id": "cellar-rat",
+  "deck": "melee",
+  "initiativeOffset": -5,
+  "normal": { "hp": 3, "move": 3, "attack": 1 },
+  "elite": { "hp": 5, "move": 3, "attack": 2 },
+  "traits": [{ "trait": "advantageIfSameTypeAdjacentToTarget" }],
+  "forkCards": [
+    {
+      "id": "cellar-rat.scurry",
+      "initiative": 22,
+      "if": "selfHpAtMostHalf",
+      "steps": [{ "type": "special", "name": "retreat", "params": { "distance": 3 } }],
+      "otherwise": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
+    }
+  ],
+  "model": "assets/models/cellar-rat.glb"
+}

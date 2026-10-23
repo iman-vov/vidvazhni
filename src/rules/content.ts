@@ -66,6 +66,8 @@ export interface ConsumeBonus {
   area?: AreaShape;
   /** Extra target for a non-attack step (Сонячний настій: «ще одному союзнику»). */
   extraTarget?: boolean;
+  /** The attack also curses its targets (Чаклун, Тінерук: «Прокляття цілі»). */
+  curse?: boolean;
 }
 
 interface StepCommon {
@@ -127,7 +129,7 @@ export type Step =
       type: 'active';
       uses: number;
       on: 'attack' | 'rangedAttack' | 'attacked';
-      grant: { advantage?: boolean; conditions?: ConditionId[]; shield?: number };
+      grant: { advantage?: boolean; conditions?: ConditionId[]; shield?: number; range?: number };
     })
   | (StepCommon & { type: 'teleport'; range: number })
   /** Behaviour that is not data-describable; implemented in src/rules/special/<name>.ts. */
@@ -262,7 +264,8 @@ export interface RoomDef {
   /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear. */
   spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>> }[];
   coins?: Hex[];
-  chests?: { hex: Hex; id: string }[];
+  /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
+  chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
   /** Named objects (важіль, жаровня, руни) handled by scenario specials. */
   objects?: { hex: Hex; id: string; kind: string }[];
 }
@@ -288,10 +291,50 @@ export interface ScenarioDef {
   reward: { goldEach: number; items?: string[]; unlock?: string[] };
 }
 
+export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';
+
+export interface ItemDef {
+  id: string;
+  slot: ItemSlot;
+  price: number;
+  /** 0 = in the shop from the start; N = after scenario N. */
+  unlockedAfter: number;
+  /** `spent` is restored by a long rest, `lost` after the scenario, `passive` is always on. */
+  use: 'spent' | 'lost' | 'passive';
+  effect: Step[];
+  /** Replaces `effect` when the orbs fork is on (Амулет світла: no Light orb). */
+  forkEffect?: Step[];
+}
+
+export interface BattleGoalDef {
+  id: string;
+  xp: number;
+  /** Named check implemented by the engine; `params` are its thresholds. */
+  check: string;
+  params?: Record<string, number | string | boolean>;
+}
+
+/** Edit of the hero's attack modifier deck. Card ids: `+0` `+1` `-1` `+2` `-2` `x2` `miss`, `+1:infuse`. */
+export type PerkOp =
+  | { op: 'add'; card: string; count: number }
+  | { op: 'remove'; card: string; count: number }
+  | { op: 'replace'; from: string; to: string; count: number };
+
+export interface PerkDef {
+  id: string;
+  /** How many times one hero can take it. */
+  max: number;
+  ops: PerkOp[];
+}
+
 export interface Content {
   heroes: Record<string, HeroClass>;
   monsters: Record<string, MonsterType>;
   bosses: Record<string, BossType>;
   decks: Record<string, BehaviourDeck>;
   scenarios: Record<string, ScenarioDef>;
+  /** Filled by `loadContent()`; optional so hand-built test contents need not provide them. */
+  items?: Record<string, ItemDef>;
+  battleGoals?: Record<string, BattleGoalDef>;
+  perks?: Record<string, PerkDef>;
 }

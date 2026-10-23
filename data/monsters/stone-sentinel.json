@@ -1,0 +1,20 @@
+{
+  "id": "stone-sentinel",
+  "deck": "guard",
+  "initiativeOffset": 15,
+  "normal": { "hp": 9, "move": 1, "attack": 3, "shield": 2 },
+  "elite": { "hp": 13, "move": 1, "attack": 4, "shield": 3 },
+  "forkCards": [
+    {
+      "id": "stone-sentinel.stone-stance",
+      "initiative": 50,
+      "if": "selfHpAtMostHalf",
+      "steps": [
+        { "type": "shield", "value": 2, "target": "self", "duration": "round" },
+        { "type": "retaliate", "value": 1, "duration": "round" }
+      ],
+      "otherwise": [{ "type": "attack", "value": 1, "push": 1 }]
+    }
+  ],
+  "model": "assets/models/stone-sentinel.glb"
+}

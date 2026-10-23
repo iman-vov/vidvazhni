@@ -1,0 +1,174 @@
+{
+  "id": "rogue",
+  "complexity": "medium",
+  "hpByLevel": [8, 9, 11, 12, 14],
+  "handSize": 9,
+  "classElement": "dark",
+  "classOrb": "air",
+  "surge": [
+    { "type": "move", "value": 2, "jump": true },
+    { "type": "condition", "condition": "invisible", "target": "self" }
+  ],
+  "cards": [
+    {
+      "id": "rogue.quick-stab",
+      "level": 1,
+      "initiative": 10,
+      "top": {
+        "steps": [{ "type": "attack", "value": 2, "bonuses": [{ "if": "allyAdjacentToTarget", "attack": 2 }] }]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "rogue.backstab",
+      "level": 1,
+      "initiative": 35,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "bonuses": [{ "if": "targetHasNoOtherEnemyAdjacent", "attack": 2 }]
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "rogue.smoke-bomb",
+      "level": 1,
+      "initiative": 15,
+      "top": {
+        "steps": [{ "type": "condition", "condition": "invisible", "target": "self", "xp": 1 }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "condition",
+              "condition": "invisible",
+              "target": "self",
+              "xp": 1,
+              "consume": {
+                "element": "earth",
+                "then": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+              }
+            }
+          ],
+          "loss": true
+        }
+      }
+    },
+    {
+      "id": "rogue.twin-daggers",
+      "level": 1,
+      "initiative": 30,
+      "top": { "steps": [{ "type": "attack", "value": 2 }, { "type": "attack", "value": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            { "type": "attack", "value": 2 },
+            { "type": "attack", "value": 2, "consume": { "element": "fire", "add": { "value": 1 } } }
+          ]
+        }
+      }
+    },
+    {
+      "id": "rogue.throwing-knife",
+      "level": 1,
+      "initiative": 25,
+      "top": { "steps": [{ "type": "attack", "value": 3, "range": 3 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }, { "type": "loot", "range": 1 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 3,
+              "range": 3,
+              "consume": { "element": "fire", "add": { "value": 1 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "rogue.poisoned-blade",
+      "level": 1,
+      "initiative": 20,
+      "top": {
+        "steps": [{ "type": "active", "uses": 3, "on": "attack", "grant": { "conditions": ["poison"] } }],
+        "active": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "rogue.shadow",
+      "level": 1,
+      "initiative": 8,
+      "top": { "steps": [{ "type": "attack", "value": 2 }, { "type": "move", "value": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }, { "type": "infuse", "element": "dark" }] },
+      "fork": {
+        "momentum": true,
+        "bottom": { "steps": [{ "type": "move", "value": 4 }, { "type": "infuse", "element": "air" }] }
+      }
+    },
+    {
+      "id": "rogue.deadly-strike",
+      "level": 1,
+      "initiative": 75,
+      "top": { "steps": [{ "type": "attack", "value": 6, "xp": 2 }], "loss": true },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "rogue.thief-skill",
+      "level": 1,
+      "initiative": 40,
+      "top": { "steps": [{ "type": "loot", "range": 2, "xp": 1 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 4, "jump": true }] }
+    },
+    {
+      "id": "rogue.strike-from-dark",
+      "level": 1,
+      "initiative": 55,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "xp": 1,
+            "consume": {
+              "element": "dark",
+              "add": { "value": 2 },
+              "then": [{ "type": "condition", "condition": "invisible", "target": "self" }]
+            }
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "momentum": true,
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 3,
+              "xp": 1,
+              "consume": {
+                "element": "air",
+                "add": { "value": 2 },
+                "then": [{ "type": "condition", "condition": "invisible", "target": "self" }]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

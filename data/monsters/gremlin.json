@@ -1,0 +1,27 @@
+{
+  "id": "gremlin",
+  "deck": "archer",
+  "initiativeOffset": 0,
+  "normal": { "hp": 3, "move": 2, "attack": 1, "range": 3 },
+  "elite": { "hp": 5, "move": 2, "attack": 2, "range": 3, "onAttack": ["muddle"] },
+  "forkCards": [
+    {
+      "id": "gremlin.scram",
+      "initiative": 18,
+      "if": "selfHpAtMostHalf",
+      "steps": [
+        { "type": "special", "name": "retreat", "params": { "distance": 2 } },
+        { "type": "attack", "value": -1 }
+      ],
+      "otherwise": [{ "type": "move", "value": 1 }, { "type": "attack", "value": -1 }]
+    },
+    {
+      "id": "gremlin.stink-bomb",
+      "initiative": 55,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [{ "type": "attack", "value": -1, "targets": 2, "conditions": ["muddle"] }],
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    }
+  ],
+  "model": "assets/models/gremlin.glb"
+}

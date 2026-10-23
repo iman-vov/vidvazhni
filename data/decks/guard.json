@@ -1,0 +1,58 @@
+{
+  "id": "guard",
+  "cards": [
+    {
+      "id": "guard.15",
+      "initiative": 15,
+      "steps": [
+        { "type": "shield", "value": 1, "target": "self", "duration": "round" },
+        { "type": "attack", "value": -1 }
+      ]
+    },
+    {
+      "id": "guard.22",
+      "initiative": 22,
+      "shuffle": true,
+      "steps": [
+        { "type": "shield", "value": 1, "target": "self", "duration": "round" },
+        { "type": "move", "value": 0 },
+        { "type": "attack", "value": 0 }
+      ]
+    },
+    {
+      "id": "guard.30",
+      "initiative": 30,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "guard.38",
+      "initiative": 38,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "guard.45",
+      "initiative": 45,
+      "steps": [{ "type": "attack", "value": 1 }, { "type": "retaliate", "value": 1, "duration": "round" }]
+    },
+    {
+      "id": "guard.55",
+      "initiative": 55,
+      "steps": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 1 }]
+    },
+    {
+      "id": "guard.68",
+      "initiative": 68,
+      "shuffle": true,
+      "steps": [{ "type": "attack", "value": 2, "push": 1 }]
+    },
+    {
+      "id": "guard.80",
+      "initiative": 80,
+      "steps": [
+        { "type": "move", "value": 1 },
+        { "type": "attack", "value": -1 },
+        { "type": "infuse", "element": "earth" }
+      ]
+    }
+  ]
+}

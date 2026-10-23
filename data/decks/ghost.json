@@ -1,0 +1,58 @@
+{
+  "id": "ghost",
+  "cards": [
+    {
+      "id": "ghost.12",
+      "initiative": 12,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": -1 }]
+    },
+    {
+      "id": "ghost.20",
+      "initiative": 20,
+      "shuffle": true,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "ghost.26",
+      "initiative": 26,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "ghost.36",
+      "initiative": 36,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0, "conditions": ["muddle"] }]
+    },
+    {
+      "id": "ghost.46",
+      "initiative": 46,
+      "steps": [
+        { "type": "move", "value": 0 },
+        { "type": "attack", "value": 1 },
+        { "type": "infuse", "element": "dark" }
+      ]
+    },
+    {
+      "id": "ghost.58",
+      "initiative": 58,
+      "steps": [
+        { "type": "move", "value": -1 },
+        {
+          "type": "attack",
+          "value": 1,
+          "consume": { "element": "dark", "then": [{ "type": "condition", "condition": "invisible", "target": "self" }] }
+        }
+      ]
+    },
+    {
+      "id": "ghost.65",
+      "initiative": 65,
+      "shuffle": true,
+      "steps": [{ "type": "attack", "value": 2, "conditions": ["wound"] }]
+    },
+    {
+      "id": "ghost.77",
+      "initiative": 77,
+      "steps": [{ "type": "move", "value": 2 }, { "type": "attack", "value": -1, "targets": 2 }]
+    }
+  ]
+}

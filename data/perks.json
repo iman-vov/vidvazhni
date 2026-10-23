@@ -1,0 +1,8 @@
+[
+  { "id": "remove-two-minus1", "max": 1, "ops": [{ "op": "remove", "card": "-1", "count": 2 }] },
+  { "id": "minus1-to-plus1", "max": 1, "ops": [{ "op": "replace", "from": "-1", "to": "+1", "count": 1 }] },
+  { "id": "add-two-plus1", "max": 1, "ops": [{ "op": "add", "card": "+1", "count": 2 }] },
+  { "id": "zero-to-plus2", "max": 1, "ops": [{ "op": "replace", "from": "+0", "to": "+2", "count": 1 }] },
+  { "id": "add-plus1-infuse", "max": 1, "ops": [{ "op": "add", "card": "+1:infuse", "count": 1 }] },
+  { "id": "remove-minus2", "max": 1, "ops": [{ "op": "remove", "card": "-2", "count": 1 }] }
+]

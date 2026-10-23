@@ -1,0 +1,24 @@
+{
+  "id": "bandit-brute",
+  "deck": "melee",
+  "initiativeOffset": 5,
+  "normal": { "hp": 7, "move": 2, "attack": 3 },
+  "elite": { "hp": 10, "move": 2, "attack": 4, "shield": 1 },
+  "forkCards": [
+    {
+      "id": "bandit-brute.furious-charge",
+      "initiative": 48,
+      "if": "selfHpAtMostHalf",
+      "steps": [{ "type": "attack", "value": 2 }],
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 1 }]
+    },
+    {
+      "id": "bandit-brute.wide-swing",
+      "initiative": 66,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [{ "type": "attack", "value": -1, "targetAll": "adjacentEnemies" }],
+      "otherwise": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
+    }
+  ],
+  "model": "assets/models/bandit-brute.glb"
+}

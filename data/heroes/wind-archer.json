@@ -1,0 +1,150 @@
+{
+  "id": "wind-archer",
+  "complexity": "medium",
+  "hpByLevel": [8, 9, 11, 12, 14],
+  "handSize": 9,
+  "classElement": "air",
+  "classOrb": "air",
+  "surge": [
+    { "type": "move", "value": 2, "jump": true },
+    { "type": "active", "uses": 1, "on": "rangedAttack", "grant": { "range": 1 } }
+  ],
+  "cards": [
+    {
+      "id": "wind-archer.quick-shot",
+      "level": 1,
+      "initiative": 18,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 4 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.double-arrow",
+      "level": 1,
+      "initiative": 30,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 3, "targets": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 2,
+              "range": 3,
+              "targets": 2,
+              "consume": { "element": "fire", "add": { "value": 1 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wind-archer.wind-arrow",
+      "level": 1,
+      "initiative": 22,
+      "top": { "steps": [{ "type": "attack", "value": 3, "range": 4 }, { "type": "infuse", "element": "air" }] },
+      "bottom": { "steps": [{ "type": "move", "value": 2, "jump": true }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.repelling-shot",
+      "level": 1,
+      "initiative": 26,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 3, "push": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 2,
+              "range": 3,
+              "push": 2,
+              "consume": {
+                "element": "earth",
+                "then": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wind-archer.aimed-shot",
+      "level": 1,
+      "initiative": 45,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "range": 5,
+            "xp": 1,
+            "consume": { "element": "air", "add": { "value": 2 } }
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.bird-sight",
+      "level": 1,
+      "initiative": 12,
+      "top": {
+        "steps": [{ "type": "active", "uses": 2, "on": "rangedAttack", "grant": { "advantage": true } }],
+        "active": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }, { "type": "loot", "range": 1 }] }
+    },
+    {
+      "id": "wind-archer.arrow-rain",
+      "level": 1,
+      "initiative": 60,
+      "top": {
+        "steps": [{ "type": "attack", "value": 3, "range": 3, "area": { "shape": "triangle", "size": 3 }, "xp": 1 }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 4 }] }
+    },
+    {
+      "id": "wind-archer.light-step",
+      "level": 1,
+      "initiative": 8,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 4, "jump": true }, { "type": "infuse", "element": "air" }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.binding-arrow",
+      "level": 1,
+      "initiative": 35,
+      "top": { "steps": [{ "type": "attack", "value": 2, "range": 4, "conditions": ["immobilize"] }] },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "attack",
+              "value": 2,
+              "range": 4,
+              "conditions": ["immobilize"],
+              "consume": { "element": "fire", "conditions": ["wound"] }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wind-archer.gale",
+      "level": 1,
+      "initiative": 70,
+      "top": {
+        "steps": [{ "type": "attack", "value": 4, "range": 3, "targets": 3, "push": 1, "xp": 2 }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3, "consume": { "element": "air", "add": { "move": 2 } } }] },
+      "fork": { "momentum": true }
+    }
+  ]
+}

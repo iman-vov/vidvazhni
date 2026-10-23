@@ -1,0 +1,11 @@
+{
+  "id": "shadowhand",
+  "hpPerHero": 10,
+  "hpPerHeroPerLevel": 2,
+  "move": 3,
+  "attack": 3,
+  "range": 3,
+  "deck": "boss.shadowhand",
+  "immune": ["stun", "immobilize", "muddle"],
+  "special": ["secondPhase"]
+}

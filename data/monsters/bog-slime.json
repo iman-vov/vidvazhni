@@ -1,0 +1,17 @@
+{
+  "id": "bog-slime",
+  "deck": "guard",
+  "initiativeOffset": 12,
+  "normal": { "hp": 6, "move": 1, "attack": 2, "onAttack": ["poison"] },
+  "elite": { "hp": 9, "move": 1, "attack": 3, "onAttack": ["poison"] },
+  "forkCards": [
+    {
+      "id": "bog-slime.sticky-wave",
+      "initiative": 40,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [{ "type": "attack", "value": -1, "targetAll": "adjacentEnemies" }],
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    }
+  ],
+  "model": "assets/models/bog-slime.glb"
+}

@@ -1,0 +1,10 @@
+[
+  { "id": "careful", "xp": 3, "check": "maxDamageInOneTurn", "params": { "max": 3 } },
+  { "id": "hoarder", "xp": 3, "check": "mostCoinsInParty" },
+  { "id": "hunter", "xp": 3, "check": "killEliteYourself" },
+  { "id": "provident", "xp": 3, "check": "handCardsAtEnd", "params": { "min": 3 } },
+  { "id": "rescuer", "xp": 3, "check": "healedTotal", "params": { "min": 6 } },
+  { "id": "bold", "xp": 3, "check": "firstIntoEachRoom" },
+  { "id": "patient", "xp": 3, "check": "noLongRest" },
+  { "id": "daredevil", "xp": 3, "check": "hpAtEndAtMost", "params": { "max": 3 } }
+]

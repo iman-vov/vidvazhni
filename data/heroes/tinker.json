@@ -1,0 +1,131 @@
+{
+  "id": "tinker",
+  "complexity": "complex",
+  "hpByLevel": [8, 9, 11, 12, 14],
+  "handSize": 10,
+  "classElement": "fire",
+  "classOrb": "fire",
+  "summon": { "id": "tinker.button", "hp": 5, "move": 3, "attack": 2 },
+  "surge": [{ "type": "special", "name": "summonAct", "params": { "move": 2, "attack": 2 } }],
+  "cards": [
+    {
+      "id": "tinker.gather-button",
+      "level": 1,
+      "initiative": 50,
+      "top": { "steps": [{ "type": "summon", "summon": "tinker.button", "xp": 1 }], "loss": true, "active": true },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }] }
+    },
+    {
+      "id": "tinker.wrench",
+      "level": 1,
+      "initiative": 20,
+      "top": { "steps": [{ "type": "attack", "value": 3 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "momentum": true,
+        "top": { "steps": [{ "type": "attack", "value": 3, "consume": { "element": "air", "add": { "push": 1 } } }] }
+      }
+    },
+    {
+      "id": "tinker.repair",
+      "level": 1,
+      "initiative": 15,
+      "top": { "steps": [{ "type": "heal", "value": 3, "target": "allyOrSelf", "range": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": {
+        "top": {
+          "steps": [
+            {
+              "type": "heal",
+              "value": 3,
+              "target": "allyOrSelf",
+              "range": 2,
+              "consume": { "element": "earth", "add": { "value": 1 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tinker.trap",
+      "level": 1,
+      "initiative": 35,
+      "top": { "steps": [{ "type": "trap", "damage": 3, "conditions": ["immobilize"] }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "tinker.explosive-jar",
+      "level": 1,
+      "initiative": 45,
+      "top": {
+        "steps": [
+          { "type": "attack", "value": 2, "range": 3, "area": { "shape": "targetAndAdjacent" }, "xp": 1 },
+          { "type": "infuse", "element": "fire" }
+        ],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "tinker.button-upgrade",
+      "level": 1,
+      "initiative": 25,
+      "top": {
+        "steps": [{ "type": "special", "name": "buttonUpgrade", "params": { "attack": 1, "move": 1 } }],
+        "loss": true
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "tinker.spring-boots",
+      "level": 1,
+      "initiative": 10,
+      "top": { "steps": [{ "type": "attack", "value": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 4, "jump": true }] },
+      "fork": {
+        "momentum": true,
+        "bottom": {
+          "steps": [
+            {
+              "type": "move",
+              "value": 4,
+              "jump": true,
+              "consume": { "element": "air", "add": { "move": 2 } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tinker.whistle",
+      "level": 1,
+      "initiative": 30,
+      "top": { "steps": [{ "type": "special", "name": "summonAct", "params": { "move": 3, "attack": 3 } }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "fork": { "momentum": true }
+    },
+    {
+      "id": "tinker.smoke-canister",
+      "level": 1,
+      "initiative": 40,
+      "top": {
+        "steps": [{ "type": "condition", "condition": "muddle", "target": "enemiesInRadius", "radius": 2, "xp": 1 }]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "tinker.clever-device",
+      "level": 1,
+      "initiative": 65,
+      "top": {
+        "steps": [
+          { "type": "attack", "value": 3, "range": 3, "push": 2 },
+          { "type": "heal", "value": 2, "target": "summon" }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
+      "fork": { "momentum": true }
+    }
+  ]
+}

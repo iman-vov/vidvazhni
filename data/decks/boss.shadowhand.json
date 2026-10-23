@@ -1,0 +1,53 @@
+{
+  "id": "boss.shadowhand",
+  "cards": [
+    {
+      "id": "boss.shadowhand.08",
+      "initiative": 8,
+      "steps": [{ "type": "teleport", "range": 5 }, { "type": "infuse", "element": "dark" }]
+    },
+    {
+      "id": "boss.shadowhand.20",
+      "initiative": 20,
+      "steps": [{ "type": "attack", "value": 0, "targets": 3, "conditions": ["muddle"] }]
+    },
+    {
+      "id": "boss.shadowhand.31",
+      "initiative": 31,
+      "shuffle": true,
+      "steps": [{ "type": "summon", "summon": "shadow-wraith", "count": 2, "rank": "normal" }]
+    },
+    {
+      "id": "boss.shadowhand.42",
+      "initiative": 42,
+      "steps": [
+        { "type": "move", "value": 0 },
+        { "type": "attack", "value": 1, "consume": { "element": "dark", "curse": true } }
+      ]
+    },
+    {
+      "id": "boss.shadowhand.50",
+      "initiative": 50,
+      "steps": [
+        { "type": "shield", "value": 2, "target": "self", "duration": "round" },
+        { "type": "heal", "value": 4, "target": "self" }
+      ]
+    },
+    {
+      "id": "boss.shadowhand.63",
+      "initiative": 63,
+      "steps": [{ "type": "attack", "value": 2, "area": { "shape": "line", "length": 4, "fromSelf": true } }]
+    },
+    {
+      "id": "boss.shadowhand.74",
+      "initiative": 74,
+      "shuffle": true,
+      "steps": [{ "type": "special", "name": "fadeOut", "params": { "damage": 2 } }]
+    },
+    {
+      "id": "boss.shadowhand.88",
+      "initiative": 88,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 1, "conditions": ["wound"] }]
+    }
+  ]
+}

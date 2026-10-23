@@ -1,0 +1,402 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Boss type",
+  "definitions": {
+    "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+    "condition": { "enum": ["poison", "wound", "immobilize", "disarm", "stun", "muddle", "invisible", "strengthen"] },
+    "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark"] },
+    "target": {
+      "enum": [
+        "self",
+        "ally",
+        "allyOrSelf",
+        "adjacentAllies",
+        "alliesInRadius",
+        "adjacentEnemies",
+        "enemiesInRadius",
+        "summon"
+      ]
+    },
+    "area": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": { "shape": { "const": "arc" }, "size": { "const": 3 } },
+          "required": ["shape", "size"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "shape": { "const": "line" },
+            "length": { "type": "integer", "minimum": 1 },
+            "fromSelf": { "const": true }
+          },
+          "required": ["shape", "length", "fromSelf"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "shape": { "const": "triangle" }, "size": { "const": 3 } },
+          "required": ["shape", "size"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "shape": { "const": "targetAndAdjacent" } },
+          "required": ["shape"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "shape": { "const": "allAdjacent" } },
+          "required": ["shape"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "duration": {
+      "oneOf": [
+        { "enum": ["round", "scenario", "persistent"] },
+        {
+          "type": "object",
+          "properties": { "uses": { "type": "integer", "minimum": 1 } },
+          "required": ["uses"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "consume": {
+      "type": "object",
+      "properties": {
+        "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark", "any"] },
+        "count": { "type": "integer", "minimum": 1 },
+        "add": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "integer" },
+            "range": { "type": "integer" },
+            "targets": { "type": "integer" },
+            "push": { "type": "integer" },
+            "pierce": { "type": "integer" },
+            "move": { "type": "integer" }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+        "replaceConditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+        "then": { "type": "array", "items": { "$ref": "#/definitions/step" } },
+        "area": { "$ref": "#/definitions/area" },
+        "extraTarget": { "type": "boolean" },
+        "curse": { "type": "boolean" }
+      },
+      "required": ["element"],
+      "additionalProperties": false
+    },
+    "attackBonus": {
+      "type": "object",
+      "properties": {
+        "if": { "enum": ["allyAdjacentToTarget", "targetHasNoOtherEnemyAdjacent", "sameTypeAdjacentToTarget"] },
+        "attack": { "type": "integer" },
+        "advantage": { "type": "boolean" }
+      },
+      "required": ["if"],
+      "additionalProperties": false
+    },
+    "step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "move" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer" },
+            "jump": { "type": "boolean" },
+            "fly": { "type": "boolean" },
+            "straightLine": { "type": "boolean" }
+          },
+          "required": ["type", "value"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "attack" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer" },
+            "range": { "type": "integer" },
+            "targets": { "type": "integer", "minimum": 1 },
+            "area": { "$ref": "#/definitions/area" },
+            "pierce": { "type": "integer", "minimum": 0 },
+            "push": { "type": "integer", "minimum": 0 },
+            "pull": { "type": "integer", "minimum": 0 },
+            "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+            "bless": { "type": "boolean" },
+            "curse": { "type": "boolean" },
+            "advantage": { "type": "boolean" },
+            "bonuses": { "type": "array", "items": { "$ref": "#/definitions/attackBonus" } },
+            "targetAll": { "enum": ["adjacentEnemies"] }
+          },
+          "required": ["type", "value"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "heal" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer", "minimum": 1 },
+            "target": { "$ref": "#/definitions/target" },
+            "range": { "type": "integer", "minimum": 0 },
+            "radius": { "type": "integer", "minimum": 0 },
+            "removeNegative": { "type": "integer", "minimum": 1 },
+            "bless": { "type": "boolean" }
+          },
+          "required": ["type", "value", "target"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "shield" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer", "minimum": 1 },
+            "target": { "$ref": "#/definitions/target" },
+            "duration": { "$ref": "#/definitions/duration" },
+            "range": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "value", "target", "duration"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "retaliate" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer", "minimum": 1 },
+            "range": { "type": "integer", "minimum": 0 },
+            "duration": { "$ref": "#/definitions/duration" }
+          },
+          "required": ["type", "value", "duration"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "provoke" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "radius": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type", "radius"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "condition" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "condition": { "$ref": "#/definitions/condition" },
+            "target": { "$ref": "#/definitions/target" },
+            "range": { "type": "integer", "minimum": 0 },
+            "radius": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "condition", "target"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "bless" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "target": { "$ref": "#/definitions/target" },
+            "range": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "target"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "push" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer", "minimum": 1 },
+            "target": { "$ref": "#/definitions/target" }
+          },
+          "required": ["type", "value", "target"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "pull" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "value": { "type": "integer", "minimum": 1 },
+            "target": { "$ref": "#/definitions/target" },
+            "range": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "value", "target"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "infuse" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark", "any"] }
+          },
+          "required": ["type", "element"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "loot" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "range": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "range"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "summon" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "summon": { "type": "string", "minLength": 1 },
+            "count": { "type": "integer", "minimum": 1 },
+            "rank": { "enum": ["normal", "elite"] }
+          },
+          "required": ["type", "summon"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "trap" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "damage": { "type": "integer", "minimum": 1 },
+            "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } }
+          },
+          "required": ["type", "damage"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "active" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "uses": { "type": "integer", "minimum": 1 },
+            "on": { "enum": ["attack", "rangedAttack", "attacked"] },
+            "grant": {
+              "type": "object",
+              "properties": {
+                "advantage": { "type": "boolean" },
+                "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+                "shield": { "type": "integer", "minimum": 1 },
+                "range": { "type": "integer", "minimum": 1 }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "uses", "on", "grant"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "teleport" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "range": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type", "range"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "special" },
+            "xp": { "type": "integer", "minimum": 0 },
+            "consume": { "$ref": "#/definitions/consume" },
+            "name": { "type": "string", "minLength": 1 },
+            "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } }
+          },
+          "required": ["type", "name"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "steps": { "type": "array", "items": { "$ref": "#/definitions/step" }, "minItems": 1 },
+    "half": {
+      "type": "object",
+      "properties": {
+        "steps": { "$ref": "#/definitions/steps" },
+        "loss": { "type": "boolean" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["steps"],
+      "additionalProperties": false
+    },
+    "monsterCard": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "initiative": { "type": "integer", "minimum": 1, "maximum": 99 },
+        "shuffle": { "type": "boolean" },
+        "steps": { "$ref": "#/definitions/steps" },
+        "if": { "enum": ["selfHpAtMostHalf", "twoOrMoreHeroesAdjacent"] },
+        "otherwise": { "$ref": "#/definitions/steps" }
+      },
+      "required": ["id", "initiative", "steps"],
+      "additionalProperties": false,
+      "dependencies": { "if": ["otherwise"], "otherwise": ["if"] }
+    },
+    "monsterStats": {
+      "type": "object",
+      "properties": {
+        "hp": { "type": "integer", "minimum": 1 },
+        "move": { "type": "integer", "minimum": 0 },
+        "attack": { "type": "integer", "minimum": 0 },
+        "range": { "type": "integer", "minimum": 1 },
+        "shield": { "type": "integer", "minimum": 1 },
+        "retaliate": { "type": "integer", "minimum": 1 },
+        "onAttack": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+        "flying": { "type": "boolean" }
+      },
+      "required": ["hp", "move", "attack"],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "hpPerHero": { "type": "integer", "minimum": 1 },
+    "hpPerHeroPerLevel": { "type": "integer", "minimum": 0 },
+    "move": { "type": "integer", "minimum": 0 },
+    "attack": { "type": "integer", "minimum": 0 },
+    "range": { "type": "integer", "minimum": 1 },
+    "shield": { "type": "integer", "minimum": 1 },
+    "deck": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*$" },
+    "immune": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+    "special": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "required": ["id", "hpPerHero", "hpPerHeroPerLevel", "move", "attack", "deck", "immune"],
+  "additionalProperties": false
+}

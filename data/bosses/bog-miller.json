@@ -1,0 +1,10 @@
+{
+  "id": "bog-miller",
+  "hpPerHero": 8,
+  "hpPerHeroPerLevel": 2,
+  "move": 2,
+  "attack": 3,
+  "shield": 1,
+  "deck": "boss.miller",
+  "immune": ["stun", "immobilize", "muddle"]
+}

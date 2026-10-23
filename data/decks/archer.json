@@ -1,0 +1,43 @@
+{
+  "id": "archer",
+  "cards": [
+    {
+      "id": "archer.14",
+      "initiative": 14,
+      "shuffle": true,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "archer.16",
+      "initiative": 16,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": -1 }]
+    },
+    {
+      "id": "archer.31",
+      "initiative": 31,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "archer.32",
+      "initiative": 32,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "archer.44",
+      "initiative": 44,
+      "steps": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 1, "range": 1 }]
+    },
+    { "id": "archer.56", "initiative": 56, "steps": [{ "type": "attack", "value": -1, "targets": 2 }] },
+    {
+      "id": "archer.68",
+      "initiative": 68,
+      "shuffle": true,
+      "steps": [{ "type": "attack", "value": 1, "conditions": ["immobilize"] }]
+    },
+    {
+      "id": "archer.79",
+      "initiative": 79,
+      "steps": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 2, "range": -1 }]
+    }
+  ]
+}

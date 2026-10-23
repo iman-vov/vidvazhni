@@ -1,0 +1,57 @@
+{
+  "id": "boss.miller",
+  "cards": [
+    {
+      "id": "boss.miller.11",
+      "initiative": 11,
+      "steps": [{ "type": "attack", "value": 1, "targetAll": "adjacentEnemies" }]
+    },
+    {
+      "id": "boss.miller.22",
+      "initiative": 22,
+      "steps": [
+        { "type": "summon", "summon": "bog-slime", "count": 2, "rank": "normal" },
+        { "type": "heal", "value": 3, "target": "self" }
+      ]
+    },
+    {
+      "id": "boss.miller.34",
+      "initiative": 34,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0, "conditions": ["poison"] }]
+    },
+    {
+      "id": "boss.miller.45",
+      "initiative": 45,
+      "steps": [{ "type": "attack", "value": 0, "range": 3, "targets": 2 }]
+    },
+    {
+      "id": "boss.miller.53",
+      "initiative": 53,
+      "steps": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 2, "push": 2 }]
+    },
+    {
+      "id": "boss.miller.61",
+      "initiative": 61,
+      "shuffle": true,
+      "steps": [
+        { "type": "shield", "value": 2, "target": "self", "duration": "round" },
+        { "type": "retaliate", "value": 2, "duration": "round" }
+      ]
+    },
+    {
+      "id": "boss.miller.72",
+      "initiative": 72,
+      "shuffle": true,
+      "steps": [{ "type": "special", "name": "flood", "params": { "damage": 2, "condition": "immobilize" } }]
+    },
+    {
+      "id": "boss.miller.85",
+      "initiative": 85,
+      "steps": [
+        { "type": "move", "value": 0 },
+        { "type": "attack", "value": 1 },
+        { "type": "infuse", "element": "ice" }
+      ]
+    }
+  ]
+}

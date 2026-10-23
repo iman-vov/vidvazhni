@@ -1,0 +1,20 @@
+{
+  "id": "bandit-crossbow",
+  "deck": "archer",
+  "initiativeOffset": 3,
+  "normal": { "hp": 5, "move": 2, "attack": 2, "range": 4 },
+  "elite": { "hp": 7, "move": 2, "attack": 3, "range": 5 },
+  "forkCards": [
+    {
+      "id": "bandit-crossbow.parting-shot",
+      "initiative": 28,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [
+        { "type": "special", "name": "retreat", "params": { "distance": 2 } },
+        { "type": "attack", "value": 0 }
+      ],
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 1, "range": 1 }]
+    }
+  ],
+  "model": "assets/models/bandit-crossbow.glb"
+}
