@@ -2,6 +2,8 @@
 
 Тут лежать готові до вставлення промпти для ChatGPT — по одному файлу на кожну 3D-модель гри (47 моделей). З картинок, які згенерує ChatGPT, потім у Meshy роблять 3D-моделі.
 
+> **Перш ніж генерувати, прочитай [`../concepts/REVIEW.md`](../concepts/REVIEW.md)**: там рішення по стилю («стильовий замок») і вердикти по вже зроблених концептах. Замок має пріоритет над текстом окремих промптів.
+
 Джерело всіх текстів — [`docs/design/osnova.md`](../../docs/design/osnova.md), розділи «Арт-пайплайн» і «Промпти для ChatGPT». Стильові блоки A–E, фрази для ракурсів, фраза портрета й описи взято звідти дослівно. Описи, яких у документі не було (лише згадка, що такий предмет потрібен), позначені в таблиці зірочкою ✱.
 
 ## Шлях однієї моделі
@@ -66,12 +68,12 @@ art/concepts/<id>/portrait.png   (лише герої й боси)
 
 | № | id | назва | тип | блок | статус |
 |---|---|---|---|---|---|
-| 1 | [`warden`](heroes/warden.md) | Вартовий | герой | A | |
+| 1 | [`warden`](heroes/warden.md) | Вартовий | герой | A | фронт прийнято |
 | 2 | [`warden-shield`](weapons/warden-shield.md) | Щит-двері Вартового | зброя | D | |
-| 3 | [`wind-archer`](heroes/wind-archer.md) | Лучниця Вітру | герой | A | |
+| 3 | [`wind-archer`](heroes/wind-archer.md) | Лучниця Вітру | герой | A | перегенерувати фронт |
 | 4 | [`wind-archer-bow`](weapons/wind-archer-bow.md) | Лук Лучниці | зброя | D | |
-| 5 | [`cellar-rat`](monsters/cellar-rat.md) | Пацюк-злодюжка | монстр | B | |
-| 6 | [`gremlin`](monsters/gremlin.md) | Гремлін-пакостник | монстр | A | |
+| 5 | [`cellar-rat`](monsters/cellar-rat.md) | Пацюк-злодюжка | монстр | B | перегенерувати фронт |
+| 6 | [`gremlin`](monsters/gremlin.md) | Гремлін-пакостник | монстр | A | перегенерувати фронт |
 | 7 | [`gremlin-slingshot`](weapons/gremlin-slingshot.md) | Рогатка гремліна ✱ | зброя | D | |
 | 8 | [`herbalist`](heroes/herbalist.md) | Травниця | герой | A | |
 | 9 | [`herbalist-staff`](weapons/herbalist-staff.md) | Терновий посох Травниці | зброя | D | |
