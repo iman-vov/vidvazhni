@@ -96,7 +96,7 @@ art/concepts/<id>/portrait.png   (лише герої й боси)
 | 26 | [`shadow-wraith`](monsters/shadow-wraith.md) | Тіньовий привид | монстр | C | фронт прийнято |
 | 27 | [`bog-miller`](bosses/bog-miller.md) | Мірошник-Болотяник | бос | A | фронт прийнято |
 | 28 | [`flour-sack`](weapons/flour-sack.md) | Мішок Мірошника ✱ | зброя | D | усі ракурси готові |
-| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | фронт прийнято |
+| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | перегенерувати фронт |
 | 30 | [`barrel`](props/barrel.md) | Бочка | пропс | D | усі ракурси готові |
 | 31 | [`crate`](props/crate.md) | Ящик | пропс | D | усі ракурси готові |
 | 32 | [`chest`](props/chest.md) | Скриня | пропс | D | усі ракурси готові |
