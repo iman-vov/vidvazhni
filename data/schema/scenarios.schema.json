@@ -444,6 +444,25 @@
         }
       ]
     },
+    "secondary": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "check": { "enum": ["chestOpened", "noneExhausted", "withinRounds"] },
+          "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
+          "reward": {
+            "type": "object",
+            "properties": { "xp": { "type": "integer", "minimum": 0 }, "gold": { "type": "integer", "minimum": 0 } },
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "check", "reward"],
+        "additionalProperties": false
+      }
+    },
     "startRoom": { "type": "string", "minLength": 1 },
     "startHexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 4, "maxItems": 4 },
     "introduces": { "type": "array", "items": { "type": "string", "minLength": 1 } },

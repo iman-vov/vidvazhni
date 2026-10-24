@@ -318,10 +318,21 @@ export type ScenarioGoal =
   | { type: 'killBoss'; boss: string }
   | { type: 'carryItem'; item: string; to: Hex[] };
 
+/** Optional goal on top of the main one (docs/design/missions.md): a named check from the
+ *  engine's registry (`objectives.ts`), like a battle goal, paid when the scenario is won. */
+export interface SecondaryGoalDef {
+  id: string;
+  check: string;
+  params?: Record<string, number | string | boolean>;
+  /** Per hero. */
+  reward: { xp?: number; gold?: number };
+}
+
 export interface ScenarioDef {
   id: string; // s1 … s5
   number: number;
   goal: ScenarioGoal;
+  secondary?: SecondaryGoalDef[];
   startRoom: string;
   startHexes: Hex[];
   rooms: RoomDef[];

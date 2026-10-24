@@ -5,6 +5,7 @@
 import { apply, createGame } from '../rules/engine';
 import { coinValue } from '../rules/effects/context';
 import { loadContent, type LoadedContent } from '../rules/load';
+import { secondaryGold } from '../rules/objectives';
 import { legalActionResults } from '../rules/queries';
 import type { Action, FigureId, GameEvent, GameSetup, GameState, HeroState, Pending } from '../rules/state';
 import type { GameStorage, SavedGame } from './storage';
@@ -174,7 +175,7 @@ export class GameController {
   /** XP (victory bonus already added by the engine), coins and gold per hero. */
   rewards(): HeroReward[] {
     const won = this.state.phase === 'won';
-    const goldEach = won ? (this.content.scenarios[this.state.scenarioId]?.reward.goldEach ?? 0) : 0;
+    const goldEach = won ? (this.content.scenarios[this.state.scenarioId]?.reward.goldEach ?? 0) + secondaryGold(this.content, this.state) : 0;
     return this.heroes().map((h) => ({ heroId: h.id, xp: h.xp, coins: h.coins, gold: h.coins * coinValue(this.state.level) + goldEach }));
   }
 

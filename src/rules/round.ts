@@ -4,8 +4,8 @@ import type { MonsterCard } from './content';
 import { exhaust, findCard, loseScenario } from './damage';
 import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
 import { decayAtEndOfRound, scenarioOrbs } from './elements';
-import { hexEquals } from './hex';
 import { shuffleIfNeeded } from './modifiers';
+import { goalReached, secondaryMet } from './objectives';
 import { nextInt, shuffle } from './rng';
 import type { BehaviourDeckState, CardId, HeroState, InitiativeRoll, TurnEntry } from './state';
 import { INITIATIVE_DIE_MAX, INITIATIVE_DIE_SIDES } from './variants';
@@ -391,28 +391,7 @@ export function startRound(ctx: Ctx): void {
 
 // ─── Scenario goals ────────────────────────────────────────────────────────
 
-export function goalReached(ctx: Ctx): boolean {
-  const s = ctx.s;
-  const scenario = ctx.c.scenarios[s.scenarioId];
-  if (!scenario) return false;
-  const goal = scenario.goal;
-  const living = activeHeroes(s);
-  switch (goal.type) {
-    case 'killAll':
-      return s.board.revealedRooms.length === scenario.rooms.length && !monsters(s).some(isPresent);
-    case 'killBoss':
-      return (
-        scenario.rooms.some((r) => s.board.revealedRooms.includes(r.id) && r.spawns?.some((sp) => sp.monster === goal.boss)) &&
-        !monsters(s).some((m) => m.typeId === goal.boss && isPresent(m))
-      );
-    case 'reachExit':
-      return living.length > 0 && living.every((h) => goal.hexes.some((x) => hexEquals(x, h.hex)));
-    case 'carryItem':
-      return living.some(
-        (h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && goal.to.some((x) => hexEquals(x, h.hex)),
-      );
-  }
-}
+export { goalReached };
 
 export function winScenario(ctx: Ctx): void {
   const s = ctx.s;
@@ -424,6 +403,16 @@ export function winScenario(ctx: Ctx): void {
   for (const h of heroes(s)) {
     h.xp += bonus;
     emit(ctx, { type: 'xpGained', heroId: h.id, amount: bonus });
+  }
+  for (const goal of ctx.c.scenarios[s.scenarioId]?.secondary ?? []) {
+    if (!secondaryMet(s, goal)) continue;
+    emit(ctx, { type: 'secondaryGoalMet', goalId: goal.id });
+    const xp = goal.reward.xp ?? 0;
+    if (xp > 0)
+      for (const h of heroes(s)) {
+        h.xp += xp;
+        emit(ctx, { type: 'xpGained', heroId: h.id, amount: xp });
+      }
   }
   emit(ctx, { type: 'scenarioWon' });
 }

@@ -429,6 +429,7 @@ export type GameEvent =
   | { type: 'rested'; heroId: FigureId; kind: 'short' | 'long'; lost: CardId }
   | { type: 'xpGained'; heroId: FigureId; amount: number }
   | { type: 'deckShuffled'; deck: string }
+  | { type: 'secondaryGoalMet'; goalId: string }
   | { type: 'scenarioWon' }
   | { type: 'scenarioLost' }
   | { type: 'behaviourDrawn'; typeId: string; cardId: string; initiative: number }

@@ -6,10 +6,11 @@
 
 import { planTurn } from '../rules/ai/index';
 import { loadContent } from '../rules/load';
-import type { Step } from '../rules/content';
+import type { Content, Step } from '../rules/content';
 import type { Ctx } from '../rules/effects/context';
 import { withConsumeBonus } from '../rules/effects/index';
 import { hexKey, type Hex } from '../rules/hex';
+import { objectiveStatus } from '../rules/objectives';
 import * as queries from '../rules/queries';
 import { attackPrompts, forecastInitiative, orbBonusPreview, previewAttack, usableItems } from '../rules/queries';
 import { behaviourCard, monsterInitiative } from '../rules/round';
@@ -477,6 +478,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         }),
       ),
       h('div', { class: 'gplate gtop-round' }, h('b', null, t('ui.round', { round: s.round })), h('small', null, t(`game.phase.${phaseKey(s)}`))),
+      objectivePlate(content, s),
       h(
         'div',
         { class: 'gtop-tools' },
@@ -1534,6 +1536,22 @@ function actorOf(s: GameState, a: Action): FigureId | null {
   if ('heroId' in a) return a.heroId;
   const p = s.pending;
   return p && 'heroId' in p ? p.heroId : null;
+}
+
+/** The main goal with its counter and the secondary goals (a check mark when met). A minimal
+ *  text plate until the objective banners land. */
+function objectivePlate(content: Content, s: GameState): HTMLElement {
+  const st = objectiveStatus(content, s);
+  if (!st) return h('span', null);
+  const secondary = st.secondary.map((g) =>
+    h('span', null, g.met ? icon('check') : '', t(`objective.secondary.${g.check}`, Object.fromEntries(Object.entries(g.params ?? {}).map(([k, v]) => [k, String(v)])))),
+  );
+  return h(
+    'div',
+    { class: 'gplate gtop-round gtop-goal' },
+    h('b', null, t(`objective.${st.goal}`, { done: st.done ?? 0, of: st.of ?? 0 })),
+    secondary.length ? h('small', null, ...secondary) : null,
+  );
 }
 
 function phaseKey(s: GameState): string {
