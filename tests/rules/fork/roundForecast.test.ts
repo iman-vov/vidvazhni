@@ -54,6 +54,7 @@ describe('fork «Прогноз раунду» (roundForecast)', () => {
           ],
         },
       ],
+      events: [],
     });
     // Equal initiative: heroes act first.
     const tie = forecastInitiative(s, c, 'hero:alpha', 'alpha.c5');
