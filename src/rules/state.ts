@@ -63,6 +63,8 @@ export interface HeroState extends FigureBase {
   active: ActiveCard[];
   selection: CardSelection | null;
   initiative: number | null;
+  /** «Кубик ініціативи»: this round's d12, already added to `initiative`. */
+  initiativeRoll?: number;
   xp: number; // gained in this scenario
   coins: number; // picked up in this scenario
   modifierDeck: ModifierDeck;
@@ -169,6 +171,8 @@ export interface BehaviourDeckState {
   /** Fork «Три можливі наміри»: the three candidates shown during card selection. */
   intents: string[];
   needsShuffle: boolean;
+  /** «Кубик ініціативи»: this round's d12 for the type. */
+  roll?: number;
 }
 
 export type ElementLevel = 'inert' | 'waning' | 'strong';
@@ -182,11 +186,22 @@ export interface OrbState {
   age: 0 | 1;
 }
 
-/** One entry of the round's turn order. Monster types act as a group. */
+/** One entry of the round's turn order. Monster types act as a group. With «Кубик ініціативи»
+ *  `roll` is the die already added to `initiative`. */
 export type TurnEntry =
-  | { kind: 'hero'; figureId: FigureId; initiative: number }
-  | { kind: 'summon'; figureId: FigureId; initiative: number }
-  | { kind: 'monsterGroup'; typeId: string; initiative: number };
+  | { kind: 'hero'; figureId: FigureId; initiative: number; roll?: number }
+  | { kind: 'summon'; figureId: FigureId; initiative: number; roll?: number }
+  | { kind: 'monsterGroup'; typeId: string; initiative: number; roll?: number };
+
+/** «Кубик ініціативи»: one roll at the reveal, for a hero or a monster type. */
+export interface InitiativeRoll {
+  kind: 'hero' | 'monsterGroup';
+  /** Hero figure id or monster type id. */
+  id: string;
+  card: number;
+  roll: number;
+  initiative: number;
+}
 
 export type Phase = 'selectCards' | 'turns' | 'endOfRound' | 'won' | 'lost';
 
@@ -358,6 +373,8 @@ export type GameEvent =
   | { type: 'roundStarted'; round: number }
   | { type: 'intentsDrawn'; typeId: string; cards: string[] }
   | { type: 'cardsRevealed'; order: TurnEntry[] }
+  /** «Кубик ініціативи»: right before `cardsRevealed`, or for a type revealed mid-round. */
+  | { type: 'initiativeRolled'; rolls: InitiativeRoll[] }
   | { type: 'turnStarted'; figureId: FigureId }
   | { type: 'turnEnded'; figureId: FigureId }
   | { type: 'moved'; figureId: FigureId; path: Hex[]; jump?: boolean; fly?: boolean }

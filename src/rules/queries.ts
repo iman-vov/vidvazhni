@@ -11,7 +11,7 @@ import { reachableHexes } from './geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from './hex';
 import { itemDef, itemEffect } from './items';
 import { interactiveObstacles } from './obstacles';
-import { behaviourCard, monsterInitiative, typesOnBoard } from './round';
+import { behaviourCard, groupInitiative, monsterInitiative, typesOnBoard } from './round';
 import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
 import { availableCards } from './setup';
 import type { Action, CardId, Figure, FigureId, GameEvent, GameState, HeroState, StepChoice } from './state';
@@ -332,7 +332,9 @@ export function forecastInitiative(state: GameState, content: Content, heroId: F
   const inHand = h.hand.includes(leadingCardId) || (h.selection?.kind === 'cards' && h.selection.cards.includes(leadingCardId));
   const card = inHand ? heroCard(content, state, h, leadingCardId) : undefined;
   if (!card) return null;
-  const initiative = card.initiative;
+  // After the reveal the chosen leading card's initiative includes the die («Кубик ініціативи»).
+  const revealed = state.phase !== 'selectCards' && h.selection?.kind === 'cards' && h.selection.leading === leadingCardId;
+  const initiative = revealed && h.initiative !== null ? h.initiative : card.initiative;
   const ctx = readCtx(state, content);
   const heroes: Extract<ForecastEntry, { kind: 'hero' }>[] = [{ kind: 'hero', figureId: heroId, initiative, self: true }];
   for (const f of Object.values(state.figures)) {
@@ -350,7 +352,7 @@ export function forecastInitiative(state: GameState, content: Content, heroId: F
       continue;
     }
     const list = ids.map((cardId) => {
-      const ini = monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, cardId));
+      const ini = deck?.current ? groupInitiative(ctx, typeId, cardId) : monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, cardId));
       intents.push({ kind: 'monsterIntent', typeId, cardId, initiative: ini });
       return { cardId, initiative: ini, heroFirst: initiative <= ini };
     });
@@ -426,7 +428,7 @@ export function orbBonusPreview(state: GameState, content: Content, heroId: Figu
           const current = state.behaviourDecks[typeId]?.current;
           if (!current || acted.has(typeId)) continue;
           const mc = behaviourCard(ctx, typeId, current);
-          if (monsterInitiative(ctx, typeId, mc) < myIni) earlier.push({ id: typeId, steps: [...mc.steps, ...(mc.otherwise ?? [])] });
+          if (groupInitiative(ctx, typeId, current) < myIni) earlier.push({ id: typeId, steps: [...mc.steps, ...(mc.otherwise ?? [])] });
         }
       }
     }

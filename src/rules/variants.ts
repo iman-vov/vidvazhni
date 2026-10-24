@@ -24,6 +24,10 @@ export interface Variants {
   /** «Предмети-кнопки»: the engine reports which items can be used right now and offers
    *  attack-time prompts. Engine query only; the UI shows it. */
   itemPrompts: boolean;
+  /** «Кубик ініціативи» (main rule, docs/design/dice.md §1): at the reveal every hero who played
+   *  cards and every monster type adds a d12 to its card's initiative. A long rest (99) does not
+   *  roll and stays last, so rolled totals stop at 98. */
+  initiativeDie: boolean;
 }
 
 export type VariantId = keyof Variants;
@@ -36,6 +40,7 @@ export const BASE_RULES: Readonly<Variants> = {
   reviveAlly: false,
   roundForecast: false,
   itemPrompts: false,
+  initiativeDie: false,
 };
 
 export const FULL_FORK: Readonly<Variants> = {
@@ -46,6 +51,7 @@ export const FULL_FORK: Readonly<Variants> = {
   reviveAlly: true,
   roundForecast: true,
   itemPrompts: true,
+  initiativeDie: true,
 };
 
 /** Order of implementation, cheapest first (from the design doc). */
@@ -57,9 +63,13 @@ export const VARIANT_ORDER: readonly VariantId[] = [
   'threeIntents',
   'roundForecast',
   'itemPrompts',
+  'initiativeDie',
 ];
 
 export const MONSTER_HP_BONUS_WITH_INTENTS = 0.1;
 export const MOMENTUM_MAX = 3;
 export const REVIVE_HP = 3;
 export const FOLLOW_UP_BONUS = 1;
+export const INITIATIVE_DIE_SIDES = 12;
+/** Highest rolled initiative: a long rest (99) always acts last. */
+export const INITIATIVE_DIE_MAX = 98;

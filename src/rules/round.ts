@@ -7,7 +7,8 @@ import { decayAtEndOfRound, scenarioOrbs } from './elements';
 import { hexEquals } from './hex';
 import { shuffleIfNeeded } from './modifiers';
 import { nextInt, shuffle } from './rng';
-import type { BehaviourDeckState, CardId, HeroState, TurnEntry } from './state';
+import type { BehaviourDeckState, CardId, HeroState, InitiativeRoll, TurnEntry } from './state';
+import { INITIATIVE_DIE_MAX, INITIATIVE_DIE_SIDES } from './variants';
 
 // ─── Card selection ────────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ export function revealIfReady(ctx: Ctx): void {
   }
   for (const typeId of typesOnBoard(ctx)) drawBehaviour(ctx, typeId);
   returnUnusedIntents(ctx);
+  rollInitiative(ctx, all, typesOnBoard(ctx));
   ctx.s.turnOrder = buildTurnOrder(ctx);
   ctx.s.turnIndex = -1;
   ctx.s.phase = 'turns';
@@ -107,6 +109,41 @@ export function behaviourCard(ctx: Pick<Ctx, 'c'>, typeId: string, cardId: strin
 export function monsterInitiative(ctx: Pick<Ctx, 'c'>, typeId: string, card: MonsterCard): number {
   const offset = ctx.c.monsters[typeId]?.initiativeOffset ?? 0;
   return Math.min(99, Math.max(1, card.initiative + offset));
+}
+
+/** «Кубик ініціативи»: card + die, capped so a long rest (99) stays last. */
+export function rolledInitiative(card: number, roll: number): number {
+  return Math.min(Math.max(card, INITIATIVE_DIE_MAX), card + roll);
+}
+
+/** «Кубик ініціативи»: one d12 per hero who played cards (a long rest does not roll), then one per
+ *  monster type with a card this round, in that order. */
+function rollInitiative(ctx: Ctx, heroList: HeroState[], typeIds: string[]): void {
+  if (!ctx.s.variants.initiativeDie) return;
+  const rolls: InitiativeRoll[] = [];
+  const d = () => 1 + nextInt(ctx.s.rng, INITIATIVE_DIE_SIDES);
+  for (const h of heroList) {
+    if (h.selection?.kind !== 'cards' || h.initiative === null) continue;
+    const card = h.initiative;
+    h.initiativeRoll = d();
+    h.initiative = rolledInitiative(card, h.initiativeRoll);
+    rolls.push({ kind: 'hero', id: h.id, card, roll: h.initiativeRoll, initiative: h.initiative });
+  }
+  for (const typeId of typeIds) {
+    const deck = ctx.s.behaviourDecks[typeId];
+    if (!deck?.current || deck.roll !== undefined) continue;
+    const card = monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, deck.current));
+    deck.roll = d();
+    rolls.push({ kind: 'monsterGroup', id: typeId, card, roll: deck.roll, initiative: rolledInitiative(card, deck.roll) });
+  }
+  if (rolls.length > 0) emit(ctx, { type: 'initiativeRolled', rolls });
+}
+
+/** A monster type's initiative this round: its card (+ type offset), plus the die when rolled. */
+export function groupInitiative(ctx: Pick<Ctx, 'c' | 's'>, typeId: string, cardId: string): number {
+  const card = monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, cardId));
+  const roll = ctx.s.behaviourDecks[typeId]?.roll;
+  return roll === undefined ? card : rolledInitiative(card, roll);
 }
 
 /** Takes the top card of a behaviour pile; an empty pile is reshuffled from the discard first. */
@@ -185,18 +222,20 @@ function compareKeys(a: number[], b: number[]): number {
 }
 
 function groupEntry(ctx: Ctx, typeId: string): TurnEntry | null {
-  const current = ctx.s.behaviourDecks[typeId]?.current;
-  if (!current) return null;
-  return { kind: 'monsterGroup', typeId, initiative: monsterInitiative(ctx, typeId, behaviourCard(ctx, typeId, current)) };
+  const deck = ctx.s.behaviourDecks[typeId];
+  if (!deck?.current) return null;
+  const roll = deck.roll === undefined ? {} : { roll: deck.roll };
+  return { kind: 'monsterGroup', typeId, initiative: groupInitiative(ctx, typeId, deck.current), ...roll };
 }
 
 export function buildTurnOrder(ctx: Ctx): TurnEntry[] {
   const entries: TurnEntry[] = [];
   for (const h of activeHeroes(ctx.s)) {
     if (h.initiative === null) continue;
-    entries.push({ kind: 'hero', figureId: h.id, initiative: h.initiative });
+    const roll = h.initiativeRoll === undefined ? {} : { roll: h.initiativeRoll };
+    entries.push({ kind: 'hero', figureId: h.id, initiative: h.initiative, ...roll });
     for (const f of Object.values(ctx.s.figures)) {
-      if (f.kind === 'summon' && f.ownerId === h.id) entries.push({ kind: 'summon', figureId: f.id, initiative: h.initiative });
+      if (f.kind === 'summon' && f.ownerId === h.id) entries.push({ kind: 'summon', figureId: f.id, initiative: h.initiative, ...roll });
     }
   }
   for (const typeId of typesOnBoard(ctx)) {
@@ -213,6 +252,7 @@ export function addNewGroupsToOrder(ctx: Ctx): void {
   for (const typeId of typesOnBoard(ctx)) {
     if (ctx.s.turnOrder.some((e) => e.kind === 'monsterGroup' && e.typeId === typeId)) continue;
     drawBehaviour(ctx, typeId);
+    rollInitiative(ctx, [], [typeId]);
     const entry = groupEntry(ctx, typeId);
     if (!entry) continue;
     let at = ctx.s.turnIndex + 1;
@@ -313,6 +353,7 @@ export function finishRound(ctx: Ctx): void {
   for (const [typeId, deck] of Object.entries(s.behaviourDecks)) {
     if (deck.current) deck.discard.push(deck.current);
     deck.current = null;
+    delete deck.roll;
     if (deck.needsShuffle) {
       deck.draw = shuffle(s.rng, [...deck.draw, ...deck.discard]);
       deck.discard = [];
@@ -335,6 +376,7 @@ export function startRound(ctx: Ctx): void {
     if (f.kind !== 'hero') continue;
     f.selection = null;
     f.initiative = null;
+    delete f.initiativeRoll;
     f.playedThisTurn = [];
     f.wantsShortRest = false;
   }
