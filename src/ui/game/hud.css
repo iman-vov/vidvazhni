@@ -1102,6 +1102,55 @@ body.game.g-bottom-short {
   border-color: var(--hud-gold-hi);
 }
 
+/* Damage prompt (src/ui/game/defense.ts): the incoming damage big, each defence its own block. */
+.gdef .gsheet-title {
+  flex-wrap: wrap;
+}
+
+.gdef-dmg {
+  margin-left: auto;
+  min-width: 1.6em;
+  padding: 0 0.3em;
+  border-radius: 10px;
+  background: #8e1f1f;
+  color: #fff4e0;
+  font-size: 1.9em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.gdef-hp {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-weight: 700;
+}
+
+.gdef-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(232, 196, 110, 0.35);
+}
+
+.gdef-block.is-last {
+  opacity: 0.85;
+}
+
+.gdef-head {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.gdef-head small,
+.gdef .grow small {
+  opacity: 0.85;
+}
+
 /* Phones in landscape and small windows */
 @media (max-height: 520px), (max-width: 860px) {
   body.game {

@@ -22,6 +22,7 @@ import { emptySelection, stepModel, tapStep, type StepModel, type StepSelection 
 import { h } from '../ui/dom';
 import { getLang, onLangChange, t } from '../ui/i18n';
 import { cardKeywords, cardView, compactCard, type Half } from '../ui/game/card';
+import { defensePanel } from '../ui/game/defense';
 import { chestFinds, eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
@@ -95,6 +96,8 @@ interface Ui {
   chosen: StepChoice | null;
   confirmEnd: boolean;
   avoidPick: CardId[];
+  /** «Ухилитися» with this dice item (the damage prompt's toggle). */
+  dodgeItem: string | null;
   leftOpen: boolean;
   /** The event log drawer under the elements row. */
   rightOpen: boolean;
@@ -139,6 +142,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     chosen: null,
     confirmEnd: false,
     avoidPick: [],
+    dodgeItem: null,
     leftOpen: !narrow,
     rightOpen: false,
     focusHero: null,
@@ -468,7 +472,10 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ui.handPick = cls ? cls.cards.filter((c) => c.level <= Math.max(1, hero.level)).slice(0, cls.handSize).map((c) => c.id) : [];
       }
     }
-    if (s.pending?.kind !== 'avoidDamage') ui.avoidPick = [];
+    if (s.pending?.kind !== 'avoidDamage') {
+      ui.avoidPick = [];
+      ui.dodgeItem = null;
+    }
     if (s.pending?.kind !== 'selectCards' && s.pending?.kind !== 'chooseHandBeforeScenario') ui.peek = false;
     const th = turnHero();
     if (th) ui.focusHero = th.id;
@@ -699,7 +706,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       size = 'tall';
     } else if (p?.kind === 'avoidDamage') {
       body = avoidPanel();
-      size = 'short';
+      size = 'tall';
     } else if (p?.kind === 'endOfRound') {
       body = shortRestPanel();
       size = 'short';
@@ -1156,42 +1163,18 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const s = game.state;
     const p = s.pending;
     if (p?.kind !== 'avoidDamage') return h('div');
-    const hero = s.figures[p.heroId] as HeroState;
-    const source = p.source.includes(':') ? figureName(p.source, s) : t(`game.source.${p.source}`);
-    const take: Action = { type: 'avoidDamage', heroId: hero.id, choice: { kind: 'take' } };
-    const canDiscard = hero.discard.length >= 2;
-    const [d1, d2] = ui.avoidPick;
-    return h(
-      'div',
-      { class: 'gsheet' },
-      h('p', { class: 'gsheet-title' }, icon('hp'), t('game.avoid.title', { name: figureName(hero.id), amount: p.amount, source })),
-      h('p', { class: 'gside-hint' }, t('game.avoid.text', { hp: hero.hp })),
-      defenceLine(hero),
-      reactionButtons(hero.id),
-      h('div', { class: 'grow' }, h('button', { class: 'gbtn gbtn-primary', onclick: () => act(take) }, t('ui.takeDamage'))),
-      hero.hand.length
-        ? h('div', { class: 'grow' }, h('small', null, t('game.avoid.hand')), hero.hand.map((c) => h('button', { class: 'gbtn gbtn-small', onclick: () => act({ type: 'avoidDamage', heroId: hero.id, choice: { kind: 'loseHand', cardId: c } }) }, icon('loss'), cardName(c))))
-        : null,
-      canDiscard
-        ? h(
-            'div',
-            { class: 'grow' },
-            h('small', null, t('game.avoid.discard')),
-            hero.discard.map((c) =>
-              h(
-                'button',
-                {
-                  class: 'gbtn gbtn-small gbtn-toggle',
-                  'aria-pressed': String(ui.avoidPick.includes(c)),
-                  onclick: () => ((ui.avoidPick = ui.avoidPick.includes(c) ? ui.avoidPick.filter((x) => x !== c) : [...ui.avoidPick, c].slice(-2)), renderBottom()),
-                },
-                cardName(c),
-              ),
-            ),
-            h('button', { class: 'gbtn', disabled: !(d1 && d2), onclick: () => d1 && d2 && act({ type: 'avoidDamage', heroId: hero.id, choice: { kind: 'loseDiscard', cardIds: [d1, d2] } }) }, icon('loss'), t('game.avoid.loseTwo')),
-          )
-        : null,
-    );
+    // Take, «Ухилитися», «Прикрий друга», shield items, losing cards last (src/ui/game/defense.ts).
+    return defensePanel({
+      s,
+      content,
+      options: queries.defenseOptions(s, content),
+      act: (a) => act(a),
+      discardPick: ui.avoidPick,
+      onDiscardPick: (cards) => ((ui.avoidPick = cards), renderBottom()),
+      dodgeItem: ui.dodgeItem,
+      onDodgeItem: (id) => ((ui.dodgeItem = id), renderBottom()),
+      extra: [defenceLine(s.figures[p.heroId] as HeroState)],
+    });
   }
 
   /** Items the engine accepts as a reaction right now (a shield while attack damage comes, a
