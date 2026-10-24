@@ -472,6 +472,7 @@
   "objective.carryItem": "Den Gegenstand bringen",
   "objective.survive": "Durchhalten: Runde {done}/{of}",
   "objective.defend": "Verteidigen: Runde {done}/{of}",
+  "objective.escape": "Flucht: {done}/{of} am Ausgang",
   "objective.roundsLeft": "Verbleibende Runden: {n}",
   "objective.secondary.chestOpened": "Die Truhe öffnen",
   "objective.secondary.noneExhausted": "Niemand erschöpft",

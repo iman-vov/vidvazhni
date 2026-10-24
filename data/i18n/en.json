@@ -472,6 +472,7 @@
   "objective.carryItem": "Bring the item",
   "objective.survive": "Hold out: round {done}/{of}",
   "objective.defend": "Defend: round {done}/{of}",
+  "objective.escape": "Escape: {done}/{of} at the exit",
   "objective.roundsLeft": "Rounds left: {n}",
   "objective.secondary.chestOpened": "Open the chest",
   "objective.secondary.noneExhausted": "Nobody exhausted",

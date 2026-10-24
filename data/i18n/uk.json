@@ -472,6 +472,7 @@
   "objective.carryItem": "Принести предмет",
   "objective.survive": "Протриматися: раунд {done}/{of}",
   "objective.defend": "Оборона: раунд {done}/{of}",
+  "objective.escape": "Втеча: {done}/{of} біля виходу",
   "objective.roundsLeft": "Раундів лишилось: {n}",
   "objective.secondary.chestOpened": "Відкрити скриню",
   "objective.secondary.noneExhausted": "Ніхто не виснажився",

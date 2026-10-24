@@ -340,7 +340,10 @@ export type ScenarioGoal =
   /** Hold out until the end of round `rounds`; monsters need not be beaten. */
   | { type: 'survive'; rounds: number }
   /** Hold out `rounds` rounds; a monster standing in the zone at the end of a round loses it. */
-  | { type: 'defend'; zone: string; rounds: number };
+  | { type: 'defend'; zone: string; rounds: number }
+  /** Every hero on its feet stands in the exit zone by the end of round `rounds`; later loses
+   *  (the cave-in). Monsters need not be beaten. */
+  | { type: 'escape'; hexes?: Hex[]; zone?: string; rounds: number };
 
 /** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
  *  reached by the end of round `rounds` (the escape's timer). */

@@ -222,7 +222,7 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     for (const h of z.hexes) if (!owner.has(hexKey(h))) err(`zone ${z.id} hex ${hexKey(h)} is outside every room`);
   }
   if ('zone' in g && g.zone && !zones.has(g.zone)) err(`goal zone ${g.zone} missing`);
-  if ((g.type === 'reachExit' || g.type === 'carryItem') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
+  if ((g.type === 'reachExit' || g.type === 'carryItem' || g.type === 'escape') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
   for (const h of goalZone(s)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
 

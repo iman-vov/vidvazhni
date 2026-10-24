@@ -17,7 +17,7 @@ export function zoneHexes(scenario: ScenarioDef, id: string): Hex[] {
 export function goalZone(scenario: ScenarioDef): Hex[] {
   const g = scenario.goal;
   if ('zone' in g && g.zone) return zoneHexes(scenario, g.zone);
-  if (g.type === 'reachExit') return g.hexes ?? [];
+  if (g.type === 'reachExit' || g.type === 'escape') return g.hexes ?? [];
   if (g.type === 'carryItem') return g.to ?? [];
   return [];
 }
@@ -45,6 +45,7 @@ export function goalReached(ctx: Ctx): boolean {
         !monsters(s).some((m) => m.typeId === goal.boss && isPresent(m))
       );
     case 'reachExit':
+    case 'escape':
       return living.length > 0 && living.every((h) => inZone(zone, h.hex));
     case 'carryItem':
       return living.some((h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && inZone(zone, h.hex));
@@ -61,13 +62,14 @@ function monsterInZone(s: GameState, zone: Hex[]): boolean {
 
 // ─── Lose rules ────────────────────────────────────────────────────────────
 
-/** Checked at the end of every round after the goal: a monster in the defended zone, or the
- *  scenario's `lose` rules. (Every hero exhausted is checked as it happens, in damage.ts.) */
+/** Checked at the end of every round after the goal: a monster in the defended zone, the escape's
+ *  timer run out, or the scenario's `lose` rules. (Every hero exhausted is checked as it happens, in damage.ts.) */
 export function lostByRules(ctx: Ctx): boolean {
   const s = ctx.s;
   const scenario = ctx.c.scenarios[s.scenarioId];
   if (!scenario) return false;
   if (scenario.goal.type === 'defend' && monsterInZone(s, goalZone(scenario))) return true;
+  if (scenario.goal.type === 'escape' && s.round >= scenario.goal.rounds) return true;
   return (scenario.lose ?? []).some((rule) => rule.type === 'roundLimit' && s.round >= rule.rounds);
 }
 
@@ -120,7 +122,7 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
     goal: goal.type,
     secondary: (scenario.secondary ?? []).map((g) => ({ id: g.id, check: g.check, params: g.params, met: secondaryMet(s, g) })),
   };
-  if (goal.type === 'reachExit') {
+  if (goal.type === 'reachExit' || goal.type === 'escape') {
     const zone = goalZone(scenario);
     status.done = living.filter((h) => inZone(zone, h.hex)).length;
     status.of = living.length;
@@ -131,6 +133,7 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
     status.of = goal.rounds;
   }
   const limits = (scenario.lose ?? []).filter((r) => r.type === 'roundLimit').map((r) => r.rounds);
+  if (goal.type === 'escape') limits.push(goal.rounds);
   if (limits.length) status.roundsLeft = Math.max(0, Math.min(...limits) - s.round + 1);
   return status;
 }

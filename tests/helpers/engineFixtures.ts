@@ -79,6 +79,8 @@ export interface FixtureOptions {
   secondRoom?: Partial<RoomDef> | false;
   goal?: ScenarioGoal;
   startHexes?: Hex[];
+  /** Other scenario fields (zones, lose rules, NPCs). */
+  scenario?: Partial<ScenarioDef>;
 }
 
 /** Content with scenario `test`: room `r1` (q 0..6, r 0..4); room `r2` (q 7..9) behind a door at [6, 2]. */
@@ -115,6 +117,7 @@ export function makeContent(opts: FixtureOptions = {}): Content {
     rooms,
     introduces: [],
     reward: { goldEach: 0 },
+    ...opts.scenario,
   };
   return {
     heroes,
