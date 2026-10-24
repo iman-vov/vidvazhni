@@ -252,7 +252,7 @@
   "tutorial.step.curtain.title": "Pass the tablet",
   "tutorial.step.curtain.text": "Before choosing cards the game hides the hand so that nobody peeks. With several players, pass the tablet to the one named on the screen. Tap the screen.",
   "tutorial.step.hand.title": "Your hand",
-  "tutorial.step.hand.text": "These are your cards. Each round you pick two. Press the ✋ button in the corner of \"Shield Bash\" and \"Earth Strike\". Tapping a card itself shows it large, with explanations.",
+  "tutorial.step.hand.text": "These are your cards. Each round you pick two. Press the button in the bottom right corner of \"Shield Bash\" and \"Earth Strike\". Tapping a card itself shows it large, with explanations.",
   "tutorial.step.leading.title": "The leading card",
   "tutorial.step.leading.text": "One of the two cards is leading {icon:initiative}: its number (initiative) decides when you act. Lower means earlier. \"Shield Bash\" (15) is already leading, so the Warden acts before the rats. You can make the other card leading with the \"{button}\" button.",
   "tutorial.step.ready.title": "Ready!",
