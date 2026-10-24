@@ -269,6 +269,9 @@ export function buildTurnOrder(ctx: Ctx): TurnEntry[] {
       if (f.kind === 'summon' && f.ownerId === h.id) entries.push({ kind: 'summon', figureId: f.id, initiative: h.initiative, ...roll });
     }
   }
+  for (const f of Object.values(ctx.s.figures)) {
+    if (f.kind === 'summon' && f.npc && isPresent(f)) entries.push({ kind: 'summon', figureId: f.id, initiative: f.npc.initiative });
+  }
   for (const typeId of typesOnBoard(ctx)) {
     const e = groupEntry(ctx, typeId);
     if (e) entries.push(e);

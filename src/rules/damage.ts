@@ -123,6 +123,7 @@ export function killFigure(ctx: Ctx, f: Figure): void {
   delete ctx.s.figures[f.id];
   emit(ctx, { type: 'figureDied', figureId: f.id });
   if (f.kind === 'monster') onMonsterDied(ctx, f);
+  if (f.kind === 'summon' && f.npc) return loseScenario(ctx);
   if (f.kind === 'summon') {
     // The persistent card that keeps the summon goes to the lost pile.
     const owner = ctx.s.figures[f.ownerId];

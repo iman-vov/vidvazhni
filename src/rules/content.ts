@@ -336,6 +336,18 @@ export interface ObjectDef {
   interact?: { half: 'top' | 'bottom'; from?: string; to: string; opens?: Hex[] };
 }
 
+/** A friendly figure without an owner (the shepherd, a freed prisoner): it appears with its room,
+ *  monsters attack it like a hero's summon, and on its own turn (`initiative`, default 50) it
+ *  walks up to `move` hexes towards the goal zone while a hero stands within 3 hexes of it. It
+ *  never attacks. If it dies the scenario is lost. */
+export interface NpcDef {
+  id: string;
+  hex: Hex;
+  hp: number;
+  move: number;
+  initiative?: number;
+}
+
 /** A named group of hexes the goals point at (exit, delivery spot, a point to defend). */
 export interface ZoneDef {
   id: string;
@@ -358,7 +370,9 @@ export type ScenarioGoal =
   | { type: 'escape'; hexes?: Hex[]; zone?: string; rounds: number }
   /** Pick up `count` objects of `kind` (an adjacent hero spends a bottom action) and carry them into
    *  the zone: a hero ending its turn there hands over what it carries. */
-  | { type: 'collect'; kind: string; count: number; to?: Hex[]; zone?: string };
+  | { type: 'collect'; kind: string; count: number; to?: Hex[]; zone?: string }
+  /** Bring the NPC `npc` into the zone (it walks there while a hero is near); its death loses. */
+  | { type: 'escort'; npc: string; to?: Hex[]; zone?: string };
 
 /** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
  *  reached by the end of round `rounds` (the escape's timer). */
@@ -381,6 +395,7 @@ export interface ScenarioDef {
   secondary?: SecondaryGoalDef[];
   zones?: ZoneDef[];
   lose?: LoseRule[];
+  npcs?: NpcDef[];
   startRoom: string;
   startHexes: Hex[];
   rooms: RoomDef[];

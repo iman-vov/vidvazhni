@@ -16,7 +16,7 @@ import { canConsume, consume, endTurnInfusions } from './elements';
 import { runShortRests } from './rest';
 import { behaviourCard, discardSelection, endRound, finishRound, nextTurn } from './round';
 import { monstersOfType } from './setup';
-import { applyInteraction, interactionFor, onboardingSteps, onFigureTurnEnd } from './scenarioRules';
+import { applyInteraction, interactionFor, npcGoal, onboardingSteps, onFigureTurnEnd } from './scenarioRules';
 import { LOSS_SPECIALS } from './special';
 import { runFadeOut } from './special/fadeOut';
 import { distance } from './hex';
@@ -478,8 +478,10 @@ function figureAct(ctx: Ctx, figureId: string): void {
   const steps = figureSteps(ctx, f);
   // Consume the elements whose bonuses were folded in.
   for (const st of steps) if (st.consume && st.consume.element !== 'any' && canConsume(ctx, st.consume.element)) consume(ctx, st.consume.element);
-  const goal = f.kind === 'monster' ? runnerGoal(ctx, f) : null;
-  const plan = goal ? planRun(ctx.s, figureId, steps, goal) : planTurn(ctx.s, figureId, steps);
+  const goal = f.kind === 'monster' ? runnerGoal(ctx, f) : f.kind === 'summon' && f.npc ? npcGoal(ctx, f) : null;
+  // An NPC with nowhere to go stays put (no attack).
+  const stay = !goal && f.kind === 'summon' && !!f.npc;
+  const plan = goal || stay ? planRun(ctx.s, figureId, steps, goal ?? [f.hex]) : planTurn(ctx.s, figureId, steps);
   let attackIndex = 0;
   let moved = false;
   for (const st of steps) {

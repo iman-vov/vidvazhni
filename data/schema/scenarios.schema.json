@@ -530,8 +530,35 @@
           "required": ["type", "kind", "count"],
           "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "escort" },
+            "npc": { "type": "string", "minLength": 1 },
+            "to": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "npc"],
+          "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
+          "additionalProperties": false
         }
       ]
+    },
+    "npcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "hex": { "$ref": "#/definitions/hex" },
+          "hp": { "type": "integer", "minimum": 1 },
+          "move": { "type": "integer", "minimum": 0 },
+          "initiative": { "type": "integer", "minimum": 1, "maximum": 99 }
+        },
+        "required": ["id", "hex", "hp", "move"],
+        "additionalProperties": false
+      }
     },
     "zones": {
       "type": "array",

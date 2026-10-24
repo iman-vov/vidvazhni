@@ -475,6 +475,7 @@
   "objective.defend": "Defend: round {done}/{of}",
   "objective.escape": "Escape: {done}/{of} at the exit",
   "objective.collect": "Collect: {done}/{of}",
+  "objective.escort": "Escort · health {done}/{of}",
   "objective.roundsLeft": "Rounds left: {n}",
   "objective.secondary.chestOpened": "Open the chest",
   "objective.secondary.noneExhausted": "Nobody exhausted",

@@ -16,11 +16,11 @@ import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } fr
 import { openDoor } from './effects/move';
 import { infuse } from './elements';
 import { onTaggedMonsterDied } from './events';
-import { goalZone, inZone } from './objectives';
+import { goalZone, inZone, npcId } from './objectives';
 import { hasLineOfSight } from './geometry';
 import { areAdjacent, distance, hexKey, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
-import type { Figure, GameState, HeroState, MonsterState, Tile } from './state';
+import type { Figure, GameState, HeroState, MonsterState, SummonState, Tile } from './state';
 
 export function scenarioOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioDef | undefined {
   return ctx.c.scenarios[ctx.s.scenarioId];
@@ -201,6 +201,45 @@ export function onFigureTurnEnd(ctx: Ctx, f: Figure): void {
     o.tile.object.state = 'unlit';
     emit(ctx, { type: 'objectChanged', objectId: o.tile.object.id, hex: [o.hex[0], o.hex[1]], state: 'unlit', byId: f.id });
   }
+}
+
+// ─── NPCs ──────────────────────────────────────────────────────────────────
+
+/** A hero this close makes an NPC walk on. */
+export const NPC_LEAD = 3;
+
+/** The scenario's NPCs standing in a room appear when it is revealed. */
+export function spawnNpcs(ctx: Ctx, room: RoomDef): void {
+  for (const def of scenarioOf(ctx)?.npcs ?? []) {
+    const id = npcId(def.id);
+    if (ctx.s.figures[id] || !room.hexes.some((x) => x[0] === def.hex[0] && x[1] === def.hex[1])) continue;
+    const npc: SummonState = {
+      id,
+      kind: 'summon',
+      ownerId: id,
+      summonId: def.id,
+      npc: { initiative: def.initiative ?? 50 },
+      move: def.move,
+      attack: 0,
+      hex: [def.hex[0], def.hex[1]],
+      hp: def.hp,
+      maxHp: def.hp,
+      conditions: {},
+      shields: [],
+      retaliates: [],
+      turnCount: 0,
+    };
+    ctx.s.figures[id] = npc;
+    emit(ctx, { type: 'figureSpawned', figureId: id });
+  }
+}
+
+/** Where an NPC walks this turn: the goal zone while a hero is near, else nowhere (null). */
+export function npcGoal(ctx: Pick<Ctx, 's' | 'c'>, npc: SummonState): Hex[] | null {
+  const scenario = scenarioOf(ctx);
+  if (!scenario || !heroes(ctx.s).some((h) => isPresent(h) && distance(h.hex, npc.hex) <= NPC_LEAD)) return null;
+  const zone = goalZone(scenario);
+  return zone.length ? zone : null;
 }
 
 function deliver(ctx: Ctx, h: HeroState): void {

@@ -137,8 +137,11 @@ export interface MonsterState extends FigureBase {
 
 export interface SummonState extends FigureBase {
   kind: 'summon';
+  /** An NPC (`ScenarioDef.npcs`) is its own owner. */
   ownerId: FigureId;
   summonId: string;
+  /** An NPC: acts on its own initiative, walks to the goal zone, never attacks; its death loses. */
+  npc?: { initiative: number };
   move: number;
   attack: number;
   range?: number;

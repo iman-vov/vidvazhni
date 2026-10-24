@@ -5,6 +5,7 @@ import { emit, isPresent, monsters, scaleMonsterStats, trapDamage, type Ctx } fr
 import { initialElements, scenarioOrbs } from './elements';
 import { setupItems } from './items';
 import { onRoomRevealed, onRoundStart } from './events';
+import { spawnNpcs } from './scenarioRules';
 import { drawIntents } from './round';
 import { MONSTER_HP_BONUS_WITH_INTENTS } from './variants';
 import { hexKey, type Hex } from './hex';
@@ -223,6 +224,7 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     if (sp.drops) m.drops = sp.drops;
     if (sp.tag) m.tag = sp.tag;
   }
+  spawnNpcs(ctx, room);
   onRoomRevealed(ctx, roomId);
 }
 
