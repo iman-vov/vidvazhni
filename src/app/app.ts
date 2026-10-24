@@ -2,7 +2,7 @@
 // menu → campaign map ⇄ camp → scenario. One board is created when the first scenario opens and
 // kept for later ones.
 
-import { applyScenarioResult, newCampaign, setScenarioFeedback, type ScenarioFeedback } from '../rules/campaign';
+import { applyScenarioResult, newCampaign, pickHand, setScenarioFeedback, type ScenarioFeedback } from '../rules/campaign';
 import { loadContent } from '../rules/load';
 import type { GameSetup } from '../rules/state';
 import type { BoardView } from '../render/view';
@@ -17,6 +17,7 @@ import { mountScenario } from './scenarioScreen';
 import { campScreen } from './screens/camp';
 import { campaignMapScreen } from './screens/campaignMap';
 import { endScreen } from './screens/end';
+import { handPickScreen, heroesToPick } from './screens/handPick';
 import { menuBackdrop, menuScreen } from './screens/menu';
 import { newGameScreen } from './screens/newGame';
 import { settingsPanel } from './screens/settings';
@@ -30,10 +31,10 @@ import { mountCoach } from './tutorial/coach';
 import { isTutorial, tutorialContent, tutorialPlayers, tutorialSetup, tutorialStorage } from './tutorial/scenario';
 import { saveTutorialProgress, shouldOfferTutorial, tutorialEnd, tutorialOffer } from './tutorial/screens';
 
-type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'storyIntro' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
+type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'handPick' | 'storyIntro' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
 
 /** Music by screen (data/audio.json `screens`); the board and the end screen set their own. */
-const SCREEN_MUSIC: Partial<Record<Screen, string>> = { menu: 'menu', newGame: 'menu', newCampaign: 'menu', settings: 'menu', help: 'menu', tutorialOffer: 'menu', tutorialEnd: 'menu', camp: 'camp', map: 'map', storyIntro: 'story' };
+const SCREEN_MUSIC: Partial<Record<Screen, string>> = { menu: 'menu', newGame: 'menu', newCampaign: 'menu', settings: 'menu', handPick: 'menu', help: 'menu', tutorialOffer: 'menu', tutorialEnd: 'menu', camp: 'camp', map: 'map', storyIntro: 'story' };
 
 export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
@@ -44,6 +45,8 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
   let boardLoading: Promise<BoardView> | null = null;
   let unmountScenario: (() => void) | null = null;
   let unmountCoach: (() => void) | null = null;
+  /** A start waiting for «Карти на місію» (handPick); `back` is the screen «Назад» returns to. */
+  let pendingStart: { setup: GameSetup; players: PlayerInfo[]; campaign: boolean; back: Screen } | null = null;
   document.documentElement.lang = getLang();
 
   if (import.meta.env.DEV) Object.defineProperty(window, '__game', { get: () => ({ game, board, screen, go }), configurable: true });
@@ -106,8 +109,28 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
     overlay.append(scene);
   }
 
+  /** «Почати»: the hands first (screens/handPick) when a deck is larger than the hand, then the game. */
   function startNew(setup: GameSetup, players: PlayerInfo[], campaign = false): void {
+    if (heroesToPick(setup, content).length === 0) return launch(setup, players, campaign);
+    pendingStart = { setup, players, campaign, back: screen === 'end' ? 'menu' : screen };
+    boardLoading ??= createGameBoard(boardEl, { quality: getGraphicsQuality(), lang: getLang(), speed: settings.get().speed });
+    go('handPick');
+  }
+
+  function launch(setup: GameSetup, players: PlayerInfo[], campaign: boolean): void {
     void openScenario(GameController.start(setup, players, storage, content, { campaign }));
+  }
+
+  /** The hands picked before a campaign mission become the camp's pick for the next one. */
+  function saveHands(hands: Record<string, string[]>): void {
+    const saved = campaigns.load();
+    if (!saved) return;
+    let state = saved.campaign;
+    for (const [classId, cards] of Object.entries(hands)) {
+      const r = pickHand(content, state, classId, cards);
+      if (r.ok) state = r.state;
+    }
+    campaigns.save(state, saved.players);
   }
 
   /** The party from the New Game steps becomes a campaign; the camp comes before s1. */
@@ -221,6 +244,23 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
           ),
         );
         break;
+      case 'handPick': {
+        const p = pendingStart;
+        if (!p) return go('menu');
+        overlay.replaceChildren(
+          handPickScreen({
+            content,
+            setup: p.setup,
+            onBack: () => go(p.back),
+            onDone: (setup, hands) => {
+              pendingStart = null;
+              if (p.campaign) saveHands(hands);
+              launch(setup, p.players, p.campaign);
+            },
+          }),
+        );
+        break;
+      }
       case 'storyIntro': {
         if (!game) return go('menu');
         overlay.replaceChildren(h('div', { class: 'gpage is-art' }, menuBackdrop(true)), storyScene({ lines: storyOf(game, 'intro'), doneLabel: t('story.start'), onDone: () => go('scenario') }));

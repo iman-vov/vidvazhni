@@ -1,0 +1,152 @@
+/* «Карти на місію» before a scenario (handPick.ts): header, the deck in 2–3 rows, footer. */
+
+.gpage.ghp {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  overflow: hidden;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.ghp > .mbg {
+  z-index: 0;
+}
+
+.ghp-head,
+.ghp-grid,
+.ghp-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.ghp-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.ghp-head h1 {
+  margin: 0;
+  font-size: 1.35em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghp-heroes {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.ghp-hero {
+  position: relative;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.ghp-hero.is-on {
+  border-color: var(--hud-gold-hi, #f6d98a);
+  opacity: 1;
+}
+
+.ghp-hero.is-done::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6fbf73;
+  border: 2px solid #1d2433;
+}
+
+.ghp-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15em;
+}
+
+.ghp-heroes + .ghp-who {
+  margin-left: 0;
+}
+
+.ghp-head h1 + .ghp-who {
+  margin-left: auto;
+}
+
+.gpage.ghp > .ghp-grid,
+.gpage.ghp > .ghp-foot {
+  width: 100%;
+}
+
+.ghp-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 12px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+/* Full cards, larger text than the round choice (the text scales with the card). */
+.ghp-grid .gcard {
+  position: relative;
+  width: var(--hp-w, 170px);
+  flex: 0 0 var(--hp-w, 170px);
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease, filter 0.12s ease;
+}
+
+.ghp-grid .gcard .gcard-face {
+  font-size: clamp(8px, 7cqw, 19px);
+}
+
+.ghp-grid .gcard:not(.is-picked) {
+  opacity: 0.62;
+  filter: saturate(0.6);
+}
+
+.ghp-grid .gcard:hover {
+  transform: translateY(-3px);
+  opacity: 1;
+}
+
+.ghp-grid .gcard.is-picked {
+  box-shadow: 0 0 0 3px var(--hud-gold-hi, #f6d98a), 0 0 18px rgba(246, 217, 138, 0.35);
+  border-radius: 10px;
+}
+
+.ghp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.ghp-foot .ubtn {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 260px;
+}
+
+.ghp-sum {
+  font-weight: 700;
+  font-size: 1.1em;
+  text-shadow: 0 1px 2px #000;
+}
