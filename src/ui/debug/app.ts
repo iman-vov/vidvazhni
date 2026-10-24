@@ -715,6 +715,9 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
       case 'fadeOut':
         // Тінерук «Згасання» (engine choice added with scenarios 2–5); labels are the action names.
         return [h('div', { class: 'dbg-row' }, legalOf('fadeOut').map((a) => btn(a.choice, a)))];
+      default:
+        // Reaction windows (e.g. `beforeAttacked`) and later pending kinds: offer whatever the engine lists.
+        return [h('div', { class: 'dbg-col' }, legal().map((o) => btn(o.action.type, o.action)))];
     }
   }
 
