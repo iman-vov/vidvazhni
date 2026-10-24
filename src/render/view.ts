@@ -2,6 +2,7 @@
 // The UI owns the game flow and calls the rules engine; the board only shows state and plays events.
 // Implemented in src/render/boardView.ts. Extend additively; report changes.
 
+import type { AnimStep } from './animPlan';
 import type { Content } from '../rules/content';
 import type { Hex } from '../rules/hex';
 import type { FigureId, GameEvent, GameState } from '../rules/state';
@@ -54,6 +55,8 @@ export interface BoardView {
   onFigureTap(cb: (figureId: FigureId) => void): () => void;
   /** Long press on a figure (UI shows its details). */
   onFigureHold(cb: (figureId: FigureId) => void): () => void;
+  /** Each animation step as it starts, with the current speed (sounds follow the picture). */
+  onStep?(cb: (step: AnimStep, speed: number) => void): () => void;
   /** Pins an HTML element over a figure's head (follows it; hidden while the figure is gone),
    *  e.g. a story speech bubble. Returns the remover. */
   pin?(figureId: FigureId, el: HTMLElement): () => void;

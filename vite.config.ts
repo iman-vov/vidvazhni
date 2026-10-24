@@ -30,10 +30,16 @@ export default defineConfig({
       workbox: {
         // Models: only the low tier is precached, so the game always works offline after the first
         // visit. The medium/high tier is put into the runtime cache by prefetchModels()
-        // (src/render/models.ts) and served from it here.
-        globPatterns: ['**/*.{js,css,html,svg,png,json,webp,ogg,mp3}', '**/*.low-*.glb'],
+        // (src/render/models.ts) and served from it here. Audio is never precached: each file is
+        // fetched when first played (src/audio/engine.ts) and kept in the runtime cache.
+        globPatterns: ['**/*.{js,css,html,svg,png,json,webp}', '**/*.low-*.glb'],
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         runtimeCaching: [
+          {
+            urlPattern: /\/audio\/.+\.mp3$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'vidvazhni-audio', cacheableResponse: { statuses: [0, 200] } },
+          },
           {
             urlPattern: /\.glb$/,
             handler: 'CacheFirst',

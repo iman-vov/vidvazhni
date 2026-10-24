@@ -1,4 +1,4 @@
-// Settings: language, graphics quality, music / sound / voice volume (stored; no audio yet) and the
+// Settings: language, graphics quality, music / sound / voice volume (src/audio) and the
 // hint level per hero, and «Сюжет» (full / short / off). Used as a screen from the main menu and inside the in-game menu.
 
 import { getGraphicsQuality, GRAPHICS_QUALITIES, setGraphicsQuality, type GraphicsQuality } from '../../render/quality';
@@ -117,7 +117,6 @@ export function settingsPanel(o: SettingsPanelOptions = {}): HTMLElement {
           }),
         ),
       ),
-      h('p', { class: 'gside-hint' }, t('settings.volume.none')),
       h('h3', null, t('settings.hints')),
       h('p', { class: 'gside-hint' }, t('settings.hints.text')),
       (o.heroes ?? CLASS_ORDER).map((classId) => hintRow(classId, render)),

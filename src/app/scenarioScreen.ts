@@ -39,6 +39,8 @@ import { getGraphicsQuality } from '../render/quality';
 import { artButton } from './screens/menu';
 import { settingsPanel } from './screens/settings';
 import { topicForHint } from './help/topics';
+import { boardMusic, endStinger, playEvents as eventSounds, playUi, stepSounds } from '../audio/index';
+import { environmentFor } from '../render/environment/data';
 
 export interface ScenarioScreenOptions {
   overlay: HTMLElement;
@@ -216,6 +218,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   function figureTapped(id: FigureId): void {
     if (ui.busy || ui.modal) return;
     const m = stepInfo?.model;
+    // Area, hex and path steps aim at the figure's hex: the board's hex tap that follows does it
+    // (a hold still opens the figure card).
+    if (m && (m.mode === 'area' || m.mode === 'hex' || m.mode === 'path')) return;
     if (!m || m.mode !== 'targets') {
       const f = game.state.figures[id];
       if (f?.kind === 'hero') ui.focusHero = id;
@@ -251,6 +256,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const actor = actorOf(game.state, action);
     const r = game.act(action);
     if (!r.ok) {
+      playUi('error');
       toast(t('game.rejected'), r.error ?? '', 'error');
       render();
       return false;
@@ -271,6 +277,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   async function playEvents(events: GameEvent[], actor: FigureId | null): Promise<void> {
     const s = game.state;
     for (const e of events) pushLog(e, s);
+    eventSounds(events);
     const heroAttacks = events.filter((e): e is Extract<GameEvent, { type: 'attacked' }> => e.type === 'attacked' && isHeroSide(s, e.attackerId));
     const visible = events.some((e) => e.type !== 'cardMoved' && e.type !== 'xpGained' && e.type !== 'undone');
     if (visible) {
@@ -285,9 +292,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     }
     afterEvents(events, actor);
     if (game.over) {
+      endStinger(game.state.phase === 'won');
       o.onEnd();
       return;
     }
+    music();
     render();
   }
 
@@ -831,6 +840,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   function togglePick(cardId: CardId): void {
+    playUi('cardPick');
     ui.longRest = false;
     if (ui.pick.includes(cardId)) {
       ui.pick = ui.pick.filter((c) => c !== cardId);
@@ -862,6 +872,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   function toggleHandPick(cardId: CardId, need: number): void {
+    playUi('cardPick');
     ui.handPick = ui.handPick.includes(cardId) ? ui.handPick.filter((c) => c !== cardId) : ui.handPick.length < need ? [...ui.handPick, cardId] : ui.handPick;
     render();
   }
@@ -1350,7 +1361,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (p?.kind === 'selectCards' && ui.revealed === hero.id) {
       const picked = ui.pick.includes(cardId) && !ui.longRest;
       actions.push(
-        h('button', { class: `gbtn${picked ? '' : ' gbtn-primary'}`, onclick: () => (togglePick(cardId), close()) }, icon(picked ? 'close' : 'check'), picked ? t('game.card.unpick') : t('game.card.pick')),
+        h('button', { class: `gbtn${picked ? '' : ' gbtn-primary'}`, 'data-sound': 'none', onclick: () => (togglePick(cardId), close()) }, icon(picked ? 'close' : 'check'), picked ? t('game.card.unpick') : t('game.card.pick')),
       );
       if (picked && ui.leading !== cardId) actions.push(h('button', { class: 'gbtn', onclick: () => ((ui.leading = cardId), close(), render()) }, icon('initiative'), t('game.makeLeading')));
       if (picked && ui.leading === cardId) actions.push(h('span', { class: 'gtag' }, t('game.leading')));
@@ -1646,6 +1657,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   // ─── Start ───────────────────────────────────────────────────────────────
 
   board.sync(game.state, content);
+  // Music: the location's track, the battle track while a boss is up; sounds follow the board.
+  function music(): void {
+    const boss = Object.values(game.state.figures).some((f) => f.kind === 'monster' && f.rank === 'boss' && f.hp > 0);
+    if (!game.over) boardMusic(environmentFor(game.state.scenarioId).id, boss);
+  }
+  music();
+  if (board.onStep) unsubs.push(board.onStep(stepSounds()));
   if (game.restoreError) toast(t('game.restoreFailed'), game.restoreError, 'error');
   document.addEventListener('pointerdown', skipRoll, true);
   render();

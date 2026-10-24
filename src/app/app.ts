@@ -10,6 +10,7 @@ import { getGraphicsQuality } from '../render/quality';
 import { h } from '../ui/dom';
 import { getLang, onLangChange, t } from '../ui/i18n';
 import { icon } from '../ui/game/icons';
+import { screenMusic } from '../audio/index';
 import { createGameBoard } from './board';
 import { GameController, type PlayerInfo } from './game';
 import { mountScenario } from './scenarioScreen';
@@ -30,6 +31,9 @@ import { isTutorial, tutorialContent, tutorialPlayers, tutorialSetup, tutorialSt
 import { saveTutorialProgress, shouldOfferTutorial, tutorialEnd, tutorialOffer } from './tutorial/screens';
 
 type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'storyIntro' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
+
+/** Music by screen (data/audio.json `screens`); the board and the end screen set their own. */
+const SCREEN_MUSIC: Partial<Record<Screen, string>> = { menu: 'menu', newGame: 'menu', newCampaign: 'menu', settings: 'menu', help: 'menu', tutorialOffer: 'menu', tutorialEnd: 'menu', camp: 'camp', map: 'map', storyIntro: 'story' };
 
 export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
@@ -61,6 +65,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
       unmountCoach = null;
     }
     screen = next;
+    screenMusic(SCREEN_MUSIC[next] ?? '');
     boardEl.style.visibility = next === 'scenario' ? 'visible' : 'hidden';
     render();
   }

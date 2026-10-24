@@ -633,6 +633,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         ctx.impacts.delete(target!);
         if (!alive(ctx)) break;
       }
+      for (const cb of stepListeners) cb(step, anim.speed);
       const done = runStep(step, ctx).catch((err: unknown) => console.error('board step failed', step.kind, err));
       ctx.pending.push(done);
       await anim.wait(step.wait);
@@ -1287,6 +1288,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   const hexListeners = new Set<(hex: Hex) => void>();
   const figureListeners = new Set<(id: FigureId) => void>();
   const holdListeners = new Set<(id: FigureId) => void>();
+  const stepListeners = new Set<(step: AnimStep, speed: number) => void>();
   const ground = new THREE.Vector3();
 
   function pickFigure(x: number, y: number): FigureView | null {
@@ -1397,6 +1399,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     hexListeners.clear();
     figureListeners.clear();
     holdListeners.clear();
+    stepListeners.clear();
   }
 
   return {
@@ -1408,6 +1411,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     onHexTap: (cb) => subscribe(hexListeners, cb),
     onFigureTap: (cb) => subscribe(figureListeners, cb),
     onFigureHold: (cb) => subscribe(holdListeners, cb),
+    onStep: (cb) => subscribe(stepListeners, cb),
     pin,
     focus,
     resetCamera,

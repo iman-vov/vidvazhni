@@ -231,7 +231,7 @@ export function campScreen(o: CampOptions): HTMLElement {
                 : null,
               h('button', { class: 'gbtn gcamp-buy is-sell', onclick: () => change(sell(c, state, x.classId, it.id)) }, t('camp.shop.sell'), ' ', icon('gold'), sellPrice(c, it, owned.plus)),
             ]
-          : h('button', { class: 'gbtn gcamp-buy', disabled: x.gold < it.price, onclick: () => change(buy(c, state, x.classId, it.id)) }, t('camp.shop.buy'), ' ', icon('gold'), it.price),
+          : h('button', { class: 'gbtn gcamp-buy', 'data-sound': 'coins', disabled: x.gold < it.price, onclick: () => change(buy(c, state, x.classId, it.id)) }, t('camp.shop.buy'), ' ', icon('gold'), it.price),
       ),
     );
   }
@@ -325,7 +325,7 @@ export function campScreen(o: CampOptions): HTMLElement {
           { class: 'gcamp-panel gcamp-lvl-head' },
           h('h3', null, icon('xp'), ' ', t('camp.lvl.title', { level: x.level + 1 })),
           h('span', null, icon('hp'), ' ', t('camp.lvl.hp', { from: cls?.hpByLevel[x.level - 1] ?? '', to: cls?.hpByLevel[x.level] ?? '' })),
-          h('button', { class: 'gbtn gbtn-primary gcamp-lvl-ok', disabled: !ready, onclick: () => {
+          h('button', { class: 'gbtn gbtn-primary gcamp-lvl-ok', 'data-sound': 'levelUp', disabled: !ready, onclick: () => {
                 const choice = { card: newCard ?? undefined, perk: newPerk ?? undefined };
                 newCard = newPerk = null;
                 change(levelUp(c, state, x.classId, choice));
