@@ -6,6 +6,7 @@ import type {
   BattleGoalDef,
   BehaviourDeck,
   BossType,
+  CampaignRules,
   Content,
   HeroClass,
   ItemDef,
@@ -52,6 +53,7 @@ import s5 from '../../data/scenarios/s5.json';
 import items from '../../data/items.json';
 import battleGoals from '../../data/battle-goals.json';
 import perks from '../../data/perks.json';
+import campaign from '../../data/campaign.json';
 
 import uk from '../../data/i18n/uk.json';
 import de from '../../data/i18n/de.json';
@@ -65,6 +67,7 @@ export interface LoadedContent extends Content {
   items: Record<string, ItemDef>;
   battleGoals: Record<string, BattleGoalDef>;
   perks: Record<string, PerkDef>;
+  campaign: CampaignRules;
 }
 
 export type Lang = 'uk' | 'de' | 'en';
@@ -97,6 +100,7 @@ export function loadContent(): LoadedContent {
     items: indexById<ItemDef>(items),
     battleGoals: indexById<BattleGoalDef>(battleGoals),
     perks: indexById<PerkDef>(perks),
+    campaign,
   };
   return cached;
 }

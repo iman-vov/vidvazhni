@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Campaign rules (docs/design/camp.md)",
+  "type": "object",
+  "properties": {
+    "xpByLevel": {
+      "description": "XP needed for level 1, 2, 3 …; index 0 = level 1 = 0 XP.",
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "minItems": 1
+    },
+    "startGold": { "type": "integer", "minimum": 0 },
+    "sellRate": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+    "giftStep": { "type": "integer", "minimum": 1 },
+    "slots": {
+      "type": "object",
+      "properties": {
+        "head": { "type": "integer", "minimum": 0 },
+        "body": { "type": "integer", "minimum": 0 },
+        "legs": { "type": "integer", "minimum": 0 },
+        "hands": { "type": "integer", "minimum": 0 },
+        "small": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["head", "body", "legs", "hands", "small"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["xpByLevel", "startGold", "sellRate", "giftStep", "slots"],
+  "additionalProperties": false
+}

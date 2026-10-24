@@ -355,6 +355,19 @@ export interface PerkDef {
   ops: PerkOp[];
 }
 
+/** Campaign rules (`data/campaign.json`, docs/design/camp.md). */
+export interface CampaignRules {
+  /** XP needed for each level; index 0 = level 1 = 0 XP. */
+  xpByLevel: number[];
+  startGold: number;
+  /** Share of the price paid back on a sale (rounded down). */
+  sellRate: number;
+  /** Gold given by one tap of «Подарувати». */
+  giftStep: number;
+  /** Items a hero takes on a mission; a `twoHands` item fills both hands. */
+  slots: { head: number; body: number; legs: number; hands: number; small: number };
+}
+
 export interface Content {
   heroes: Record<string, HeroClass>;
   monsters: Record<string, MonsterType>;
@@ -365,4 +378,5 @@ export interface Content {
   items?: Record<string, ItemDef>;
   battleGoals?: Record<string, BattleGoalDef>;
   perks?: Record<string, PerkDef>;
+  campaign?: CampaignRules;
 }

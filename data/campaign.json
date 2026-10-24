@@ -1,0 +1,7 @@
+{
+  "xpByLevel": [0, 20, 45, 75, 110],
+  "startGold": 15,
+  "sellRate": 0.5,
+  "giftStep": 5,
+  "slots": { "head": 1, "body": 1, "legs": 1, "hands": 2, "small": 2 }
+}
