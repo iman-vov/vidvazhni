@@ -1880,6 +1880,33 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "env-watchtower",
+      "nameUk": "Набір оточення: сторожова вежа",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 51,
+      "wave": 5,
+      "scenarios": [
+        4
+      ],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/watchtower.blend",
+      "modelFile": "assets/models/env-watchtower/env-watchtower.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 16000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }
