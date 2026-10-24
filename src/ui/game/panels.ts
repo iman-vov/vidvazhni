@@ -124,15 +124,34 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
       const state = { current: i === current && s.phase === 'turns', done: i < current };
       if (e.kind === 'monsterGroup') {
         if (!Object.values(s.figures).some((f) => f.kind === 'monster' && f.typeId === e.typeId) && i > current) return;
-        entries.push(monsterEntry(o, e.typeId, String(e.initiative), state));
-      } else if (e.kind === 'hero') entries.push(heroEntry(o, e.figureId, e.initiative, state));
+        entries.push(monsterEntry(o, e.typeId, rolledText(s, e), state));
+      } else if (e.kind === 'hero') entries.push(heroEntry(o, e.figureId, rolledText(s, e), state));
       else
         entries.push(
-          h('span', { class: `gini is-summon${state.done ? ' is-done' : ''}`, 'aria-label': figureName(e.figureId, s) }, portrait(e.figureId, SUMMON_RING, 'sm'), h('b', { class: 'gini-ini' }, e.initiative)),
+          h('span', { class: `gini is-summon${state.done ? ' is-done' : ''}`, 'aria-label': figureName(e.figureId, s) }, portrait(e.figureId, SUMMON_RING, 'sm'), h('b', { class: 'gini-ini' }, rolledText(s, e))),
         );
     });
   }
   return h('div', { class: 'ginibar', 'aria-label': t('ui.initiative') }, joined(entries));
+}
+
+/** «Кубик ініціативи»: «25+7=32» for a rolled entry (the card's number from this round's roll
+ *  event), else the plain initiative. */
+function rolledText(s: GameState, e: TurnEntry): string | HTMLElement {
+  if (e.roll === undefined) return String(e.initiative);
+  const f = e.kind === 'monsterGroup' ? undefined : s.figures[e.figureId];
+  const id = e.kind === 'monsterGroup' ? e.typeId : f?.kind === 'summon' ? f.ownerId : e.figureId;
+  let card = e.initiative - e.roll;
+  for (let i = s.log.length - 1; i >= 0; i--) {
+    const ev = s.log[i]!;
+    if (ev.type === 'roundStarted') break;
+    const r = ev.type === 'initiativeRolled' ? ev.rolls.find((x) => x.id === id) : undefined;
+    if (r) {
+      card = r.card;
+      break;
+    }
+  }
+  return h('span', { class: 'gini-roll', title: `${card} + ${e.roll} = ${e.initiative}` }, h('small', null, `${card}+${e.roll}=`), String(e.initiative));
 }
 
 /** Entries with the small gold diamonds between them, as on the mockup ribbon. */
@@ -140,14 +159,14 @@ function joined(entries: HTMLElement[]): HTMLElement[] {
   return entries.flatMap((e, i) => (i === 0 ? [e] : [h('span', { class: 'gini-sep', 'aria-hidden': 'true' }), e]));
 }
 
-function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | null, st: { self?: boolean; chosen?: boolean; current?: boolean; done?: boolean }): HTMLElement {
+function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | string | HTMLElement | null, st: { self?: boolean; chosen?: boolean; current?: boolean; done?: boolean }): HTMLElement {
   const f = o.s.figures[heroId] as HeroState | undefined;
   const cls = ['gini', 'is-hero'];
   if (st.self) cls.push('is-self');
   if (st.current) cls.push('is-current');
   if (st.done) cls.push('is-done');
   if (f?.downed || f?.exhausted) cls.push('is-out');
-  const iniText = ini === null ? (st.chosen ? icon('check', '', t('game.ready')) : icon('initiative', '', t('ui.initiative'))) : f?.selection?.kind === 'longRest' ? '99' : String(ini);
+  const iniText = ini === null ? (st.chosen ? icon('check', '', t('game.ready')) : icon('initiative', '', t('ui.initiative'))) : f?.selection?.kind === 'longRest' ? '99' : typeof ini === 'number' ? String(ini) : ini;
   const el = h(
     'button',
     { class: cls.join(' '), 'aria-label': figureName(heroId) },

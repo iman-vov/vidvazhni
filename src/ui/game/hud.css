@@ -180,6 +180,17 @@ body.game.g-bottom-short {
   height: 0.95em;
 }
 
+/* «Кубик ініціативи»: card + die = total under the portrait. */
+.gini:has(.gini-roll) {
+  margin-inline: 10px;
+}
+
+.gini-roll small {
+  font-size: 0.78em;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .gini-you {
   position: absolute;
   top: -6px;
