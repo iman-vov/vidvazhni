@@ -2,7 +2,8 @@
 // without touching the screens. Everything stored is plain JSON.
 
 import type { Action, GameSetup } from '../rules/state';
-import type { GameMeta } from './game';
+import { CAMPAIGN_VERSION, type CampaignState } from '../rules/campaign';
+import type { GameMeta, PlayerInfo } from './game';
 
 /** A synchronous string key–value store (localStorage, or memory in tests). */
 export interface KeyValueStore {
@@ -81,5 +82,36 @@ export function gameStorage(kv: KeyValueStore = localStore): GameStorage {
     },
     save: (game) => kv.set(GAME_KEY, JSON.stringify(game)),
     clear: () => kv.remove(GAME_KEY),
+  };
+}
+
+/** The campaign between scenarios (src/rules/campaign.ts), kept apart from the game in progress. */
+export interface SavedCampaign {
+  app: 'vidvazhni';
+  version: number;
+  campaign: CampaignState;
+  /** Names for `CampaignHero.playerId`. */
+  players: PlayerInfo[];
+  savedAt: number;
+}
+
+export interface CampaignStorage {
+  load(): SavedCampaign | null;
+  save(campaign: CampaignState, players: PlayerInfo[]): void;
+  clear(): void;
+}
+
+export const CAMPAIGN_KEY = 'vidvazhni.campaign';
+
+/** A save of another version is ignored (no migrations yet). */
+export function campaignStorage(kv: KeyValueStore = localStore): CampaignStorage {
+  return {
+    load() {
+      const c = readJson<SavedCampaign>(kv, CAMPAIGN_KEY);
+      const ok = c?.app === 'vidvazhni' && c.version === CAMPAIGN_VERSION && c.campaign?.version === CAMPAIGN_VERSION && Array.isArray(c.campaign.heroes) && Array.isArray(c.players);
+      return ok ? c : null;
+    },
+    save: (campaign, players) => kv.set(CAMPAIGN_KEY, JSON.stringify({ app: 'vidvazhni', version: CAMPAIGN_VERSION, campaign, players, savedAt: Date.now() } satisfies SavedCampaign)),
+    clear: () => kv.remove(CAMPAIGN_KEY),
   };
 }
