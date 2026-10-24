@@ -1,9 +1,10 @@
-// Dev-only review page (`?icons`): every icon at 24, 32 and 48 px in colour on a dark and a light
-// panel, plus a monochrome silhouette grid at 24 px to check that no two icons share a shape.
+// Dev-only review page (`?icons`): every icon at 24, 32 and 48 px on a light parchment panel, on the
+// dark HUD slate as is and with `vi-on-dark`, plus a monochrome silhouette grid at 24 px to check that
+// no two icons share a shape.
 
 import { h } from '../dom';
 import { onLangChange, setLang, LANGS, getLang, t } from '../i18n';
-import { ICON_GROUPS, ICON_TINTS, icon, iconLabel, type IconGroup, type IconName } from './index';
+import { ICON_GROUPS, icon, iconLabel, type IconGroup, type IconName } from './index';
 
 const CSS = `
 html{overflow:auto!important;height:auto!important}
@@ -21,7 +22,7 @@ body.icons-gallery{margin:0;background:#1d2433;color:#e9e2d2;font:14px/1.4 syste
 .ig-name small{color:#98a2b6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ig-mono{display:grid;grid-template-columns:repeat(auto-fill,64px);gap:6px}
 .ig-mono>div{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 4px;background:#efe2c4;color:#1d1510;border-radius:8px;font-size:10px}
-.ig-mono .vi{--icon-line:currentColor}
+.ig-mono .vi{--icon-accent:currentColor;--icon-halo:transparent}
 .ig-sample{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px;background:#263049;border-radius:10px}
 .ig-sample span{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:#33405c;min-height:44px;box-sizing:border-box}
 `;
@@ -59,7 +60,7 @@ function page(): HTMLElement {
       h('span', null, icon('attack', { title: false }), `${t('stat.attack')} 3`),
       h('span', null, icon('ranged', { title: false }), `${t('stat.attack')} 2`, icon('range', { title: false }), '4'),
       h('span', null, icon('move', { title: false }), `${t('stat.move')} 3`, icon('jump', { title: false })),
-      h('span', { style: { color: ICON_TINTS.hp } }, icon('hp', { title: false }), '7/10'),
+      h('span', null, icon('hp', { title: false }), '7/10'),
       h('span', null, icon('fire', { title: false, size: 22 }), icon('ice', { size: 22 }), icon('air', { size: 22 }), icon('earth', { size: 22 }), icon('light', { size: 22 }), icon('dark', { size: 22 })),
     ),
     groups.map(([group, list]) =>
@@ -71,9 +72,8 @@ function page(): HTMLElement {
           'div',
           { class: 'ig-grid' },
           list.map((n) => {
-            const tint = ICON_TINTS[n];
-            const sizes = (cls: string) => h('div', { class: `ig-pane ${cls}`, style: tint ? { color: tint } : undefined }, [24, 32, 48].map((size) => icon(n, { size })));
-            return h('div', { class: 'ig-cell', title: iconLabel(n) }, sizes('ig-dark'), sizes('ig-light'), h('div', { class: 'ig-name' }, h('b', null, n), h('small', null, iconLabel(n))));
+            const sizes = (cls: string, className?: string) => h('div', { class: `ig-pane ${cls}` }, [24, 32, 48].map((size) => icon(n, { size, className })));
+            return h('div', { class: 'ig-cell', title: iconLabel(n) }, sizes('ig-light'), sizes('ig-dark'), sizes('ig-dark', 'vi-on-dark'), h('div', { class: 'ig-name' }, h('b', null, n), h('small', null, iconLabel(n))));
           }),
         ),
       ),

@@ -3,14 +3,14 @@
 // from the page (currentColor, CSS variables), so they follow the panel theme.
 
 import { t } from '../../ui/i18n';
-import { iconInner, ICON_TINTS, type IconName } from '../../ui/icons';
+import { iconInner, type IconName } from '../../ui/icons';
 
 export type DiagramId = 'round' | 'card' | 'initiative' | 'move' | 'attack' | 'modifiers' | 'push' | 'orbs' | 'elements' | 'piles';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
 function ic(name: IconName, x: number, y: number, size = 22, tint?: string): string {
-  const color = tint ?? ICON_TINTS[name] ?? 'currentColor';
+  const color = tint ?? 'var(--icon-ink, #1f2a44)';
   return `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 24 24" style="color:${color}">${iconInner(name)}</svg>`;
 }
 

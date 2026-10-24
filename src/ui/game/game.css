@@ -1773,7 +1773,8 @@ textarea.ginput {
   width: 1.5em;
   height: 1.5em;
   color: var(--ubtn-gold);
-  --icon-line: #6b4a12;
+  --icon-ink: currentColor;
+  --icon-halo: #6b4a12;
   flex: 0 0 auto;
 }
 

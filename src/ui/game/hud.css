@@ -655,7 +655,8 @@ body.game.g-bottom-short {
   width: 34px;
   height: 34px;
   color: #fff3cf;
-  --icon-line: #2a1a08;
+  --icon-ink: currentColor;
+  --icon-halo: #2a1a08;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
@@ -715,12 +716,14 @@ body.game.g-bottom-short {
 
 .ubtn.is-stop .ubtn-icon {
   color: #ff6b5b;
-  --icon-line: #4a0d07;
+  --icon-ink: currentColor;
+  --icon-halo: #4a0d07;
 }
 
 .ubtn.is-go .ubtn-icon {
   color: #7ee08a;
-  --icon-line: #0d3a14;
+  --icon-ink: currentColor;
+  --icon-halo: #0d3a14;
 }
 
 .ubtn.is-go.is-ready,
