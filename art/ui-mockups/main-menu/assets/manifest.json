@@ -1,0 +1,66 @@
+{
+  "screen": "main-menu",
+  "approvedMenu": "../uk-final.png",
+  "background": {
+    "file": "background.png",
+    "size": [1448, 1086],
+    "alpha": false
+  },
+  "buttonBase": {
+    "file": "button-base.png",
+    "size": [2172, 724],
+    "alpha": true
+  },
+  "icons": {
+    "size": [128, 128],
+    "alpha": true,
+    "items": {
+      "continue": "icons/continue.svg",
+      "new-game": "icons/new-game.svg",
+      "campaign": "icons/campaign.svg",
+      "settings": "icons/settings.svg"
+    }
+  },
+  "labels": {
+    "font": "Segoe UI Bold, 52 px",
+    "size": [700, 120],
+    "color": "#f8e8c0",
+    "alpha": true,
+    "languages": {
+      "uk": {
+        "continue": "Продовжити",
+        "new-game": "Нова гра",
+        "campaign": "Кампанія",
+        "settings": "Налаштування"
+      },
+      "en": {
+        "continue": "Continue",
+        "new-game": "New Game",
+        "campaign": "Campaign",
+        "settings": "Settings"
+      },
+      "de": {
+        "continue": "Fortsetzen",
+        "new-game": "Neues Spiel",
+        "campaign": "Kampagne",
+        "settings": "Einstellungen"
+      }
+    },
+    "svgPattern": "labels/<lang>/<id>.svg",
+    "pngPattern": "labels/<lang>/<id>.png"
+  },
+  "logos": {
+    "uk": {
+      "name": "Відважні",
+      "files": ["../../logos/uk/final.png"]
+    },
+    "en": {
+      "name": "The Braveheart Guild",
+      "files": ["../../logos/en/v1.png", "../../logos/en/v2.png", "../../logos/en/v3.png"]
+    },
+    "de": {
+      "name": "Die Mutherzen",
+      "files": ["../../logos/de/v1.png", "../../logos/de/v2.png", "../../logos/de/v3.png"]
+    }
+  }
+}

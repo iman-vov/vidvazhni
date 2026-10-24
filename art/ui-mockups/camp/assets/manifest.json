@@ -1,0 +1,113 @@
+{
+  "screen": "camp",
+  "sourceScreens": [
+    "../v1.png",
+    "../shop-v1.png",
+    "../level-v1.png"
+  ],
+  "notes": {
+    "integration": "Components only; application code is not included.",
+    "overlays": "Claude adds all labels, numbers, icons, hero portraits and active states programmatically.",
+    "icons": "Existing icon assets are intentionally referenced, not copied or regenerated.",
+    "buttonBase": "Reuse the existing main-menu button base; do not duplicate it.",
+    "cardFrames": "Reuse the existing card-frame sheet and palette; do not bake card content into these camp assets.",
+    "heroSwitching": "Left list icons use the approved concept portrait PNGs. Central selected hero uses the matching 2D waist-up illustration in heroes/. No hero is baked into the background; Marta remains a separate persistent NPC layer. GLB/live-3D is intentionally not used for camp."
+  },
+  "assets": [
+    {
+      "file": "background.png",
+      "size": [
+        1448,
+        1086
+      ],
+      "transparent": false,
+      "purpose": "Clean warm Alba tavern/camp scene behind every camp tab; environmental Lanterns, furniture, barrels, window and town view remain."
+    },
+    {
+      "file": "panel.png",
+      "size": [
+        1774,
+        887
+      ],
+      "transparent": true,
+      "purpose": "Reusable empty blue-slate and gold container for hero, chest and shop content."
+    },
+    {
+      "file": "slot-frame.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "transparent": true,
+      "purpose": "Reusable empty square equipment slot frame."
+    },
+    {
+      "file": "tab.png",
+      "size": [
+        2172,
+        724
+      ],
+      "transparent": true,
+      "purpose": "Reusable neutral camp tab base; labels, icons and selected highlight are programmatic."
+    },
+    {
+      "file": "marta.png",
+      "size": [
+        1315,
+        1196
+      ],
+      "transparent": true,
+      "purpose": "Friendly waist-up NPC illustration of Пані Марта with her Lantern."
+    }
+  ],
+  "references": {
+    "buttonBase": "../../main-menu/assets/button-base.png",
+    "cardFrames": "../../card-frames/v1.png",
+    "cardPalette": "../../card-frames/palette.json",
+    "heroPrompts": "heroes/PROMPTS.md"
+  },
+  "heroSources": [
+    {
+      "id": "warden",
+      "listPortrait": "../../../concepts/warden/portrait.png",
+      "selectedIllustration": "heroes/warden.png",
+      "size": [1315, 1197],
+      "transparent": true
+    },
+    {
+      "id": "wind-archer",
+      "listPortrait": "../../../concepts/wind-archer/portrait.png",
+      "selectedIllustration": "heroes/wind-archer.png",
+      "size": [1315, 1197],
+      "transparent": true
+    },
+    {
+      "id": "herbalist",
+      "listPortrait": "../../../concepts/herbalist/portrait.png",
+      "selectedIllustration": "heroes/herbalist.png",
+      "size": [1315, 1197],
+      "transparent": true
+    },
+    {
+      "id": "rogue",
+      "listPortrait": "../../../concepts/rogue/portrait.png",
+      "selectedIllustration": "heroes/rogue.png",
+      "size": [1315, 1197],
+      "transparent": true
+    },
+    {
+      "id": "elementalist",
+      "listPortrait": "../../../concepts/elementalist/portrait.png",
+      "selectedIllustration": "heroes/elementalist.png",
+      "size": [1315, 1197],
+      "transparent": true
+    },
+    {
+      "id": "tinker",
+      "listPortrait": "../../../concepts/tinker/portrait.png",
+      "selectedIllustration": "heroes/tinker.png",
+      "size": [1315, 1197],
+      "transparent": true
+    }
+  ]
+}

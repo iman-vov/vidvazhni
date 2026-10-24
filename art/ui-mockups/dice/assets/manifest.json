@@ -1,0 +1,23 @@
+{
+  "components": [
+    {
+      "path": "background.png",
+      "size": { "width": 1448, "height": 1086 },
+      "transparent": false,
+      "description": "Чисте тепле тло корчемної настільної сцени без UI, тексту, кубика чи іконок."
+    },
+    {
+      "path": "d12-blank.png",
+      "size": { "width": 1312, "height": 1199 },
+      "transparent": true,
+      "description": "Порожній d12 із темно-синіми гранями, темною міддю та тонким золотом; усі видимі грані без цифр і символів."
+    }
+  ],
+  "sharedComponents": [
+    "camp/assets/panel.png",
+    "camp/assets/tab.png",
+    "camp/assets/slot-frame.png",
+    "main-menu/assets/button-base.png"
+  ],
+  "note": "PNG d12 — 2D-графіка та матеріальний референс, не 3D-модель і не готова анімація. Реальну 3D-геометрію, цифри та кидок реалізує Клод."
+}

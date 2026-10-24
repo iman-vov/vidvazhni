@@ -1,0 +1,45 @@
+{
+  "screen": "scenario-end",
+  "sourceScreen": "../v1.png",
+  "notes": {
+    "integration": "Components only; application code is not included.",
+    "overlays": "Claude adds all Ukrainian text, numbers, hero portraits, gold, XP, loot, feedback states, and icons programmatically.",
+    "icons": "Existing icon assets are intentionally referenced, not copied or regenerated.",
+    "uiBases": "Reuse existing panel, slot-frame, and tab assets where useful. This screen has dedicated structured result-card, loot-panel, and button components below; all text, icons, portraits, and values remain programmatic.",
+    "preliminaryAssets": "hero-frame-sheet.png and button-sheet.png are earlier outline-only drafts; do not use them for this screen."
+  },
+  "assets": [
+    {
+      "file": "background.png",
+      "size": [1448, 1086],
+      "transparent": false,
+      "purpose": "Opaque clean warm painted victory-cellar scene behind the scenario-end results UI; the central Lantern-Obereg, amber lanterns, wood, stone, barrels, goose pennants, and empty floor remain. Contains no UI, text, heroes, portraits, rewards, panels, buttons, numbers, or icons."
+    },
+    {
+      "file": "hero-result-cards.png",
+      "size": [1024, 1536],
+      "transparent": true,
+      "purpose": "2×2 sheet of fully structured opaque hero-result card bodies on a transparent canvas: Warden #3B6FB6 top-left, Wind Archer #2FA36B top-right, Herbalist #E0B040 bottom-left, Rogue #7E4FC4 bottom-right. Each card has an empty alpha portrait aperture, name/stat/objective sections, and no baked portrait, text, number, or gameplay icon."
+    },
+    {
+      "file": "loot-panel.png",
+      "size": [2172, 724],
+      "transparent": true,
+      "purpose": "Wide opaque blue-slate/gold loot panel on a transparent canvas, with three empty item-slot sections and one empty destination section separated by a fine divider. No baked title, loot, text, number, icon, or arrow."
+    },
+    {
+      "file": "victory-buttons.png",
+      "size": [1983, 793],
+      "transparent": true,
+      "purpose": "2×2 sheet of filled empty button bases on a transparent canvas: wide emerald-green primary action top row, then cyan-blue, blue-slate/gold, and warm-red compact feedback buttons. No baked label, text, number, or icon."
+    }
+  ],
+  "references": {
+    "panel": "../../camp/assets/panel.png",
+    "slotFrame": "../../camp/assets/slot-frame.png",
+    "tab": "../../camp/assets/tab.png",
+    "buttonBase": "../../main-menu/assets/button-base.png",
+    "cardFrames": "../../card-frames/v1.png",
+    "cardPalette": "../../card-frames/palette.json"
+  }
+}
