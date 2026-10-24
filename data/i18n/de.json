@@ -898,6 +898,7 @@
   "game.shortRest.cards": "Hand {hand}, Ablage {discard}",
   "game.shortRest.yes": "Rasten",
   "game.shortRest.no": "Nicht jetzt",
+  "game.shortRest.noAll": "Jetzt nicht — alle",
   "game.reroll.title": "{name} verliert „{card}“",
   "game.reroll.text": "Einmal darfst du 1 Schaden nehmen, um stattdessen eine andere zufällige Karte zu verlieren.",
   "game.reroll.keep": "In Ordnung",

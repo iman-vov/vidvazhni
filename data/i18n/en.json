@@ -898,6 +898,7 @@
   "game.shortRest.cards": "hand {hand}, discard {discard}",
   "game.shortRest.yes": "Rest",
   "game.shortRest.no": "Not now",
+  "game.shortRest.noAll": "Not now — everyone",
   "game.reroll.title": "{name} loses “{card}”",
   "game.reroll.text": "Once, you may take 1 damage to lose a different random card instead.",
   "game.reroll.keep": "Fine",

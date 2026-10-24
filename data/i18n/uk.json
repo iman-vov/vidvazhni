@@ -898,6 +898,7 @@
   "game.shortRest.cards": "рука {hand}, скидання {discard}",
   "game.shortRest.yes": "Відпочити",
   "game.shortRest.no": "Не зараз",
+  "game.shortRest.noAll": "Не зараз — усім",
   "game.reroll.title": "{name} втрачає «{card}»",
   "game.reroll.text": "Можна раз прийняти 1 шкоду, щоб натомість втратити іншу випадкову карту.",
   "game.reroll.keep": "Гаразд",

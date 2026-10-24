@@ -114,6 +114,9 @@ interface Ui {
 }
 
 const TOAST_MS = 6000;
+/** End of round: a short rest is asked only of heroes with this many cards in hand or fewer (two
+ *  more rounds' worth otherwise); the others say «Не зараз» by themselves. */
+const SHORT_REST_HAND = 3;
 const MODIFIER_MS = 1100;
 const LOG_LINES = 60;
 
@@ -340,7 +343,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (next && hintLevel(next) >= 1) {
       const kind = s.pending?.kind;
       if (kind === 'avoidDamage') showHint({ key: 'avoidDamage', title: t('ui.avoidDamage'), text: t('game.hint.avoidDamage') });
-      if (kind === 'endOfRound') showHint({ key: 'shortRest', title: t('ui.shortRest'), text: t('game.hint.shortRest') });
+      if (kind === 'endOfRound' && restAsked().length) showHint({ key: 'shortRest', title: t('ui.shortRest'), text: t('game.hint.shortRest') });
       if (kind === 'longRestLoss') showHint({ key: 'longRest', title: t('ui.longRest'), text: t('game.hint.longRest') });
     }
     const started = [...events].reverse().find((e) => e.type === 'turnStarted' && s.figures[e.figureId]?.kind === 'hero');
@@ -483,6 +486,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (disposed) return;
     sync();
     const s = game.state;
+    // Heroes with a hand big enough skip the short rest without a prompt (one at a time: each
+    // answer re-renders).
+    const p = s.pending;
+    if (p?.kind === 'endOfRound' && !ui.busy) {
+      const skip = p.heroIds.find((id) => !restAsked().includes(id));
+      if (skip && act({ type: 'shortRest', heroId: skip, rest: false })) return;
+    }
     stepInfo = null;
     if (s.pending?.kind === 'stepChoice' && !ui.busy) {
       const choices = game.legalOf('resolveStep').map((a) => a.choice);
@@ -1239,16 +1249,35 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     );
   }
 
+  /** Heroes asked about a short rest this round: offered by the engine and short of cards. */
+  function restAsked(): FigureId[] {
+    const p = game.state.pending;
+    if (p?.kind !== 'endOfRound') return [];
+    return p.heroIds.filter((id) => {
+      const hero = game.state.figures[id];
+      return hero?.kind === 'hero' && hero.hand.length <= SHORT_REST_HAND;
+    });
+  }
+
+  /** One prompt for every hero still asked; «Не зараз — усім» answers for all of them at once. */
   function shortRestPanel(): HTMLElement {
     const s = game.state;
     const p = s.pending;
     if (p?.kind !== 'endOfRound') return h('div');
+    const asked = restAsked();
     return h(
       'div',
       { class: 'gsheet' },
       h('p', { class: 'gsheet-title' }, icon('rest'), t('game.shortRest.title', { round: s.round })),
       h('p', { class: 'gside-hint' }, t('game.shortRest.text')),
-      p.heroIds.map((id) => {
+      asked.length > 1
+        ? h(
+            'div',
+            { class: 'grow' },
+            h('button', { class: 'gbtn', onclick: () => asked.every((id) => act({ type: 'shortRest', heroId: id, rest: false })) }, t('game.shortRest.noAll')),
+          )
+        : null,
+      asked.map((id) => {
         const hero = s.figures[id] as HeroState;
         return h(
           'div',
