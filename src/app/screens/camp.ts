@@ -17,7 +17,7 @@ import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
 import { icon, type IconName } from '../../ui/game/icons';
 import { modifierLabel, stepLine } from '../../ui/game/text';
-import { heroBustUrl, portraitUrl } from '../../ui/game/uiArt';
+import { campHeroUrl, heroBustUrl, portraitUrl } from '../../ui/game/uiArt';
 import { settings } from '../settings';
 import type { SavedCampaign } from '../storage';
 import { artButton } from './menu';
@@ -123,7 +123,7 @@ export function campScreen(o: CampOptions): HTMLElement {
 
   function stage(): HTMLElement {
     const x = hero();
-    const url = heroBustUrl(x.classId);
+    const url = campHeroUrl(x.classId) ?? heroBustUrl(x.classId);
     const need = c.campaign.xpByLevel[x.level];
     return h(
       'div',

@@ -49,3 +49,10 @@ const BUSTS = import.meta.glob<string>('./assets/heroes/*.webp', { eager: true, 
 export function heroBustUrl(classId: string): string | undefined {
   return BUSTS[`./assets/heroes/${classId}.webp`];
 }
+
+const CAMP_HEROES = import.meta.glob<string>('./assets/camp-hero-*.webp', { eager: true, query: '?url', import: 'default' });
+
+/** The selected hero in the camp: waist-up illustration from art/ui-mockups/camp/assets/heroes. */
+export function campHeroUrl(classId: string): string | undefined {
+  return CAMP_HEROES[`./assets/camp-hero-${classId}.webp`];
+}

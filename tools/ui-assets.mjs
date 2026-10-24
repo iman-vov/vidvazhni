@@ -24,6 +24,14 @@ const JOBS = [
   { id: 'logo-uk', src: 'art/ui-mockups/logos/uk/final.png', kind: 'cutout', width: 1200 },
   { id: 'logo-en', src: 'art/ui-mockups/logos/en/v2.png', kind: 'cutout', width: 1200 },
   { id: 'logo-de', src: 'art/ui-mockups/logos/de/v1.png', kind: 'cutout', width: 1200 },
+  // Camp (art/ui-mockups/camp/assets/manifest.json): clean tavern, empty frames, Marta, and the
+  // selected hero's waist-up illustration (the manifest keeps the camp 2D, no live GLB).
+  { id: 'camp-bg', src: 'art/ui-mockups/camp/assets/background.png', kind: 'opaque', width: 1448, quality: 80 },
+  { id: 'camp-marta', src: 'art/ui-mockups/camp/assets/marta.png', kind: 'cutout', width: 560 },
+  { id: 'camp-panel', src: 'art/ui-mockups/camp/assets/panel.png', kind: 'cutout', width: 900 },
+  { id: 'camp-tab', src: 'art/ui-mockups/camp/assets/tab.png', kind: 'cutout', width: 520 },
+  { id: 'camp-slot', src: 'art/ui-mockups/camp/assets/slot-frame.png', kind: 'cutout', width: 220 },
+  ...['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'].map((id) => ({ id: `camp-hero-${id}`, src: `art/ui-mockups/camp/assets/heroes/${id}.png`, kind: 'cutout', width: 720 })),
 ];
 
 /** Round portraits (initiative ribbon, hero panel): heroes, summons and bosses from portrait.png,

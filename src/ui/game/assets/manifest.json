@@ -5,6 +5,18 @@
     "height": 1086,
     "bytes": 239368
   },
+  "campaign-map": {
+    "src": "art/ui-mockups/campaign-map/v2.png",
+    "width": 1448,
+    "height": 1086,
+    "bytes": 204392
+  },
+  "campaign-map-lo": {
+    "src": "art/ui-mockups/campaign-map/v2.png",
+    "width": 960,
+    "height": 720,
+    "bytes": 112012
+  },
   "button": {
     "src": "art/ui-mockups/main-menu/assets/button-base.png",
     "width": 760,
@@ -37,6 +49,82 @@
     "width": 1200,
     "height": 463,
     "bytes": 155514,
+    "keyed": false
+  },
+  "camp-bg": {
+    "src": "art/ui-mockups/camp/assets/background.png",
+    "width": 1448,
+    "height": 1086,
+    "bytes": 238266
+  },
+  "camp-marta": {
+    "src": "art/ui-mockups/camp/assets/marta.png",
+    "width": 560,
+    "height": 530,
+    "bytes": 68950,
+    "keyed": false
+  },
+  "camp-panel": {
+    "src": "art/ui-mockups/camp/assets/panel.png",
+    "width": 900,
+    "height": 298,
+    "bytes": 20568,
+    "keyed": false
+  },
+  "camp-tab": {
+    "src": "art/ui-mockups/camp/assets/tab.png",
+    "width": 520,
+    "height": 127,
+    "bytes": 9084,
+    "keyed": false
+  },
+  "camp-slot": {
+    "src": "art/ui-mockups/camp/assets/slot-frame.png",
+    "width": 220,
+    "height": 211,
+    "bytes": 7744,
+    "keyed": false
+  },
+  "camp-hero-warden": {
+    "src": "art/ui-mockups/camp/assets/heroes/warden.png",
+    "width": 720,
+    "height": 648,
+    "bytes": 105068,
+    "keyed": false
+  },
+  "camp-hero-wind-archer": {
+    "src": "art/ui-mockups/camp/assets/heroes/wind-archer.png",
+    "width": 720,
+    "height": 650,
+    "bytes": 102860,
+    "keyed": false
+  },
+  "camp-hero-herbalist": {
+    "src": "art/ui-mockups/camp/assets/heroes/herbalist.png",
+    "width": 720,
+    "height": 821,
+    "bytes": 124340,
+    "keyed": false
+  },
+  "camp-hero-rogue": {
+    "src": "art/ui-mockups/camp/assets/heroes/rogue.png",
+    "width": 720,
+    "height": 752,
+    "bytes": 108416,
+    "keyed": false
+  },
+  "camp-hero-elementalist": {
+    "src": "art/ui-mockups/camp/assets/heroes/elementalist.png",
+    "width": 720,
+    "height": 727,
+    "bytes": 94530,
+    "keyed": false
+  },
+  "camp-hero-tinker": {
+    "src": "art/ui-mockups/camp/assets/heroes/tinker.png",
+    "width": 720,
+    "height": 649,
+    "bytes": 100426,
     "keyed": false
   },
   "portraits": [

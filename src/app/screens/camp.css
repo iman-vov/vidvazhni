@@ -8,6 +8,8 @@
   --cp-ink: #f8e8c0;
   --cp-panel: linear-gradient(180deg, rgba(27, 52, 86, 0.88), rgba(13, 27, 48, 0.92));
   --cp-line: rgba(214, 170, 80, 0.6);
+  /* The empty slate-and-gold frame from art/ui-mockups/camp/assets/panel.png as a 9-slice. */
+  --cp-frame: url(../../ui/game/assets/camp-panel.webp) 34 48 fill / 16px 24px stretch;
   position: fixed;
   inset: 0;
   overflow: auto;
@@ -42,11 +44,11 @@
 }
 
 .gcamp-panel {
-  background: var(--cp-panel);
-  border: 1px solid var(--cp-line);
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  padding: 10px 12px;
+  border: solid transparent;
+  border-width: 16px 24px;
+  border-image: var(--cp-frame);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  padding: 0 2px;
   box-sizing: border-box;
 }
 
@@ -101,11 +103,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: var(--tap, 48px);
-  padding: 6px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--cp-line);
-  background: var(--cp-panel);
+  min-height: 56px;
+  padding: 6px 30px 12px;
+  border: none;
+  background: url(../../ui/game/assets/camp-tab.webp) center / 100% 100% no-repeat;
   color: var(--cp-ink);
   font: inherit;
   font-weight: 700;
@@ -118,9 +119,7 @@
 }
 
 .gcamp-tab[aria-selected='true'] {
-  border: 2px solid var(--cp-gold-hi);
-  background: linear-gradient(180deg, #24508a, #142f55);
-  box-shadow: 0 0 14px rgba(247, 212, 111, 0.4);
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(247, 212, 111, 0.65));
 }
 
 .gcamp-tab:disabled {
@@ -266,7 +265,7 @@
 .gcamp-marta {
   grid-area: marta;
   align-self: end;
-  aspect-ratio: 443 / 420;
+  aspect-ratio: 560 / 530;
   background: url(../../ui/game/assets/camp-marta.webp) bottom / contain no-repeat;
   display: flex;
   align-items: flex-end;
@@ -303,10 +302,9 @@
   justify-content: center;
   gap: 2px;
   min-height: 86px;
-  padding: 6px 4px;
-  border-radius: 12px;
-  border: 1px solid var(--cp-line);
-  background: var(--cp-panel);
+  padding: 10px 8px;
+  border: none;
+  background: url(../../ui/game/assets/camp-slot.webp) center / 100% 100% no-repeat;
   color: var(--cp-ink);
   font: inherit;
   text-align: center;
@@ -331,16 +329,15 @@
 
 .gcamp-slot.is-full {
   cursor: pointer;
-  border: 2px solid var(--cp-gold);
-  background: linear-gradient(180deg, #24508a, #142f55);
+  filter: brightness(1.15) drop-shadow(0 0 5px rgba(247, 212, 111, 0.5));
 }
 
 .gcamp-slot.is-full > .gi {
   opacity: 1;
 }
 
-.is-plus {
-  box-shadow: inset 0 0 0 2px rgba(247, 212, 111, 0.35), 0 0 12px rgba(247, 212, 111, 0.45);
+.gcamp .is-plus {
+  filter: brightness(1.15) drop-shadow(0 0 10px rgba(247, 212, 111, 0.75));
 }
 
 .gcamp-hint,
@@ -465,15 +462,15 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--cp-line);
-  background: var(--cp-panel);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  padding: 0 2px;
+  border: solid transparent;
+  border-width: 16px 24px;
+  border-image: var(--cp-frame);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 .gcamp-ware.is-owned {
-  border: 2px solid var(--cp-gold);
+  filter: drop-shadow(0 0 6px rgba(247, 212, 111, 0.55));
 }
 
 .gcamp-ware-head {
