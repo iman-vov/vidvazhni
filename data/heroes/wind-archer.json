@@ -134,6 +134,275 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 3, "consume": { "element": "air", "add": { "move": 2 } } }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.hook-arrow",
+      "level": 2,
+      "initiative": 28,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 4,
+            "pull": 2,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "wind-archer.piercing-arrow",
+      "level": 2,
+      "initiative": 52,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 4,
+            "pierce": 2,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "wind-archer.wind-path",
+      "level": 3,
+      "initiative": 14,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "fly": true
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1,
+                "push": 1
+              }
+            }
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "wind-archer.volley",
+      "level": 3,
+      "initiative": 58,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 4,
+            "targets": 2,
+            "consume": {
+              "element": "air",
+              "add": {
+                "targets": 1
+              }
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "wind-archer.eagle-shot",
+      "level": 4,
+      "initiative": 72,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "range": 6,
+            "advantage": true,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "consume": {
+              "element": "air",
+              "add": {
+                "move": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "wind-archer.wind-barrier",
+      "level": 4,
+      "initiative": 20,
+      "top": {
+        "steps": [
+          {
+            "type": "push",
+            "value": 2,
+            "target": "adjacentEnemies"
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          },
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "active",
+            "uses": 3,
+            "on": "attacked",
+            "grant": {
+              "shield": 1
+            },
+            "xp": 1
+          }
+        ],
+        "active": true
+      }
+    },
+    {
+      "id": "wind-archer.hurricane",
+      "level": 5,
+      "initiative": 78,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "area": {
+              "shape": "triangle",
+              "size": 3
+            },
+            "push": 2,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              },
+              "conditions": [
+                "immobilize"
+              ]
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "wind-archer.storm-eye",
+      "level": 5,
+      "initiative": 34,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 5,
+            "targets": 2,
+            "conditions": [
+              "immobilize"
+            ],
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "active",
+            "uses": 3,
+            "on": "rangedAttack",
+            "grant": {
+              "advantage": true,
+              "range": 1
+            }
+          }
+        ],
+        "active": true
+      }
     }
   ]
 }
