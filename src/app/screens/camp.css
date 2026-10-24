@@ -424,6 +424,134 @@
   width: 100%;
 }
 
+/* ─── Shop (shop-v1.png): slot filter, wares on the counter, gifts ─── */
+
+.gcamp-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcamp-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gcamp-chip {
+  min-height: 44px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-panel);
+  color: var(--cp-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gcamp-chip[aria-pressed='true'] {
+  border: 2px solid var(--cp-gold-hi);
+  background: linear-gradient(180deg, #24508a, #142f55);
+}
+
+.gcamp-wares {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.gcamp-ware {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-panel);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.gcamp-ware.is-owned {
+  border: 2px solid var(--cp-gold);
+}
+
+.gcamp-ware-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gcamp-ware-head .gi {
+  flex: none;
+  width: 1.4em;
+  height: 1.4em;
+  color: var(--cp-gold);
+}
+
+.gcamp-ware-effect {
+  margin: 0;
+  font-size: 0.9em;
+  flex: 1;
+}
+
+.gcamp-ware small {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.gcamp-ware-up {
+  color: var(--cp-gold-hi);
+}
+
+.gcamp-ware-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.gcamp-buy {
+  flex: 1;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.gcamp-buy .gi {
+  color: var(--cp-gold-hi);
+}
+
+.gcamp-buy.is-up {
+  border-color: var(--cp-gold-hi);
+  background: linear-gradient(180deg, #2c5c9a, #173764);
+}
+
+.gcamp-buy.is-sell {
+  opacity: 0.9;
+}
+
+.gcamp-gift h3 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1em;
+  margin-bottom: 6px;
+}
+
+.gcamp-gift-to {
+  border-left: 4px solid var(--hero);
+}
+
+.gcamp-gift-to small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ─── Mission summary ─── */
 
 .gcamp-dialog {
