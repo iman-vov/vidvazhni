@@ -10,6 +10,7 @@ import { nextInt, shuffle } from './rng';
 import type { BehaviourDeckState, CardId, HeroState, InitiativeRoll, TurnEntry } from './state';
 import { INITIATIVE_DIE_MAX, INITIATIVE_DIE_SIDES } from './variants';
 import { openInitiativeWindow } from './diceItems';
+import { cardHasX, rollX } from './dice';
 
 // ─── Card selection ────────────────────────────────────────────────────────
 
@@ -177,7 +178,20 @@ export function drawIntents(ctx: Ctx): void {
       if (cardId) deck.intents.push(cardId);
     }
     emit(ctx, { type: 'intentsDrawn', typeId, cards: [...deck.intents] });
+    for (const cardId of deck.intents) rollMonsterX(ctx, typeId, cardId);
   }
+}
+
+/** «Монстри з X»: a card with `x` steps rolls its X as soon as it is revealed, so the players see
+ *  the exact number. One roll per card, kept until the end of the round. */
+function rollMonsterX(ctx: Ctx, typeId: string, cardId: string): void {
+  if (!ctx.s.variants.monsterDieAbilities) return;
+  const deck = ctx.s.behaviourDecks[typeId];
+  const card = behaviourCard(ctx, typeId, cardId);
+  if (!deck || deck.xRolls?.[cardId] !== undefined || (!cardHasX(card.steps) && !cardHasX(card.otherwise))) return;
+  const roll = rollX(ctx);
+  deck.xRolls = { ...deck.xRolls, [cardId]: roll };
+  emit(ctx, { type: 'monsterDieRolled', typeId, cardId, roll });
 }
 
 /** Intents of types that left the board before the reveal go back into their pile. */
@@ -186,6 +200,7 @@ function returnUnusedIntents(ctx: Ctx): void {
     if (deck.intents.length === 0) continue;
     deck.draw = shuffle(ctx.s.rng, [...deck.draw, ...deck.intents]);
     deck.intents = [];
+    delete deck.xRolls;
   }
 }
 
@@ -205,6 +220,11 @@ export function drawBehaviour(ctx: Ctx, typeId: string): void {
   }
   if (!cardId) return;
   deck.current = cardId;
+  // The intents that went back lose their X; the picked card keeps its roll (or rolls now).
+  const kept = deck.xRolls?.[cardId];
+  if (kept === undefined) delete deck.xRolls;
+  else deck.xRolls = { [cardId]: kept };
+  rollMonsterX(ctx, typeId, cardId);
   const card = behaviourCard(ctx, typeId, cardId);
   if (card.shuffle) deck.needsShuffle = true;
   emit(ctx, { type: 'behaviourDrawn', typeId, cardId, initiative: monsterInitiative(ctx, typeId, card) });
@@ -364,6 +384,7 @@ export function finishRound(ctx: Ctx): void {
     if (deck.current) deck.discard.push(deck.current);
     deck.current = null;
     delete deck.roll;
+    delete deck.xRolls;
     if (deck.needsShuffle) {
       deck.draw = shuffle(s.rng, [...deck.draw, ...deck.discard]);
       deck.discard = [];

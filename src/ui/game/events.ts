@@ -3,7 +3,7 @@
 
 import type { GameEvent, GameState } from '../../rules/state';
 import { has, t } from '../i18n';
-import { conditionName, elementName, figureName, modifierLabel } from './text';
+import { conditionName, elementName, figureName, modifierLabel, monsterTypeName } from './text';
 
 export function eventLine(e: GameEvent, s: GameState): string | null {
   const n = (id: string) => figureName(id, s);
@@ -56,6 +56,8 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
       return null;
     case 'itemUsed':
       return t('game.ev.item', { name: n(e.heroId), item: t(`item.${e.itemId}`) });
+    case 'monsterDieRolled':
+      return t('game.ev.monsterDieRolled', { name: monsterTypeName(e.typeId), roll: e.roll });
     case 'initiativeChanged':
       return t('game.ev.initiativeChanged', { name: n(e.heroId), initiative: e.initiative });
     case 'dieRolled':

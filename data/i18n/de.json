@@ -920,6 +920,7 @@
   "game.ev.dieRolled": "{name}: X-Würfel = {roll}",
   "game.ev.dieRerolled": "{name}: X neu geworfen, {previous} {icon:arrow} {roll}",
   "game.ev.initiativeChanged": "{name}: Initiative jetzt {initiative}",
+  "game.ev.monsterDieRolled": "{name}: X-Würfel = {roll}",
   "game.ev.undone": "Aktion rückgängig gemacht",
   "game.marker.obstacle": "Hindernis",
   "game.marker.door": "Tür",

@@ -20,7 +20,7 @@
       "initiative": 55,
       "if": "twoOrMoreHeroesAdjacent",
       "steps": [{ "type": "attack", "value": -1, "targets": 2, "conditions": ["muddle"] }],
-      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 1, "x": -1 }]
     }
   ],
   "drops": { "normal": { "coins": 1, "coinChance": 0.25 }, "elite": { "coins": 1, "items": ["healing-potion", "grappling-rope"], "itemChance": 0.2 } },

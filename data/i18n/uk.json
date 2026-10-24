@@ -920,6 +920,7 @@
   "game.ev.dieRolled": "{name}: кубик X = {roll}",
   "game.ev.dieRerolled": "{name}: X перекинуто, {previous} {icon:arrow} {roll}",
   "game.ev.initiativeChanged": "{name}: ініціатива тепер {initiative}",
+  "game.ev.monsterDieRolled": "{name}: кубик X = {roll}",
   "game.ev.undone": "Дію відмінено",
   "game.marker.obstacle": "Перешкода",
   "game.marker.door": "Двері",

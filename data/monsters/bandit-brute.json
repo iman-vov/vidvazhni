@@ -16,7 +16,7 @@
       "id": "bandit-brute.wide-swing",
       "initiative": 66,
       "if": "twoOrMoreHeroesAdjacent",
-      "steps": [{ "type": "attack", "value": -1, "targetAll": "adjacentEnemies" }],
+      "steps": [{ "type": "attack", "value": 0, "x": -2, "targetAll": "adjacentEnemies" }],
       "otherwise": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
     }
   ],

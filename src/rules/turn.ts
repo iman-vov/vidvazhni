@@ -405,7 +405,9 @@ export function figureSteps(ctx: Ctx, f: Figure): Step[] {
   } else if (f.kind === 'monster') {
     const current = ctx.s.behaviourDecks[f.typeId]?.current;
     if (!current) return [];
-    steps = onboardingSteps(ctx, f, absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current))));
+    // «Монстри з X»: the X rolled when this card was revealed.
+    const roll = ctx.s.variants.monsterDieAbilities ? ctx.s.behaviourDecks[f.typeId]?.xRolls?.[current] : undefined;
+    steps = onboardingSteps(ctx, f, absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current)), roll));
   } else {
     return [];
   }
@@ -424,6 +426,13 @@ export function figureSteps(ctx: Ctx, f: Figure): Step[] {
   );
 }
 
+/** A monster step with `x`: the delta is `x` + the rolled X; without a roll the fixed `value` stays. */
+function withX(st: Step, xRoll: number | undefined): Step {
+  if (st.x === undefined || !('value' in st)) return st;
+  const { x, ...rest } = st;
+  return (xRoll === undefined ? rest : { ...rest, value: x + xRoll, xRoll }) as Step;
+}
+
 function withoutConsume(st: Step): Step {
   const copy = { ...st };
   delete copy.consume;
@@ -439,9 +448,10 @@ function cardSteps(ctx: Ctx, m: MonsterState, card: MonsterCard): Step[] {
   return holds ? card.steps : (card.otherwise ?? []);
 }
 
-function absoluteSteps(ctx: Ctx, m: MonsterState, steps: Step[]): Step[] {
+function absoluteSteps(ctx: Ctx, m: MonsterState, steps: Step[], xRoll?: number): Step[] {
   const stats = monsterStats(ctx, m);
-  return steps.map((st): Step => {
+  return steps.map((raw): Step => {
+    const st = withX(raw, xRoll);
     if (st.type === 'move') return { ...st, value: Math.max(0, stats.move + st.value), ...(stats.flying ? { fly: true } : {}) };
     if (st.type === 'attack') {
       // Areas drawn from the monster itself (arc, line, all adjacent) and «по всіх сусідніх» are

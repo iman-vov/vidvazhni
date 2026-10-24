@@ -920,6 +920,7 @@
   "game.ev.dieRolled": "{name}: X die = {roll}",
   "game.ev.dieRerolled": "{name}: X rerolled, {previous} {icon:arrow} {roll}",
   "game.ev.initiativeChanged": "{name}: initiative is now {initiative}",
+  "game.ev.monsterDieRolled": "{name}: X die = {roll}",
   "game.ev.undone": "Action undone",
   "game.marker.obstacle": "Obstacle",
   "game.marker.door": "Door",
