@@ -4,6 +4,7 @@
   "color": "#2FA36B",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 9,
+  "recommendedHand": ["wind-archer.quick-shot", "wind-archer.double-arrow", "wind-archer.wind-arrow", "wind-archer.repelling-shot", "wind-archer.aimed-shot", "wind-archer.arrow-rain", "wind-archer.light-step", "wind-archer.binding-arrow", "wind-archer.retreat-shot"],
   "classElement": "air",
   "classOrb": "air",
   "surge": [
@@ -134,6 +135,105 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 3, "consume": { "element": "air", "add": { "move": 2 } } }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "wind-archer.retreat-shot",
+      "level": 1,
+      "initiative": 24,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3
+          },
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "wind-archer.screen-shot",
+      "level": 1,
+      "initiative": 32,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 2,
+            "push": 1
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wind-archer.tailwind",
+      "level": 1,
+      "initiative": 42,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 4,
+            "xp": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1,
+                "targets": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      }
     },
     {
       "id": "wind-archer.hook-arrow",
