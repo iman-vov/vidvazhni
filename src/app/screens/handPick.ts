@@ -3,7 +3,7 @@
 // cards in 2–3 rows (digital GH style); a tap toggles a card. The camp's pick (setup hand) is the
 // default. The game starts with the hands set, so the battle never asks for them.
 
-import { availableCards, createGame } from '../../rules/setup';
+import { availableCards, createGame, recommendedHand } from '../../rules/setup';
 import type { LoadedContent } from '../../rules/load';
 import type { GameSetup, HeroState } from '../../rules/state';
 import { h } from '../../ui/dom';
@@ -44,7 +44,8 @@ export function handPickScreen(o: HandPickOptions): HTMLElement {
   const hands: Record<string, string[]> = {};
   for (const { x, cls, pool } of pickers) {
     const camp = (x.hand ?? []).filter((id) => pool.includes(id));
-    hands[x.classId] = camp.slice(0, cls.handSize);
+    // No hand kept from the camp yet: start from the class's recommended hand.
+    hands[x.classId] = (camp.length ? camp : recommendedHand(cls, pool)).slice(0, cls.handSize);
   }
   let at = 0;
   const root = h('div', { class: 'gpage is-art ghp' });
