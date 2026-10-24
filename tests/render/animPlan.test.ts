@@ -175,6 +175,11 @@ describe('planAnimation', () => {
     planAnimation([{ type: 'moved', figureId: W, path: [[1, 0]] }], positions);
     expect(positions[W]).toEqual([0, 1]);
   });
+
+  it('the X die roll is a badge over a figure on the board', () => {
+    const steps = planAnimation([{ type: 'dieRolled', figureId: W, roll: 4, value: 6 }, { type: 'dieRolled', figureId: 'hero:gone', roll: 2, value: 3 }], start);
+    expect(steps).toEqual([expect.objectContaining({ kind: 'die', figureId: W, roll: 4 })]);
+  });
 });
 
 describe('planLength', () => {

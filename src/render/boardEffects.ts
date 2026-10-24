@@ -133,6 +133,95 @@ export class BoardEffects {
     );
   }
 
+  /** Small bright motes rising around a figure in a loose column (a heal): they drift up, twinkle
+   *  and fade. `count` 0 shows nothing. */
+  sparkles(at: THREE.Vector3, color: string, opts: { count?: number; seconds?: number; height?: number; radius?: number } = {}): Promise<void> {
+    const count = opts.count ?? 14;
+    if (count <= 0) return Promise.resolve();
+    const seconds = opts.seconds ?? 1.1;
+    const height = opts.height ?? 1.3;
+    const radius = opts.radius ?? 0.38;
+    const group = new THREE.Group();
+    const motes: { s: THREE.Sprite; x: number; z: number; delay: number; size: number; phase: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      const s = this.sprite(i % 3 === 0 ? '#ffffff' : color, true, 0);
+      const a = (i / count) * Math.PI * 2 + Math.random() * 0.8;
+      const r = radius * (0.35 + Math.random() * 0.65);
+      group.add(s);
+      motes.push({ s, x: Math.cos(a) * r, z: Math.sin(a) * r, delay: Math.random() * 0.35, size: 0.1 + Math.random() * 0.1, phase: Math.random() * 6 });
+    }
+    group.position.copy(at);
+    this.root.add(group);
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        for (const m of motes) {
+          const u = Math.max(0, Math.min(1, (k - m.delay) / (1 - m.delay)));
+          m.s.position.set(m.x * (1 - u * 0.3), -0.35 + u * height, m.z * (1 - u * 0.3));
+          m.s.scale.setScalar(m.size * (1 + 0.35 * Math.sin(u * 14 + m.phase)));
+          m.s.material.opacity = u <= 0 ? 0 : Math.min(1, u * 6) * (1 - u * u);
+        }
+      },
+      { ease: linear, done: () => this.drop(group) },
+    );
+  }
+
+  /** A translucent six-sided shield that rises around a figure, shimmers once and fades (shield,
+   *  ward). `shimmer` false: it only fades in and out (reduced motion). */
+  hexShield(at: THREE.Vector3, color: string, seconds: number, opts: { radius?: number; height?: number; shimmer?: boolean } = {}): Promise<void> {
+    const radius = opts.radius ?? 0.62;
+    const height = opts.height ?? 1.25;
+    const shimmer = opts.shimmer ?? true;
+    const geo = new THREE.CylinderGeometry(radius, radius * 1.06, height, 6, 1, true).translate(0, height / 2, 0);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+    const edgeGeo = new THREE.EdgesGeometry(geo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false });
+    const shell = new THREE.Mesh(geo, mat);
+    const lines = new THREE.LineSegments(edgeGeo, edgeMat);
+    const o = new THREE.Group();
+    o.add(shell, lines);
+    o.position.copy(at);
+    o.rotation.y = Math.PI / 6;
+    o.renderOrder = 5;
+    this.root.add(o);
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        const grow = shimmer ? easeOut(Math.min(1, k * 3)) : 1;
+        o.scale.set(1, 0.2 + 0.8 * grow, 1);
+        const fade = Math.min(1, k * 5) * (1 - Math.max(0, (k - 0.6) / 0.4));
+        // A bright band sweeps up the shell once.
+        const band = shimmer ? Math.max(0, 1 - Math.abs(k * 1.6 - 0.5) * 4) : 0;
+        mat.opacity = (0.16 + 0.22 * band) * fade;
+        edgeMat.opacity = (0.45 + 0.4 * band) * fade;
+        if (shimmer) o.rotation.y = Math.PI / 6 + k * 0.6;
+      },
+      {
+        ease: linear,
+        done: () => {
+          o.removeFromParent();
+          for (const x of [geo, mat, edgeGeo, edgeMat]) x.dispose();
+        },
+      },
+    );
+  }
+
+  /** A fading dust streak left behind a figure that is pushed or pulled. */
+  trail(at: THREE.Vector3, color: string, seconds = 0.5): Promise<void> {
+    const s = this.sprite(color, false, 0.55);
+    s.position.copy(at);
+    s.scale.set(0.5, 0.25, 1);
+    this.root.add(s);
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        s.scale.set(0.5 + k * 0.4, 0.25 + k * 0.1, 1);
+        s.material.opacity = 0.55 * (1 - k);
+      },
+      { ease: linear, done: () => this.drop(s) },
+    );
+  }
+
   /** A coin arcs from a loot hex to the hero. */
   coin(from: THREE.Vector3, to: THREE.Vector3, seconds: number): Promise<void> {
     const m = new THREE.Mesh(this.coinGeo, this.gold);

@@ -30,6 +30,7 @@ export const TIMING = {
   loot: 0.7,
   trap: 0.35,
   revive: 0.9,
+  die: 0.45,
 } as const;
 
 export type AttackLabel = 'miss' | 'x2' | null;
@@ -67,6 +68,8 @@ export type AnimStep = { wait: number; duration: number } & (
   | { kind: 'loot'; heroId: FigureId; coins: number; chest?: string }
   | { kind: 'trap'; figureId: FigureId }
   | { kind: 'trapPlaced'; hex: Hex }
+  /** «Карти з X»: the X die's roll, a small d12 badge over the figure. */
+  | { kind: 'die'; figureId: FigureId; roll: number }
 );
 
 export type AnimKind = AnimStep['kind'];
@@ -212,6 +215,9 @@ export function planAnimation(events: readonly GameEvent[], positions: Readonly<
         break;
       case 'trapPlaced':
         push({ kind: 'trapPlaced', hex: e.hex, wait: 0.3, duration: 0.4 });
+        break;
+      case 'dieRolled':
+        if (at[e.figureId]) push({ kind: 'die', figureId: e.figureId, roll: e.roll, wait: TIMING.die, duration: TIMING.floatLabel + 0.3 });
         break;
       default:
         break;

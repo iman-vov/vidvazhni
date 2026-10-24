@@ -52,6 +52,10 @@ const CSS = `
 .bv-float.dmg>span{color:#ff6b57}.bv-float.heal>span{color:#7ee07a}.bv-float.miss>span{color:#d7dbe4;font-size:18px}
 .bv-float.x2>span{color:#ffd23f;font-size:20px}.bv-float.shield>span{color:#a9c6ff;font-size:17px}.bv-float.coin>span{color:#ffd54a;font-size:18px}
 .bv-float.info>span{color:#f4f1e8;font-size:15px}
+.bv-float.heal>span{display:flex;align-items:center;gap:2px;font-size:28px;color:#8af58a;text-shadow:0 2px 0 rgba(10,60,20,.6),0 0 10px rgba(110,240,120,.75)}
+.bv-float.shield>span{display:flex;align-items:center;gap:3px;padding:1px 8px 1px 5px;border-radius:10px;background:rgba(30,52,96,.82);box-shadow:0 0 0 1.5px rgba(169,198,255,.85);font-size:17px;color:#dbe7ff;text-shadow:none}
+.bv-float.cond>span{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:50%;background:rgba(20,22,30,.82);box-shadow:0 0 0 2px currentColor,0 0 10px currentColor}
+.bv-float.die>span{display:flex;align-items:center;justify-content:center;width:34px;height:34px;font-size:17px;color:#2a1a06;background:#f2d9a0;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);text-shadow:none}
 .bv-cost{transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#3a2a08;background:rgba(255,226,140,.92);border-radius:8px;padding:0 5px;line-height:16px}
 .bv-exp{transform:translate(-50%,-100%);display:flex;align-items:center;gap:2px;white-space:nowrap;font-size:14px;font-weight:800;color:#fff;background:rgba(196,60,40,.92);border-radius:9px;padding:1px 7px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .bv-exp.ally{background:rgba(36,128,64,.94);box-shadow:0 0 0 1.5px rgba(160,255,180,.7),0 1px 3px rgba(0,0,0,.5)}
@@ -90,6 +94,8 @@ export class BoardOverlay {
   private readonly v = new THREE.Vector3();
   /** Board time in seconds (advanced by the board with the speed setting applied). */
   time = 0;
+  /** Reduced motion: floating labels only fade in and out where they appear. */
+  still = false;
 
   constructor(parent: HTMLElement) {
     if (!document.getElementById('bv-style')) {
@@ -127,6 +133,18 @@ export class BoardOverlay {
     this.add(el, anchor, seconds);
   }
 
+  /** A floating icon or badge (HTML) that pops and rises like a float: a condition over the figure
+   *  it lands on, the X die's roll. `color` tints the icon. */
+  pop(html: string, cls: string, anchor: () => THREE.Vector3 | null, seconds: number, color?: string): void {
+    const el = document.createElement('div');
+    el.className = `bv-float ${cls}`;
+    const span = document.createElement('span');
+    span.innerHTML = html;
+    if (color) span.style.color = color;
+    el.appendChild(span);
+    this.add(el, anchor, seconds);
+  }
+
   /** Removes every float (skip ends them at once). */
   clearFloats(): void {
     for (const item of [...this.items]) if (item.el.classList.contains('bv-float')) this.remove(item);
@@ -141,7 +159,7 @@ export class BoardOverlay {
           this.remove(item);
           continue;
         }
-        const [y, scale, opacity] = floatPose(Math.max(0, k));
+        const [y, scale, opacity] = this.still ? [0, 1, Math.min(1, k * 8) * (1 - k * k)] : floatPose(Math.max(0, k));
         const span = item.el.firstElementChild as HTMLElement | null;
         if (span) {
           span.style.transform = `translateY(${y.toFixed(1)}px) scale(${scale.toFixed(3)})`;

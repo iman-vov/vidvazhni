@@ -15,7 +15,7 @@ import { planAnimation, TIMING, type AnimStep } from './animPlan';
 import { BoardCamera } from './boardCamera';
 import { BoardEffects, ELEMENT_COLORS } from './boardEffects';
 import { BoardEnvironment, type EnvironmentStats } from './environment';
-import { BoardOverlay, CONDITION_ICONS, FigureBadge, type OverlayItem } from './boardOverlay';
+import { BoardOverlay, CONDITION_ICONS, conditionIconSvg, FigureBadge, type OverlayItem } from './boardOverlay';
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
 import { animateGlows, createFigureParts, disposeFigureParts, FigureView } from './figureView';
@@ -24,7 +24,7 @@ import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from '.
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
-import { setBoardWater, setWaterRipples } from './environment/life';
+import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
@@ -678,7 +678,15 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     return out;
   }
 
+  /** How much of the particle effects to show: all on high, fewer on medium and low, none with
+   *  reduced motion (numbers, icons and the shield's fade stay). */
+  function fxLevel(): number {
+    if (reducedMotion()) return 0;
+    return quality === 'high' ? 1 : quality === 'medium' ? 0.7 : 0.4;
+  }
+
   async function runStep(step: AnimStep, ctx: JobCtx): Promise<void> {
+    overlay.still = reducedMotion();
     switch (step.kind) {
       case 'walk':
         return walk(step.figureId, step.path, ctx);
@@ -701,12 +709,19 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       case 'heal': {
         const fv = figures.get(step.figureId);
         if (!fv) return;
-        overlay.float(`+${step.amount}`, 'heal', () => fv.headPoint(), TIMING.floatLabel);
+        // Green motes rise around the figure in a soft glow, «+3» floats up; a cured poison or
+        // wound pops its icon instead of a number.
+        if (step.amount > 0) overlay.float(`+${step.amount}`, 'heal', () => fv.headPoint(), TIMING.floatLabel, 'heal');
+        else for (const c of step.removed) overlay.pop(conditionIconSvg(c, 22), 'cond', () => fv.headPoint(), TIMING.floatLabel * 0.8, CONDITION_ICONS[c].color);
         fv.hp = Math.min(fv.maxHp, fv.hp + step.amount);
         fv.conditions = fv.conditions.filter((c) => !step.removed.includes(c));
         fv.badge?.setHp(fv.hp, fv.maxHp);
         fv.badge?.setConditions(fv.conditions, fv.shield, true);
-        await effects.puff(fv.chestPoint(), '#9cf08a', { count: 7, size: 0.35, additive: true, seconds: 0.9, rise: 1 });
+        const fx = fxLevel();
+        void effects.glow(fv.chestPoint(), '#7dff8a', 1.0, 1.5);
+        if (fx > 0) void effects.puff(fv.chestPoint(), '#9cf08a', { count: Math.round(6 * fx), size: 0.35, additive: true, seconds: 0.9, rise: 1 });
+        await effects.sparkles(fv.root.position.clone().setY(PLATE_HEIGHT + 0.3), '#9cf08a', { count: Math.round(16 * fx), height: Math.max(1.1, fv.height * 1.2) });
+        if (fx === 0) await anim.wait(0.5);
         return;
       }
       case 'condition': {
@@ -714,7 +729,11 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         if (!fv) return;
         if (step.added) {
           if (!fv.conditions.includes(step.condition)) fv.conditions = [...fv.conditions, step.condition];
-          void effects.puff(fv.chestPoint(), CONDITION_ICONS[step.condition].color, { count: 6, size: 0.3, additive: true, seconds: 0.6 });
+          // The condition's icon pops over the figure, then stays small in its badge row.
+          const color = CONDITION_ICONS[step.condition].color;
+          overlay.pop(conditionIconSvg(step.condition, 22), 'cond', () => fv.headPoint(), TIMING.floatLabel * 0.8, color);
+          const fx = fxLevel();
+          if (fx > 0) void effects.puff(fv.chestPoint(), color, { count: Math.round(6 * fx), size: 0.3, additive: true, seconds: 0.6 });
         } else fv.conditions = fv.conditions.filter((c) => c !== step.condition);
         fv.badge?.setConditions(fv.conditions, fv.shield, true);
         settle(0.5);
@@ -725,8 +744,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         if (!fv) return;
         fv.shield += step.value;
         fv.badge?.setConditions(fv.conditions, fv.shield, true);
-        overlay.float(`${LABELS[lang].shield} ${step.value}`, 'shield', () => fv.headPoint(), TIMING.floatLabel);
-        await effects.puff(fv.chestPoint(), '#a9c6ff', { count: 6, size: 0.45, additive: true, seconds: 0.6, rise: 0.2 });
+        overlay.float(`${LABELS[lang].shield} ${step.value}`, 'shield', () => fv.headPoint(), TIMING.floatLabel, 'shield');
+        // A translucent hex shield rises around the figure and shimmers once.
+        await effects.hexShield(fv.root.position.clone().setY(PLATE_HEIGHT + 0.01), '#8fb6ff', 0.95, { height: Math.max(0.9, fv.height * 1.1), shimmer: fxLevel() > 0 });
         return;
       }
       case 'retaliate': {
@@ -792,6 +812,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
           tiles.removeProp(key);
         }
         void effects.puff(fv.root.position.clone().setY(PLATE_HEIGHT + 0.15), '#8a8f99', { count: 6, size: 0.35, seconds: 0.6, rise: 0.3 });
+        return;
+      }
+      case 'die': {
+        // «Карти з X»: the roll in a small d12 badge over the figure.
+        const fv = figures.get(step.figureId);
+        if (!fv) return;
+        const lift = new THREE.Vector3(0, 0.25, 0);
+        overlay.pop(String(step.roll), 'die', () => fv.headPoint().add(lift), TIMING.floatLabel + 0.3);
         return;
       }
       case 'trapPlaced': {
@@ -935,6 +963,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const dx = pts[segs]!.x - pts[0]!.x;
     const dz = pts[segs]!.z - pts[0]!.z;
     fv.playClip('hit');
+    // A dust trail behind the figure: a streak every quarter hex of travel.
+    const trail = fxLevel() > 0;
+    let lastTrail = -1;
     await anim.tween(
       seconds,
       (k) => {
@@ -946,6 +977,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         const a = pts[i]!;
         const b = pts[i + 1]!;
         applyPose(fv, p, a.x + (b.x - a.x) * u, a.z + (b.z - a.z) * u, dx, dz);
+        if (trail && t - lastTrail >= 0.25 && k < 0.95) {
+          lastTrail = t;
+          void effects.trail(new THREE.Vector3(a.x + (b.x - a.x) * u, PLATE_HEIGHT + 0.12, a.z + (b.z - a.z) * u), '#d8c8a8', 0.55);
+        }
       },
       { ease: linear },
     );
@@ -1115,7 +1150,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       const p = tiles.prop(pick.key);
       const from = p ? p.object.position.clone().setY(PLATE_HEIGHT + 0.2) : hero.chestPoint();
       if (p) tiles.removeProp(pick.key);
-      if (coins > 0) await effects.coin(from, hero.chestPoint(), TIMING.loot * 0.7);
+      // A few coins fly to the hero one after another (one with reduced motion).
+      const flying = coins > 0 ? (fxLevel() > 0 ? Math.min(4, coins) : 1) : 0;
+      const flights: Promise<void>[] = [];
+      for (let i = 0; i < flying; i++) {
+        const go = () => effects.coin(from, hero.chestPoint(), TIMING.loot * 0.7);
+        flights.push(i ? anim.wait(i * 0.09).then(go) : go());
+      }
+      await Promise.all(flights);
     }
     if (coins > 0) overlay.float(`+${coins}`, 'coin', label, TIMING.floatLabel, 'coin');
   }
@@ -1184,7 +1226,24 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       if (step.ownerId) ctx.orbOwner[id] = step.ownerId;
       effects.syncOrbs({ ...currentOrbs(), [id]: { age: 0 } });
       const mesh = effects.orbMesh(id);
-      if (mesh) await anim.tween(TIMING.orb, (k) => mesh.scale.setScalar(0.2 + 0.8 * k), { ease: easeOut });
+      if (!mesh) return;
+      // A new orb flies out of its maker's chest up to its place around the owner's head.
+      const maker = step.ownerId ? figures.get(step.ownerId) : undefined;
+      const goal = orbPoint(id)?.clone().add(new THREE.Vector3(0.5, 0.1, 0));
+      if (maker && goal && fxLevel() > 0) {
+        const from = maker.chestPoint();
+        movingOrbs.add(id);
+        await anim.tween(
+          TIMING.orb + 0.15,
+          (k) => {
+            mesh.position.lerpVectors(from, goal, k);
+            mesh.position.y += Math.sin(k * Math.PI) * 0.35;
+            mesh.scale.setScalar(0.3 + 0.7 * k);
+          },
+          { ease: easeOut },
+        );
+        movingOrbs.delete(id);
+      } else await anim.tween(TIMING.orb, (k) => mesh.scale.setScalar(0.2 + 0.8 * k), { ease: easeOut });
       return;
     }
     const mesh = effects.orbMesh(id);
