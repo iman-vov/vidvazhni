@@ -9,6 +9,7 @@ import { createGame } from '../../src/rules/engine';
 import { hexKey } from '../../src/rules/hex';
 import { LANGS, loadContent, loadTranslations } from '../../src/rules/load';
 import { goalZone } from '../../src/rules/objectives';
+import { upcomingEvents } from '../../src/rules/queries';
 import { revealRoom } from '../../src/rules/setup';
 import type { MonsterState } from '../../src/rules/state';
 import { BASE_RULES, FULL_FORK } from '../../src/rules/variants';
@@ -149,6 +150,23 @@ describe('drafts s2–s5 follow the design doc', () => {
     expect(s.forkOrbs).toEqual({ atStart: [{ orb: 'fire' }, { orb: 'air' }] });
     expect(content.bosses['shadowhand']?.special).toEqual(['secondPhase']);
     expect(s.reward.goldEach).toBe(25);
+  });
+});
+
+describe('demo scenario events', () => {
+  const party = (id: string) =>
+    createGame({ scenarioId: id, seed: 1, heroes: ['warden', 'herbalist'].map((classId, i) => ({ classId, playerId: `p${i}`, level: 1 })), difficulty: 'normal', variants: { ...BASE_RULES } }, content);
+
+  it('every scenario has one; the barrel ambush is a surprise, the rest are warned in the intents', () => {
+    for (const id of ['s1', 's2', 's3', 's4', 's5']) expect(scenarios[id]!.events ?? [], id).toHaveLength(1);
+    expect(upcomingEvents(party('s1'), content)).toEqual([]);
+    expect(upcomingEvents(party('s2'), content).map((w) => [w.eventId, w.kind])).toEqual([['s2.howl', 'call']]);
+    expect(upcomingEvents(party('s3'), content)).toMatchObject([{ eventId: 's3.wave', kind: 'wave', round: 4 }]);
+    expect(upcomingEvents(party('s5'), content)).toMatchObject([{ eventId: 's5.pulse', kind: 'wave', round: 4 }]);
+    // The bell runner shows once the barracks are open.
+    const s4 = party('s4');
+    revealRoom({ s: s4, c: content, ev: [], out: [] }, scenarios['s4']!, 's4.barracks');
+    expect(upcomingEvents(s4, content)).toMatchObject([{ eventId: 's4.alarm', kind: 'alarm', hex: [10, -3] }]);
   });
 });
 

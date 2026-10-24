@@ -31,7 +31,12 @@
       "spawns": [
         { "monster": "grey-wolf", "hex": [4, -1], "by": { "4": "elite" } },
         { "monster": "thornling", "hex": [3, 2], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "grey-wolf", "hex": [4, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        {
+          "monster": "grey-wolf",
+          "hex": [4, 0],
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "tag": "howler"
+        },
         { "monster": "thornling", "hex": [3, 0], "by": { "4": "elite" } },
         { "monster": "thornling", "hex": [4, 2], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "thornling", "hex": [3, -1], "by": { "3": "elite", "4": "normal" } },
@@ -76,5 +81,22 @@
       "coins": [[14, -5]]
     }
   ],
-  "reward": { "goldEach": 10, "items": ["healing-potion"], "unlock": ["s3"] }
+  "reward": { "goldEach": 10, "items": ["healing-potion"], "unlock": ["s3"] },
+  "events": [
+    {
+      "id": "s2.howl",
+      "trigger": { "type": "monsterTurnsAlive", "tag": "howler", "turns": 2 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "grey-wolf",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "count": 2,
+          "hexes": [[3, 4], [3, 1]]
+        },
+        { "type": "story", "text": "event.s2.howl" }
+      ],
+      "prevented": [{ "type": "story", "text": "event.s2.howl-stopped" }]
+    }
+  ]
 }

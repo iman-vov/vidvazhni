@@ -34,7 +34,12 @@
       "doors": [{ "hex": [10, -3], "to": "s4.upper-tier", "key": "tower-key" }],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [8, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [7, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        {
+          "monster": "gloom-cultist",
+          "hex": [6, -1],
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "tag": "runner"
+        },
         { "monster": "gloom-cultist", "hex": [9, -2], "by": { "3": "elite", "4": "normal" } },
         { "monster": "gloom-cultist", "hex": [9, -1], "by": { "4": "elite" } }
       ],
@@ -70,5 +75,13 @@
       "chests": [{ "hex": [13, -6], "id": "s4.lantern-shard", "loot": { "questItem": "lantern-shard-2" } }]
     }
   ],
-  "reward": { "goldEach": 15, "unlock": ["s5"] }
+  "reward": { "goldEach": 15, "unlock": ["s5"] },
+  "events": [
+    {
+      "id": "s4.alarm",
+      "trigger": { "type": "objectReached", "tag": "runner", "hex": [10, -3] },
+      "actions": [{ "type": "openDoor", "hex": [10, -3] }, { "type": "story", "text": "event.s4.alarm" }],
+      "prevented": [{ "type": "coins", "coins": 2 }, { "type": "story", "text": "event.s4.alarm-stopped" }]
+    }
+  ]
 }

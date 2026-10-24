@@ -51,5 +51,22 @@
       "chests": [{ "hex": [10, -3], "id": "s1.lantern-shard", "loot": { "questItem": "lantern-shard-1" } }]
     }
   ],
-  "reward": { "goldEach": 10, "unlock": ["s2"] }
+  "reward": { "goldEach": 10, "unlock": ["s2"] },
+  "events": [
+    {
+      "id": "s1.barrel",
+      "trigger": { "type": "heroEnters", "adjacent": [8, -1] },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "cellar-rat",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "count": 2,
+          "hexes": [[8, -1], [9, -1]],
+          "burst": true
+        },
+        { "type": "story", "text": "event.s1.barrel" }
+      ]
+    }
+  ]
 }

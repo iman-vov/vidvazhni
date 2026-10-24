@@ -83,5 +83,21 @@
       "objects": [{ "hex": [17, -8], "id": "s3.millstones", "kind": "millstone", "blocks": true }]
     }
   ],
-  "reward": { "goldEach": 15, "unlock": ["s4"] }
+  "reward": { "goldEach": 15, "unlock": ["s4"] },
+  "events": [
+    {
+      "id": "s3.wave",
+      "trigger": { "type": "round", "round": 4 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "bog-slime",
+          "by": { "2": "normal", "3": "normal", "4": "elite" },
+          "count": 2,
+          "hexes": [[7, -1], [7, 0], [8, -2]]
+        },
+        { "type": "story", "text": "event.s3.wave" }
+      ]
+    }
+  ]
 }

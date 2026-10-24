@@ -54,5 +54,20 @@
       ]
     }
   ],
-  "reward": { "goldEach": 25 }
+  "reward": { "goldEach": 25 },
+  "events": [
+    {
+      "id": "s5.pulse",
+      "trigger": { "type": "round", "round": 4 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "shadow-wraith",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[6, -1], [7, -1], [5, 0]]
+        },
+        { "type": "story", "text": "event.s5.wave" }
+      ]
+    }
+  ]
 }

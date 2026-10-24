@@ -1,7 +1,8 @@
 // Card budget (docs/design/missions.md «Бюджет карт»): the deck must outlast the mission.
 // For every scenario, with the two-hero party of the replay tests on normal:
 //   min = the fewest rounds the goal can take: the walk (steps / the party's mean move) plus the
-//         fight (all monsters' hp / the party's mean attack per round); an estimate, not a bot run
+//         fight (all monsters' hp, scenario events' spawns included, / the party's mean attack per
+//         round); an estimate, not a bot run
 //   max = the rounds of play the party's smallest hand allows, every rest costing a card
 // Wanted: slack (max − min) / max ≥ 25%. Then the greedy bot plays a few seeds and counts the
 // games lost to an empty deck (a hero exhausted for lack of cards, not hit points). The target is
@@ -16,6 +17,7 @@ import { loadContent } from '../../src/rules/load';
 import { goalZone } from '../../src/rules/objectives';
 import { revealRoom } from '../../src/rules/setup';
 import type { GameSetup, GameState } from '../../src/rules/state';
+import { scaleMonsterStats } from '../../src/rules/effects/context';
 import { BASE_RULES } from '../../src/rules/variants';
 import { stepsFrom } from '../../tools/map-editor/checks';
 import { chooseAction } from './bot';
@@ -101,10 +103,22 @@ export function cardBudget(id: string, content: Content): Budget {
   const party = PARTIES[id]!;
   const s = createGame(setup(id, 1), content);
   for (const room of scenario.rooms) revealRoom({ s, c: content, ev: [], out: [] }, scenario, room.id);
-  const hp = Object.values(s.figures).reduce((n, f) => n + (f.kind === 'monster' ? f.maxHp : 0), 0);
   const steps = walk(scenario);
   const move = mean(party.map((c) => meanStep(content, c, 'bottom', 'move')));
   const damage = party.reduce((n, c) => n + meanStep(content, c, 'top', 'attack'), 0);
+  let hp = Object.values(s.figures).reduce((n, f) => n + (f.kind === 'monster' ? f.maxHp : 0), 0);
+  // Every event fires (a call for help is not stopped); a repeating wave as often as the fight lasts.
+  const span = Math.ceil(steps / move) + Math.ceil(hp / damage);
+  for (const ev of scenario.events ?? []) {
+    const t = ev.trigger;
+    const times = t.type === 'round' && t.every ? 1 + Math.max(0, Math.floor((span - t.round) / t.every)) : 1;
+    for (const a of ev.actions) {
+      const rank = a.type === 'spawn' ? a.by['2'] : undefined;
+      if (a.type !== 'spawn' || !rank) continue;
+      const type = content.monsters[a.monster]!;
+      hp += times * (a.count ?? 1) * scaleMonsterStats(rank === 'elite' ? type.elite : type.normal, s.level).hp;
+    }
+  }
   const min = Math.ceil(steps / move) + Math.ceil(hp / damage);
   const max = Math.min(...party.map((c) => handRounds(content.heroes[c]!.handSize)));
   return { walk: steps, hp, min, max, slack: (max - min) / max };
