@@ -1,7 +1,7 @@
 // Game state, actions and events. The state is plain JSON (no Maps, Sets or classes), so it can be
 // saved to IndexedDB, sent over the network and rebuilt from seed + action log.
 
-import type { ConditionId, ElementId, OrbId, Step, TargetSpec } from './content';
+import type { ConditionId, DropDef, ElementId, OrbId, Step, TargetSpec } from './content';
 import type { Hex, HexKey } from './hex';
 import type { RngState } from './rng';
 import type { Variants } from './variants';
@@ -120,6 +120,8 @@ export interface MonsterState extends FigureBase {
   summonerId?: FigureId;
   /** The room the monster appeared in; set only where the room drops a story item. */
   room?: string;
+  /** A named enemy's own loot (`spawns[].drops`), replacing its type's. */
+  drops?: DropDef;
   /** Boss phase (Тінерук: 2 from ≤ 50% health for the rest of the scenario); absent = 1. */
   bossPhase?: number;
 }
@@ -270,6 +272,11 @@ export interface GameState {
   /** Snapshot taken when the current half started; `undo` restores it. Null once something random
    *  happened (modifier drawn, room revealed) or the turn ended. */
   undoPoint?: GameState | null;
+  /** Shop items found this scenario (chests, enemy drops); the camp puts them in the party chest. */
+  foundItems?: string[];
+  /** Separate seeded stream for drop chances, so loot never shifts the fight's RNG (old saves and
+   *  recorded games replay unchanged). */
+  lootRng?: RngState;
 }
 
 /** Resolved numbers of one attack against one target (after card, item and consume bonuses). */
@@ -410,6 +417,10 @@ export type GameEvent =
   | { type: 'momentumGained'; heroId: FigureId; charges: number }
   | { type: 'surgeUsed'; heroId: FigureId }
   | { type: 'looted'; heroId: FigureId; coins: number; chest?: string; questItems?: string[] }
+  /** A killed enemy left coins on its hex (picked up like map coins). */
+  | { type: 'coinsDropped'; byId: FigureId; hex: Hex; coins: number }
+  /** «Знайдено: …» — a shop item from an enemy (`byId`) or a chest (`chest`), kept in `foundItems`. */
+  | { type: 'itemFound'; item: string; byId?: FigureId; chest?: string }
   | { type: 'trapTriggered'; figureId: FigureId; damage: number }
   | { type: 'cardMoved'; heroId: FigureId; cardId: CardId; to: 'hand' | 'discard' | 'lost' | 'active' }
   | { type: 'rested'; heroId: FigureId; kind: 'short' | 'long'; lost: CardId }

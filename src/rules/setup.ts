@@ -37,6 +37,11 @@ export function heroHp(cls: HeroClass, level: number): number {
   return hp;
 }
 
+/** Seed of the drop-chance stream, derived from the game seed. */
+export function lootSeed(seed: number): number {
+  return (seed ^ 0x9e3779b9) | 0;
+}
+
 export function createGame(setup: GameSetup, content: Content): GameState {
   const scenario = content.scenarios[setup.scenarioId];
   if (!scenario) throw new Error(`unknown scenario ${setup.scenarioId}`);
@@ -69,6 +74,7 @@ export function createGame(setup: GameSetup, content: Content): GameState {
     log: [],
     queue: [],
     undoPoint: null,
+    lootRng: { seed: lootSeed(setup.seed) },
   };
   const ctx: Ctx = { s, c: content, ev: [], out: [] };
 
@@ -194,6 +200,7 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     const m = spawnMonster(ctx, sp.monster, rank, sp.hex);
     // Rooms whose last monster of a type drops a story item remember where the monster came from.
     if (room.drops?.some((d) => d.monster === sp.monster)) m.room = roomId;
+    if (sp.drops) m.drops = sp.drops;
   }
 }
 

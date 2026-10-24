@@ -16,5 +16,6 @@
       "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 1, "range": 1 }]
     }
   ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.5 }, "elite": { "coins": 1, "items": ["swift-boots", "strength-potion"], "itemChance": 0.2 } },
   "model": "assets/models/bandit-crossbow.glb"
 }

@@ -13,5 +13,6 @@
       "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
     }
   ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.25 }, "elite": { "coins": 1, "coinChance": 0.5 } },
   "model": "assets/models/bog-slime.glb"
 }

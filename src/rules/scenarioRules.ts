@@ -10,11 +10,12 @@
 //                         takes half damage (rounded down); a wraith ending its turn next to a lit
 //                         brazier puts it out.
 
-import type { Content, ScenarioDef, Step } from './content';
+import type { Content, DropDef, RoomDef, ScenarioDef, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
 import { infuse } from './elements';
 import { hasLineOfSight } from './geometry';
 import { areAdjacent, distance, hexKey, parseHexKey, type Hex } from './hex';
+import { nextFloat, nextInt, type RngState } from './rng';
 import type { Figure, GameState, HeroState, MonsterState, Tile } from './state';
 
 export function scenarioOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioDef | undefined {
@@ -185,17 +186,60 @@ export function dropQuestItem(ctx: Ctx, item: string, hex: Hex, byId: string): v
   emit(ctx, { type: 'questItemDropped', item, hex: [hex[0], hex[1]], byId });
 }
 
-/** The story item a chest holds (`loot.questItem`). */
-export function chestQuestItem(ctx: Pick<Ctx, 's' | 'c'>, chestId: string): string | undefined {
+type ChestLoot = NonNullable<NonNullable<RoomDef['chests']>[number]['loot']>;
+
+/** What a chest holds: coins, a shop item, a story item (none = an empty chest). */
+export function chestLoot(ctx: Pick<Ctx, 's' | 'c'>, chestId: string): ChestLoot | undefined {
   for (const room of scenarioOf(ctx)?.rooms ?? []) {
     const chest = room.chests?.find((c) => c.id === chestId);
-    if (chest) return chest.loot?.questItem;
+    if (chest) return chest.loot;
   }
   return undefined;
 }
 
-/** A monster died: the last one of its type from a room with `drops` leaves the item on its hex. */
+/** A shop item found this scenario goes to `foundItems` (the party chest after the scenario). */
+export function findItem(ctx: Ctx, item: string, from: { byId?: string; chest?: string }): void {
+  (ctx.s.foundItems ??= []).push(item);
+  emit(ctx, { type: 'itemFound', item, ...from });
+}
+
+/** The drop-chance stream (`GameState.lootRng`), apart from the fight's RNG. */
+function lootRng(s: GameState): RngState {
+  return (s.lootRng ??= { seed: 0x9e3779b9 });
+}
+
+/** A chance roll; no chance (or ≥ 1) = always, without a roll. */
+function roll(ctx: Ctx, chance: number | undefined): boolean {
+  return chance === undefined || chance >= 1 || nextFloat(lootRng(ctx.s)) < chance;
+}
+
+/** What a killed monster may leave: its own (named enemy), else its boss or type-and-rank drops. */
+function dropsOf(ctx: Ctx, m: MonsterState): DropDef | undefined {
+  if (m.drops) return m.drops;
+  if (m.rank === 'boss') return ctx.c.bosses[m.typeId]?.drops;
+  return ctx.c.monsters[m.typeId]?.drops?.[m.rank];
+}
+
+/** A killed (not summoned) enemy rolls its drops with the seeded `lootRng`: coins on its hex, an item straight to `foundItems`. */
+export function rollDrops(ctx: Ctx, m: MonsterState): void {
+  if (m.summonerId) return;
+  const drop = dropsOf(ctx, m);
+  if (!drop) return;
+  const tile = ctx.s.board.tiles[hexKey(m.hex)];
+  if (drop.coins && tile && roll(ctx, drop.coinChance)) {
+    tile.coins = (tile.coins ?? 0) + drop.coins;
+    emit(ctx, { type: 'coinsDropped', byId: m.id, hex: [m.hex[0], m.hex[1]], coins: drop.coins });
+  }
+  const table = drop.items ?? [];
+  if (table.length > 0 && roll(ctx, drop.itemChance)) {
+    findItem(ctx, table[table.length > 1 ? nextInt(lootRng(ctx.s), table.length) : 0] as string, { byId: m.id });
+  }
+}
+
+/** A monster died: it rolls its drops; the last one of its type from a room with `drops` leaves the
+ *  story item on its hex. */
 export function onMonsterDied(ctx: Ctx, m: MonsterState): void {
+  rollDrops(ctx, m);
   if (!m.room) return;
   const room = scenarioOf(ctx)?.rooms.find((r) => r.id === m.room);
   for (const drop of room?.drops ?? []) {

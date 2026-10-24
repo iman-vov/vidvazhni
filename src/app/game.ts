@@ -166,6 +166,11 @@ export class GameController {
     return this.state.phase === 'won' || this.state.phase === 'lost';
   }
 
+  /** Shop items found in chests and on enemies (to the party chest, won or lost). */
+  foundItems(): string[] {
+    return [...(this.state.foundItems ?? [])];
+  }
+
   /** XP (victory bonus already added by the engine), coins and gold per hero. */
   rewards(): HeroReward[] {
     const won = this.state.phase === 'won';

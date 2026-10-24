@@ -27,5 +27,6 @@
       "otherwise": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 1 }]
     }
   ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.5 }, "elite": { "coins": 1, "items": ["healing-potion", "strength-potion"], "itemChance": 0.25 } },
   "model": "assets/models/gloom-cultist.glb"
 }

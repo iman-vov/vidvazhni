@@ -8,7 +8,7 @@ import { elementIds, infuse } from '../elements';
 import { hasLineOfSight } from '../geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from '../hex';
 import { addToDeck } from '../modifiers';
-import { chestQuestItem, teleportHex } from '../scenarioRules';
+import { chestLoot, findItem, teleportHex } from '../scenarioRules';
 import { spawnMonster } from '../setup';
 import type { Figure, HeroState, ShieldEffect, StepChoice, SummonState } from '../state';
 import { alliesOf, areEnemies as areEnemiesOf, emit, enemiesOf, isFreeHex, isPresent, monsterStats, tileAt, wallBetween, type Ctx } from './context';
@@ -199,15 +199,15 @@ export function performInfuse(ctx: Ctx, f: Figure, step: S<'infuse'>, choice: St
 
 // ─── Loot ──────────────────────────────────────────────────────────────────
 
-/** Picks up coins, a chest (and the story item in it) and story items lying on one hex. */
+/** Picks up coins, a chest (its coins, story item and shop item) and story items lying on one hex. */
 export function lootHex(ctx: Ctx, h: HeroState, hex: Hex): void {
   const tile = tileAt(ctx.s, hex);
   if (!tile || (!tile.coins && !tile.chest && !tile.questItems?.length)) return;
-  const coins = tile.coins ?? 0;
   const chest = tile.chest;
+  const loot = chest ? chestLoot(ctx, chest) : undefined;
+  const coins = (tile.coins ?? 0) + (loot?.coins ?? 0);
   const items = [...(tile.questItems ?? [])];
-  const inChest = chest ? chestQuestItem(ctx, chest) : undefined;
-  if (inChest) items.unshift(inChest);
+  if (loot?.questItem) items.unshift(loot.questItem);
   h.coins += coins;
   delete tile.coins;
   delete tile.chest;
@@ -221,6 +221,7 @@ export function lootHex(ctx: Ctx, h: HeroState, hex: Hex): void {
     ...(chest ? { chest } : {}),
     ...(items.length > 0 ? { questItems: items } : {}),
   });
+  if (chest && loot?.item) findItem(ctx, loot.item, { chest });
 }
 
 /** «Лут N»: every coin and chest within N hexes. */
