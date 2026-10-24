@@ -68,6 +68,8 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
       return t('log.scenarioLost');
     case 'undone':
       return t('game.ev.undone');
+    case 'story':
+      return t(e.text);
     default:
       return null;
   }

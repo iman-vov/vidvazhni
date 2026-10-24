@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ConditionId, Content, OrbId } from '../rules/content';
+import { eventWarnings } from '../rules/events';
 import { hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
@@ -504,6 +505,13 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     }
     for (const fv of [...figures.values()]) if (!seen.has(fv.id)) removeFigure(fv);
     for (const fv of created) faceNearestFoe(fv);
+    // Scenario events: turns until a horn-blower calls, hexes a runner still has to go.
+    const marks = new Map<FigureId, { icon: 'summon' | 'move'; value: number }>();
+    for (const w of eventWarnings(s, scenario)) {
+      if (w.kind === 'call') marks.set(w.figureId, { icon: 'summon', value: w.turnsLeft });
+      if (w.kind === 'alarm') marks.set(w.figureId, { icon: 'move', value: w.steps });
+    }
+    for (const fv of figures.values()) fv.badge?.setMark(marks.get(fv.id) ?? null);
     effects.syncOrbs(s.orbs);
     updateBounds();
     applyHighlights();

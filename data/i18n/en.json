@@ -1158,5 +1158,17 @@
   "game.monster.base": "base",
   "game.monster.goesFor": "Goes for: {name}",
   "game.monster.noFocus": "Reaches no one",
-  "game.monster.steps": "steps: {n}"
+  "game.monster.steps": "steps: {n}",
+  "game.monster.runs": "Runs for its goal, attacks no one",
+  "game.event.wave": "Round {round}: {who} arrive",
+  "game.event.waveNext": "Next round: {who} arrive",
+  "game.event.call": "{name} calls for help ({who}) in round {round}",
+  "game.event.callNow": "{name} calls for help ({who}) this round!",
+  "game.event.alarm": "{name} runs to raise the alarm: {n} hexes to go",
+  "event.s1.barrel": "The barrel cracks open and rats leap out!",
+  "event.s2.howl": "The pack leader howls, and the pack answers from the ravine!",
+  "event.s2.howl-stopped": "The leader falls silent. The pack will not come.",
+  "event.s4.alarm": "The cultist throws open the door upstairs and calls the guard!",
+  "event.s4.alarm-stopped": "The cultist is caught: no alarm. He dropped a few coins.",
+  "event.s5.wave": "New shades crawl out of the tunnel!"
 }

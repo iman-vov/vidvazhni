@@ -45,6 +45,8 @@ const CSS = `
 .bv-conds>span.pop{animation:bv-pop .45s ease-out}
 .bv-conds>span.shield{border-radius:4px;width:auto;padding:0 3px;gap:1px;font-size:11px;color:#dfe6f2}
 .bv-fig.dim{opacity:.55}
+.bv-mark{display:inline-flex;align-items:center;gap:1px;height:18px;padding:0 4px;border-radius:9px;background:rgba(150,36,30,.9);color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 0 1.5px rgba(255,210,120,.85)}
+.bv-mark[hidden]{display:none}
 .bv-float{transform:translate(-50%,-175%)}
 .bv-float>span{display:block;white-space:nowrap;font-size:26px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.45),0 0 6px rgba(0,0,0,.6)}
 .bv-float.dmg>span{color:#ff6b57}.bv-float.heal>span{color:#7ee07a}.bv-float.miss>span{color:#d7dbe4;font-size:18px}
@@ -180,6 +182,8 @@ export class FigureBadge {
   private readonly fill: HTMLElement;
   private readonly text: HTMLElement;
   private readonly conds: HTMLDivElement;
+  private readonly mark: HTMLSpanElement;
+  private markKey = '';
   private shown = new Set<string>();
 
   /** The side shows in the bar: heroes (and summons) green in a warm gold frame, monsters red in a
@@ -195,7 +199,20 @@ export class FigureBadge {
     this.fill = document.createElement('i');
     this.text = document.createElement('b');
     this.bar.append(this.fill, this.text);
-    this.el.append(this.conds, this.bar);
+    this.mark = document.createElement('span');
+    this.mark.className = 'bv-mark';
+    this.mark.hidden = true;
+    this.el.append(this.mark, this.conds, this.bar);
+  }
+
+  /** A scenario event countdown over the figure (turns until the horn-blower calls, hexes the
+   *  runner still has to go); null hides it. */
+  setMark(mark: { icon: IconName; value: number } | null): void {
+    const key = mark ? `${mark.icon}|${mark.value}` : '';
+    if (key === this.markKey) return;
+    this.markKey = key;
+    this.mark.hidden = !mark;
+    this.mark.innerHTML = mark ? `${iconSvg(mark.icon, { size: '12px' })}${mark.value}` : '';
   }
 
   setHp(hp: number, maxHp: number): void {

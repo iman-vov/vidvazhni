@@ -3,7 +3,7 @@
 // right). Pure render functions; the scenario screen passes state and callbacks.
 
 import type { ConditionId, ElementId, OrbId } from '../../rules/content';
-import type { InitiativeForecast } from '../../rules/queries';
+import type { EventWarning, InitiativeForecast } from '../../rules/queries';
 import type { FigureId, Figure, GameState, HeroState, TurnEntry } from '../../rules/state';
 import type { LoadedContent } from '../../rules/load';
 import { MOMENTUM_MAX } from '../../rules/variants';
@@ -12,7 +12,7 @@ import { h } from '../dom';
 import { t } from '../i18n';
 import { icon, type IconName } from './icons';
 import { onPress } from './press';
-import { cardName, className, conditionName, elementName, figureName, monsterTypeName } from './text';
+import { cardName, className, conditionName, elementName, eventWarningIcon, eventWarningText, figureName, monsterTypeName } from './text';
 import { portraitOf, portraitUrl } from './uiArt';
 
 export const ELEMENTS: ElementId[] = ['fire', 'ice', 'air', 'earth', 'light', 'dark'];
@@ -106,6 +106,7 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
       { class: 'ginibar is-forecast', 'aria-label': t('variant.roundForecast') },
       h('span', { class: 'ginibar-tag' }, icon('initiative'), t('game.forecast', { n: o.forecast.position + 1 })),
       joined(entries),
+      eventChips(s, o.forecast.events),
     );
   }
   if (s.phase === 'selectCards' || s.turnOrder.length === 0) {
@@ -133,6 +134,16 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
     });
   }
   return h('div', { class: 'ginibar', 'aria-label': t('ui.initiative') }, joined(entries));
+}
+
+/** Scenario events due soon (a wave, a call for help, a runner), as warning tags. */
+export function eventChips(s: GameState, warnings: EventWarning[]): HTMLElement | null {
+  if (warnings.length === 0) return null;
+  return h(
+    'span',
+    { class: 'gevents' },
+    warnings.map((w) => h('span', { class: 'gtag is-bad gevent' }, icon(eventWarningIcon(w)), eventWarningText(w, s))),
+  );
 }
 
 /** «Кубик ініціативи»: «25+7=32» for a rolled entry (the card's number from this round's roll

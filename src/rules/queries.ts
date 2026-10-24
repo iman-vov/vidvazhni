@@ -6,6 +6,7 @@ import { attackSpecFor, shieldOf } from './effects/attack';
 import { alliesOf, enemiesOf, isFreeHex, isPresent, type Ctx } from './effects/context';
 import { withConsumeBonus } from './effects/index';
 import { availableElements, canConsume, elementIds, ORBS } from './elements';
+import { eventWarnings, type EventWarning } from './events';
 import { apply } from './engine';
 import { reachableHexes } from './geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from './hex';
@@ -17,6 +18,8 @@ import { availableCards } from './setup';
 import type { Action, CardId, Figure, FigureId, GameEvent, GameState, HeroState, StepChoice } from './state';
 import { figureSteps } from './turn';
 import { MOMENTUM_MAX } from './variants';
+
+export type { EventWarning };
 
 const EMPTY_CONTENT: Content = { heroes: {}, monsters: {}, bosses: {}, decks: {}, scenarios: {} };
 /** Cap on attack target combinations per step, to keep the list small for bots. */
@@ -333,6 +336,18 @@ export interface InitiativeForecast {
   /** Per monster type on the board: its possible cards (three with «Три можливі наміри», the
    *  drawn one after the reveal) with whether the hero acts first; `null` = unknown until the reveal. */
   monsters: { typeId: string; intents: { cardId: string; initiative: number; heroFirst: boolean }[] | null }[];
+  /** Scenario events due this round or the next (a wave, a call for help, a runner on its way). */
+  events: EventWarning[];
+}
+
+/** Scenario events the players should see coming, soonest first (events.ts); surprises left out. */
+export function upcomingEvents(state: GameState, content: Content): EventWarning[] {
+  return eventWarnings(state, content.scenarios[state.scenarioId]);
+}
+
+/** The warnings that concern this round or the next: what the forecast and the intents show. */
+export function eventsSoon(state: GameState, content: Content): EventWarning[] {
+  return upcomingEvents(state, content).filter((w) => w.kind === 'alarm' || w.round <= state.round + 1);
 }
 
 /** Fork «Прогноз раунду»: where the hero would stand in this round's order with `leadingCardId`
@@ -373,7 +388,7 @@ export function forecastInitiative(state: GameState, content: Content, heroId: F
   const order: ForecastEntry[] = [...heroes, ...intents].sort(
     (a, b) => a.initiative - b.initiative || (a.kind === 'hero' ? 0 : 1) - (b.kind === 'hero' ? 0 : 1),
   );
-  return { heroId, cardId: leadingCardId, initiative, position: heroes.findIndex((e) => e.self), order, monsters };
+  return { heroId, cardId: leadingCardId, initiative, position: heroes.findIndex((e) => e.self), order, monsters, events: eventsSoon(state, content) };
 }
 
 export interface OrbBonusPreview {

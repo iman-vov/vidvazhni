@@ -4,6 +4,7 @@
 import type { ConditionId, ElementId, HeroCard, Step } from '../../rules/content';
 import { effectiveCard } from '../../rules/damage';
 import type { LoadedContent } from '../../rules/load';
+import type { EventWarning } from '../../rules/events';
 import type { FigureId, GameState } from '../../rules/state';
 import type { Variants } from '../../rules/variants';
 import { stepText } from '../debug/format';
@@ -30,6 +31,19 @@ export function figureName(id: FigureId, s?: GameState): string {
   }
   if (has(`game.source.${id}`)) return t(`game.source.${id}`);
   return id;
+}
+
+/** A scenario event warning as one sentence: «Наступного раунду прийдуть: 2× Пацюк». */
+export function eventWarningText(w: EventWarning, s: GameState): string {
+  const who = (list: { monster: string; count: number }[]) => list.map((x) => `${x.count}× ${monsterTypeName(x.monster)}`).join(', ');
+  if (w.kind === 'wave') return t(w.round === s.round + 1 ? 'game.event.waveNext' : 'game.event.wave', { round: w.round, who: who(w.spawns) });
+  if (w.kind === 'call') return t(w.round <= s.round ? 'game.event.callNow' : 'game.event.call', { name: figureName(w.figureId, s), round: w.round, who: who(w.spawns) });
+  return t('game.event.alarm', { name: figureName(w.figureId, s), n: w.steps });
+}
+
+/** The icon of an event warning: help being called, a runner. */
+export function eventWarningIcon(w: EventWarning): IconName {
+  return w.kind === 'alarm' ? 'move' : 'summon';
 }
 
 export function cardName(cardId: string): string {

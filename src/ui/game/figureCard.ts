@@ -3,9 +3,11 @@
 
 import type { MonsterStats, Step } from '../../rules/content';
 import type { LoadedContent } from '../../rules/load';
-import { planTurn } from '../../rules/ai/index';
+import { planRun, planTurn } from '../../rules/ai/index';
 import type { Ctx } from '../../rules/effects/context';
+import { runnerGoal } from '../../rules/events';
 import type { Hex } from '../../rules/hex';
+import { upcomingEvents } from '../../rules/queries';
 import { behaviourCard, monsterInitiative } from '../../rules/round';
 import { figureSteps } from '../../rules/turn';
 import type { Figure, FigureId, GameState, HeroState, MonsterState } from '../../rules/state';
@@ -14,7 +16,7 @@ import { h } from '../dom';
 import { t } from '../i18n';
 import { icon, type IconName } from './icons';
 import { MONSTER_RING, portrait, statusRow, type Explain } from './panels';
-import { cardName, figureName, monsterTypeName } from './text';
+import { cardName, eventWarningIcon, eventWarningText, figureName, monsterTypeName } from './text';
 
 export interface FigureCardOptions {
   s: GameState;
@@ -163,7 +165,9 @@ export function monsterPlan(s: GameState, content: LoadedContent, figure: Monste
   if (!s.behaviourDecks[figure.typeId]?.current) return null;
   const steps = resolvedSteps(s, content, figure, s.behaviourDecks[figure.typeId]?.current as string);
   try {
-    const plan = planTurn(s, figure.id, steps);
+    // A bell runner (scenario event) heads for its goal instead of fighting.
+    const goal = runnerGoal({ s, c: content }, figure);
+    const plan = goal ? planRun(s, figure.id, steps, goal) : planTurn(s, figure.id, steps);
     return { focusId: plan.focusId, path: plan.path, steps };
   } catch {
     return null;
@@ -193,6 +197,9 @@ function intentLines(s: GameState, content: LoadedContent, typeId: string, figur
   // One line per rank is enough when the figures of a rank are alike; a tapped figure gets its own.
   const shown = figure ? [figure] : [...new Map(all.map((f) => [f.rank, f])).values()];
   const plan = figure && deck?.current ? monsterPlan(s, content, figure) : null;
+  // Scenario events tied to these figures: «покличе підмогу на 3-му раунді», a runner's distance.
+  const warnings = upcomingEvents(s, content).filter((w) => w.kind !== 'wave' && (figure ? w.figureId === figure.id : all.some((f) => f.id === w.figureId)));
+  const runs = !!figure && !!runnerGoal({ s, c: content }, figure);
   return h(
     'div',
     { class: 'gfig-intents' },
@@ -211,6 +218,7 @@ function intentLines(s: GameState, content: LoadedContent, typeId: string, figur
         ),
       );
     }),
-    plan ? h('p', { class: 'gfig-plan' }, icon('arrow'), plan.focusId ? t('game.monster.goesFor', { name: figureName(plan.focusId, s) }) : t('game.monster.noFocus'), plan.path.length ? ` · ${t('game.monster.steps', { n: plan.path.length })}` : '') : null,
+    plan ? h('p', { class: 'gfig-plan' }, icon('arrow'), runs ? t('game.monster.runs') : plan.focusId ? t('game.monster.goesFor', { name: figureName(plan.focusId, s) }) : t('game.monster.noFocus'), plan.path.length ? ` · ${t('game.monster.steps', { n: plan.path.length })}` : '') : null,
+    warnings.map((w) => h('p', { class: 'gfig-plan gevent' }, icon(eventWarningIcon(w)), eventWarningText(w, s))),
   );
 }

@@ -1158,5 +1158,17 @@
   "game.monster.base": "Grundwerte",
   "game.monster.goesFor": "Geht auf: {name}",
   "game.monster.noFocus": "Erreicht niemanden",
-  "game.monster.steps": "Schritte: {n}"
+  "game.monster.steps": "Schritte: {n}",
+  "game.monster.runs": "Läuft zu seinem Ziel, greift niemanden an",
+  "game.event.wave": "Runde {round}: {who} kommen",
+  "game.event.waveNext": "Nächste Runde kommen: {who}",
+  "game.event.call": "{name} ruft in Runde {round} Hilfe ({who})",
+  "game.event.callNow": "{name} ruft diese Runde Hilfe ({who})!",
+  "game.event.alarm": "{name} läuft, um Alarm zu schlagen: noch {n} Felder",
+  "event.s1.barrel": "Das Fass bricht auf, und Ratten springen heraus!",
+  "event.s2.howl": "Der Leitwolf heult, und das Rudel antwortet aus der Schlucht!",
+  "event.s2.howl-stopped": "Der Leitwolf verstummt. Das Rudel kommt nicht.",
+  "event.s4.alarm": "Der Kultist reißt die Tür nach oben auf und ruft die Wache!",
+  "event.s4.alarm-stopped": "Der Kultist ist gestellt: kein Alarm. Er hat ein paar Münzen verloren.",
+  "event.s5.wave": "Neue Schatten kriechen aus dem Tunnel!"
 }

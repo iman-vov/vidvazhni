@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Content, ScenarioEventDef } from '../../src/rules/content';
 import { eventWarnings, spawnHex } from '../../src/rules/events';
+import { eventsSoon, forecastInitiative } from '../../src/rules/queries';
 import { revealRoom } from '../../src/rules/setup';
 import type { GameState, MonsterState } from '../../src/rules/state';
 import {
@@ -173,6 +174,19 @@ describe('scenario events', () => {
     expect(spawnHex(s, [[3, 2], [4, 4]])).toEqual([4, 4]);
     expect(spawnHex(s, [[3, 2]])).toEqual([2, 2]);
     expect(spawnHex(s, [[20, 20]])).not.toBeNull();
+  });
+
+  it('the round forecast and the intents warn about what comes this round or the next', () => {
+    const c = withEvents(makeContent({ room: { spawns: [{ monster: 'rat', hex: [5, 0], by: ALL, tag: 'horn' }] } }), [
+      { id: 'late', trigger: { type: 'round', round: 3 }, actions: [{ type: 'spawn', monster: 'rat', by: ALL, hexes: [[5, 4]] }] },
+      { id: 'soon', trigger: { type: 'round', round: 2 }, actions: [{ type: 'spawn', monster: 'rat', by: ALL, hexes: [[5, 4]] }] },
+      { id: 'call', trigger: { type: 'monsterTurnsAlive', tag: 'horn', turns: 3 }, actions: [{ type: 'spawn', monster: 'rat', by: ALL, hexes: [[4, 4]] }] },
+    ]);
+    const s = newGame(c);
+    s.variants.roundForecast = true;
+    expect(eventsSoon(s, c).map((w) => w.eventId)).toEqual(['soon']);
+    expect(forecastInitiative(s, c, 'hero:alpha', 'alpha.c1')?.events.map((w) => w.eventId)).toEqual(['soon']);
+    expect(eventWarnings(s, c.scenarios.test).map((w) => w.eventId)).toEqual(['soon', 'late', 'call']);
   });
 
   it('is deterministic: the same game replays the same events', () => {

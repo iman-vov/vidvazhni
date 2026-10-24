@@ -102,6 +102,23 @@ body.game.g-bottom-short {
   color: rgba(248, 232, 192, 0.7);
 }
 
+/* Scenario events due soon: a wave, a call for help, a runner on its way. */
+.gevents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  max-width: 320px;
+}
+
+.gevent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--hud-bg);
+  font-weight: 600;
+}
+
 .gtop-tools {
   margin-left: 0;
 }

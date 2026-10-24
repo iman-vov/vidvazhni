@@ -1158,5 +1158,17 @@
   "game.monster.base": "основа",
   "game.monster.goesFor": "Іде на: {name}",
   "game.monster.noFocus": "Нікого не досягає",
-  "game.monster.steps": "кроків: {n}"
+  "game.monster.steps": "кроків: {n}",
+  "game.monster.runs": "Біжить до своєї цілі, нікого не атакує",
+  "game.event.wave": "Раунд {round}: прийдуть {who}",
+  "game.event.waveNext": "Наступного раунду прийдуть: {who}",
+  "game.event.call": "{name} покличе підмогу ({who}) на {round}-му раунді",
+  "game.event.callNow": "{name} покличе підмогу ({who}) цього раунду!",
+  "game.event.alarm": "{name} біжить підняти тривогу: ще {n} гекс.",
+  "event.s1.barrel": "Бочка тріснула, а звідти вистрибують пацюки!",
+  "event.s2.howl": "Вовк-вожак завив, і з яру відгукнулася зграя!",
+  "event.s2.howl-stopped": "Вожак замовк. Зграя не прийде.",
+  "event.s4.alarm": "Культист відчинив двері нагору й кличе варту!",
+  "event.s4.alarm-stopped": "Культиста перехоплено: тривоги не буде. Він загубив кілька монет.",
+  "event.s5.wave": "З тунелю виповзають нові тіні!"
 }

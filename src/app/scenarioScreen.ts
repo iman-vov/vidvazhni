@@ -12,7 +12,7 @@ import { withConsumeBonus } from '../rules/effects/index';
 import { hexKey, type Hex } from '../rules/hex';
 import { objectiveStatus } from '../rules/objectives';
 import * as queries from '../rules/queries';
-import { attackPrompts, forecastInitiative, initiativePrompts, orbBonusPreview, previewAttack, usableItems, type InitiativePrompt } from '../rules/queries';
+import { attackPrompts, eventsSoon, forecastInitiative, initiativePrompts, orbBonusPreview, previewAttack, usableItems, type InitiativePrompt } from '../rules/queries';
 import { behaviourCard, monsterInitiative } from '../rules/round';
 import type { Action, CardId, FigureId, GameEvent, GameState, HeroState, MonsterState, StepChoice } from '../rules/state';
 import { figureSteps } from '../rules/turn';
@@ -26,7 +26,7 @@ import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
 import { isIconName } from '../ui/icons/names';
-import { elementsRow, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow, type RibbonTarget } from '../ui/game/panels';
+import { elementsRow, eventChips, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow, type RibbonTarget } from '../ui/game/panels';
 import { figureCard, monsterPlan } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
@@ -321,6 +321,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       if (e.type === 'attacked' && e.shield > 0) toast(t('game.ev.shieldBlocked', { name: figureName(e.targetId, s), shield: e.shield }), '', 'info');
       if (e.type === 'retaliated') toast(t('game.ev.retaliated', { name: figureName(e.figureId, s), target: figureName(e.targetId, s), damage: e.damage }), '', 'info');
       if (e.type === 'roomRevealed') toast(t('log.roomRevealed', { name: t(`room.${e.roomId}`) }), '', 'info');
+      if (e.type === 'story') toast(t(e.text), '', 'info');
       if (e.type === 'heroExhausted') toast(t('log.exhausted', { name: figureName(e.heroId) }), '', 'info');
     }
   }
@@ -479,6 +480,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       ),
       h('div', { class: 'gplate gtop-round' }, h('b', null, t('ui.round', { round: s.round })), h('small', null, t(`game.phase.${phaseKey(s)}`))),
       objectivePlate(content, s),
+      ...(forecast ? [] : [eventChips(s, eventsSoon(s, content))].filter((x): x is HTMLElement => !!x)),
       h(
         'div',
         { class: 'gtop-tools' },
