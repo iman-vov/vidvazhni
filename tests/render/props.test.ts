@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { ENVIRONMENTS } from '../../src/render/environment';
-import { hexBand } from '../../src/render/figureView';
+import { footRing, hexBand } from '../../src/render/figureView';
 import { activeFigure } from '../../src/render/highlightPlan';
 import { fitToHeight, hexVariation, propModelFor } from '../../src/render/propModels';
 import type { GameState } from '../../src/rules/state';
@@ -79,7 +79,25 @@ describe('figure ground marks', () => {
     expect(g.getAttribute('color').itemSize).toBe(4);
   });
 
+  it('the foot ring faces up, glows on its line and fades to nothing at the rims', () => {
+    const g = footRing(3, 34);
+    g.computeVertexNormals();
+    const n = g.getAttribute('normal');
+    for (let i = 0; i < n.count; i++) expect(n.getY(i)).toBeGreaterThan(0.99);
+    const pos = g.getAttribute('position');
+    const col = g.getAttribute('color');
+    let peak = 0;
+    for (let i = 0; i < pos.count; i++) {
+      const r = Math.hypot(pos.getX(i), pos.getZ(i));
+      expect(r).toBeLessThanOrEqual(1.14);
+      if (r < 0.83 || r > 1.12) expect(col.getW(i)).toBe(0);
+      peak = Math.max(peak, col.getW(i));
+    }
+    expect(peak).toBe(1);
+  });
+
   it('the active figure is the hero the engine waits for, else the turn-order entry', () => {
+
     const base = {
       phase: 'turns',
       pending: null,

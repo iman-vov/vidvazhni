@@ -17,7 +17,8 @@ import { BoardEnvironment, type EnvironmentStats } from './environment';
 import { BoardOverlay, CONDITION_ICONS, FigureBadge, type OverlayItem } from './boardOverlay';
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
-import { createFigureParts, disposeFigureParts, FigureView } from './figureView';
+import { animateGlows, createFigureParts, disposeFigureParts, FigureView } from './figureView';
+
 import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
@@ -27,6 +28,8 @@ import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
 
 const BACKGROUND = '#1b1d27';
+/** Frame rate while only the rings under figures move. */
+const RING_FPS = 24;
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
 const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string }> = {
@@ -253,6 +256,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   let fpsStart = 0;
   let fps = 0;
   const orbAnchor = new THREE.Vector3();
+  let ringTimer: ReturnType<typeof setTimeout> | 0 = 0;
 
   function requestRender(): void {
     if (!frame && !disposed) frame = requestAnimationFrame(renderFrame);
@@ -270,7 +274,12 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const animDt = dt * anim.speed;
     overlay.time += animDt;
     environment.update(now / 1000);
-    for (const fv of figures.values()) fv.update(animDt);
+    const t = now / 1000;
+    animateGlows(parts, t);
+    for (const fv of figures.values()) {
+      fv.update(animDt);
+      fv.spinGlow(t);
+    }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     renderer.render(scene, camera.camera);
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
@@ -301,6 +310,13 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     else {
       lastTime = 0;
       fps = 0;
+      // A turning ring under the active figure: keep drawing, but slowly (saves the tablet's battery).
+      if (!frozen && !ringTimer && [...figures.values()].some((fv) => fv.glowing)) {
+        ringTimer = setTimeout(() => {
+          ringTimer = 0;
+          requestRender();
+        }, 1000 / RING_FPS);
+      }
     }
   }
 
@@ -1244,6 +1260,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     disposed = true;
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
+    if (ringTimer) clearTimeout(ringTimer);
     resizeObserver.disconnect();
     stopQuality();
     camera.dispose();

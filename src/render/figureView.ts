@@ -1,9 +1,9 @@
 // One figure on the board: its model (or a small painted standee until a model exists or loads)
 // standing straight on the hex like a real miniature: no base disc, a soft contact shadow under its
-// feet, a thin hex-edge tint for its side (heroes warm gold, monsters cool grey-violet), a glowing
-// hex edge when it is active, selected or a target (targets also get an outline), an invisible
-// pick cylinder, and the HTML badge with health and conditions. Positions and clips are driven by
-// boardView.
+// feet, a thin hex-edge tint for its side (heroes warm gold, monsters cool grey-violet), a slowly
+// turning glowing ring around its feet when it is active, selected or a target (targets also pulse
+// and get an outline), an invisible pick cylinder, and the HTML badge with health and conditions.
+// Positions and clips are driven by boardView.
 
 import * as THREE from 'three';
 import type { ConditionId } from '../rules/content';
@@ -48,14 +48,20 @@ function measureHeight(model: Model): number {
 
 /** Side colours of the thin hex edge under a figure. */
 export const SIDE_EDGE_COLORS: Record<'hero' | 'foe', string> = { hero: '#f0c470', foe: '#9a90c0' };
-/** Glowing hex edge: the active figure (warm), a selected one (soft white), a valid target (ember). */
+/** Glowing ring around the feet: the active figure (warm gold), a selected one (soft white), a
+ *  valid target (ember, pulsing). The ring turns slowly. */
 export type FigureGlow = 'active' | 'selected' | 'target';
-export const GLOW_COLORS: Record<FigureGlow, string> = { active: '#ffbe3a', selected: '#eef1ff', target: '#ff4f1f' };
-const GLOW_OPACITY: Record<FigureGlow, number> = { active: 0.85, selected: 0.6, target: 0.9 };
+export const GLOW_COLORS: Record<FigureGlow, string> = { active: '#ffc040', selected: '#eef1ff', target: '#ff5422' };
+const GLOW_OPACITY: Record<FigureGlow, number> = { active: 0.95, selected: 0.7, target: 0.95 };
+/** Turns per second of the ring (active and selected turn one way, targets the other). */
+const RING_SPIN: Record<FigureGlow, number> = { active: 0.08, selected: 0.05, target: -0.12 };
+/** Ring radius around a figure's feet: a little wider than its contact shadow, inside the hex. */
+const RING_SCALE = 1.2;
+const RING_MAX = 0.8;
 
 export interface FigureParts {
   edgeGeometry: THREE.BufferGeometry;
-  glowGeometry: THREE.BufferGeometry;
+  ringGeometry: THREE.BufferGeometry;
   blobGeometry: THREE.BufferGeometry;
   proxyGeometry: THREE.BufferGeometry;
   blobTexture: THREE.Texture;
@@ -96,25 +102,72 @@ export function hexBand(radii: readonly number[], levels: readonly number[]): TH
   return g;
 }
 
+/**
+ * A flat glowing ring of unit radius on the ground: `arcs` bright arcs with tapered ends over a faint
+ * full circle, each a band whose alpha (vertex colour, RGBA) peaks on the line and fades to 0 at the
+ * rims, so it reads as a thin line with a soft glow.
+ */
+export function footRing(arcs = 3, gapDeg = 34): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const col: number[] = [];
+  const index: number[] = [];
+  const band = (start: number, length: number, radii: number[], alphas: number[], taper: number) => {
+    const steps = Math.max(4, Math.ceil(length / (Math.PI / 36)));
+    const base = pos.length / 3;
+    for (let s = 0; s <= steps; s++) {
+      const a = start + (s / steps) * length;
+      const along = Math.min(a - start, start + length - a);
+      const k = taper > 0 ? Math.min(1, along / taper) : 1;
+      const fade = k * k * (3 - 2 * k);
+      radii.forEach((r, i) => {
+        pos.push(Math.cos(a) * r, 0, -Math.sin(a) * r);
+        col.push(1, 1, 1, (alphas[i] ?? 0) * fade);
+      });
+    }
+    const n = radii.length;
+    for (let s = 0; s < steps; s++) {
+      for (let i = 0; i < n - 1; i++) {
+        const a = base + s * n + i;
+        const b = a + n;
+        // Counter-clockwise seen from above, so the ring faces up.
+        index.push(a, a + 1, b + 1, a, b + 1, b);
+      }
+    }
+  };
+  band(0, Math.PI * 2, [0.9, 0.965, 1.03], [0, 0.3, 0], 0);
+  const gap = (gapDeg * Math.PI) / 180;
+  const arc = (Math.PI * 2) / arcs - gap;
+  for (let i = 0; i < arcs; i++) band((i * Math.PI * 2) / arcs, arc, [0.82, 0.935, 0.995, 1.13], [0, 1, 1, 0], arc * 0.3);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+  g.setIndex(index);
+  return g;
+}
+
+/** Board-wide glow animation at `time` seconds: targets pulse (shared material). */
+export function animateGlows(parts: FigureParts, time: number): void {
+  const target = parts.glowMaterials.target as THREE.MeshBasicMaterial;
+  target.opacity = GLOW_OPACITY.target * (0.7 + 0.3 * Math.sin(time * Math.PI * 1.4));
+}
+
 export function createFigureParts(): FigureParts {
   const proxyMaterial = new THREE.MeshBasicMaterial();
   proxyMaterial.visible = false;
   const glow = (g: FigureGlow) => new THREE.MeshBasicMaterial({ color: GLOW_COLORS[g], vertexColors: true, transparent: true, opacity: GLOW_OPACITY[g], depthWrite: false });
   return {
     edgeGeometry: hexBand([0.83, 0.9], [1, 1]),
-    // Brightest just inside the plate's rim, fading toward the middle and over the rim.
-    glowGeometry: hexBand([0.66, 0.86, 0.9, 0.97], [0, 0.75, 0.75, 0]),
+    ringGeometry: footRing(),
     blobGeometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
     proxyGeometry: new THREE.CylinderGeometry(0.62, 0.62, 1, 10).translate(0, 0.5, 0),
     blobTexture: blobShadowTexture(),
     glowMaterials: { active: glow('active'), selected: glow('selected'), target: glow('target') },
-
     proxyMaterial,
   };
 }
 
 export function disposeFigureParts(p: FigureParts): void {
-  for (const x of [p.edgeGeometry, p.glowGeometry, p.blobGeometry, p.proxyGeometry, p.blobTexture, p.proxyMaterial, ...Object.values(p.glowMaterials)]) x.dispose();
+  for (const x of [p.edgeGeometry, p.ringGeometry, p.blobGeometry, p.proxyGeometry, p.blobTexture, p.proxyMaterial, ...Object.values(p.glowMaterials)]) x.dispose();
 }
 
 /** Inverted-hull outline material; works with skinning (pushes vertices along the skinned normal). */
@@ -191,8 +244,10 @@ export class FigureView {
     this.hoverPhase = (f.hex[0] * 1.7 + f.hex[1] * 2.3) % (Math.PI * 2);
     this.blobRadius = THREE.MathUtils.clamp(look.height * 0.42, 0.42, 0.85);
     this.blob = this.buildBase();
-    this.glowMesh = new THREE.Mesh(parts.glowGeometry, parts.glowMaterials.active);
+    this.glowMesh = new THREE.Mesh(parts.ringGeometry, parts.glowMaterials.active);
     this.glowMesh.position.y = PLATE_HEIGHT + 0.012;
+    this.glowMesh.scale.setScalar(Math.min(RING_MAX, this.blobRadius * RING_SCALE));
+    this.glowMesh.name = 'foot-ring';
     this.glowMesh.renderOrder = 3;
     this.glowMesh.visible = false;
     this.base.add(this.glowMesh);
@@ -514,15 +569,26 @@ export class FigureView {
     }
   }
 
-  /** An outline around the figure (valid targets); the glowing hex edge comes from setGlow. */
+  /** An outline around the figure (valid targets); the glowing ring comes from setGlow. */
   setTargeted(on: boolean): void {
     this.targeted = on;
     if (on && this.outlines.length === 0) this.buildOutline();
     for (const o of this.outlines) o.visible = on;
   }
 
-  /** Glowing hex edge for the active figure, a selected one or a valid target; null for none. */
+  /** Whether a ring is showing (it turns, so the board keeps drawing slowly). */
+  get glowing(): boolean {
+    return this.glowMesh.visible;
+  }
+
+  /** Turns the ring to where it is at `time` seconds (absolute, so frame gaps do not matter). */
+  spinGlow(time: number): void {
+    if (this.glow) this.glowMesh.rotation.y = (time * RING_SPIN[this.glow] + this.hoverPhase / (Math.PI * 2)) * Math.PI * 2;
+  }
+
+  /** Glowing ring around the feet for the active figure, a selected one or a valid target; null for none. */
   setGlow(glow: FigureGlow | null): void {
+
     this.glow = glow;
     if (glow) this.glowMesh.material = this.parts.glowMaterials[glow];
     this.glowMesh.visible = glow !== null && this.opacity > 0.5;
