@@ -4,7 +4,7 @@
 import { settings } from '../app/settings';
 import type { AnimStep } from '../render/animPlan';
 import type { FigureId, GameEvent } from '../rules/state';
-import { AUDIO, eventCues, locationTrack, stepCues, uiSound, type Cue, type UiSound } from './cues';
+import { AUDIO, eventCues, locationAmbient, locationTrack, stepCues, uiSound, type Cue, type UiSound } from './cues';
 import { AudioEngine } from './engine';
 
 export const audio = new AudioEngine(`${import.meta.env.BASE_URL}audio/`);
@@ -67,15 +67,21 @@ export function stepSounds(): (step: AnimStep, speed: number) => void {
   };
 }
 
-/** Music of a screen outside the board (menu, camp, map, story). */
+/** Music of a screen outside the board (menu, camp, map, story); the menu and the camp open with
+ *  the Lantern theme when their track was not already playing. No ambient bed off the board. */
 export function screenMusic(screen: string): void {
   const track = AUDIO.screens[screen];
-  if (track) audio.setMusic(track);
+  if (!track) return;
+  audio.setAmbient(null);
+  audio.setMusic(track, AUDIO.intros[screen]);
 }
 
-/** The board's music: the location's track, or the battle track while a boss is up. */
-export function boardMusic(environmentId: string, boss = false): void {
+/** The board: the location's track (the battle track while a boss is up) over its ambient bed;
+ *  `intensity` 0..1 (awake monsters, a boss) colours the bed. */
+export function boardMusic(environmentId: string, boss = false, intensity = 0): void {
   audio.setMusic(boss ? AUDIO.battle : locationTrack(environmentId));
+  audio.setAmbient(locationAmbient(environmentId), environmentId);
+  audio.setIntensity(boss ? 1 : intensity);
 }
 
 export function endStinger(won: boolean): void {

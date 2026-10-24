@@ -4,9 +4,13 @@
 import { TIMING, type AnimStep } from '../render/animPlan';
 import type { FigureId, GameEvent } from '../rules/state';
 import table from '../../data/audio.json';
+import type { AmbientDef } from './ambient';
+import type { MotifVariant } from './motif';
 
 export interface SoundDef {
-  files: string[];
+  /** Recorded files (one picked at random), or `synth`: a recipe made in code (src/audio/synth.ts). */
+  files?: string[];
+  synth?: string;
   /** 0..1, multiplied with the SFX volume. */
   volume?: number;
   /** Random playback-rate spread (±), so repeats do not sound the same. */
@@ -27,8 +31,13 @@ export interface AudioTable {
   sizes: { default: string; small: string[]; large: string[] };
   music: Record<string, MusicDef>;
   screens: Record<string, string>;
+  /** The Lantern theme played before a screen's track starts (src/audio/motif.ts). */
+  intros: Record<string, MotifVariant>;
+  /** Code-made beds under the music, by environment id (src/audio/ambient.ts). */
+  ambient: Record<string, AmbientDef>;
   locations: Record<string, string>;
   battle: string;
+  /** A music id, or `motif:<variant>` for the Lantern theme. */
   stingers: { victory: string; defeat: string };
 }
 
@@ -41,6 +50,11 @@ export interface Cue {
 }
 
 export type UiSound = 'click' | 'back' | 'open' | 'error' | 'cardPick' | 'levelUp' | 'coins';
+
+/** The location's ambient bed (by environment id). */
+export function locationAmbient(environmentId: string, t: AudioTable = AUDIO): AmbientDef | undefined {
+  return t.ambient[environmentId] ?? t.ambient.default;
+}
 
 export function uiSound(kind: UiSound, t: AudioTable = AUDIO): string | undefined {
   return t.ui[kind];
@@ -69,6 +83,8 @@ export function eventCues(e: GameEvent, t: AudioTable = AUDIO): Cue[] {
     case 'deckShuffled':
     case 'secondaryGoalMet':
     case 'roundStarted':
+    case 'momentumGained':
+    case 'surgeUsed':
     case 'obstacleDestroyed':
     case 'itemFound':
       return cue(t, e.type);

@@ -1658,8 +1658,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   board.sync(game.state, content);
   // Music: the location's track, the battle track while a boss is up; sounds follow the board.
   function music(): void {
-    const boss = Object.values(game.state.figures).some((f) => f.kind === 'monster' && f.rank === 'boss' && f.hp > 0);
-    if (!game.over) boardMusic(environmentFor(game.state.scenarioId).id, boss);
+    const awake = Object.values(game.state.figures).filter((f): f is MonsterState => f.kind === 'monster' && f.hp > 0);
+    if (!game.over) boardMusic(environmentFor(game.state.scenarioId).id, awake.some((f) => f.rank === 'boss'), Math.min(1, awake.length / 6));
   }
   music();
   if (board.onStep) unsubs.push(board.onStep(stepSounds()));

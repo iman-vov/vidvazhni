@@ -1,33 +1,177 @@
 {
   "sounds": {
-    "ui-click": { "files": ["sfx/ui-click.mp3"], "volume": 0.5 },
-    "ui-back": { "files": ["sfx/ui-back.mp3"], "volume": 0.5 },
-    "ui-open": { "files": ["sfx/ui-open.mp3"], "volume": 0.5 },
-    "ui-error": { "files": ["sfx/ui-error.mp3"], "volume": 0.5 },
-    "card-pick": { "files": ["sfx/card-pick-1.mp3", "sfx/card-pick-2.mp3"], "volume": 0.8 },
-    "card-slide": { "files": ["sfx/card-slide.mp3"], "volume": 0.7 },
-    "card-shuffle": { "files": ["sfx/card-shuffle.mp3"], "volume": 0.6 },
-    "dice": { "files": ["sfx/dice-1.mp3", "sfx/dice-2.mp3"], "volume": 0.9 },
-    "step": { "files": ["sfx/step-1.mp3", "sfx/step-2.mp3", "sfx/step-3.mp3"], "volume": 0.45, "pitch": 0.08 },
-    "hit": { "files": ["sfx/hit-1.mp3", "sfx/hit-2.mp3"], "volume": 0.85, "pitch": 0.06 },
-    "miss": { "files": ["sfx/miss.mp3"], "volume": 0.7 },
-    "shield": { "files": ["sfx/shield.mp3"], "volume": 0.7 },
-    "hurt": { "files": ["sfx/hurt.mp3"], "volume": 0.7, "pitch": 0.08 },
-    "heal": { "files": ["sfx/heal.mp3"], "volume": 0.6 },
-    "die-small": { "files": ["sfx/die-small.mp3"], "volume": 0.7, "pitch": 0.05 },
-    "die-medium": { "files": ["sfx/die-medium.mp3"], "volume": 0.8 },
-    "die-large": { "files": ["sfx/die-large.mp3"], "volume": 0.9 },
-    "hero-down": { "files": ["sfx/hero-down.mp3"], "volume": 0.7 },
-    "door": { "files": ["sfx/door.mp3"], "volume": 0.8 },
-    "chest": { "files": ["sfx/chest.mp3"], "volume": 0.8 },
-    "coins": { "files": ["sfx/coins-1.mp3", "sfx/coins-2.mp3"], "volume": 0.7 },
-    "lever": { "files": ["sfx/lever.mp3"], "volume": 0.8 },
-    "trap": { "files": ["sfx/trap.mp3"], "volume": 0.75 },
-    "break": { "files": ["sfx/break.mp3"], "volume": 0.8 },
-    "orb": { "files": ["sfx/orb.mp3"], "volume": 0.55 },
-    "level-up": { "files": ["sfx/level-up.mp3"], "volume": 0.7 },
-    "goal": { "files": ["sfx/goal.mp3"], "volume": 0.7 },
-    "round": { "files": ["sfx/round.mp3"], "volume": 0.4 }
+    "ui-click": {
+      "synth": "click",
+      "volume": 0.6
+    },
+    "ui-back": {
+      "synth": "back",
+      "volume": 0.6
+    },
+    "ui-open": {
+      "files": [
+        "sfx/ui-open.mp3"
+      ],
+      "volume": 0.5
+    },
+    "ui-error": {
+      "files": [
+        "sfx/ui-error.mp3"
+      ],
+      "volume": 0.5
+    },
+    "card-pick": {
+      "synth": "cardPick",
+      "volume": 0.8
+    },
+    "card-slide": {
+      "files": [
+        "sfx/card-slide.mp3"
+      ],
+      "volume": 0.7
+    },
+    "card-shuffle": {
+      "files": [
+        "sfx/card-shuffle.mp3"
+      ],
+      "volume": 0.6
+    },
+    "dice": {
+      "synth": "die",
+      "volume": 0.9
+    },
+    "step": {
+      "files": [
+        "sfx/step-1.mp3",
+        "sfx/step-2.mp3",
+        "sfx/step-3.mp3"
+      ],
+      "volume": 0.45,
+      "pitch": 0.08
+    },
+    "hit": {
+      "files": [
+        "sfx/hit-1.mp3",
+        "sfx/hit-2.mp3"
+      ],
+      "volume": 0.85,
+      "pitch": 0.06
+    },
+    "miss": {
+      "files": [
+        "sfx/miss.mp3"
+      ],
+      "volume": 0.7
+    },
+    "shield": {
+      "files": [
+        "sfx/shield.mp3"
+      ],
+      "volume": 0.7
+    },
+    "hurt": {
+      "files": [
+        "sfx/hurt.mp3"
+      ],
+      "volume": 0.7,
+      "pitch": 0.08
+    },
+    "heal": {
+      "files": [
+        "sfx/heal.mp3"
+      ],
+      "volume": 0.6
+    },
+    "die-small": {
+      "files": [
+        "sfx/die-small.mp3"
+      ],
+      "volume": 0.7,
+      "pitch": 0.05
+    },
+    "die-medium": {
+      "files": [
+        "sfx/die-medium.mp3"
+      ],
+      "volume": 0.8
+    },
+    "die-large": {
+      "files": [
+        "sfx/die-large.mp3"
+      ],
+      "volume": 0.9
+    },
+    "hero-down": {
+      "files": [
+        "sfx/hero-down.mp3"
+      ],
+      "volume": 0.7
+    },
+    "door": {
+      "files": [
+        "sfx/door.mp3"
+      ],
+      "volume": 0.8
+    },
+    "chest": {
+      "files": [
+        "sfx/chest.mp3"
+      ],
+      "volume": 0.8
+    },
+    "coins": {
+      "files": [
+        "sfx/coins-1.mp3",
+        "sfx/coins-2.mp3"
+      ],
+      "volume": 0.7
+    },
+    "lever": {
+      "files": [
+        "sfx/lever.mp3"
+      ],
+      "volume": 0.8
+    },
+    "trap": {
+      "files": [
+        "sfx/trap.mp3"
+      ],
+      "volume": 0.75
+    },
+    "break": {
+      "files": [
+        "sfx/break.mp3"
+      ],
+      "volume": 0.8
+    },
+    "orb": {
+      "synth": "orb",
+      "volume": 0.8
+    },
+    "level-up": {
+      "synth": "levelUp",
+      "volume": 0.9
+    },
+    "goal": {
+      "files": [
+        "sfx/goal.mp3"
+      ],
+      "volume": 0.7
+    },
+    "round": {
+      "files": [
+        "sfx/round.mp3"
+      ],
+      "volume": 0.4
+    },
+    "momentum": {
+      "synth": "momentum",
+      "volume": 0.7
+    },
+    "surge": {
+      "synth": "surge",
+      "volume": 0.8
+    }
   },
   "events": {
     "moved": "step",
@@ -58,7 +202,9 @@
     "cardsRevealed": "card-slide",
     "deckShuffled": "card-shuffle",
     "secondaryGoalMet": "goal",
-    "roundStarted": "round"
+    "roundStarted": "round",
+    "momentumGained": "momentum",
+    "surgeUsed": "surge"
   },
   "ui": {
     "click": "ui-click",
@@ -71,27 +217,82 @@
   },
   "sizes": {
     "default": "medium",
-    "small": ["cellar-rat", "night-moth", "gremlin", "thornling", "bog-slime"],
-    "large": ["stone-sentinel", "mountain-ram", "bog-miller", "hammerfist", "shadowhand"]
+    "small": [
+      "cellar-rat",
+      "night-moth",
+      "gremlin",
+      "thornling",
+      "bog-slime"
+    ],
+    "large": [
+      "stone-sentinel",
+      "mountain-ram",
+      "bog-miller",
+      "hammerfist",
+      "shadowhand"
+    ]
   },
   "music": {
-    "camp": { "file": "music/camp.mp3", "loop": "seamless", "volume": 0.8 },
-    "village": { "file": "music/village.mp3", "loop": "seamless", "volume": 0.6 },
-    "cellar": { "file": "music/cellar.mp3", "loop": "crossfade", "volume": 0.7 },
-    "forest": { "file": "music/forest.mp3", "loop": "crossfade", "volume": 0.7 },
-    "marsh": { "file": "music/marsh.mp3", "loop": "crossfade", "volume": 0.9 },
-    "tower": { "file": "music/tower.mp3", "loop": "crossfade", "volume": 0.9 },
-    "gloom": { "file": "music/gloom.mp3", "loop": "crossfade", "volume": 0.7 },
-    "caves": { "file": "music/caves.mp3", "loop": "crossfade", "volume": 0.7 },
-    "battle": { "file": "music/battle.mp3", "loop": "crossfade", "volume": 0.6 },
-    "victory": { "file": "music/victory.mp3", "loop": "none", "volume": 0.8 },
-    "defeat": { "file": "music/defeat.mp3", "loop": "none", "volume": 0.8 }
+    "camp": {
+      "file": "music/camp.mp3",
+      "loop": "seamless",
+      "volume": 0.8
+    },
+    "village": {
+      "file": "music/village.mp3",
+      "loop": "seamless",
+      "volume": 0.6
+    },
+    "cellar": {
+      "file": "music/cellar.mp3",
+      "loop": "crossfade",
+      "volume": 0.7
+    },
+    "forest": {
+      "file": "music/forest.mp3",
+      "loop": "crossfade",
+      "volume": 0.7
+    },
+    "marsh": {
+      "file": "music/marsh.mp3",
+      "loop": "crossfade",
+      "volume": 0.9
+    },
+    "tower": {
+      "file": "music/tower.mp3",
+      "loop": "crossfade",
+      "volume": 0.9
+    },
+    "gloom": {
+      "file": "music/gloom.mp3",
+      "loop": "crossfade",
+      "volume": 0.7
+    },
+    "caves": {
+      "file": "music/caves.mp3",
+      "loop": "crossfade",
+      "volume": 0.7
+    },
+    "battle": {
+      "file": "music/battle.mp3",
+      "loop": "crossfade",
+      "volume": 0.6
+    },
+    "defeat": {
+      "file": "music/defeat.mp3",
+      "loop": "none",
+      "volume": 0.8
+    }
   },
   "screens": {
     "menu": "camp",
     "camp": "camp",
     "map": "camp",
     "story": "camp"
+  },
+  "intros": {
+    "menu": "full",
+    "camp": "camp"
   },
   "locations": {
     "default": "cellar",
@@ -107,5 +308,129 @@
     "gloom-heart": "gloom"
   },
   "battle": "battle",
-  "stingers": { "victory": "victory", "defeat": "defeat" }
+  "stingers": {
+    "victory": "motif:victory",
+    "defeat": "defeat"
+  },
+  "ambient": {
+    "default": {
+      "drone": {
+        "freq": 55,
+        "gain": 0.014
+      }
+    },
+    "cellar": {
+      "drone": {
+        "freq": 55,
+        "gain": 0.016,
+        "cutoff": 300
+      },
+      "drips": {
+        "gain": 0.07,
+        "rate": 1
+      },
+      "crackle": {
+        "gain": 0.025
+      }
+    },
+    "copperdale": {
+      "wind": {
+        "gain": 0.025,
+        "freq": 500
+      },
+      "birds": {
+        "gain": 0.035,
+        "rate": 0.6
+      }
+    },
+    "thorn-path": {
+      "wind": {
+        "gain": 0.04,
+        "freq": 700
+      },
+      "birds": {
+        "gain": 0.04,
+        "rate": 1
+      }
+    },
+    "mountain-pass": {
+      "wind": {
+        "gain": 0.07,
+        "freq": 450
+      },
+      "birds": {
+        "gain": 0.025,
+        "rate": 0.25
+      }
+    },
+    "flooded-mill": {
+      "water": {
+        "gain": 0.08
+      },
+      "drips": {
+        "gain": 0.04,
+        "rate": 0.5
+      },
+      "wind": {
+        "gain": 0.015,
+        "freq": 600
+      }
+    },
+    "watchtower": {
+      "wind": {
+        "gain": 0.06,
+        "freq": 600
+      },
+      "crackle": {
+        "gain": 0.02
+      }
+    },
+    "mine-tunnel": {
+      "drone": {
+        "freq": 49,
+        "gain": 0.016,
+        "cutoff": 260
+      },
+      "drips": {
+        "gain": 0.06,
+        "rate": 0.8
+      }
+    },
+    "old-forge": {
+      "drone": {
+        "freq": 41,
+        "gain": 0.016,
+        "cutoff": 220
+      },
+      "crackle": {
+        "gain": 0.05
+      }
+    },
+    "dark-depths": {
+      "drone": {
+        "freq": 46,
+        "gain": 0.018,
+        "cutoff": 280
+      },
+      "drips": {
+        "gain": 0.05,
+        "rate": 0.6
+      },
+      "wind": {
+        "gain": 0.02,
+        "freq": 300
+      }
+    },
+    "gloom-heart": {
+      "drone": {
+        "freq": 44,
+        "gain": 0.02,
+        "cutoff": 380
+      },
+      "wind": {
+        "gain": 0.04,
+        "freq": 350
+      }
+    }
+  }
 }

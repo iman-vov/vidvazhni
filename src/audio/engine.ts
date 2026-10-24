@@ -3,7 +3,10 @@
 // tab is hidden. The AudioContext is created suspended and resumed on the first tap (iOS needs a
 // user gesture); sounds asked for before that are dropped, music waits and starts on unlock.
 
+import { AmbientBed, type AmbientDef } from './ambient';
 import { AUDIO, type AudioTable, type MusicDef } from './cues';
+import { playMotif, type MotifVariant } from './motif';
+import { playSynth } from './synth';
 
 export interface Volumes {
   music: number;
@@ -34,6 +37,14 @@ export class AudioEngine {
   private wanted: string | null = null;
   private hidden = false;
   private ducks = 0;
+  /** The Lantern theme to play before `id` starts, and the timer of one that is playing. */
+  private intro: { id: string; variant: MotifVariant } | null = null;
+  private introTimer: ReturnType<typeof setTimeout> | null = null;
+  private introFor: string | null = null;
+  private bed: AmbientBed | null = null;
+  private wantedBed: { key: string; def: AmbientDef } | null = null;
+  private bedKey: string | null = null;
+  private intensity = 0;
 
   constructor(
     private readonly base: string,
@@ -78,7 +89,12 @@ export class AudioEngine {
     const def = this.table.sounds[id];
     const ctx = this.ctx;
     if (!def || !ctx || !this.unlocked || this.volumes.sound <= 0) return;
-    const file = def.files[Math.floor(Math.random() * def.files.length)];
+    if (def.synth) {
+      playSynth(def.synth, { ctx, dest: this.bus.sfx, at: ctx.currentTime + Math.max(0, delay) + 0.005 }, def.volume ?? 1);
+      return;
+    }
+    const files = def.files ?? [];
+    const file = files[Math.floor(Math.random() * files.length)];
     if (!file) return;
     const at = ctx.currentTime + Math.max(0, delay);
     void this.load(file).then((buf) => {
@@ -94,10 +110,12 @@ export class AudioEngine {
     });
   }
 
-  /** Switches the music to `id` (crossfade); null fades it out. The same track keeps playing. */
-  setMusic(id: string | null): void {
+  /** Switches the music to `id` (crossfade); null fades it out. The same track keeps playing. With
+   *  `intro`, the Lantern theme plays first and the track comes in under its last bar. */
+  setMusic(id: string | null, intro?: MotifVariant): void {
     if (id === this.wanted) return;
     this.wanted = id;
+    this.intro = id && intro ? { id, variant: intro } : null;
     if (id && this.table.music[id]) void this.load(this.table.music[id].file);
     this.startWanted();
   }
@@ -108,6 +126,11 @@ export class AudioEngine {
     this.wanted = `stinger:${id}`;
     this.fadeOut(this.music, 0.6);
     this.music = null;
+    this.setAmbient(null);
+    if (id.startsWith('motif:')) {
+      if (this.unlocked) this.motif(id.slice(6) as MotifVariant, 0.3);
+      return;
+    }
     const def = this.table.music[id];
     if (!def) return;
     void this.load(def.file).then(() => {
@@ -128,6 +151,25 @@ export class AudioEngine {
     };
   }
 
+  /** The Lantern theme on the music bus, `delay` s from now; returns its length (0 when silent). */
+  motif(variant: MotifVariant, delay = 0): number {
+    const ctx = this.ctx;
+    if (!ctx || !this.unlocked) return 0;
+    return playMotif(variant, { ctx, dest: this.bus.music, at: ctx.currentTime + delay });
+  }
+
+  /** The bed under the music (null: none); the same `key` keeps the running one. */
+  setAmbient(def: AmbientDef | null | undefined, key = ''): void {
+    this.wantedBed = def ? { key, def } : null;
+    this.startBed();
+  }
+
+  /** 0 calm … 1 tense (adaptive ambient). */
+  setIntensity(x: number): void {
+    this.intensity = x;
+    this.bed?.setIntensity(x);
+  }
+
   /** The voice bus, for the later TTS step. */
   get voiceBus(): GainNode | null {
     return this.ctx ? this.bus.voice : null;
@@ -141,6 +183,10 @@ export class AudioEngine {
     if (!Ctor) return null;
     const ctx = new Ctor({ latencyHint: 'interactive' });
     this.ctx = ctx;
+    // Where autoplay is allowed the context starts running by itself, a moment later.
+    ctx.addEventListener('statechange', () => {
+      if (ctx.state === 'running' && !this.hidden) this.startWanted();
+    });
     this.master = ctx.createGain();
     this.master.connect(ctx.destination);
     const duck = ctx.createGain();
@@ -177,14 +223,45 @@ export class AudioEngine {
     return p;
   }
 
+  private startBed(): void {
+    const w = this.wantedBed;
+    if (!this.ctx || !this.unlocked) return;
+    if (w && this.bed && this.bedKey === w.key) return;
+    this.bed?.stop();
+    this.bed = null;
+    this.bedKey = null;
+    if (!w) return;
+    this.bed = new AmbientBed(this.ctx, this.bus.music, w.def);
+    this.bedKey = w.key;
+    this.bed.setIntensity(this.intensity);
+  }
+
   private startWanted(): void {
     const id = this.wanted;
     if (!this.ctx || !this.unlocked || id?.startsWith('stinger:')) return;
+    this.startBed();
     if (this.music?.id === id) return;
+    // The theme is playing before this very track: let it finish.
+    if (this.introTimer && this.introFor === id) return;
+    if (this.introTimer) {
+      clearTimeout(this.introTimer);
+      this.introTimer = null;
+    }
     this.fadeOut(this.music, MUSIC_FADE);
     this.music = null;
     const def = id ? this.table.music[id] : undefined;
     if (!id || !def) return;
+    if (this.intro?.id === id) {
+      const length = this.motif(this.intro.variant, 0.1);
+      this.intro = null;
+      void this.load(def.file);
+      this.introFor = id;
+      this.introTimer = setTimeout(() => {
+        this.introTimer = null;
+        if (this.wanted === id && !this.music && this.unlocked) this.start(id, def, MUSIC_FADE * 2);
+      }, Math.max(0, length - 2) * 1000);
+      return;
+    }
     void this.load(def.file).then(() => {
       if (this.wanted === id && !this.music && this.unlocked) this.start(id, def, MUSIC_FADE);
     });
