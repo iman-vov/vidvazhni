@@ -1845,3 +1845,8 @@ body.game.g-bottom-short {
     max-height: max(calc(100% - 96px), calc(100vh - 494px));
   }
 }
+
+/* Turn tray: the basic-action row keeps its place while it offers nothing (no shift after the first half). */
+.gcard-basic.is-idle {
+  visibility: hidden;
+}

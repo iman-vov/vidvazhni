@@ -908,15 +908,14 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           const a = find(half, false);
           if (a) act(a);
         },
-        footer:
-          basicTop || basicBottom
-            ? h(
-                'div',
-                { class: 'gcard-basic' },
-                h('button', { class: 'gbtn gbtn-small', disabled: !basicTop, onclick: () => basicTop && act(basicTop) }, icon('attack'), t('game.basicAttack')),
-                h('button', { class: 'gbtn gbtn-small', disabled: !basicBottom, onclick: () => basicBottom && act(basicBottom) }, icon('move'), t('game.basicMove')),
-              )
-            : null,
+        // The basic-action row is always there (hidden while it offers nothing), so the cards keep
+        // their height and position when it appears after the first half.
+        footer: h(
+          'div',
+          { class: `gcard-basic${basicTop || basicBottom ? '' : ' is-idle'}`, 'aria-hidden': basicTop || basicBottom ? null : 'true' },
+          h('button', { class: 'gbtn gbtn-small', disabled: !basicTop, onclick: () => basicTop && act(basicTop) }, icon('attack'), t('game.basicAttack')),
+          h('button', { class: 'gbtn gbtn-small', disabled: !basicBottom, onclick: () => basicBottom && act(basicBottom) }, icon('move'), t('game.basicMove')),
+        ),
       });
       if (usedCard && playable.length === 0 && !basicTop && !basicBottom) el.classList.add('is-used');
       onPress(el, {
