@@ -463,7 +463,7 @@ export class BoardEnvironment {
     outputColor(mixHex(def.fog.color, def.fog.morok, 0.35), u.uEnvVeilColor.value);
     u.uEnvCentreZ.value = layout.centre.z;
     u.uEnvTexScale.value = 1 / (def.surface ? TEXTURE_WORLD_SIZE : (def.ground.scale ?? 2.6));
-    setWaterLook(outputColor(def.light.sky), waterFlow(layout));
+    setWaterLook(outputColor(def.light.sky), waterFlow(layout), def.ground.waterFlow === 'flowing');
 
     this.buildGround(def);
     this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
@@ -996,7 +996,7 @@ function mixHex(a: string, b: string, t: number): string {
   return `#${new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString()}`;
 }
 
-/** The water's slow drift: from the entrance into the location (down the mill race), 0.12 units/s. */
+/** Where flowing water drifts: from the entrance into the location (down a mill race), 0.12 units/s. */
 function waterFlow(layout: EnvLayout): THREE.Vector2 {
   const e = layout.edges.find((x) => x.door === 'entrance');
   const v = e ? new THREE.Vector2(layout.centre.x - (e.ax + e.bx) / 2, layout.centre.z - (e.az + e.bz) / 2) : new THREE.Vector2(0.8, 0.4);

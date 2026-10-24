@@ -1,10 +1,10 @@
 // Motion in the locations that is not fire or dust (ambient.ts): animated water on the water hexes
-// and the puddles beyond the edge (moving ripples, a soft fresnel toward the sky, darker depth toward
-// the middle, a broken light line along shores and walkways, rings around figures standing in water,
-// slow flow along the location), plants and cloth swaying in a vertex wind, a turning mill wheel,
+// and the puddles beyond the edge (a calm shimmer, a soft fresnel toward the sky, darker depth toward
+// the middle, a broken light line along shores and walkways, rings around figures standing in water
+// and from the odd drip; only water tagged as flowing drifts along the location), plants and cloth swaying in a vertex wind, a turning mill wheel,
 // fireflies over the marsh and leaves falling on the forest path.
 // Everything runs in shaders from shared time uniforms; the CPU only sets a few numbers per frame.
-// Low quality keeps the water to a cheap UV scroll and fewer particles; with reduced motion the
+// Low quality keeps the water to a cheap oscillating offset and fewer particles; with reduced motion the
 // clock stops, so the location stands still (fire keeps its flicker).
 
 import * as THREE from 'three';
@@ -34,8 +34,10 @@ export const MAX_RIPPLES = 6;
 /** Water uniforms shared by the board's water hexes and the location's water. */
 export const WATER = {
   uWaterTime: { value: 0 },
-  /** World units per second the surface drifts (the location's flow, e.g. along the mill race). */
+  /** World units per second the surface drifts where the water flows (e.g. along a mill race). */
   uWaterFlow: { value: new THREE.Vector2(0.06, 0.03) },
+  /** 1: the location's water flows (drifts with uWaterFlow); 0: it is still and only shimmers. */
+  uWaterFlowing: { value: 0 },
   /** Output-space (sRGB) sky colour the water mirrors at grazing angles. */
   uWaterSky: { value: new THREE.Vector3(0.7, 0.77, 0.8) },
   /** x, z, strength (0 = off), phase: rings around figures standing in water. */
@@ -56,10 +58,12 @@ export function tickLife(time: number): number {
   return t;
 }
 
-/** The location's water: its sky colour (output space) and flow in world units per second. */
-export function setWaterLook(sky: THREE.Vector3, flow: THREE.Vector2): void {
+/** The location's water: its sky colour (output space), whether it flows and the flow in world
+ *  units per second (unused while the water is still). */
+export function setWaterLook(sky: THREE.Vector3, flow: THREE.Vector2, flowing = false): void {
   WATER.uWaterSky.value.copy(sky);
   WATER.uWaterFlow.value.copy(flow);
+  WATER.uWaterFlowing.value = flowing ? 1 : 0;
 }
 
 /** Rings around these points (figures standing in water); the rest switch off. */
@@ -146,20 +150,52 @@ export function setBoardWater(tiles: Record<HexKey, { terrain: Terrain }>): void
 const WATER_HEAD = `
   uniform float uWaterTime;
   uniform vec2 uWaterFlow;
+  uniform float uWaterFlowing;
   uniform vec3 uWaterSky;
   uniform vec4 uWaterRipples[${MAX_RIPPLES}];
   uniform sampler2D uWaterMask;
   uniform vec4 uWaterMaskRect;
   varying vec3 vWaterW;
-  // Gradient of a gently moving height field: four crossing wave trains on a slowly warped
-  // domain (so the pattern never reads as a grid), drifting with the flow.
-  vec2 waterWaves(vec2 q, float t) {
-    q += 0.35 * vec2(sin(q.y * 0.9 + t * 0.21), sin(q.x * 0.8 - t * 0.17));
-    vec2 g = vec2(0.80, 0.60) * cos(dot(q, vec2(0.80, 0.60)) * 4.3 + t * 1.1) * 0.55;
-    g += vec2(-0.47, 0.88) * cos(dot(q, vec2(-0.47, 0.88)) * 6.7 - t * 1.4) * 0.38;
-    g += vec2(0.97, -0.24) * cos(dot(q, vec2(0.97, -0.24)) * 10.3 + t * 1.9) * 0.22;
-    g += vec2(-0.71, -0.70) * cos(dot(q, vec2(-0.71, -0.70)) * 15.1 - t * 2.6) * 0.13;
+  float waterHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  // Still water: gradient of three small standing wave sets at different angles, each rising and
+  // sinking in place with its own slow period (about 9, 7 and 5.5 s), on a domain that only sways
+  // back and forth. Nothing travels, so the sets cancel into a calm shimmer.
+  vec2 waterCalm(vec2 q, float t) {
+    q += 0.16 * vec2(sin(q.y * 0.7 + t * 0.13), sin(q.x * 0.6 - t * 0.11));
+    vec2 g = vec2(0.80, 0.60) * cos(dot(q, vec2(0.80, 0.60)) * 3.4) * sin(t * 0.70) * 0.30;
+    g += vec2(-0.47, 0.88) * cos(dot(q, vec2(-0.47, 0.88)) * 5.3 + 1.3) * sin(t * 0.90 + 2.1) * 0.22;
+    g += vec2(0.97, -0.24) * cos(dot(q, vec2(0.97, -0.24)) * 8.1 + 0.4) * sin(t * 1.15 + 4.0) * 0.14;
     return g;
+  }
+  // Flowing water: two layers carried downstream at different speeds, each on a domain stirred by
+  // slow eddies, so the surface flows and churns instead of sliding as one sheet.
+  vec2 waterStream(vec2 p, float t, vec2 flow) {
+    vec2 a = p - flow * t;
+    vec2 b = p - flow * t * 0.6 + vec2(3.7, 1.3);
+    a += 0.30 * vec2(sin(a.y * 1.3 + t * 0.50), sin(a.x * 1.1 - t * 0.43));
+    b += 0.25 * vec2(sin(b.y * 1.7 - t * 0.37), sin(b.x * 1.5 + t * 0.41));
+    vec2 g = vec2(0.80, 0.60) * cos(dot(a, vec2(0.80, 0.60)) * 4.3 + t * 0.6) * 0.40;
+    g += vec2(-0.47, 0.88) * cos(dot(a, vec2(-0.47, 0.88)) * 6.7 - t * 0.8) * 0.26;
+    g += vec2(0.97, -0.24) * cos(dot(b, vec2(0.97, -0.24)) * 10.3 + t * 1.0) * 0.18;
+    g += vec2(-0.71, -0.70) * cos(dot(b, vec2(-0.71, -0.70)) * 15.1 - t * 1.3) * 0.10;
+    return g;
+  }
+  // The odd drip: in each 2.6-unit cell a ring now and then (every 6-14 s, not every cycle),
+  // spreading slowly for about two seconds and fading. Gradient (xy) and height (z).
+  vec3 waterDrips(vec2 p, float t) {
+    vec2 cell = floor(p / 2.6);
+    float period = 6.0 + 8.0 * waterHash(cell);
+    float local = t + waterHash(cell + 7.3) * period;
+    float cyc = floor(local / period);
+    float age = local - cyc * period;
+    if (waterHash(cell + cyc * 5.0 + 9.7) < 0.45) return vec3(0.0);
+    vec2 h = vec2(waterHash(cell + cyc * 17.0), waterHash(cell - cyc * 13.0 + 3.1));
+    vec2 dv = p - (cell + 0.3 + 0.4 * h) * 2.6;
+    float d = length(dv) + 1e-4;
+    float x = d - age * 0.34;
+    float fade = exp(-x * x * 45.0) * (1.0 - smoothstep(0.4, 2.4, age)) * smoothstep(0.0, 0.08, age);
+    float ph = x * 22.0;
+    return vec3(dv / d * cos(ph), sin(ph)) * fade;
   }
   // Rings: gradient (xy) and height (z).
   vec3 waterRipples(vec2 p, float t) {
@@ -170,7 +206,7 @@ const WATER_HEAD = `
         vec2 dv = p - r.xy;
         float d = length(dv) + 1e-4;
         float fade = r.z * exp(-d * 2.1) * smoothstep(0.16, 0.34, d);
-        float ph = d * 15.0 - t * 3.2 + r.w;
+        float ph = d * 15.0 - t * 2.2 + r.w;
         g += vec3(dv / d * cos(ph), sin(ph)) * fade;
       }
     }
@@ -179,12 +215,17 @@ const WATER_HEAD = `
 
 export type WaterMode = 'hex' | 'env';
 
+/** A small back-and-forth offset of the water's coordinate (periods about 10 and 13 s): still water
+ *  and the low tier sway in place, they never scroll. */
+const OSC = 'vec2(sin(uWaterTime * 0.63), cos(uWaterTime * 0.48)) * 0.06';
+
 /**
- * Makes a material animated water. `hex`: the board's water hexes (map scrolled with the flow,
- * depth and shores from the board mask, ripples around figures); `env`: the location's water
- * (depth and shores from the environment field's water channel, so field.ts must patch first).
- * `full` = medium and high: moving normals, fresnel toward the sky, a foam line; else only the
- * scroll, a slow shimmer and the depth.
+ * Makes a material animated water. `hex`: the board's water hexes (depth and shores from the board
+ * mask, ripples around figures); `env`: the location's water (depth and shores from the environment
+ * field's water channel, so field.ts must patch first). Still water (the default) shimmers in place
+ * and gets the odd drip ring; water tagged as flowing (uWaterFlowing) drifts with the flow, the
+ * hexes' map with it. `full` = medium and high: moving normals, fresnel toward the sky, a foam line;
+ * else only a small oscillating offset, a slow shimmer and the depth, never a scroll.
  */
 export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): void {
   const prev = m.onBeforeCompile;
@@ -203,7 +244,10 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
       vWaterW = (modelMatrix * waterW).xyz;`,
     );
     let frag = shader.fragmentShader.replace('#include <common>', `#include <common>\n${WATER_HEAD}`);
-    if (mode === 'hex') frag = frag.replace('texture2D(map, vBvUv)', `texture2D(map, vBvUv - uWaterFlow * uWaterTime * ${flow} * 0.3)`);
+    // The map sways a little in place; on full quality flowing water carries it downstream.
+    const sway = 'vec2(sin(uWaterTime * 0.61), cos(uWaterTime * 0.47)) * 0.012';
+    const mapUv = full ? `mix(${sway}, -uWaterFlow * uWaterTime * ${flow} * 0.3, uWaterFlowing)` : sway;
+    if (mode === 'hex') frag = frag.replace('texture2D(map, vBvUv)', `texture2D(map, vBvUv + ${mapUv})`);
     const depth =
       mode === 'hex'
         ? 'texture2D(uWaterMask, (vWaterW.xz - uWaterMaskRect.xy) * uWaterMaskRect.zw).r'
@@ -213,19 +257,23 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
     frag = frag.replace(
       '#include <normal_fragment_maps>',
       `#include <normal_fragment_maps>
-      vec2 wQ = vWaterW.xz - uWaterFlow * uWaterTime * ${flow};
+      vec2 wQ = vWaterW.xz + ${OSC};
       vec3 wN = vec3(0.0, 1.0, 0.0);
       vec2 wG = vec2(0.0);
       float wRing = 0.0;
       #ifdef WATER_FULL
-      wG = waterWaves(wQ, uWaterTime) * 0.11;
-      ${mode === 'hex' ? 'vec3 wR = waterRipples(vWaterW.xz, uWaterTime); wG += wR.xy * 0.55; wRing = wR.z;' : ''}
+      wQ = mix(wQ, vWaterW.xz - uWaterFlow * uWaterTime * ${flow}, uWaterFlowing);
+      wG = uWaterFlowing > 0.5 ? waterStream(vWaterW.xz, uWaterTime, uWaterFlow * ${flow}) * 0.11 : waterCalm(vWaterW.xz, uWaterTime) * 0.07;
+      vec3 wD = waterDrips(vWaterW.xz, uWaterTime) * (1.0 - uWaterFlowing);
+      wG += wD.xy * 0.2;
+      wRing = wD.z * 0.6;
+      ${mode === 'hex' ? 'vec3 wR = waterRipples(vWaterW.xz, uWaterTime); wG += wR.xy * 0.45; wRing += wR.z;' : ''}
       wN = normalize(vec3(-wG.x, 1.0, -wG.y));
       normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);
       #endif`,
     );
     // Lambert (low) has the same chunk; a material without it still gets the flow coordinate.
-    if (!frag.includes('vec2 wQ')) frag = frag.replace('void main() {', 'void main() {\nvec2 wQ = vWaterW.xz - uWaterFlow * uWaterTime * ' + flow + ';\nvec3 wN = vec3(0.0, 1.0, 0.0);');
+    if (!frag.includes('vec2 wQ')) frag = frag.replace('void main() {', `void main() {\nvec2 wQ = vWaterW.xz + ${OSC};\nvec3 wN = vec3(0.0, 1.0, 0.0);`);
     frag = frag.replace(
       '#include <fog_fragment>',
       `float wDepth = ${depth};
@@ -239,11 +287,11 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
       float wFres = 0.06 + 0.94 * pow(1.0 - clamp(dot(wN, wV), 0.0, 1.0), 4.0);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, uWaterSky, clamp(wFres * 1.4, 0.0, 0.55));
       float wFoam = ${shore};
-      wFoam *= smoothstep(-0.25, 0.7, sin(dot(wQ, vec2(7.1, 5.3)) + uWaterTime * 0.9) * sin(dot(wQ, vec2(-4.7, 8.9)) - uWaterTime * 0.7) + 0.35);
+      wFoam *= smoothstep(-0.25, 0.7, sin(dot(wQ, vec2(7.1, 5.3)) + uWaterTime * 0.5) * sin(dot(wQ, vec2(-4.7, 8.9)) - uWaterTime * 0.4) + 0.35);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.86, 0.9, 0.88), wFoam);
       gl_FragColor.a = max(gl_FragColor.a, wFoam * 1.2);
       #else
-      gl_FragColor.rgb *= 0.95 + 0.05 * sin(dot(wQ, vec2(2.3, 1.7))) * sin(dot(wQ, vec2(-1.3, 2.9)) + uWaterTime * 0.6);
+      gl_FragColor.rgb *= 0.95 + 0.05 * sin(dot(wQ, vec2(2.3, 1.7))) * sin(dot(wQ, vec2(-1.3, 2.9)) + uWaterTime * 0.45);
       #endif
       #include <fog_fragment>`,
     );

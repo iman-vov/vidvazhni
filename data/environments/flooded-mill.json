@@ -6,7 +6,7 @@
   "kits": ["env-thorn-path"],
   "surface": "mud",
   "boundary": "reeds",
-  "ground": { "texture": "swamp-mud", "tint": "#76694e", "scale": 2.6, "water": 0.5, "waterColor": "#5c8c92" },
+  "ground": { "texture": "swamp-mud", "tint": "#76694e", "scale": 2.6, "water": 0.5, "waterColor": "#5c8c92", "waterFlow": "still" },
   "walls": { "height": 1.5, "low": 0.3, "alt": 3, "inner": "#7a5c3e", "sconce": { "piece": "wall-torch", "every": 4 } },
   "palette": { "wood": "#7e5b3b", "woodDark": "#4e3826", "reed": "#9ca25a", "rock": "#7e7a6e", "leaf": "#6a8248" },
   "light": {

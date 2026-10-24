@@ -5,7 +5,7 @@
   "surface": "rock",
   "boundary": "walls",
   "rooms": { "s9.gate": { "edge": "forge" } },
-  "ground": { "texture": "cave-rock", "tint": "#363a44", "scale": 2.8, "water": 0.35, "waterColor": "#0e1a22" },
+  "ground": { "texture": "cave-rock", "tint": "#363a44", "scale": 2.8, "water": 0.35, "waterColor": "#0e1a22", "waterFlow": "still" },
   "walls": { "height": 1.8, "low": 0.36, "alt": 3, "inner": "#3e4048", "sconce": { "piece": "mine-lamp", "every": 4 } },
   "palette": { "rock": "#4a4e58", "rockDark": "#2c2e36", "stone": "#55555e", "stoneDark": "#3a3a42", "stoneLight": "#6a6a72", "wood": "#5e4632", "woodDark": "#3a2a1e", "ore": "#a8743c", "crystal": "#7a5ad0", "glowCold": "#6ac0d8", "iron": "#3c3e46" },
   "light": {

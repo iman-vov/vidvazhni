@@ -37,7 +37,8 @@
         "tint": { "$ref": "#/definitions/color" },
         "scale": { "type": "number", "exclusiveMinimum": 0 },
         "water": { "type": "number", "minimum": 0, "maximum": 1 },
-        "waterColor": { "$ref": "#/definitions/color" }
+        "waterColor": { "$ref": "#/definitions/color" },
+        "waterFlow": { "description": "Flowing water drifts from the entrance; still water (default) only shimmers.", "enum": ["still", "flowing"] }
       },
       "required": ["tint"],
       "additionalProperties": false

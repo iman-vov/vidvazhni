@@ -31,6 +31,9 @@ export interface EnvironmentDef {
     /** Share of the ground outside the walls that is under shallow water (0..1). */
     water?: number;
     waterColor?: string;
+    /** Whether that water flows (drifts from the entrance, e.g. a mill race or a stream) or stands
+     *  still and only shimmers. Default still. */
+    waterFlow?: 'still' | 'flowing';
   };
   /** Blender kits (model ids `env-<location>`) this location borrows pieces from, after its own. */
   kits?: string[];
