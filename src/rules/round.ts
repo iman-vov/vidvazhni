@@ -366,7 +366,9 @@ export function goalReached(ctx: Ctx): boolean {
     case 'reachExit':
       return living.length > 0 && living.every((h) => goal.hexes.some((x) => hexEquals(x, h.hex)));
     case 'carryItem':
-      return living.some((h) => (h.chests ?? []).includes(goal.item) && goal.to.some((x) => hexEquals(x, h.hex)));
+      return living.some(
+        (h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && goal.to.some((x) => hexEquals(x, h.hex)),
+      );
   }
 }
 

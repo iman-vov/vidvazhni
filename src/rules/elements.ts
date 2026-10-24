@@ -106,5 +106,12 @@ export function scenarioOrbs(ctx: Ctx, when: 'atStart' | 'eachRound'): void {
   if (!ctx.s.variants.orbs) return;
   const fork = ctx.c.scenarios[ctx.s.scenarioId]?.forkOrbs;
   if (when === 'atStart') for (const o of fork?.atStart ?? []) putOrb(ctx, o.orb, 'scenario', o.hex);
-  else for (const o of fork?.eachRound ?? []) putOrb(ctx, o.orb, o.source);
+  else for (const o of fork?.eachRound ?? []) {
+    // A source that is a scenario object (s3 millstones) gives its orb only once its room is
+    // revealed; the orb sits on the object's hex.
+    const room = ctx.c.scenarios[ctx.s.scenarioId]?.rooms.find((r) => r.objects?.some((x) => x.id === o.source));
+    const object = room?.objects?.find((x) => x.id === o.source);
+    if (room && !ctx.s.board.revealedRooms.includes(room.id)) continue;
+    putOrb(ctx, o.orb, o.source, object?.hex);
+  }
 }

@@ -80,6 +80,9 @@ export interface HeroState extends FigureBase {
   provokeRadius?: number | null;
   /** Chest ids (scenario items) looted in this scenario. */
   chests?: string[];
+  /** Story items the hero carries (a chest's `loot.questItem`, a key dropped by a monster, a
+   *  carried item picked up again). A key opens its door for the whole party. */
+  questItems?: string[];
   /** Items the hero carries into the scenario (absent = none). */
   items?: HeroItemState[];
   /** Fork «Наснага»: ongoing bonuses granted by the class Порив (its `active` steps), until used
@@ -113,6 +116,10 @@ export interface MonsterState extends FigureBase {
   attackedBy: FigureId[];
   /** The monster that summoned this one (культист: max summons per figure). */
   summonerId?: FigureId;
+  /** The room the monster appeared in; set only where the room drops a story item. */
+  room?: string;
+  /** Boss phase (Тінерук: 2 from ≤ 50% health for the rest of the scenario); absent = 1. */
+  bossPhase?: number;
 }
 
 export interface SummonState extends FigureBase {
@@ -135,6 +142,9 @@ export interface Tile {
   coins?: number;
   chest?: string;
   object?: { id: string; kind: string; state?: string };
+  /** Story items lying on the hex (a key dropped by a monster, a carried item dropped by an
+   *  exhausted hero); picked up like loot. */
+  questItems?: string[];
 }
 
 export interface BoardState {
@@ -184,7 +194,9 @@ export type Pending =
   | { kind: 'endOfRound'; heroIds: FigureId[] } // short rest decisions
   | { kind: 'longRestLoss'; heroId: FigureId }
   | { kind: 'shortRestReroll'; heroId: FigureId; lostCard: CardId }
-  | { kind: 'chooseHandBeforeScenario'; heroIds: FigureId[] };
+  | { kind: 'chooseHandBeforeScenario'; heroIds: FigureId[] }
+  /** Тінерук «Згасання»: the hero loses 1 random discarded card or takes `damage`. */
+  | { kind: 'fadeOut'; heroId: FigureId; damage: number; sourceId: FigureId };
 
 export interface HalfInProgress {
   heroId: FigureId;
@@ -270,7 +282,9 @@ export type EngineTask =
   | { t: 'endRound' }
   /** `heroIds` = heroes still to decide; absent until the offer is made. */
   | { t: 'shortRests'; heroIds?: FigureId[] }
-  | { t: 'finishRound' };
+  | { t: 'finishRound' }
+  /** Тінерук «Згасання»: `heroIds` = heroes still to choose; absent until it starts. */
+  | { t: 'fadeOut'; sourceId: FigureId; damage: number; heroIds?: FigureId[] };
 
 // ─── Actions ────────────────────────────────────────────────────────────────
 
@@ -304,6 +318,11 @@ export type Action =
   | { type: 'reviveAlly'; heroId: FigureId; cardId: CardId; half: 'top' | 'bottom'; targetId: FigureId }
   /** Uses a carried item during the hero's own turn; an attack or move bonus applies to the pending step. */
   | { type: 'useItem'; heroId: FigureId; itemId: string }
+  /** Spends the top or bottom action of a selected card on a scenario object next to the hero
+   *  (s3: top action lowers the sluice lever; s5: bottom action lights a brazier). */
+  | { type: 'interact'; heroId: FigureId; cardId: CardId; half: 'top' | 'bottom'; objectId: string }
+  /** Answer to Тінерук's «Згасання». */
+  | { type: 'fadeOut'; heroId: FigureId; choice: 'loseCard' | 'damage' }
   | { type: 'undo' };
 
 // ─── Events ────────────────────────────────────────────────────────────────
@@ -346,7 +365,7 @@ export type GameEvent =
   | { type: 'heroRevived'; heroId: FigureId; byId: FigureId }
   | { type: 'momentumGained'; heroId: FigureId; charges: number }
   | { type: 'surgeUsed'; heroId: FigureId }
-  | { type: 'looted'; heroId: FigureId; coins: number; chest?: string }
+  | { type: 'looted'; heroId: FigureId; coins: number; chest?: string; questItems?: string[] }
   | { type: 'trapTriggered'; figureId: FigureId; damage: number }
   | { type: 'cardMoved'; heroId: FigureId; cardId: CardId; to: 'hand' | 'discard' | 'lost' | 'active' }
   | { type: 'rested'; heroId: FigureId; kind: 'short' | 'long'; lost: CardId }
@@ -360,7 +379,14 @@ export type GameEvent =
   | { type: 'roundEnded'; round: number }
   | { type: 'itemUsed'; heroId: FigureId; itemId: string; to: 'spent' | 'lost' }
   | { type: 'itemsRefreshed'; heroId: FigureId; itemIds: string[] }
-  | { type: 'undone' };
+  | { type: 'undone' }
+  /** A scenario object changed state (lever `down`, brazier `lit` / `unlit`); `byId` = who did it. */
+  | { type: 'objectChanged'; objectId: string; hex: Hex; state: string; byId?: FigureId }
+  /** A story item fell on a hex: dropped by the last monster of a room, or by an exhausted carrier. */
+  | { type: 'questItemDropped'; item: string; hex: Hex; byId: FigureId }
+  | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
+  /** Тінерук «Згасання»: the hero lost a random discarded card (`lost`) or took the damage. */
+  | { type: 'fadeOutResolved'; heroId: FigureId; lost?: CardId };
 
 // ─── Engine API (implemented in engine.ts) ─────────────────────────────────
 

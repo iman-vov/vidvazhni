@@ -11,6 +11,7 @@ import { reachableHexes } from './geometry';
 import { areAdjacent, hexesInRadius, neighbors, type Hex } from './hex';
 import { itemDef, itemEffect } from './items';
 import { behaviourCard, monsterInitiative, typesOnBoard } from './round';
+import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
 import { availableCards } from './setup';
 import type { Action, CardId, Figure, FigureId, GameEvent, GameState, HeroState, StepChoice } from './state';
 import { figureSteps } from './turn';
@@ -57,6 +58,12 @@ function candidateActions(state: GameState, content: Content): Action[] {
             out.push({ type: 'startHalf', heroId: h.id, cardId, half, basic: true });
           }
         }
+        for (const o of boardObjects(state)) {
+          if (!areAdjacent(o.hex, h.hex)) continue;
+          for (const cardId of h.selection.cards) {
+            for (const half of ['top', 'bottom'] as const) out.push({ type: 'interact', heroId: h.id, cardId, half, objectId: o.tile.object.id });
+          }
+        }
         if (state.variants.reviveAlly) {
           for (const t of Object.values(state.figures)) {
             if (t.kind !== 'hero' || !t.downed || t.revived || !areAdjacent(t.hex, h.hex)) continue;
@@ -98,6 +105,10 @@ function candidateActions(state: GameState, content: Content): Action[] {
       break;
     case 'longRestLoss':
       for (const cardId of hero(p.heroId).discard) out.push({ type: 'longRestLoss', heroId: p.heroId, cardId });
+      break;
+    case 'fadeOut':
+      out.push({ type: 'fadeOut', heroId: p.heroId, choice: 'loseCard' });
+      out.push({ type: 'fadeOut', heroId: p.heroId, choice: 'damage' });
       break;
   }
   if (state.undoPoint) out.push({ type: 'undo' });
@@ -260,7 +271,7 @@ export function previewAttack(
     value,
     shield,
     pierce: spec.pierce,
-    damage: Math.max(0, value - Math.max(0, shield - spec.pierce)),
+    damage: adjustDamage(ctx, target, Math.max(0, value - Math.max(0, shield - spec.pierce))),
     advantage: spec.advantage,
     disadvantage: spec.disadvantage,
   };
@@ -499,4 +510,29 @@ export function attackPrompts(state: GameState, content: Content, heroId: Figure
     out.push({ ...item, value: before.value, boosted: after.value, advantage: after.advantage && !after.disadvantage });
   }
   return out;
+}
+
+// ─── Scenarios ─────────────────────────────────────────────────────────────
+
+export interface ScenarioReward {
+  goldEach: number;
+  /** Items the party gets once (s2: one Зілля лікування for the whole party, not one each). */
+  partyItems: string[];
+  unlock: string[];
+}
+
+export function scenarioReward(content: Content, scenarioId: string): ScenarioReward | null {
+  const reward = content.scenarios[scenarioId]?.reward;
+  if (!reward) return null;
+  return { goldEach: reward.goldEach, partyItems: [...(reward.items ?? [])], unlock: [...(reward.unlock ?? [])] };
+}
+
+/** A closed door that needs a key nobody in the party holds (s4: the upper tier). */
+export function isDoorLocked(state: GameState, hex: Hex): boolean {
+  return doorLocked(state, state.board.tiles[`${hex[0]},${hex[1]}`]);
+}
+
+/** Scenario objects on the board (lever, braziers, runes, millstones) with their state. */
+export function scenarioObjects(state: GameState): { id: string; kind: string; state?: string; hex: Hex }[] {
+  return boardObjects(state).map((o) => ({ ...o.tile.object, hex: o.hex }));
 }

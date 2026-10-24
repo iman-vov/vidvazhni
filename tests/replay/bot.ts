@@ -1,19 +1,60 @@
 // A simple greedy bot for replay tests: every choice comes from `legalActions`; a half is chosen
 // by playing it out greedily and scoring the result. With the fork variants it also weighs a
 // Порив («Наснага», played out the same way) and raising a downed ally («Підняти друга»).
+// Scenario goals steer where the acting hero heads: monsters, exits, keys, chests, braziers.
 
 import type { Content } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
-import { distance, parseHexKey } from '../../src/rules/hex';
-import { legalActionResults, legalActions } from '../../src/rules/queries';
+import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
+import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
 
 function hero(s: GameState, id: string): HeroState {
   return s.figures[id] as HeroState;
 }
 
+function closedDoors(s: GameState): Hex[] {
+  return Object.entries(s.board.tiles)
+    .filter(([, t]) => t.door && !t.door.open)
+    .map(([k]) => parseHexKey(k))
+    .filter((hex) => !isDoorLocked(s, hex));
+}
+
+function tilesWith(s: GameState, has: (t: GameState['board']['tiles'][string]) => boolean): Hex[] {
+  return Object.entries(s.board.tiles)
+    .filter(([, t]) => has(t))
+    .map(([k]) => parseHexKey(k));
+}
+
+/** Where the acting hero should head, by the scenario goal; null = no goal-specific target. */
+function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | null {
+  const goal = content.scenarios[s.scenarioId]?.goal;
+  const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster').map((f) => f.hex);
+  const unlit = scenarioObjects(s).filter((o) => o.kind === 'brazier' && o.state === 'unlit').map((o) => o.hex);
+  switch (goal?.type) {
+    case 'reachExit': {
+      // Clear the way first, then run for the exit (or the next door).
+      if (monsters.length > 0) return null;
+      const exits = goal.hexes.filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
+      return exits.length > 0 ? exits : closedDoors(s);
+    }
+    case 'carryItem': {
+      const carriers = Object.values(s.figures).filter(
+        (f): f is HeroState => f.kind === 'hero' && !f.exhausted && !!f.questItems?.includes(goal.item),
+      );
+      if (carriers.some((c) => c.id === me.id)) return goal.to;
+      if (carriers.length > 0 || monsters.length > 0) return null;
+      const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
+      return items.length > 0 ? items : null;
+    }
+    default:
+      // Light the braziers first (s5); otherwise the plain «nearest monster, then doors» pull.
+      return unlit.length > 0 && monsters.length > 0 ? unlit : null;
+  }
+}
+
 /** Higher is better for the party; `heroId` adds the acting hero's position. */
-export function score(s: GameState, heroId?: string): number {
+export function score(s: GameState, heroId?: string, content?: Content): number {
   if (s.phase === 'won') return 1e6;
   if (s.phase === 'lost') return -1e6;
   let v = 0;
@@ -25,8 +66,21 @@ export function score(s: GameState, heroId?: string): number {
     v += f.exhausted ? -200 : f.downed ? -120 : 2 * f.hp;
     v -= 2 * f.lost.length;
   }
+  for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit')) v += 20;
+  const goal = content?.scenarios[s.scenarioId]?.goal;
+  if (goal?.type === 'carryItem') {
+    for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted) v += 30 * (f.questItems?.length ?? 0);
+  }
+  if (goal?.type === 'reachExit') {
+    for (const f of Object.values(s.figures)) {
+      if (f.kind === 'hero' && !f.exhausted && goal.hexes.some((x) => distance(x, f.hex) === 0)) v += 25;
+    }
+  }
   const me = heroId ? hero(s, heroId) : undefined;
-  if (me && !me.exhausted) {
+  const targets = me && content ? goalTargets(s, content, me) : null;
+  if (me && !me.exhausted && targets && targets.length > 0) {
+    v -= 3 * Math.min(...targets.map((x) => distance(x, me.hex)));
+  } else if (me && !me.exhausted) {
     if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
     else {
       const doors = Object.entries(s.board.tiles)
@@ -65,7 +119,7 @@ function bestStep(s: GameState, content: Content, heroId: string): Action {
     let t: GameState | null = state;
     while (t?.pending?.kind === 'avoidDamage') t = after(t, avoidOrTake(t), content);
     if (!t) continue;
-    const v = score(t, heroId) + (a.type === 'skipStep' ? -0.5 : 0);
+    const v = score(t, heroId, content) + (a.type === 'skipStep' ? -0.5 : 0);
     if (v > bestScore) {
       bestScore = v;
       best = a;
@@ -115,10 +169,11 @@ export function chooseAction(s: GameState, content: Content): Action {
     }
     case 'heroTurn': {
       let best: Action = { type: 'endTurn', heroId: p.heroId };
-      let bestScore = score(s, p.heroId) - 0.25;
+      let bestScore = score(s, p.heroId, content) - 0.25;
       for (const { action: a, state: t } of legalActionResults(s, content)) {
-        if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly') continue;
-        const v = score(a.type === 'reviveAlly' ? t : finishHalf(t, content, p.heroId), p.heroId) - (a.type === 'startHalf' && a.basic ? 0.1 : 0);
+        if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly' && a.type !== 'interact') continue;
+        const instant = a.type === 'reviveAlly' || a.type === 'interact';
+        const v = score(instant ? t : finishHalf(t, content, p.heroId), p.heroId, content) - (a.type === 'startHalf' && a.basic ? 0.1 : 0);
         if (v > bestScore) {
           bestScore = v;
           best = a;
@@ -136,6 +191,10 @@ export function chooseAction(s: GameState, content: Content): Action {
       return { type: 'shortRestReroll', heroId: p.heroId, reroll: false };
     case 'longRestLoss':
       return { type: 'longRestLoss', heroId: p.heroId, cardId: hero(s, p.heroId).discard[0] as string };
+    case 'fadeOut': {
+      const h = hero(s, p.heroId);
+      return { type: 'fadeOut', heroId: h.id, choice: h.hp > p.damage + 3 ? 'damage' : 'loseCard' };
+    }
     default: {
       const first = legalActions(s, content)[0];
       if (!first) throw new Error(`bot: no legal action for ${p.kind}`);

@@ -3,6 +3,7 @@
 import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
+import { adjustDamage, checkBossPhase, onHeroExhausted, onMonsterDied } from './scenarioRules';
 import type { CardId, EngineTask, Figure, HeroState } from './state';
 import type { Variants } from './variants';
 
@@ -32,16 +33,18 @@ export function canAvoidDamage(h: HeroState): boolean {
  *  (the task then stays at the front of the queue). */
 export function runDamage(ctx: Ctx, task: DamageTask): boolean {
   const target = ctx.s.figures[task.targetId];
-  if (!isPresent(target) || task.amount <= 0) {
+  // Scenario rules may reduce the damage (s5: Тінерук while the braziers are not all lit).
+  const amount = isPresent(target) ? adjustDamage(ctx, target, task.amount) : 0;
+  if (!isPresent(target) || amount <= 0) {
     if (isPresent(target)) applyConditions(ctx, target, task.conditions);
     return true;
   }
   if (target.kind === 'hero' && task.avoidable && canAvoidDamage(target)) {
     // Sources are a figure id, 'trap', 'hazard' or 'condition' (wound).
-    ctx.s.pending = { kind: 'avoidDamage', heroId: target.id, amount: task.amount, source: task.source };
+    ctx.s.pending = { kind: 'avoidDamage', heroId: target.id, amount, source: task.source };
     return false;
   }
-  takeDamage(ctx, target, task.amount, task.source);
+  takeDamage(ctx, target, amount, task.source);
   if (isPresent(target)) applyConditions(ctx, target, task.conditions);
   return true;
 }
@@ -88,7 +91,10 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
   const dealt = Math.min(amount, f.hp);
   f.hp -= dealt;
   emit(ctx, { type: 'damaged', figureId: f.id, amount: dealt, source });
-  if (f.hp > 0) return;
+  if (f.hp > 0) {
+    if (f.kind === 'monster') checkBossPhase(ctx, f);
+    return;
+  }
   if (f.kind === 'hero') heroAtZero(ctx, f);
   else killFigure(ctx, f);
 }
@@ -109,6 +115,7 @@ export function killFigure(ctx: Ctx, f: Figure): void {
   if (f.kind === 'hero') return exhaust(ctx, f, 'damage');
   delete ctx.s.figures[f.id];
   emit(ctx, { type: 'figureDied', figureId: f.id });
+  if (f.kind === 'monster') onMonsterDied(ctx, f);
   if (f.kind === 'summon') {
     // The persistent card that keeps the summon goes to the lost pile.
     const owner = ctx.s.figures[f.ownerId];
@@ -132,6 +139,7 @@ export function exhaust(ctx: Ctx, h: HeroState, reason: 'damage' | 'cards'): voi
   h.hp = 0;
   h.provokeRadius = null;
   emit(ctx, { type: 'heroExhausted', heroId: h.id, reason });
+  onHeroExhausted(ctx, h);
   for (const f of Object.values(ctx.s.figures)) {
     if (f.kind === 'summon' && f.ownerId === h.id) {
       delete ctx.s.figures[f.id];

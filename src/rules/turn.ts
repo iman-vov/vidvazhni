@@ -15,7 +15,9 @@ import { canConsume, consume, endTurnInfusions } from './elements';
 import { runShortRests } from './rest';
 import { behaviourCard, discardSelection, endRound, finishRound, nextTurn } from './round';
 import { monstersOfType } from './setup';
+import { applyInteraction, interactionFor, onboardingSteps, onFigureTurnEnd } from './scenarioRules';
 import { LOSS_SPECIALS } from './special';
+import { runFadeOut } from './special/fadeOut';
 import { distance } from './hex';
 import type { CardId, EngineTask, Figure, GameState, HalfInProgress, HeroState, MonsterState, StepChoice } from './state';
 import { MOMENTUM_MAX, REVIVE_HP } from './variants';
@@ -101,6 +103,8 @@ function runTask(ctx: Ctx, task: EngineTask): boolean {
     case 'finishRound':
       finishRound(ctx);
       return true;
+    case 'fadeOut':
+      return runFadeOut(ctx, task);
   }
 }
 
@@ -220,6 +224,25 @@ export function reviveAlly(ctx: Ctx, heroId: string, cardId: CardId, half: 'top'
   return null;
 }
 
+/** Spends the top or bottom action of a selected card on a scenario object next to the hero (s3
+ *  lever: top; s5 brazier: bottom). The card goes to the discard, or the lost pile for a loss half. */
+export function interact(ctx: Ctx, heroId: string, cardId: CardId, half: 'top' | 'bottom', objectId: string): string | null {
+  const s = ctx.s;
+  if (s.pending?.kind !== 'heroTurn' || s.pending.heroId !== heroId || s.half) return 'not this hero’s turn';
+  const h = hero(s, heroId);
+  if (h.conditions.stun) return 'stunned: end the turn';
+  if (h.selection?.kind !== 'cards' || !h.selection.cards.includes(cardId)) return 'card not selected';
+  if (h.playedThisTurn.some((x) => x.cardId === cardId)) return 'card already played';
+  if (h.playedThisTurn.some((x) => x.half === half)) return `${half} action already played`;
+  const found = interactionFor(ctx, h, objectId, half);
+  if (typeof found === 'string') return found;
+  s.undoPoint = undoSnapshot(s);
+  h.playedThisTurn.push({ cardId, half });
+  placeCard(ctx, h, cardId, cardLoss(ctx, h, cardId, half) ? 'lost' : 'discard');
+  applyInteraction(ctx, h, found);
+  return null;
+}
+
 function enterStep(ctx: Ctx): void {
   const half = ctx.s.half;
   if (!half) return;
@@ -333,6 +356,7 @@ function endFigureTurn(ctx: Ctx, figureId: string): void {
   if (f && isPresent(f)) {
     if (f.kind === 'hero') lootHex(ctx, f, f.hex);
     expireConditions(ctx, f);
+    onFigureTurnEnd(ctx, f);
   }
   endTurnInfusions(ctx);
   emit(ctx, { type: 'turnEnded', figureId });
@@ -370,7 +394,7 @@ export function figureSteps(ctx: Ctx, f: Figure): Step[] {
   } else if (f.kind === 'monster') {
     const current = ctx.s.behaviourDecks[f.typeId]?.current;
     if (!current) return [];
-    steps = absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current)));
+    steps = onboardingSteps(ctx, f, absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current))));
   } else {
     return [];
   }
@@ -409,7 +433,10 @@ function absoluteSteps(ctx: Ctx, m: MonsterState, steps: Step[]): Step[] {
   return steps.map((st): Step => {
     if (st.type === 'move') return { ...st, value: Math.max(0, stats.move + st.value), ...(stats.flying ? { fly: true } : {}) };
     if (st.type === 'attack') {
-      const range = stats.range !== undefined ? stats.range + (st.range ?? 0) : st.range;
+      // Areas drawn from the monster itself (arc, line, all adjacent) and «по всіх сусідніх» are
+      // melee: the monster's base range does not make them ranged (Тінерук 63: a line of 4).
+      const fromSelf = !!st.targetAll || st.area?.shape === 'arc' || st.area?.shape === 'line' || st.area?.shape === 'allAdjacent';
+      const range = fromSelf ? st.range : stats.range !== undefined ? stats.range + (st.range ?? 0) : st.range;
       const conditions = [...new Set([...(st.conditions ?? []), ...(stats.onAttack ?? [])])];
       const out: Step = { ...st, value: Math.max(0, stats.attack + st.value) };
       if (range !== undefined) out.range = Math.max(1, range);

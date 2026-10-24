@@ -6,6 +6,8 @@ import type { Ctx } from '../effects/context';
 import type { EffectSource, StepResult } from '../effects/support';
 import type { Figure, StepChoice } from '../state';
 import { elementalSphere } from './elementalSphere';
+import { fadeOut } from './fadeOut';
+import { flood } from './flood';
 import { retreat } from './retreat';
 import { transmuteOrb } from './transmuteOrb';
 
@@ -17,6 +19,8 @@ export const SPECIALS: Record<string, SpecialFn> = {
   elementalSphere,
   transmuteOrb,
   retreat,
+  flood,
+  fadeOut,
 };
 
 /** Specials whose card always goes to the lost pile, whatever the half says. */

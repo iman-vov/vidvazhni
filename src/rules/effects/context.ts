@@ -140,7 +140,9 @@ export function monsterStats(ctx: { s: GameState; c: Content }, m: MonsterState)
   if (m.rank === 'boss') {
     const boss = ctx.c.bosses[m.typeId];
     if (!boss) throw new Error(`unknown boss ${m.typeId}`);
-    const stats: MonsterStats = { hp: m.maxHp, move: boss.move, attack: boss.attack };
+    // «Друга фаза» (Тінерук): Атака +1 for the rest of the scenario.
+    const phaseBonus = (m.bossPhase ?? 1) >= 2 && boss.special?.includes('secondPhase') ? 1 : 0;
+    const stats: MonsterStats = { hp: m.maxHp, move: boss.move, attack: boss.attack + phaseBonus };
     if (boss.range !== undefined) stats.range = boss.range;
     if (boss.shield !== undefined) stats.shield = boss.shield;
     return stats;

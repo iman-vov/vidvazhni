@@ -8,9 +8,10 @@ import { elementIds, infuse } from '../elements';
 import { hasLineOfSight } from '../geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from '../hex';
 import { addToDeck } from '../modifiers';
+import { chestQuestItem, teleportHex } from '../scenarioRules';
 import { spawnMonster } from '../setup';
 import type { Figure, HeroState, ShieldEffect, StepChoice, SummonState } from '../state';
-import { alliesOf, areEnemies as areEnemiesOf, emit, enemiesOf, isFreeHex, isPresent, tileAt, wallBetween, type Ctx } from './context';
+import { alliesOf, areEnemies as areEnemiesOf, emit, enemiesOf, isFreeHex, isPresent, monsterStats, tileAt, wallBetween, type Ctx } from './context';
 
 export type Apply = () => void;
 export type StepResult = string | Apply;
@@ -198,17 +199,28 @@ export function performInfuse(ctx: Ctx, f: Figure, step: S<'infuse'>, choice: St
 
 // ─── Loot ──────────────────────────────────────────────────────────────────
 
-/** Picks up coins and a chest from one hex. */
+/** Picks up coins, a chest (and the story item in it) and story items lying on one hex. */
 export function lootHex(ctx: Ctx, h: HeroState, hex: Hex): void {
   const tile = tileAt(ctx.s, hex);
-  if (!tile || (!tile.coins && !tile.chest)) return;
+  if (!tile || (!tile.coins && !tile.chest && !tile.questItems?.length)) return;
   const coins = tile.coins ?? 0;
   const chest = tile.chest;
+  const items = [...(tile.questItems ?? [])];
+  const inChest = chest ? chestQuestItem(ctx, chest) : undefined;
+  if (inChest) items.unshift(inChest);
   h.coins += coins;
   delete tile.coins;
   delete tile.chest;
+  delete tile.questItems;
   if (chest) (h.chests ??= []).push(chest);
-  emit(ctx, chest ? { type: 'looted', heroId: h.id, coins, chest } : { type: 'looted', heroId: h.id, coins });
+  if (items.length > 0) (h.questItems ??= []).push(...items);
+  emit(ctx, {
+    type: 'looted',
+    heroId: h.id,
+    coins,
+    ...(chest ? { chest } : {}),
+    ...(items.length > 0 ? { questItems: items } : {}),
+  });
 }
 
 /** «Лут N»: every coin and chest within N hexes. */
@@ -286,7 +298,9 @@ export function performTrap(ctx: Ctx, f: Figure, step: S<'trap'>, choice: StepCh
 }
 
 export function performTeleport(ctx: Ctx, f: Figure, step: S<'teleport'>, choice: StepChoice): StepResult {
-  const hex = choice.hex;
+  // Monsters (Тінерук) pick their hex deterministically.
+  const hex = choice.hex ?? (f.kind === 'monster' ? teleportHex(ctx, f, step.range, monsterStats(ctx, f).range ?? 1) : undefined);
+  if (f.kind === 'monster' && hex && hex[0] === f.hex[0] && hex[1] === f.hex[1]) return () => {};
   if (!hex || distance(hex, f.hex) > step.range || !isFreeHex(ctx.s, hex)) return 'teleport needs a free hex in range';
   return () => {
     f.hex = [hex[0], hex[1]];

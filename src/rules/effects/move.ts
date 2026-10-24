@@ -5,6 +5,7 @@ import { validatePath } from '../geometry';
 import { DIRECTIONS, add, areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { passiveItemValue } from '../items';
 import { addNewGroupsToOrder } from '../round';
+import { doorLocked } from '../scenarioRules';
 import { revealRoom } from '../setup';
 import type { EngineTask, Figure, FigureId, StepChoice } from '../state';
 import { emit, hazardDamage, isFreeHex, isPresent, schedule, tileAt, wallBetween, type Ctx } from './context';
@@ -27,6 +28,7 @@ export function performMove(ctx: Ctx, f: Figure, step: S<'move'>, choice: StepCh
   if (!result) return 'illegal path';
   const doorAt = path.findIndex((h) => tileAt(ctx.s, h)?.door?.open === false);
   if (doorAt >= 0 && doorAt !== path.length - 1) return 'a closed door ends the move';
+  if (doorAt >= 0 && doorLocked(ctx.s, tileAt(ctx.s, path[doorAt] as Hex))) return 'the door is locked';
   if (step.straightLine && !isStraightLine(f.hex, path)) return 'move must be in a straight line';
   return () =>
     schedule(ctx, {

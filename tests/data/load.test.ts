@@ -15,7 +15,7 @@ describe('loadContent', () => {
     expect(Object.keys(content.decks).sort()).toEqual(
       ['archer', 'boss.miller', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
     );
-    expect(Object.keys(content.scenarios)).toEqual(['s1']);
+    expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5']);
     expect(Object.keys(content.items)).toHaveLength(12);
     expect(Object.keys(content.battleGoals)).toHaveLength(8);
     expect(Object.keys(content.perks)).toHaveLength(6);

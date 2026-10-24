@@ -10,6 +10,7 @@ import { applyModifier, drawForAttack } from '../modifiers';
 import { findCard } from '../damage';
 import { passiveItemValue } from '../items';
 import { moveActiveOut } from '../round';
+import { scenarioShield } from '../scenarioRules';
 import { FOLLOW_UP_BONUS } from '../variants';
 import type { AttackSpec, EngineTask, Figure, HeroState, ModifierDeck, StepChoice } from '../state';
 import { emit, enemiesOf, figureAt, isPresent, schedule, wallBetween, type Ctx } from './context';
@@ -230,9 +231,9 @@ function attackedGrants(ctx: Ctx, f: Figure): { cardId?: string; surge?: number;
   return out;
 }
 
-/** Total shield of a figure against one attack. */
+/** Total shield of a figure against one attack (with the scenario's: s4 runes). */
 export function shieldOf(f: Figure, ctx?: Ctx): number {
-  const grants = ctx ? attackedGrants(ctx, f).reduce((sum, g) => sum + g.shield, 0) : 0;
+  const grants = ctx ? attackedGrants(ctx, f).reduce((sum, g) => sum + g.shield, 0) + scenarioShield(ctx, f) : 0;
   return grants + f.shields.reduce((sum, x) => sum + x.value, 0);
 }
 

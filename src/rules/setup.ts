@@ -148,7 +148,12 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     t.coins = (t.coins ?? 0) + 1;
   }
   for (const c of room.chests ?? []) tile(c.hex).chest = c.id;
-  for (const o of room.objects ?? []) tile(o.hex).object = { id: o.id, kind: o.kind };
+  for (const o of room.objects ?? []) {
+    const t = tile(o.hex);
+    t.object = { id: o.id, kind: o.kind, ...(o.state !== undefined ? { state: o.state } : {}) };
+    // Lever, brazier, millstones: impassable like an obstacle; a hero acts from a neighbouring hex.
+    if (o.blocks) t.obstacle = true;
+  }
   for (const d of room.doors ?? []) {
     const t = tile(d.hex);
     if (!t.door) {
@@ -168,7 +173,10 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
   const key = spawnKey(Object.keys(s.figures).filter((id) => id.startsWith('hero:')).length);
   for (const sp of room.spawns ?? []) {
     const rank = sp.by[key];
-    if (rank) spawnMonster(ctx, sp.monster, rank, sp.hex);
+    if (!rank) continue;
+    const m = spawnMonster(ctx, sp.monster, rank, sp.hex);
+    // Rooms whose last monster of a type drops a story item remember where the monster came from.
+    if (room.drops?.some((d) => d.monster === sp.monster)) m.room = roomId;
   }
 }
 

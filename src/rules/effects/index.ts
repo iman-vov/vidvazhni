@@ -40,6 +40,7 @@ export function withConsumeBonus(step: Step, bonus: ConsumeBonus): { step: Step;
     if (bonus.replaceConditions) s.conditions = [...bonus.replaceConditions];
     if (bonus.conditions) s.conditions = [...new Set([...(s.conditions ?? []), ...bonus.conditions])];
     if (bonus.area) s.area = bonus.area;
+    if (bonus.curse) s.curse = true;
   }
   if (s.type === 'push' && add.push) s.value += add.push;
   return { step: s, extraTargets: bonus.extraTarget ? 1 : 0 };

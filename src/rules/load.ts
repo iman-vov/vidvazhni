@@ -44,6 +44,10 @@ import guardDeck from '../../data/decks/guard.json';
 import meleeDeck from '../../data/decks/melee.json';
 
 import s1 from '../../data/scenarios/s1.json';
+import s2 from '../../data/scenarios/s2.json';
+import s3 from '../../data/scenarios/s3.json';
+import s4 from '../../data/scenarios/s4.json';
+import s5 from '../../data/scenarios/s5.json';
 
 import items from '../../data/items.json';
 import battleGoals from '../../data/battle-goals.json';
@@ -86,7 +90,7 @@ export function loadContent(): LoadedContent {
     decks: indexById<BehaviourDeck>([
       meleeDeck, guardDeck, archerDeck, casterDeck, ghostDeck, bossMillerDeck, bossShadowhandDeck,
     ]),
-    scenarios: indexById<ScenarioDef>([s1]),
+    scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5]),
     items: indexById<ItemDef>(items),
     battleGoals: indexById<BattleGoalDef>(battleGoals),
     perks: indexById<PerkDef>(perks),

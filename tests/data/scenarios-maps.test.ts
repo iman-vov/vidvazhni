@@ -46,9 +46,9 @@ describe('scenario files', () => {
       expect(formatScenario(s)).toBe(texts[id]);
     });
 
-  it('s1 is still the only scenario in loadContent(); s2–s5 wait for src/rules/load.ts', () => {
-    expect(Object.keys(base.scenarios)).toEqual(['s1']);
-    expect(base.scenarios['s1']).toEqual(scenarios['s1']);
+  it('loadContent() serves every scenario file as it is on disk', () => {
+    expect(Object.keys(base.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5']);
+    for (const id of Object.keys(scenarios)) expect(base.scenarios[id]).toEqual(scenarios[id]);
   });
 });
 
