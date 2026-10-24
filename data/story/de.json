@@ -1,0 +1,346 @@
+{
+  "lang": "de",
+  "scenarios": {
+    "s1": {
+      "intro": [
+        { "id": "s1.intro.1", "speaker": "narrator", "text": "Das Wirtshaus „Zur satten Gans“ schläft tief. Doch jede Nacht raschelt, klirrt und kichert es im Keller." },
+        { "id": "s1.intro.2", "speaker": "marta", "text": "Meine Löffel sind weg. Meine Knöpfe auch. Und meine beste Pfanne! Jemand klaut alles, was glänzt." },
+        { "id": "s1.intro.3", "speaker": "marta", "text": "Geht runter und schafft Ordnung. Aber lasst die Fässer heil. Da ist mein Kwas drin." },
+        {
+          "id": "s1.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Na, gehen wir runter?",
+          "variants": {
+            "warden": "Bleibt hinter mir. Ich gehe vor, wie immer.",
+            "wind-archer": "Leise. Ich höre kleine Pfoten. Sehr viele kleine Pfoten.",
+            "herbalist": "Ratten? Gut, dass ich Salbe gegen Bisse dabeihabe.",
+            "rogue": "Keller sind mein Lieblingsort in der Stadt. Gleich nach den Dächern.",
+            "elementalist": "In meinem Buch steht, Kobolde fürchten Funken. Das probieren wir aus!",
+            "tinker": "Bolt, schnüffle los. Aber beiß nichts Rostiges."
+          }
+        },
+        { "id": "s1.intro.5", "speaker": "marta", "text": "Dann los. Ich setze solange Teewasser auf." }
+      ],
+      "beats": [
+        {
+          "id": "s1.first-rat",
+          "trigger": { "on": "monsterKilled", "arg": "cellar-rat" },
+          "lines": [
+            { "id": "s1.first-rat.1", "speaker": "narrator", "text": "Die Ratte quiekte, ließ den Löffel fallen und huschte in eine Ritze. Der Nebel verflog von ihr wie Rauch." }
+          ]
+        },
+        {
+          "id": "s1.wine-cellar",
+          "trigger": { "on": "roomRevealed", "arg": "s1.wine-cellar" },
+          "lines": [
+            { "id": "s1.wine-cellar.1", "speaker": "narrator", "text": "Im Weinkeller sitzt ein Kobold auf einer Truhe. Auf dem Kopf trägt er Frau Martas Pfanne, wie einen Helm." },
+            { "id": "s1.wine-cellar.2", "speaker": "rogue", "text": "Eine Pfanne als Helm? Mutig. Aber ich nehme sie zurück." }
+          ]
+        },
+        {
+          "id": "s1.upstairs",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s1.upstairs.1", "speaker": "marta", "text": "Hallo, wie geht es euch da unten? Ich höre es poltern! Hoffentlich ist das nicht mein Kwas." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s1.win.1", "speaker": "narrator", "text": "In der Truhe, unter einem Haufen gestohlener Löffel, beginnt etwas warm zu leuchten." },
+          {
+            "id": "s1.win.2", "speaker": "hero", "pick": "random",
+            "text": "Es leuchtet!",
+            "variants": {
+              "warden": "Oha! Es leuchtet wie eine Laterne auf dem Jahrmarkt.",
+              "wind-archer": "So warm. Als hielte ich ein Stück Sonne in den Händen.",
+              "herbalist": "Es riecht nach Honig und Licht. Ein gutes Zeichen.",
+              "rogue": "Mein Fund! Na gut, unser Fund.",
+              "elementalist": "Unglaublich! Darf ich es halten? Ich bin ganz vorsichtig!",
+              "tinker": "Feine Arbeit. Wer hat dich nur so zerbrochen, du Armes?"
+            }
+          },
+          { "id": "s1.win.3", "speaker": "marta", "text": "Das ist ein Stück von unserer Laterne! Diese Nager haben es gehütet wie einen Schatz." },
+          { "id": "s1.win.4", "speaker": "marta", "text": "Ich wickle es in ein Tuch. Etwas sagt mir, das ist erst der Anfang." }
+        ],
+        "defeat": [
+          { "id": "s1.lose.1", "speaker": "marta", "text": "Hallo, ihr Mutherzen! Kommt aus dem Keller, bevor die Ratten auch noch eure Stiefel klauen." },
+          { "id": "s1.lose.2", "speaker": "marta", "text": "Stärkt euch, verbindet eure Wunden, und dann versuchen wir es noch einmal." }
+        ]
+      },
+      "epilogue": { "id": "s1.epilogue", "speaker": "marta", "text": "Die Löffel sind wieder da, die Pfanne auch. Sie hat jetzt nur ein paar kleine Zahnspuren." }
+    },
+
+    "s2": {
+      "intro": [
+        { "id": "s2.intro.1", "speaker": "narrator", "text": "Vor der Stadt beginnt der Dornwald. Der Nebel liegt tief, wie eine Katze auf dem Sprung." },
+        { "id": "s2.intro.2", "speaker": "marta", "text": "Der Förster hat ein Licht bei der alten Hütte gesehen. Genau so eins wie von unserem Laternenstück." },
+        { "id": "s2.intro.3", "speaker": "marta", "text": "Der Weg ist kurz, aber stachelig. Trödelt nicht, geht einfach zur Hütte." },
+        { "id": "s2.intro.4", "speaker": "narrator", "text": "Im Gebüsch blitzen gelbe Augen auf. Ein Paar, noch ein Paar, und noch eins." },
+        {
+          "id": "s2.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Da ist jemand!",
+          "variants": {
+            "warden": "Schilde hoch! Da draußen ist etwas!",
+            "wind-archer": "Bewegung im Gebüsch! Zwei. Nein, vier.",
+            "herbalist": "Vorsicht. Hier stimmt etwas nicht.",
+            "rogue": "Pst. Da ist jemand. Und der ist nicht besonders höflich.",
+            "elementalist": "Ich spüre Magie. Und sie gefällt mir nicht.",
+            "tinker": "Bolt knurrt. Dann ist Ärger nah."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s2.thorns",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s2.thorns.1", "speaker": "herbalist", "text": "Dornen stechen nicht aus Bosheit. Geht um die Büsche herum, dann lassen sie euch in Ruhe." }
+          ]
+        },
+        {
+          "id": "s2.ravine",
+          "trigger": { "on": "roomRevealed", "arg": "s2.ravine" },
+          "lines": [
+            { "id": "s2.ravine.1", "speaker": "narrator", "text": "Die Schlucht ist eng und dunkel. Zwischen den Steinen blitzt etwas Eisernes. Es sieht aus wie eine Falle." },
+            { "id": "s2.ravine.2", "speaker": "wind-archer", "text": "Ich bin in den Bergen bei den Wölfen aufgewachsen. Sie sind nicht böse. Sie haben sich nur im Nebel verirrt." }
+          ]
+        },
+        {
+          "id": "s2.first-wolf",
+          "trigger": { "on": "monsterKilled", "arg": "grey-wolf" },
+          "lines": [
+            { "id": "s2.first-wolf.1", "speaker": "narrator", "text": "Der Wolf schüttelte den Kopf, als wache er auf, und sprang ins Dickicht. Ohne den Nebel ist er wieder ein ganz gewöhnlicher grauer Wolf." }
+          ]
+        },
+        {
+          "id": "s2.lodge",
+          "trigger": { "on": "roomRevealed", "arg": "s2.lodge" },
+          "lines": [
+            { "id": "s2.lodge.1", "speaker": "narrator", "text": "Vor der Hütte steht ein Hüne mit schwarz-violettem Schal. Ein Räuber!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s2.win.1", "speaker": "narrator", "text": "Die Hütte war leer. Nur Asche vom Lagerfeuer, Stiefelspuren und ein Schal an einem Nagel." },
+          { "id": "s2.win.2", "speaker": "narrator", "text": "Auf dem Tisch lag eine Karte. Ein Kreuz markierte die alte Mühle am Sumpf." },
+          { "id": "s2.win.3", "speaker": "marta", "text": "Die Mühle? Da wohnt doch Müller Bruno, so ein guter Kerl. Was wollen Räuber von ihm?" }
+        ],
+        "defeat": [
+          { "id": "s2.lose.1", "speaker": "marta", "text": "Nicht alles auf einmal, ihr Mutherzen. Nicht mal die Wölfe finden den Pfad beim ersten Mal." },
+          { "id": "s2.lose.2", "speaker": "marta", "text": "Flickt eure Umhänge, ich gebe euch noch Salbe für die Kratzer." }
+        ]
+      },
+      "epilogue": { "id": "s2.epilogue", "speaker": "marta", "text": "Der Förster hat einen Korb Pilze geschickt. Er sagt, die Wölfe sind wieder friedlich und leise, so wie früher." }
+    },
+
+    "s3": {
+      "intro": [
+        { "id": "s3.intro.1", "speaker": "narrator", "text": "Der Fluss ist über die Ufer getreten, und die alte Mühle steht knietief im Wasser. Das Rad knarrt, obwohl es niemand dreht." },
+        { "id": "s3.intro.2", "speaker": "marta", "text": "Räuber bewachen den Hof. Und drinnen brummelt etwas. Etwas Großes und Nasses." },
+        { "id": "s3.intro.3", "speaker": "marta", "text": "Man sagt, an der Schleuse gibt es einen Hebel, der das Wasser ablässt. Findet ihn, dann wird es leichter." },
+        {
+          "id": "s3.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Wir müssen Bruno helfen.",
+          "variants": {
+            "warden": "Nasse Stiefel sind kein Grund umzukehren.",
+            "wind-archer": "Das Wasser schluckt unsere Schritte. Bleibt dicht beisammen.",
+            "herbalist": "Bruno hat mir immer Brezeln geschenkt. Wir müssen ihm helfen.",
+            "rogue": "Räuber in fremden Höfen? Unhöflich. Ich frage ja immer um Erlaubnis. Manchmal.",
+            "elementalist": "So viel Wasser! Schade, dass ich noch nicht gelernt habe, es zu trocknen.",
+            "tinker": "Ein Mühlrad ist eine Maschine. Und Maschinen rette ich gern."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s3.sluice",
+          "trigger": { "on": "roomRevealed", "arg": "s3.sluice" },
+          "lines": [
+            { "id": "s3.sluice.1", "speaker": "narrator", "text": "In der Schleuse blubbern Sumpfschleime. An der Wand steht ein alter Hebel, ganz mit Schlamm bedeckt." },
+            { "id": "s3.sluice.2", "speaker": "tinker", "text": "Der Hebel ist heil, nur verrostet. Einer von euch soll mal richtig daran ziehen!" }
+          ]
+        },
+        {
+          "id": "s3.miller",
+          "trigger": { "on": "doorOpened", "arg": "s3.mill-hall" },
+          "lines": [
+            { "id": "s3.miller.1", "speaker": "narrator", "text": "Das Rad knarrte und blieb stehen. Langsam steigt der Sumpfmüller aus dem Wasser." },
+            { "id": "s3.miller.2", "speaker": "miller", "text": "Wer wagt es, meine Mühle anzuhalten?! Seid ihr auch gekommen, um das Licht zu stehlen?" }
+          ]
+        },
+        {
+          "id": "s3.miller-half",
+          "trigger": { "on": "bossHalfHp", "arg": "bog-miller" },
+          "lines": [
+            { "id": "s3.miller-half.1", "speaker": "miller", "text": "Mein Kopf brummt wie ein Mühlstein. Wer seid ihr? Nein, geht weg! Der Nebel sagt, ihr seid Feinde!" },
+            {
+              "id": "s3.miller-half.2", "speaker": "hero", "pick": "random",
+              "text": "Bruno, wir sind Freunde! Halt durch!",
+              "variants": {
+                "warden": "Bruno, wir sind Freunde! Halt durch, wir holen dich raus.",
+                "wind-archer": "Er kämpft gegen den Nebel. Nur noch ein bisschen!",
+                "herbalist": "Bruno, ich bin es, die Kräuterfrau! Denk an meine Kräuter und deine Brezeln!",
+                "rogue": "Onkel Bruno, wach auf! Du bist ein guter Mann, das weiß ich.",
+                "elementalist": "Der Nebel hält ihn nur noch schwach! Das spüre ich!",
+                "tinker": "Gleich rutscht ihm der Schlamm vom Leib. Wie Rost von einem Zahnrad."
+              }
+            }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s3.win.1", "speaker": "narrator", "text": "Der Schlamm rutscht vom Müller ab, und er ist wieder er selbst: der müde, gute Bruno." },
+          { "id": "s3.win.2", "speaker": "miller", "text": "Oh, mein Kopf brummt wie ein Mühlstein. Wie lange habe ich geschlafen?" },
+          { "id": "s3.win.3", "speaker": "herbalist", "text": "Hier, Bruno, ein Schluck Minztee. In einer Stunde bist du wie neu." },
+          { "id": "s3.win.4", "speaker": "miller", "text": "Ich erinnere mich an einen großen Mann im Mantel aus Schatten. Auf seiner Brust hing eine Glaskugel, und darin war unser Licht." },
+          { "id": "s3.win.5", "speaker": "miller", "text": "Er nannte sich Schattenhand. Seine Leute schleppten Kisten zum alten Wachturm." }
+        ],
+        "defeat": [
+          { "id": "s3.lose.1", "speaker": "marta", "text": "Dieser nasse Riese ist immer noch unser Bruno, nur ganz durcheinander. Gebt nicht auf, er wartet auf euch." },
+          { "id": "s3.lose.2", "speaker": "marta", "text": "Trocknet eure Stiefel am Ofen, dann geht es zurück zur Mühle." }
+        ]
+      },
+      "epilogue": { "id": "s3.epilogue", "speaker": "marta", "text": "Bruno hat drei Schüsseln Suppe gegessen und ist gleich am Tisch eingeschlafen. Lasst ihn schlafen, er hat es verdient." }
+    },
+
+    "s4": {
+      "intro": [
+        { "id": "s4.intro.1", "speaker": "narrator", "text": "Im Turm über dem Pass brennen wieder Lichter. Aber dieses Licht ist kalt und violett." },
+        { "id": "s4.intro.2", "speaker": "marta", "text": "Bruno sagt, Schattenhands Kultisten haben dort das zweite Stück der Laterne versteckt." },
+        { "id": "s4.intro.3", "speaker": "marta", "text": "Die Tür zum oberen Stockwerk ist verschlossen. Einer der Kultisten trägt den Schlüssel. Sucht ihn." },
+        { "id": "s4.intro.4", "speaker": "narrator", "text": "Die Runen an den Wänden leuchten auf, eine nach der anderen. Steinerne Wächter öffnen die Augen." },
+        {
+          "id": "s4.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Sie sind aufgewacht!",
+          "variants": {
+            "warden": "Steinerne Wächter? Mal sehen, wer von uns besser wacht.",
+            "wind-archer": "Der Wind riecht nach Bergen. Fast wie zu Hause.",
+            "herbalist": "Diese Runen gefallen mir nicht. Bleibt weg von den violetten Platten.",
+            "rogue": "Ein Turm, eine verschlossene Tür und der Schlüssel in fremder Tasche. Ein perfekter Abend.",
+            "elementalist": "Düsterrunen! Die habe ich in einem verbotenen Buch gesehen. Na ja, fast nicht gelesen.",
+            "tinker": "Steinerne Wächter sind uralte Automaten. Bolt, nicht bellen, die sind nervös."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s4.barracks",
+          "trigger": { "on": "roomRevealed", "arg": "s4.barracks" },
+          "lines": [
+            { "id": "s4.barracks.1", "speaker": "narrator", "text": "In der Kaserne flüstern Düsterkultisten. Um sie herum leuchten Runenkreise auf dem Boden." },
+            { "id": "s4.barracks.2", "speaker": "elementalist", "text": "Diese Runen schützen die Kultisten. Lockt sie aus den Kreisen heraus!" }
+          ]
+        },
+        {
+          "id": "s4.sentinel",
+          "trigger": { "on": "monsterKilled", "arg": "stone-sentinel" },
+          "lines": [
+            { "id": "s4.sentinel.1", "speaker": "narrator", "text": "Der blaue Funke in den Augen des Wächters erlosch. Der Stein ist wieder nur Stein." },
+            { "id": "s4.sentinel.2", "speaker": "warden", "text": "Ruh dich aus, steinerner Freund. Deine Wache ist vorbei." }
+          ]
+        },
+        {
+          "id": "s4.upper-door",
+          "trigger": { "on": "doorOpened", "arg": "s4.upper-tier" },
+          "lines": [
+            { "id": "s4.upper-door.1", "speaker": "narrator", "text": "Das Schloss klickte. Ein Schatten huschte die Treppe hinauf. Oben wartet schon jemand." }
+          ]
+        },
+        {
+          "id": "s4.hurry",
+          "trigger": { "on": "round", "arg": 8 },
+          "lines": [
+            { "id": "s4.hurry.1", "speaker": "narrator", "text": "Die Schatten im Turm werden dichter. Zeit, das Licht zu holen und zum Tor zu laufen!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s4.win.1", "speaker": "narrator", "text": "Das zweite Stück der Laterne ist warm wie Brot frisch aus dem Ofen." },
+          { "id": "s4.win.2", "speaker": "narrator", "text": "Die beiden Stücke passen zusammen, als hätten sie immer aufeinander gewartet. Aber ohne ihr Herz kann die Laterne nicht leuchten." },
+          { "id": "s4.win.3", "speaker": "marta", "text": "Und dieser Schlüssel aus schwarzem Glas gehört zu einer Höhle unter den Grauen Bergen. Die Alten nennen sie das Düsterherz." },
+          { "id": "s4.win.4", "speaker": "wind-archer", "text": "Die Grauen Berge sind meine Heimat. Ich kenne den Weg." }
+        ],
+        "defeat": [
+          { "id": "s4.lose.1", "speaker": "marta", "text": "Der Turm ist hoch und die Treppe steil. Macht nichts. Beim nächsten Mal steigt ihr schneller hinauf." },
+          { "id": "s4.lose.2", "speaker": "marta", "text": "Nur merkt euch: Das Licht muss man nicht nur finden, sondern auch nach Hause tragen." }
+        ]
+      },
+      "epilogue": { "id": "s4.epilogue", "speaker": "marta", "text": "Morgen verabschiedet euch die ganze Stadt. Die Bäckerin knetet schon Brot für unterwegs." }
+    },
+
+    "s5": {
+      "intro": [
+        { "id": "s5.intro.1", "speaker": "narrator", "text": "Unter den Grauen Bergen, hinter einer Tür aus schwarzem Glas, verbirgt sich das Düsterherz." },
+        { "id": "s5.intro.2", "speaker": "marta", "text": "Schattenhand hält dort unser Licht fest. An den Wänden stehen erloschene Feuerschalen. Zündet sie an, dann kann sich der Schatten nicht mehr verstecken." },
+        { "id": "s5.intro.3", "speaker": "marta", "text": "Und kommt alle zurück. Ich zähle euch an der Tür." },
+        {
+          "id": "s5.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Holen wir unser Licht zurück.",
+          "variants": {
+            "warden": "Mein Schild war einmal die Tür unseres Rathauses. Heute beschützt er wieder Alba.",
+            "wind-archer": "Ich kenne diese Berge. So dunkel war es hier nie.",
+            "herbalist": "Ich habe alle meine Kräuter dabei. Sogar die, die nach Socken riechen.",
+            "rogue": "Das Licht einer ganzen Stadt stehlen? So etwas tue nicht einmal ich.",
+            "elementalist": "Feuer und Wind sind bei mir. Pass auf, Schattenhand!",
+            "tinker": "Bolt, gleich wird es dunkel. Bleib dicht bei mir."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s5.first-wraith",
+          "trigger": { "on": "monsterKilled", "arg": "shadow-wraith" },
+          "lines": [
+            { "id": "s5.first-wraith.1", "speaker": "narrator", "text": "Der Geist zerfloss wie Nebel in der Sonne. Im Tunnel wurde es ein wenig heller." }
+          ]
+        },
+        {
+          "id": "s5.heart",
+          "trigger": { "on": "doorOpened", "arg": "s5.heart" },
+          "lines": [
+            { "id": "s5.heart.1", "speaker": "shadowhand", "text": "Habt ihr mir noch etwas Licht mitgebracht? Wie freundlich." },
+            { "id": "s5.heart.2", "speaker": "shadowhand", "text": "Die Düsternis ist nicht böse, ihr Kleinen. Sie wartet nur, bis alle Lichter ausgehen." },
+            { "id": "s5.heart.3", "speaker": "narrator", "text": "An den Wänden stehen drei dunkle Feuerschalen. Solange sie nicht brennen, ist Schattenhand kaum zu fassen." }
+          ]
+        },
+        {
+          "id": "s5.crack",
+          "trigger": { "on": "bossHalfHp", "arg": "shadowhand" },
+          "lines": [
+            { "id": "s5.crack.1", "speaker": "narrator", "text": "Ein Riss läuft über die Glaskugel auf Schattenhands Brust. Goldene Strahlen dringen hindurch." },
+            { "id": "s5.crack.2", "speaker": "shadowhand", "text": "Schluss mit den Spielen! Jetzt nehme ich auch euer Licht!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s5.win.1", "speaker": "shadowhand", "text": "Nein! Nehmt diesen Glanz weg!" },
+          { "id": "s5.win.2", "speaker": "narrator", "text": "Die Kugel zerbarst, und das gestohlene Licht brach aus der Höhle hinaus in den Himmel." },
+          { "id": "s5.win.3", "speaker": "narrator", "text": "Schattenhand zerfiel zu einem Schwarm schwarzer Schmetterlinge, und sie flatterten davon, ins Dunkel." },
+          { "id": "s5.win.4", "speaker": "narrator", "text": "Über dem Rathaus leuchtete wieder die Schutzlaterne. Der Nebel zog sich bis an den Waldrand zurück." },
+          {
+            "id": "s5.win.5", "speaker": "hero", "pick": "random",
+            "text": "Wir haben es geschafft!",
+            "variants": {
+              "warden": "Na also. Niemand ist verletzt. Fast.",
+              "wind-archer": "Kein Pfeil zu viel.",
+              "herbalist": "Alle heil? Wunderbar.",
+              "rogue": "Leicht. Beim nächsten Mal bitte schwerer.",
+              "elementalist": "Habt ihr das gesehen? Habt ihr das Feuer gesehen?!",
+              "tinker": "Alles funktioniert. Sogar ich."
+            }
+          },
+          { "id": "s5.win.6", "speaker": "marta", "text": "Die Gilde der Mutherzen lebt wieder. Und eure Namen sticke ich selbst auf die Fahne." }
+        ],
+        "defeat": [
+          { "id": "s5.lose.1", "speaker": "marta", "text": "Hallo, ihr Mutherzen! Der Nebel bekommt euch nicht. Kommt zurück, wir versuchen es noch einmal." },
+          { "id": "s5.lose.2", "speaker": "marta", "text": "Schattenhand ist stark, aber die Feuerschalen sind stärker. Zündet alle drei an, dann kann er sich nicht verstecken." }
+        ]
+      },
+      "epilogue": { "id": "s5.epilogue", "speaker": "marta", "text": "Ruht euch aus. Man sagt, in den Grauen Bergen rumpelt es nachts." }
+    }
+  }
+}

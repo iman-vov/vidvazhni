@@ -1,0 +1,346 @@
+{
+  "lang": "en",
+  "scenarios": {
+    "s1": {
+      "intro": [
+        { "id": "s1.intro.1", "speaker": "narrator", "text": "The Fat Goose inn is fast asleep. But every night, strange sounds come from the cellar: rustling, clinking and a little giggle." },
+        { "id": "s1.intro.2", "speaker": "marta", "text": "My spoons are gone. So are my buttons, and my best frying pan! Somebody is taking everything that shines." },
+        { "id": "s1.intro.3", "speaker": "marta", "text": "Go down and sort it out. But don't smash the barrels. That's my kvass in there." },
+        {
+          "id": "s1.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Well, shall we go down?",
+          "variants": {
+            "warden": "Stay behind me. I go first, as always.",
+            "wind-archer": "Quiet. I hear tiny paws. Lots of tiny paws.",
+            "herbalist": "Rats? Good thing I packed my bite ointment.",
+            "rogue": "Cellars are my favorite part of town. After the rooftops.",
+            "elementalist": "My book says gremlins fear sparks. Let's find out!",
+            "tinker": "Bolt, sniff around. But don't bite anything rusty."
+          }
+        },
+        { "id": "s1.intro.5", "speaker": "marta", "text": "Off you go, then. I'll put the kettle on." }
+      ],
+      "beats": [
+        {
+          "id": "s1.first-rat",
+          "trigger": { "on": "monsterKilled", "arg": "cellar-rat" },
+          "lines": [
+            { "id": "s1.first-rat.1", "speaker": "narrator", "text": "The rat squeaked, dropped its spoon and dashed into a crack. The fog drifted off it like smoke." }
+          ]
+        },
+        {
+          "id": "s1.wine-cellar",
+          "trigger": { "on": "roomRevealed", "arg": "s1.wine-cellar" },
+          "lines": [
+            { "id": "s1.wine-cellar.1", "speaker": "narrator", "text": "In the wine cellar, a gremlin sits on a chest. On his head is Mistress Marta's frying pan, worn like a helmet." },
+            { "id": "s1.wine-cellar.2", "speaker": "rogue", "text": "A frying pan for a helmet? Bold. But I'm taking it back." }
+          ]
+        },
+        {
+          "id": "s1.upstairs",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s1.upstairs.1", "speaker": "marta", "text": "Hello down there! I hear banging! I hope that's not my kvass." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s1.win.1", "speaker": "narrator", "text": "Inside the chest, under a heap of stolen spoons, something began to glow warmly." },
+          {
+            "id": "s1.win.2", "speaker": "hero", "pick": "random",
+            "text": "It's glowing!",
+            "variants": {
+              "warden": "Wow! It glows like a lantern at the fair.",
+              "wind-archer": "So warm. Like holding a bit of sunshine.",
+              "herbalist": "It smells of honey and light. A good sign.",
+              "rogue": "My find! Well, our find.",
+              "elementalist": "Incredible! May I hold it? I'll be careful!",
+              "tinker": "Fine work. Who broke you, poor thing?"
+            }
+          },
+          { "id": "s1.win.3", "speaker": "marta", "text": "That's a piece of our Lantern! Those critters were hoarding it like treasure." },
+          { "id": "s1.win.4", "speaker": "marta", "text": "I'll wrap it in a scarf. Something tells me this is only the beginning." }
+        ],
+        "defeat": [
+          { "id": "s1.lose.1", "speaker": "marta", "text": "Hello, Bravehearts! Come up from the cellar before the rats take your boots too." },
+          { "id": "s1.lose.2", "speaker": "marta", "text": "Have a snack, patch yourselves up, and we'll try again." }
+        ]
+      },
+      "epilogue": { "id": "s1.epilogue", "speaker": "marta", "text": "The spoons are back, and so is the frying pan. It does have tiny tooth marks now." }
+    },
+
+    "s2": {
+      "intro": [
+        { "id": "s2.intro.1", "speaker": "narrator", "text": "Beyond the town begins Thornwood. The fog lies low here, like a cat sneaking up on a mouse." },
+        { "id": "s2.intro.2", "speaker": "marta", "text": "The forester saw a light near the old lodge. The same glow as our lantern piece." },
+        { "id": "s2.intro.3", "speaker": "marta", "text": "The path is short but prickly. Don't dawdle. Just head for the lodge." },
+        { "id": "s2.intro.4", "speaker": "narrator", "text": "Yellow eyes flash in the bushes. One pair, then another, then one more." },
+        {
+          "id": "s2.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Someone's there!",
+          "variants": {
+            "warden": "Shields up! Something's out there!",
+            "wind-archer": "Movement in the bushes! Two. No, four.",
+            "herbalist": "Careful. Something is wrong here.",
+            "rogue": "Shh. Someone's there. And they're not very polite.",
+            "elementalist": "I feel magic. And I don't like it.",
+            "tinker": "Bolt is growling. Trouble is close."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s2.thorns",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s2.thorns.1", "speaker": "herbalist", "text": "Thorns don't prick out of spite. Walk around the bushes and they'll leave you alone." }
+          ]
+        },
+        {
+          "id": "s2.ravine",
+          "trigger": { "on": "roomRevealed", "arg": "s2.ravine" },
+          "lines": [
+            { "id": "s2.ravine.1", "speaker": "narrator", "text": "The ravine is narrow and dark. Something iron glints between the rocks. It looks like a trap." },
+            { "id": "s2.ravine.2", "speaker": "wind-archer", "text": "I grew up in the mountains, near wolves. They aren't mean. They're just lost in the fog." }
+          ]
+        },
+        {
+          "id": "s2.first-wolf",
+          "trigger": { "on": "monsterKilled", "arg": "grey-wolf" },
+          "lines": [
+            { "id": "s2.first-wolf.1", "speaker": "narrator", "text": "The wolf shook its head as if waking up, and bounded into the woods. Without the fog, it is just a gray wolf again." }
+          ]
+        },
+        {
+          "id": "s2.lodge",
+          "trigger": { "on": "roomRevealed", "arg": "s2.lodge" },
+          "lines": [
+            { "id": "s2.lodge.1", "speaker": "narrator", "text": "A big fellow in a black and purple scarf guards the lodge. A bandit!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s2.win.1", "speaker": "narrator", "text": "The lodge was empty. Only ashes from a campfire, boot prints, and a scarf on a nail." },
+          { "id": "s2.win.2", "speaker": "narrator", "text": "On the table lay a map. A cross was marked on the old mill by the marsh." },
+          { "id": "s2.win.3", "speaker": "marta", "text": "The mill? Good old Bruno the miller lives there. What would bandits want with him?" }
+        ],
+        "defeat": [
+          { "id": "s2.lose.1", "speaker": "marta", "text": "Not all at once, Bravehearts. Even wolves don't find the path the first time." },
+          { "id": "s2.lose.2", "speaker": "marta", "text": "Mend your cloaks, and I'll give you more ointment for the scratches." }
+        ]
+      },
+      "epilogue": { "id": "s2.epilogue", "speaker": "marta", "text": "The forester sent a basket of mushrooms. He says the wolves are calm and polite again, just like before." }
+    },
+
+    "s3": {
+      "intro": [
+        { "id": "s3.intro.1", "speaker": "narrator", "text": "The river has burst its banks, and the old mill stands knee-deep in water. The wheel creaks, though nobody turns it." },
+        { "id": "s3.intro.2", "speaker": "marta", "text": "Bandits guard the yard. And inside, something mumbles. Something big and wet." },
+        { "id": "s3.intro.3", "speaker": "marta", "text": "They say the sluice has a lever that lets the water out. Find it, and things get easier." },
+        {
+          "id": "s3.intro.4", "speaker": "hero", "pick": "random",
+          "text": "We have to help Bruno.",
+          "variants": {
+            "warden": "Wet boots are no reason to turn back.",
+            "wind-archer": "Water hides our steps. Stay close.",
+            "herbalist": "Bruno always gave me bagels. We have to help him.",
+            "rogue": "Bandits in someone else's yard? Rude. I always ask permission. Sometimes.",
+            "elementalist": "So much water! Too bad I haven't learned to dry it up.",
+            "tinker": "A mill wheel is a machine. And I love rescuing machines."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s3.sluice",
+          "trigger": { "on": "roomRevealed", "arg": "s3.sluice" },
+          "lines": [
+            { "id": "s3.sluice.1", "speaker": "narrator", "text": "Bog slimes bubble in the sluice. By the wall stands an old lever, covered in mud." },
+            { "id": "s3.sluice.2", "speaker": "tinker", "text": "The lever is fine, just rusty. Somebody go and give it a good pull!" }
+          ]
+        },
+        {
+          "id": "s3.miller",
+          "trigger": { "on": "doorOpened", "arg": "s3.mill-hall" },
+          "lines": [
+            { "id": "s3.miller.1", "speaker": "narrator", "text": "The wheel creaked and stopped. Slowly, the Bog Miller rises from the water." },
+            { "id": "s3.miller.2", "speaker": "miller", "text": "Who dared to stop my mill?! Did you come to take the light too?" }
+          ]
+        },
+        {
+          "id": "s3.miller-half",
+          "trigger": { "on": "bossHalfHp", "arg": "bog-miller" },
+          "lines": [
+            { "id": "s3.miller-half.1", "speaker": "miller", "text": "My head hums like a millstone. Who are you? No, go away! The fog says you are enemies!" },
+            {
+              "id": "s3.miller-half.2", "speaker": "hero", "pick": "random",
+              "text": "Bruno, we're friends! Hang on!",
+              "variants": {
+                "warden": "Bruno, we're friends! Hang on, we'll pull you out.",
+                "wind-archer": "He's fighting the fog. Just a little more!",
+                "herbalist": "Bruno, it's me, the Herbalist! Remember my herbs and your bagels!",
+                "rogue": "Uncle Bruno, wake up! You're a good man, I know it.",
+                "elementalist": "The fog is losing its grip! I can feel it!",
+                "tinker": "Almost there. This mud will slide right off, like rust off a gear."
+              }
+            }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s3.win.1", "speaker": "narrator", "text": "The mud slides off the Miller, and he is himself again: tired, kind Bruno." },
+          { "id": "s3.win.2", "speaker": "miller", "text": "Oh, my head is like a millstone. How long was I asleep?" },
+          { "id": "s3.win.3", "speaker": "herbalist", "text": "Here, Bruno, a sip of mint tea. You'll feel new in an hour." },
+          { "id": "s3.win.4", "speaker": "miller", "text": "I remember a tall man in a cloak made of shadow. On his chest hung a glass ball, and inside it was our light." },
+          { "id": "s3.win.5", "speaker": "miller", "text": "He called himself Shadowhand. His men hauled crates to the old watchtower." }
+        ],
+        "defeat": [
+          { "id": "s3.lose.1", "speaker": "marta", "text": "That wet giant is still our Bruno, only muddled. Don't give up. He is waiting for you." },
+          { "id": "s3.lose.2", "speaker": "marta", "text": "Dry your boots by the stove, and back to the mill you go." }
+        ]
+      },
+      "epilogue": { "id": "s3.epilogue", "speaker": "marta", "text": "Bruno ate three bowls of soup and fell asleep right at the table. Let him sleep. He earned it." }
+    },
+
+    "s4": {
+      "intro": [
+        { "id": "s4.intro.1", "speaker": "narrator", "text": "Lights burn again in the tower above the pass. But this light is cold and purple." },
+        { "id": "s4.intro.2", "speaker": "marta", "text": "Bruno says Shadowhand's cultists hid the second piece of the Lantern up there." },
+        { "id": "s4.intro.3", "speaker": "marta", "text": "The door to the upper floor is locked. One of the cultists carries the key. Go and find it." },
+        { "id": "s4.intro.4", "speaker": "narrator", "text": "The runes on the walls flash, one after another. Stone sentinels open their eyes." },
+        {
+          "id": "s4.intro.5", "speaker": "hero", "pick": "random",
+          "text": "They're awake!",
+          "variants": {
+            "warden": "Stone sentinels? Let's see which of us guards better.",
+            "wind-archer": "The wind smells of mountains. Almost like home.",
+            "herbalist": "I don't like these runes. Stay off the purple tiles.",
+            "rogue": "A tower, a locked door, and the key in someone else's pocket. Perfect evening.",
+            "elementalist": "Gloom runes! I saw them in a forbidden book. Well, I almost didn't read it.",
+            "tinker": "Stone sentinels are ancient automatons. Bolt, don't bark. They're nervous."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s4.barracks",
+          "trigger": { "on": "roomRevealed", "arg": "s4.barracks" },
+          "lines": [
+            { "id": "s4.barracks.1", "speaker": "narrator", "text": "Gloom cultists whisper in the barracks. Glowing rune circles surround them on the floor." },
+            { "id": "s4.barracks.2", "speaker": "elementalist", "text": "These runes protect the cultists. Lure them out of the circles!" }
+          ]
+        },
+        {
+          "id": "s4.sentinel",
+          "trigger": { "on": "monsterKilled", "arg": "stone-sentinel" },
+          "lines": [
+            { "id": "s4.sentinel.1", "speaker": "narrator", "text": "The blue spark in the sentinel's eyes went out. The stone is just stone again." },
+            { "id": "s4.sentinel.2", "speaker": "warden", "text": "Rest now, stone friend. Your watch is over." }
+          ]
+        },
+        {
+          "id": "s4.upper-door",
+          "trigger": { "on": "doorOpened", "arg": "s4.upper-tier" },
+          "lines": [
+            { "id": "s4.upper-door.1", "speaker": "narrator", "text": "The lock clicked. A shadow slipped up the stairs. Someone is already waiting on the upper floor." }
+          ]
+        },
+        {
+          "id": "s4.hurry",
+          "trigger": { "on": "round", "arg": 8 },
+          "lines": [
+            { "id": "s4.hurry.1", "speaker": "narrator", "text": "The shadows in the tower grow thicker. Time to grab the light and head for the gate!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s4.win.1", "speaker": "narrator", "text": "The second piece of the Lantern is warm, like bread from the oven." },
+          { "id": "s4.win.2", "speaker": "narrator", "text": "The two pieces fit together, as if they had always been waiting for each other. But without its heart, the Lantern cannot shine." },
+          { "id": "s4.win.3", "speaker": "marta", "text": "And this black glass key opens a cave under the Gray Mountains. The old folks call it the Heart of Gloom." },
+          { "id": "s4.win.4", "speaker": "wind-archer", "text": "The Gray Mountains are my home. I know the way." }
+        ],
+        "defeat": [
+          { "id": "s4.lose.1", "speaker": "marta", "text": "The tower is tall and the stairs are steep. Never mind. Next time you'll climb faster." },
+          { "id": "s4.lose.2", "speaker": "marta", "text": "Just remember: the light must not only be found, but carried home." }
+        ]
+      },
+      "epilogue": { "id": "s4.epilogue", "speaker": "marta", "text": "Tomorrow the whole town will see you off. The baker is already kneading bread for the road." }
+    },
+
+    "s5": {
+      "intro": [
+        { "id": "s5.intro.1", "speaker": "narrator", "text": "Under the Gray Mountains, behind a door of black glass, hides the Heart of Gloom." },
+        { "id": "s5.intro.2", "speaker": "marta", "text": "Shadowhand keeps our light there. Dark braziers stand along the walls. Light them, and the shadow has nowhere to hide." },
+        { "id": "s5.intro.3", "speaker": "marta", "text": "And come back, all of you. I'll be counting you at the door." },
+        {
+          "id": "s5.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Let's get our light back.",
+          "variants": {
+            "warden": "My shield was once the door of our town hall. Today it guards Alba again.",
+            "wind-archer": "I know these mountains. It was never this dark here.",
+            "herbalist": "I packed all my herbs. Even the ones that smell like socks.",
+            "rogue": "Stealing a whole town's light? Even I wouldn't do that.",
+            "elementalist": "Fire and wind are with me. Watch out, Shadowhand!",
+            "tinker": "Bolt, it's going to get dark. Stay close to me."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s5.first-wraith",
+          "trigger": { "on": "monsterKilled", "arg": "shadow-wraith" },
+          "lines": [
+            { "id": "s5.first-wraith.1", "speaker": "narrator", "text": "The wraith melted away like fog in the sun. The tunnel grew a little brighter." }
+          ]
+        },
+        {
+          "id": "s5.heart",
+          "trigger": { "on": "doorOpened", "arg": "s5.heart" },
+          "lines": [
+            { "id": "s5.heart.1", "speaker": "shadowhand", "text": "Did you bring me a little more light? How kind." },
+            { "id": "s5.heart.2", "speaker": "shadowhand", "text": "The gloom is not evil, little ones. It only waits until all the lights go out." },
+            { "id": "s5.heart.3", "speaker": "narrator", "text": "Three dark braziers stand along the walls. While they stay unlit, Shadowhand is almost untouchable." }
+          ]
+        },
+        {
+          "id": "s5.crack",
+          "trigger": { "on": "bossHalfHp", "arg": "shadowhand" },
+          "lines": [
+            { "id": "s5.crack.1", "speaker": "narrator", "text": "A crack runs across the glass ball on Shadowhand's chest. Golden rays shine through it." },
+            { "id": "s5.crack.2", "speaker": "shadowhand", "text": "Enough games! Now I will take your light too!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s5.win.1", "speaker": "shadowhand", "text": "No! Take this glow away!" },
+          { "id": "s5.win.2", "speaker": "narrator", "text": "The ball shattered, and the stolen light burst out of the cave and into the sky." },
+          { "id": "s5.win.3", "speaker": "narrator", "text": "Shadowhand crumbled into a swarm of black butterflies, and they fluttered away into the dark." },
+          { "id": "s5.win.4", "speaker": "narrator", "text": "Above the town hall, the Guardian Lantern shone again. The fog retreated all the way to the edge of the forest." },
+          {
+            "id": "s5.win.5", "speaker": "hero", "pick": "random",
+            "text": "We did it!",
+            "variants": {
+              "warden": "There. Nobody got hurt. Almost.",
+              "wind-archer": "Not one arrow too many.",
+              "herbalist": "Everyone's safe? Wonderful.",
+              "rogue": "Easy. Next time, make it harder, please.",
+              "elementalist": "Did you see that? Did you see that fire?!",
+              "tinker": "Everything works. Even me."
+            }
+          },
+          { "id": "s5.win.6", "speaker": "marta", "text": "The Braveheart Guild lives again. And I'll embroider your names on the banner myself." }
+        ],
+        "defeat": [
+          { "id": "s5.lose.1", "speaker": "marta", "text": "Hello, Bravehearts! The fog won't take you. Come back, and we'll try again." },
+          { "id": "s5.lose.2", "speaker": "marta", "text": "Shadowhand is strong, but the braziers are stronger. Light all three, and he can't hide." }
+        ]
+      },
+      "epilogue": { "id": "s5.epilogue", "speaker": "marta", "text": "Get some rest. They say something goes bump in the Gray Mountains at night." }
+    }
+  }
+}
