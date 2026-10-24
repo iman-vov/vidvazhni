@@ -82,6 +82,8 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   chestOpened: (s, p) => heroes(s).some((h) => (h.chests ?? []).includes(String(p?.chest))),
   /** «Ніхто не виснажився». */
   noneExhausted: (s) => !heroes(s).some((h) => h.exhausted),
+  /** «Опустити шлюз», «Увімкнути автомат»: the object `params.object` is in state `params.state`. */
+  objectState: (s, p) => Object.values(s.board.tiles).some((t) => t.object?.id === String(p?.object) && t.object.state === String(p?.state)),
   /** «До N-го раунду»: the scenario ends no later than round `params.rounds`. */
   withinRounds: (s, p) => s.round <= Number(p?.rounds),
 };

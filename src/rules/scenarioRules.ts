@@ -1,5 +1,6 @@
 // Scenario rules beyond the core: gradual onboarding (`ScenarioDef.introduces`), scenario objects
 // (lever, braziers, runes), story items (keys, the carried Lantern piece) and boss phases.
+// Objects with their own `interact` (a floor lever opening locked doors) need no special.
 // The named rules in `ScenarioDef.specials`:
 //   millSluice       (s3) a hero next to the lever spends a top action → `down`; the Miller's
 //                         «Потоп» no longer works. Water stays difficult terrain.
@@ -12,6 +13,7 @@
 
 import type { Content, DropDef, RoomDef, ScenarioDef, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
+import { openDoor } from './effects/move';
 import { infuse } from './elements';
 import { onTaggedMonsterDied } from './events';
 import { hasLineOfSight } from './geometry';
@@ -82,12 +84,24 @@ interface ObjectRule {
   half: 'top' | 'bottom';
   from: string;
   to: string;
+  opens?: Hex[];
 }
 
 const INTERACTIONS: readonly ObjectRule[] = [
   { special: 'millSluice', kind: 'lever', half: 'top', from: 'up', to: 'down' },
   { special: 'braziers', kind: 'brazier', half: 'bottom', from: 'unlit', to: 'lit' },
 ];
+
+/** The object's own `interact` from the scenario data (a lever opening doors). */
+function dataRule(ctx: Pick<Ctx, 's' | 'c'>, objectId: string): ObjectRule | undefined {
+  for (const room of scenarioOf(ctx)?.rooms ?? []) {
+    const o = room.objects?.find((x) => x.id === objectId);
+    if (!o?.interact) continue;
+    const { half, from, to, opens } = o.interact;
+    return { special: '', kind: o.kind, half, from: from ?? o.state ?? '', to, ...(opens ? { opens } : {}) };
+  }
+  return undefined;
+}
 
 /** Under the orbs fork there is no Light: a lit brazier gives a Fire orb instead. */
 export const BRAZIER_ELEMENT = 'light';
@@ -111,7 +125,7 @@ export function interactionFor(
 ): { rule: ObjectRule; hex: Hex; tile: Tile & { object: NonNullable<Tile['object']> } } | string {
   const found = boardObjects(ctx.s).find((o) => o.tile.object.id === objectId);
   if (!found) return 'no such object';
-  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special));
+  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special)) ?? dataRule(ctx, objectId);
   if (!rule) return 'nothing to do with this object';
   if (rule.half !== half) return `this needs a ${rule.half} action`;
   if ((found.tile.object.state ?? '') !== rule.from) return 'already done';
@@ -123,6 +137,7 @@ export function applyInteraction(ctx: Ctx, h: HeroState, found: Exclude<ReturnTy
   found.tile.object.state = found.rule.to;
   emit(ctx, { type: 'objectChanged', objectId: found.tile.object.id, hex: [found.hex[0], found.hex[1]], state: found.rule.to, byId: h.id });
   if (found.rule.kind === 'brazier') infuse(ctx, ctx.s.variants.orbs ? BRAZIER_ORB : BRAZIER_ELEMENT, h.id);
+  for (const hex of found.rule.opens ?? []) openDoor(ctx, hex);
 }
 
 /** s3: the Miller's «Потоп» does nothing once the sluice lever is down. */

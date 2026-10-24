@@ -317,11 +317,23 @@ export interface RoomDef {
   coins?: Hex[];
   /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
   chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
-  /** Named objects (важіль, жаровня, руни) handled by scenario specials.
+  /** Named objects (важіль, жаровня, руни) handled by scenario specials or by their own `interact`.
    *  `state` = initial state (`unlit`, `up`); `blocks` = impassable like an obstacle (lever, brazier). */
-  objects?: { hex: Hex; id: string; kind: string; state?: string; blocks?: boolean }[];
+  objects?: ObjectDef[];
   /** Story items dropped by the last figure of `monster` in this room to die (ключ від ярусу). */
   drops?: { monster: string; questItem: string }[];
+}
+
+export interface ObjectDef {
+  hex: Hex;
+  id: string;
+  kind: string;
+  state?: string;
+  blocks?: boolean;
+  /** Without a scenario special: an adjacent hero spends a `half` action to turn the object from
+   *  `from` (default: its initial state) to `to`; the doors on `opens` open (a floor lever opening
+   *  a locked door on the other side of the room). */
+  interact?: { half: 'top' | 'bottom'; from?: string; to: string; opens?: Hex[] };
 }
 
 /** A named group of hexes the goals point at (exit, delivery spot, a point to defend). */

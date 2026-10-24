@@ -225,6 +225,9 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
   if ((g.type === 'reachExit' || g.type === 'carryItem' || g.type === 'escape') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
   for (const h of goalZone(s)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
+  for (const o of s.rooms.flatMap((r) => r.objects ?? [])) {
+    for (const h of o.interact?.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`object ${o.id} opens ${hexKey(h)}, which is no door`);
+  }
 
   const tags = new Set(s.rooms.flatMap((r) => (r.spawns ?? []).flatMap((sp) => (sp.tag ? [sp.tag] : []))));
   for (const ev of s.events ?? []) for (const a of ev.actions) if (a.type === 'spawn' && a.tag) tags.add(a.tag);

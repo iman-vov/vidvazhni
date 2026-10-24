@@ -548,7 +548,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "check": { "enum": ["chestOpened", "noneExhausted", "withinRounds"] },
+          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds"] },
           "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
           "reward": {
             "type": "object",
@@ -723,7 +723,18 @@
                 "id": { "type": "string", "minLength": 1 },
                 "kind": { "type": "string", "minLength": 1 },
                 "state": { "type": "string", "minLength": 1 },
-                "blocks": { "type": "boolean" }
+                "blocks": { "type": "boolean" },
+                "interact": {
+                  "type": "object",
+                  "properties": {
+                    "half": { "enum": ["top", "bottom"] },
+                    "from": { "type": "string", "minLength": 1 },
+                    "to": { "type": "string", "minLength": 1 },
+                    "opens": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
+                  },
+                  "required": ["half", "to"],
+                  "additionalProperties": false
+                }
               },
               "required": ["hex", "id", "kind"],
               "additionalProperties": false

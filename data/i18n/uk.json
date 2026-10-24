@@ -476,6 +476,7 @@
   "objective.roundsLeft": "Раундів лишилось: {n}",
   "objective.secondary.chestOpened": "Відкрити скриню",
   "objective.secondary.noneExhausted": "Ніхто не виснажився",
+  "objective.secondary.objectState": "Перемкнути важіль",
   "objective.secondary.withinRounds": "Встигнути до {rounds}-го раунду",
   "ui.hand": "Рука",
   "ui.discard": "Скидання",

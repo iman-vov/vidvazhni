@@ -476,6 +476,7 @@
   "objective.roundsLeft": "Rounds left: {n}",
   "objective.secondary.chestOpened": "Open the chest",
   "objective.secondary.noneExhausted": "Nobody exhausted",
+  "objective.secondary.objectState": "Pull the lever",
   "objective.secondary.withinRounds": "Finish by round {rounds}",
   "ui.hand": "Hand",
   "ui.discard": "Discard",
