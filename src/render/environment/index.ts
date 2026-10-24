@@ -25,6 +25,7 @@ import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
 import { atmosphereFor } from './atmosphere';
+import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
@@ -103,6 +104,8 @@ export class BoardEnvironment {
   private disposables: { dispose(): void }[] = [];
   private morok: Morok | null = null;
   private ambient: Ambient | null = null;
+  /** Grime, wall dressing and pools of light (decals.ts). */
+  private atmosphere: AtmosphereBuild | null = null;
   /** Unlit flame and glow materials with their base colour (they flicker with the lights). */
   private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
@@ -364,6 +367,7 @@ export class BoardEnvironment {
   update(time: number): void {
     if (this.morok) this.morok.uniforms.uTime.value = time;
     this.ambient?.update(time);
+    this.atmosphere?.update(time);
     const glow = 1 + 0.06 * Math.sin(time * 8.3) + 0.04 * Math.sin(time * 13.7 + 1.3);
     for (const f of this.flicker) f.material.color.copy(f.base).multiplyScalar(glow);
     for (const l of this.lights) {
@@ -412,6 +416,7 @@ export class BoardEnvironment {
     this.materials.clear();
     this.morok = null;
     this.ambient = null;
+    this.atmosphere = null;
     this.flicker = [];
     this.lights = [];
   }
@@ -441,6 +446,7 @@ export class BoardEnvironment {
     this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
     this.buildPieces(q.shadows);
     this.buildLights(q.lights);
+    this.buildAtmosphere();
     if (q.wisps > 0) {
       this.morok = new Morok(layout, { color: outputColor(def.fog.morok), opacity: def.fog.morokOpacity, edgeCount: q.wisps, roomDensity: q.roomWisps });
       for (const [room, v] of this.veil) this.morok.setRoomVeil(room, v);
@@ -702,6 +708,21 @@ export class BoardEnvironment {
       this.lights.push({ light, base, phase: i * 1.7, kind: s.kind, room: s.room });
     });
     this.update(0);
+  }
+
+  /** Dirt on the floor, dressing on the walls, warm pools under the flames (see decals.ts). */
+  private buildAtmosphere(): void {
+    this.atmosphere = buildAtmosphere({
+      layout: this.layout!,
+      def: this.def!,
+      quality: this.quality,
+      placements: this.placements,
+      partitions: this.partitionLines.map((p) => p.points),
+      uniforms: this.uniforms,
+      material: (key) => this.material(key),
+    });
+    this.root.add(this.atmosphere.root);
+    this.disposables.push(this.atmosphere);
   }
 
   /** Fire over every flame, dust in the light of the point lights and the entrance beam, low fog
