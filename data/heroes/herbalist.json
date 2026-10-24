@@ -4,6 +4,7 @@
   "color": "#E0B040",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 10,
+  "recommendedHand": ["herbalist.healing-salve", "herbalist.poison-brew", "herbalist.thorn-staff", "herbalist.blooming-circle", "herbalist.roots", "herbalist.morning-dew", "herbalist.sun-brew", "herbalist.stinging-nettle", "herbalist.forest-gift", "herbalist.bramble-lash"],
   "classElement": "light",
   "classOrb": "earth",
   "surge": [
@@ -137,6 +138,98 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "herbalist.bark-ward",
+      "level": 1,
+      "initiative": 22,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 2,
+            "target": "allyOrSelf",
+            "range": 2,
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "alliesInRadius",
+            "radius": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.bramble-lash",
+      "level": 1,
+      "initiative": 38,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 2,
+            "consume": {
+              "element": "earth",
+              "conditions": [
+                "immobilize"
+              ]
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.earth-brew",
+      "level": 1,
+      "initiative": 28,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "allyOrSelf",
+            "range": 3,
+            "xp": 1,
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      }
     },
     {
       "id": "herbalist.living-balm",
