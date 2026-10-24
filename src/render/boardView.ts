@@ -340,6 +340,13 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.obstacleFactory = (model) => environment.makeObstacle(model);
   tiles.propModel = (key, height) => environment.propModel(key, height);
   tiles.propGlow = (key, height) => environment.propGlow(key, height);
+  tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);
+  tiles.pieceFactory = (id) => environment.makePiece(id);
+  // Blender kit pieces arrive after the first build: rebuild door bodies and obstacles with them.
+  environment.onKit = () => {
+    tiles.resetProps();
+    if (state) tiles.syncProps(state);
+  };
 
   const stopQuality = onGraphicsQualityChange((q) => setQuality(q));
 
@@ -452,7 +459,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (scenario) {
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
-      tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null);
+      tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null, environment.defaultBoundary);
     }
     tiles.syncRooms(s, c);
     for (const id of tiles.revealed) tiles.setRoomRise(id, 1, null);

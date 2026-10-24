@@ -6,7 +6,7 @@
 // turned and sized a little differently per hex, each standing on a soft contact shadow.
 
 import * as THREE from 'three';
-import type { Content, SurfaceId } from '../rules/content';
+import type { BoundaryKind, Content, DoorKind, SurfaceId } from '../rules/content';
 import { hexKey as rulesHexKey, neighbors, parseHexKey, type Hex, type HexKey } from '../rules/hex';
 import type { GameState, Tile } from '../rules/state';
 import { blobShadowTexture } from './contactShadow';
@@ -155,20 +155,82 @@ interface RoomView {
   plateHexes: Hex[][];
   plateY: number[];
   plateKeys: string[];
-  walls: THREE.InstancedMesh | null;
-  kerbs: THREE.InstancedMesh | null;
+  /** Thin walls (or natural boundaries) and kerbs of the room, rebuilt when rooms change. */
+  edges: THREE.Group | null;
+  edgeDisposables: { dispose(): void }[];
   props: THREE.Group;
 }
 
-interface PropView {
+export interface PropView {
   key: string;
   object: THREE.Group;
   room: string;
-  /** For doors: the swinging panel and whether it is open now. */
-  panel?: THREE.Object3D;
+  /** For doors: how it looks and opens, and whether it is open now. */
+  doorKind?: DoorKind;
   open?: boolean;
+  /** A door's swinging panel (door) or wings (gate). */
+  panel?: THREE.Object3D;
+  wings?: THREE.Object3D[];
+  /** What moves when a barricade, brush, log, rubble or cart door opens (or a prop breaks). */
+  body?: THREE.Group;
   /** For chests: the lid. */
   lid?: THREE.Object3D;
+}
+
+/** Door look where the scenario does not say: by the boundary of the rooms it joins. */
+export const DOOR_FOR_BOUNDARY: Record<BoundaryKind, DoorKind> = { walls: 'door', reeds: 'barricade', thicket: 'brush', logs: 'log', rocks: 'rubble' };
+/** The piece (pieces.ts id, also the art-kit / prop-model key) that a door body is made of. */
+export const DOOR_PIECES: Partial<Record<DoorKind, string>> = { barricade: 'barricade', brush: 'brush-pile', log: 'fallen-log', rubble: 'rubble-heap', minecart: 'mine-cart' };
+/** Seconds a door takes to open. */
+export const DOOR_SECONDS: Record<DoorKind, number> = { door: 0.35, gate: 0.45, barricade: 0.6, brush: 0.5, log: 0.6, rubble: 0.7, minecart: 0.8 };
+
+/**
+ * A door's pose at t = 0 (closed) .. 1 (open): a door or gate swings, a barricade slides aside and
+ * tips over, brush is shoved aside and flattened, a log swings round on its root, rubble crumbles
+ * into a low scatter, a mine cart rolls away along its rails. Local X runs along the edge, +Z into
+ * the room the door leads to.
+ */
+export function doorPose(p: Pick<PropView, 'doorKind' | 'panel' | 'wings' | 'body'>, t: number): void {
+  const e = t * t * (3 - 2 * t);
+  const body = p.body;
+  switch (p.doorKind ?? 'door') {
+    case 'door':
+      if (p.panel) p.panel.rotation.y = e * THREE.MathUtils.degToRad(-105);
+      return;
+    case 'gate':
+      p.wings?.forEach((w, i) => (w.rotation.y = (i ? 1 : -1) * e * THREE.MathUtils.degToRad(100)));
+      return;
+    case 'barricade':
+      if (!body) return;
+      body.position.x = 0.8 * e;
+      body.rotation.z = -1.45 * Math.max(0, (e - 0.35) / 0.65) ** 2;
+      return;
+    case 'brush':
+      if (!body) return;
+      body.position.x = 0.75 * e;
+      body.scale.set(1 + 0.2 * e, 1 - 0.55 * e, 1 + 0.1 * e);
+      return;
+    case 'log':
+      if (!body) return;
+      // The body pivots on the log's rooted left end.
+      body.rotation.y = -1.3 * e;
+      return;
+    case 'rubble': {
+      if (!body) return;
+      const stones = (body.userData['stones'] as THREE.Object3D[] | undefined)?.filter((s) => s.parent?.parent === body);
+      if (stones?.length) {
+        for (const s of stones) {
+          const base = s.userData['base'] as THREE.Vector3;
+          s.position.set(base.x * (1 + 0.7 * e), base.y * (1 - 0.8 * e), base.z + (s.id % 2 ? 0.15 : -0.15) * e);
+          s.scale.setScalar((s.userData['scale'] as number) * (1 - 0.3 * e));
+        }
+      } else body.scale.set(1 + 0.4 * e, 1 - 0.7 * e, 1 + 0.2 * e);
+      return;
+    }
+    case 'minecart':
+      if (body) body.position.x = 1.0 * e;
+      return;
+  }
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -192,6 +254,13 @@ export class TileLayer {
   /** Surface of each hex of the scenario (room data, per-hex overrides, the location's default). */
   private surfaceByHex = new Map<HexKey, SurfaceId>();
   private defaultSurface: SurfaceId = 'cobblestone';
+  private roomBoundary = new Map<string, BoundaryKind>();
+  private doorKinds = new Map<HexKey, DoorKind>();
+  private defaultBoundary: BoundaryKind = 'walls';
+  /** Natural boundaries (reeds, thicket, rocks, logs) on edge frames, from the environment. */
+  boundaryFactory: ((kind: Exclude<BoundaryKind, 'walls'>, frames: THREE.Matrix4[], low: boolean) => THREE.Object3D & { dispose(): void }) | null = null;
+  /** A piece in the location's colours (door bodies, rails), from the environment. */
+  pieceFactory: ((piece: string) => THREE.Group | null) | null = null;
   private readonly propParts = new PropParts();
   private obstacleModels = new Map<HexKey, string>();
   private readonly available = new Set(listModels());
@@ -294,8 +363,9 @@ export class TileLayer {
 
   /** Location settings from the environment: map footprint (kerbs), thin-wall colour, the hexes'
    *  default surface. */
-  setSurroundings(footprint: ReadonlySet<HexKey> | null, wallColor: string | null, surface: SurfaceId | null): void {
+  setSurroundings(footprint: ReadonlySet<HexKey> | null, wallColor: string | null, surface: SurfaceId | null, boundary: BoundaryKind = 'walls'): void {
     this.footprint = footprint;
+    this.defaultBoundary = boundary;
     if (wallColor) {
       this.wallMaterial.color.set(wallColor);
       this.kerbMaterial.color.set(wallColor).multiplyScalar(0.78);
@@ -308,7 +378,11 @@ export class TileLayer {
   syncRooms(s: GameState, content: Content, only?: string): string[] {
     this.obstacleModels = new Map();
     this.surfaceByHex = new Map();
+    this.roomBoundary = new Map();
+    this.doorKinds = new Map();
     for (const room of content.scenarios[s.scenarioId]?.rooms ?? []) {
+      if (room.boundary) this.roomBoundary.set(room.id, room.boundary);
+      for (const d of room.doors ?? []) if (d.kind) this.doorKinds.set(rulesHexKey(d.hex), d.kind);
       for (const o of room.obstacles ?? []) if (o.model) this.obstacleModels.set(rulesHexKey(o.hex), o.model);
       for (const h of room.hexes) {
         const k = rulesHexKey(h);
@@ -321,8 +395,7 @@ export class TileLayer {
       if (wanted.includes(id)) continue;
       this.root.remove(room.group);
       for (const mesh of room.plates) mesh.dispose();
-      room.walls?.dispose();
-      room.kerbs?.dispose();
+      for (const d of room.edgeDisposables) d.dispose();
       this.rooms.delete(id);
       for (const [k, p] of this.props) if (p.room === id) this.props.delete(k);
     }
@@ -347,7 +420,7 @@ export class TileLayer {
   private buildRoom(id: string, tiles: [HexKey, Tile][]): RoomView {
     const group = new THREE.Group();
     group.name = `room:${id}`;
-    const room: RoomView = { id, group, plates: [], plateHexes: [], plateY: [], plateKeys: [], walls: null, kerbs: null, props: new THREE.Group() };
+    const room: RoomView = { id, group, plates: [], plateHexes: [], plateY: [], plateKeys: [], edges: null, edgeDisposables: [], props: new THREE.Group() };
     const m = new THREE.Matrix4();
     const color = new THREE.Color();
     const add = (key: string, geometry: THREE.BufferGeometry, list: Hex[], y: number, vary: boolean) => {
@@ -387,15 +460,35 @@ export class TileLayer {
     return room;
   }
 
-  /** Thin walls from the state, plus low kerbs on every edge between a tile and the outside. */
+  private boundaryOf(room: string): BoundaryKind {
+    return this.roomBoundary.get(room) ?? this.defaultBoundary;
+  }
+
+  /** How a door looks: the scenario's `kind`, else masonry rooms get a door, outdoor rooms a
+   *  barricade, brush, log or rubble by their boundary. */
+  doorKindAt(k: HexKey, tile: Tile, s: GameState): DoorKind {
+    const own = this.doorKinds.get(k);
+    if (own) return own;
+    const here = this.boundaryOf(tile.room);
+    const there = tile.door ? this.boundaryOf(tile.door.to) : here;
+    if (here === 'walls' || there === 'walls') return 'door';
+    void s;
+    return DOOR_FOR_BOUNDARY[here];
+  }
+
+  /** Thin walls from the state, plus low kerbs on every edge between a tile and the outside. Each
+   *  room's walls look like its boundary: masonry, or reeds, thicket, rocks, logs outdoors (a wall
+   *  next to an indoor room stays masonry). */
   private buildWalls(s: GameState, rooms: string[]): void {
     const wallSet = new Set(s.board.walls);
-    const perRoomWalls = new Map<string, THREE.Matrix4[]>();
-    const perRoomKerbs = new Map<string, THREE.Matrix4[]>();
-    const add = (map: Map<string, THREE.Matrix4[]>, room: string, mat: THREE.Matrix4) => {
-      let list = map.get(room);
-      if (!list) map.set(room, (list = []));
-      list.push(mat);
+    type Lists = Map<BoundaryKind, { walls: THREE.Matrix4[]; kerbs: THREE.Matrix4[] }>;
+    const perRoom = new Map<string, Lists>();
+    const add = (room: string, kind: BoundaryKind, which: 'walls' | 'kerbs', mat: THREE.Matrix4) => {
+      let lists = perRoom.get(room);
+      if (!lists) perRoom.set(room, (lists = new Map()));
+      let l = lists.get(kind);
+      if (!l) lists.set(kind, (l = { walls: [], kerbs: [] }));
+      l[which].push(mat);
     };
     const tiles = s.board.tiles;
     const inRooms = (k: HexKey) => {
@@ -406,7 +499,11 @@ export class TileLayer {
       const [ka, kb] = w.split('|') as [HexKey, HexKey];
       const owner = inRooms(ka) ? tiles[ka]!.room : inRooms(kb) ? tiles[kb]!.room : null;
       if (!owner) continue;
-      add(perRoomWalls, owner, edgeMatrix(parseHexKey(ka), parseHexKey(kb), WALL_HEIGHT, WALL_THICK));
+      const other = (inRooms(ka) ? tiles[kb]?.room : tiles[ka]?.room) ?? owner;
+      const kind = this.boundaryOf(owner) === 'walls' || this.boundaryOf(other) === 'walls' ? 'walls' : this.boundaryOf(owner);
+      const a = parseHexKey(ka);
+      const b = parseHexKey(kb);
+      add(owner, kind, 'walls', kind === 'walls' ? edgeMatrix(a, b, WALL_HEIGHT, WALL_THICK) : edgeFrame(a, b));
     }
     for (const [k, tile] of Object.entries(tiles)) {
       if (!rooms.includes(tile.room)) continue;
@@ -419,28 +516,43 @@ export class TileLayer {
         // A door leads out of the room: no kerb in front of it.
         if (tile.door) continue;
         if (this.footprint && !this.footprint.has(nk)) continue;
-        add(perRoomKerbs, tile.room, edgeMatrix(hex, n, KERB_HEIGHT, KERB_THICK));
+        const kind = this.boundaryOf(tile.room);
+        add(tile.room, kind, 'kerbs', kind === 'walls' ? edgeMatrix(hex, n, KERB_HEIGHT, KERB_THICK) : edgeFrame(hex, n));
       }
     }
     for (const room of this.rooms.values()) {
-      for (const which of ['walls', 'kerbs'] as const) {
-        const old = room[which];
-        if (old) {
-          room.group.remove(old);
-          old.dispose();
+      if (room.edges) room.group.remove(room.edges);
+      for (const d of room.edgeDisposables) d.dispose();
+      room.edgeDisposables = [];
+      room.edges = null;
+      const lists = perRoom.get(room.id);
+      if (!lists) continue;
+      const edges = new THREE.Group();
+      edges.name = 'edges';
+      for (const [kind, l] of lists) {
+        for (const which of ['walls', 'kerbs'] as const) {
+          const list = l[which];
+          if (!list.length) continue;
+          const natural = kind !== 'walls' ? this.boundaryFactory?.(kind, list, which === 'kerbs') : null;
+          if (natural) {
+            edges.add(natural);
+            room.edgeDisposables.push(natural);
+            continue;
+          }
+          // Masonry, or boxes where no environment builds natural boundaries.
+          const boxes = kind === 'walls' ? list : list.map((f) => f.clone().multiply(new THREE.Matrix4().compose(new THREE.Vector3(0, (which === 'walls' ? WALL_HEIGHT : KERB_HEIGHT) / 2, 0), new THREE.Quaternion(), new THREE.Vector3(HEX_SIZE * 1.08, which === 'walls' ? WALL_HEIGHT : KERB_HEIGHT, which === 'walls' ? WALL_THICK : KERB_THICK))));
+          const mesh = new THREE.InstancedMesh(this.boxGeometry, which === 'walls' ? this.wallMaterial : this.kerbMaterial, boxes.length);
+          boxes.forEach((mat, i) => mesh.setMatrixAt(i, mat));
+          mesh.receiveShadow = true;
+          edges.add(mesh);
+          room.edgeDisposables.push(mesh);
         }
-        const list = (which === 'walls' ? perRoomWalls : perRoomKerbs).get(room.id) ?? [];
-        if (!list.length) {
-          room[which] = null;
-          continue;
-        }
-        const mesh = new THREE.InstancedMesh(this.boxGeometry, which === 'walls' ? this.wallMaterial : this.kerbMaterial, list.length);
-        list.forEach((mat, i) => mesh.setMatrixAt(i, mat));
-        mesh.castShadow = this.castShadows;
-        mesh.receiveShadow = true;
-        room.group.add(mesh);
-        room[which] = mesh;
       }
+      edges.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) o.castShadow = this.castShadows;
+      });
+      room.group.add(edges);
+      room.edges = edges;
     }
   }
 
@@ -454,8 +566,9 @@ export class TileLayer {
       if (!room) continue;
       const hex = parseHexKey(k);
       const wanted: [string, () => PropView][] = [];
-      // A blocking scenario object (brazier, lever) is drawn as the object, not as an obstacle too.
-      if (tile.obstacle && !tile.object) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
+      // A blocking scenario object (brazier, lever) is drawn as the object, a blocking door (rubble,
+      // a barricade) as the door, not as an obstacle too.
+      if (tile.obstacle && !tile.object && !tile.door) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
       if (tile.door) wanted.push([`${k}:door`, () => this.makeDoor(k, hex, tile, s)]);
       if (tile.trap) wanted.push([`${k}:trap`, () => this.makeSimple(`${k}:trap`, hex, tile.room, 'trap', this.propParts.trap())]);
       if (tile.coins) wanted.push([`${k}:coins`, () => this.makeSimple(`${k}:coins`, hex, tile.room, null, this.propParts.coins(tile.coins ?? 1))]);
@@ -501,15 +614,25 @@ export class TileLayer {
     this.props.delete(key);
   }
 
-  /** Door panel: swings open (k = 0..1 when animating). */
+  /** Opens or closes a door (k = 0..1 when animating), in the way of its kind (doorPose). */
   setDoorOpen(p: PropView, open: boolean, animate: boolean, k = 1): void {
-    if (!p.panel) return;
+    if (!p.doorKind) return;
     if (!animate && p.open === open) return;
     const from = p.open ? 1 : 0;
     const to = open ? 1 : 0;
-    const t = animate ? from + (to - from) * k : to;
-    p.panel.rotation.y = t * THREE.MathUtils.degToRad(-105);
+    doorPose(p, animate ? from + (to - from) * k : to);
     if (!animate || k >= 1) p.open = open;
+  }
+
+  /** Seconds a door takes to open. */
+  doorSeconds(p: PropView): number {
+    return DOOR_SECONDS[p.doorKind ?? 'door'];
+  }
+
+  /** Drops every prop so the next syncProps builds them again (new art-kit pieces arrived). */
+  resetProps(): void {
+    for (const p of this.props.values()) p.object.removeFromParent();
+    this.props.clear();
   }
 
   /** Room rise: k from 0 (below the board) to 1 (in place); `origin` = where the reveal starts. */
@@ -535,7 +658,7 @@ export class TileLayer {
       mesh.instanceMatrix.needsUpdate = true;
     });
     const late = THREE.MathUtils.clamp((k - 0.55) / 0.45, 0, 1);
-    for (const which of [room.walls, room.kerbs, room.props]) {
+    for (const which of [room.edges, room.props]) {
       if (!which) continue;
       which.position.y = -(1 - late) * 1.2;
       which.visible = late > 0;
@@ -599,19 +722,52 @@ export class TileLayer {
 
   private makeDoor(k: HexKey, hex: Hex, tile: Tile, s: GameState): PropView {
     const dir = doorDirection(hex, tile, s);
+    const kind = this.doorKindAt(k, tile, s);
     const object = new THREE.Group();
-    const { frame, panel } = this.propParts.door();
     const holder = new THREE.Group();
-    holder.add(frame, panel);
-    // Stand the frame on the hex edge the door leads through.
+    // Stand the door on the hex edge it leads through: local X along the edge, +Z into the next room.
     holder.position.set(dir.x * 0.62, 0, dir.z * 0.62);
     holder.rotation.y = Math.atan2(dir.x, dir.z);
     object.add(holder);
+    const p: PropView = { key: `${k}:door`, object, room: tile.room, doorKind: kind, open: false };
+    if (kind === 'door') {
+      const { frame, panel } = this.propParts.door();
+      holder.add(frame, panel);
+      p.panel = panel;
+      this.swapDoorPanel(panel);
+    } else if (kind === 'gate') {
+      const { frame, wings } = this.propParts.gate();
+      holder.add(frame, ...wings);
+      p.wings = wings;
+    } else {
+      const pieceId = DOOR_PIECES[kind]!;
+      const body = new THREE.Group();
+      const piece = this.pieceFactory?.(pieceId) ?? this.propParts.crate();
+      if (kind === 'log') {
+        // Pivot on the rooted left end.
+        body.position.x = -0.55;
+        piece.position.x = 0.55;
+      }
+      if (kind === 'rubble') {
+        const stones = [...piece.children];
+        for (const st of stones) {
+          st.userData['base'] = st.position.clone();
+          st.userData['scale'] = st.scale.x;
+        }
+        body.userData['stones'] = stones;
+      }
+      if (kind === 'minecart') {
+        const rails = this.pieceFactory?.('rails');
+        if (rails) holder.add(rails);
+      }
+      body.add(piece);
+      holder.add(body);
+      p.body = body;
+      this.swapInProp(p, piece, pieceId);
+    }
     this.place(object, hex);
     this.shadow(object);
-    const p: PropView = { key: `${k}:door`, object, room: tile.room, panel, open: false };
     this.setDoorOpen(p, !!tile.door?.open, false);
-    this.swapDoorPanel(panel);
     return p;
   }
 
@@ -669,12 +825,8 @@ export class TileLayer {
   setCastShadows(on: boolean): void {
     this.castShadows = on;
     this.root.traverse((c) => {
-      if ((c as THREE.Mesh).isMesh && !(c as THREE.InstancedMesh).isInstancedMesh) c.castShadow = on;
+      if ((c as THREE.Mesh).isMesh && c.name !== 'contact-shadow' && !c.name.startsWith('plates:')) c.castShadow = on;
     });
-    for (const room of this.rooms.values()) {
-      if (room.walls) room.walls.castShadow = on;
-      if (room.kerbs) room.kerbs.castShadow = on;
-    }
   }
 
   /** Board extent of the built rooms (XZ, world units), or null when empty. */
@@ -703,8 +855,7 @@ export class TileLayer {
   dispose(): void {
     for (const room of this.rooms.values()) {
       for (const mesh of room.plates) mesh.dispose();
-      room.walls?.dispose();
-      room.kerbs?.dispose();
+      for (const d of room.edgeDisposables) d.dispose();
     }
     this.rooms.clear();
     this.props.clear();
@@ -737,6 +888,14 @@ function edgeMatrix(a: Hex, b: Hex, height: number, thick: number): THREE.Matrix
   const q = new THREE.Quaternion().setFromAxisAngle(UP, angle);
   const pos = new THREE.Vector3((wa.x + wb.x) / 2, PLATE_HEIGHT + height / 2 - 0.02, (wa.z + wb.z) / 2);
   return new THREE.Matrix4().compose(pos, q, new THREE.Vector3(HEX_SIZE * 1.08, height, thick));
+}
+
+/** Frame on the edge between two adjacent hexes, at plate height: X along the edge, Z across it. */
+function edgeFrame(a: Hex, b: Hex): THREE.Matrix4 {
+  const wa = hexToWorld(a[0], a[1]);
+  const wb = hexToWorld(b[0], b[1]);
+  const angle = Math.atan2(wb.x - wa.x, wb.z - wa.z);
+  return new THREE.Matrix4().compose(new THREE.Vector3((wa.x + wb.x) / 2, PLATE_HEIGHT - 0.02, (wa.z + wb.z) / 2), new THREE.Quaternion().setFromAxisAngle(UP, angle), new THREE.Vector3(1, 1, 1));
 }
 
 /** Unit vector from the door hex towards the room it leads to (or away from its own room). */
@@ -876,6 +1035,40 @@ class PropParts {
     ring.position.set(0.74, 0.5, 0.06);
     panel.add(ring);
     return { frame, panel };
+  }
+
+  /** A two-wing timber gate in a frame; each wing hinges on its post. */
+  gate(): { frame: THREE.Group; wings: THREE.Group[] } {
+    const frame = new THREE.Group();
+    for (const x of [-0.52, 0.52]) {
+      const post = new THREE.Mesh(this.box, this.darkWood);
+      post.scale.set(0.14, 1.15, 0.16);
+      post.position.set(x, 0.575, 0);
+      frame.add(post);
+    }
+    const wings = [-1, 1].map((side) => {
+      const wing = new THREE.Group();
+      wing.position.set(side * 0.45, 0, 0);
+      for (let i = 0; i < 3; i++) {
+        const plank = new THREE.Mesh(this.box, i % 2 ? this.wood : this.lightWood);
+        plank.scale.set(0.14, 0.9 - i * 0.04, 0.05);
+        plank.position.set(-side * (0.08 + i * 0.15), 0.5, 0);
+        wing.add(plank);
+      }
+      for (const y of [0.25, 0.75]) {
+        const rail = new THREE.Mesh(this.box, this.iron);
+        rail.scale.set(0.44, 0.06, 0.07);
+        rail.position.set(-side * 0.23, y, 0);
+        wing.add(rail);
+      }
+      const brace = new THREE.Mesh(this.box, this.darkWood);
+      brace.scale.set(0.06, 0.6, 0.04);
+      brace.position.set(-side * 0.23, 0.5, 0.03);
+      brace.rotation.z = side * 0.75;
+      wing.add(brace);
+      return wing;
+    });
+    return { frame, wings };
   }
 
   trap(): THREE.Group {

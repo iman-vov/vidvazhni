@@ -32,6 +32,8 @@ export interface EnvironmentDef {
     water?: number;
     waterColor?: string;
   };
+  /** Blender kits (model ids `env-<location>`) this location borrows pieces from, after its own. */
+  kits?: string[];
   /** Default look of the hexes (a room's `surface` in the scenario data wins). */
   surface?: SurfaceId;
   /** Default look of thin walls between rooms (a room's `boundary` wins). Default: masonry for

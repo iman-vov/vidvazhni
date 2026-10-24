@@ -18,7 +18,7 @@ import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } 
 import type { GraphicsQuality } from '../quality';
 import { environmentFor } from './data';
 import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
-import { kitPieces, loadKitPiece } from './kit';
+import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Morok } from './morok';
 import { planEnvironment, type Placement } from './plan';
@@ -106,6 +106,8 @@ export class BoardEnvironment {
   private readonly veil = new Map<string, number>();
   private obstacleGeometries: THREE.BufferGeometry[] = [];
   private buildToken = 0;
+  /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
+  private loadToken = 0;
 
   constructor(quality: GraphicsQuality) {
     this.quality = quality;
@@ -126,6 +128,7 @@ export class BoardEnvironment {
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
     this.kitParts.clear();
     this.propProtos.clear();
+    this.loadToken++;
     this.rebuild();
     this.loadKit();
     this.loadPropModels();
@@ -135,8 +138,10 @@ export class BoardEnvironment {
     if (q === this.quality) return;
     this.quality = q;
     if (!this.layout) return;
+    this.loadToken++;
     this.propProtos.clear();
     this.rebuild();
+    this.loadKit();
     this.loadPropModels();
   }
 
@@ -600,10 +605,10 @@ export class BoardEnvironment {
       if (spec && def.propModels?.[p.piece]) wanted.set(p.piece, spec);
     }
     if (!wanted.size) return;
-    const token = this.buildToken;
+    const token = this.loadToken;
     const quality = this.quality;
     void Promise.all([...wanted].map(async ([piece, spec]) => [piece, await loadPropPrototype(spec, quality)] as const)).then((loaded) => {
-      if (token !== this.buildToken) return;
+      if (token !== this.loadToken) return;
       for (const [piece, proto] of loaded) if (proto) this.propProtos.set(piece, proto);
       if (this.propProtos.size) this.rebuild();
     });
@@ -663,20 +668,37 @@ export class BoardEnvironment {
   }
 
   /** Swaps in art-kit pieces that exist for this location (none yet: all procedural). */
+  /** Swaps in art-kit pieces: the location's Blender kit (`env-<id>` model, plus kits it borrows
+   *  from), then single-piece GLBs in assets/environment, which win. */
   private loadKit(): void {
     const def = this.def!;
     const ids = kitPieces(def.id);
-    if (!ids.size) return;
-    const token = this.buildToken;
-    void Promise.all([...ids].map(async (id) => [id, await loadKitPiece(def.id, id)] as const)).then((loaded) => {
-      if (token !== this.buildToken) return;
-      for (const [id, parts] of loaded) if (parts?.length) this.kitParts.set(id, parts);
-      if (this.kitParts.size) this.rebuild();
-    });
+    const kits = locationKits(def.id, def.kits);
+    if (!ids.size && !kits.length) return;
+    const token = this.loadToken;
+    const quality = this.quality;
+    void (async () => {
+      const found = new Map<string, Part[]>();
+      // Borrowed kits first, so the location's own pieces win where both have one.
+      for (const kit of [...kits].reverse()) for (const [id, parts] of await loadLocationKit(kit, quality)) found.set(id, parts);
+      for (const id of ids) {
+        const parts = await loadKitPiece(def.id, id);
+        if (parts?.length) found.set(id, parts);
+      }
+      if (token !== this.loadToken || !found.size) return;
+      this.kitParts = found;
+      this.rebuild();
+      // Tile props built from pieces (obstacles, door bodies) pick the kit up on the next sync.
+      this.onKit();
+    })();
   }
+
+  /** Called when kit pieces arrived (the board rebuilds its tile props from them). */
+  onKit: () => void = () => {};
 
   dispose(): void {
     this.buildToken++;
+    this.loadToken++;
     this.clear();
     this.blobTexture?.dispose();
     this.blobTexture = null;

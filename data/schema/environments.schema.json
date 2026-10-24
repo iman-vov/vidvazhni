@@ -42,6 +42,7 @@
       "required": ["tint"],
       "additionalProperties": false
     },
+    "kits": { "description": "Blender kit models (env-<location>) to borrow pieces from, after the location's own.", "type": "array", "items": { "type": "string", "pattern": "^env-[a-z0-9-]+$" } },
     "surface": { "description": "Default look of the hexes; a room's surface in the scenario wins.", "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock"] },
     "boundary": { "description": "Default look of thin walls between rooms; a room's boundary wins.", "enum": ["walls", "reeds", "thicket", "rocks", "logs"] },
     "walls": {
