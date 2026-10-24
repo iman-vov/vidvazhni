@@ -24,12 +24,13 @@
     "sack": { "model": "flour-sack", "height": 0.5 },
     "brazier": { "model": "brazier", "height": 0.68 },
     "brazier-lit": { "model": "brazier", "height": 0.72 },
+    "table": { "model": "tavern-table", "height": 0.62 },
     "chest": { "model": "chest", "height": 0.6 },
     "door": { "model": "dungeon-door", "height": 1.0 },
     "trap": { "model": "bear-trap", "height": 0.18 }
   },
   "dressing": {
-    "anchors": [["brazier-lit", 2]],
+    "anchors": [["brazier-lit", 2], ["table", 1]],
     "ring": [["barrel", 3], ["keg-rack", 2], ["crate", 2], ["crate-stack", 2], ["sacks", 2], ["wine-rack", 2], ["candles", 2], ["shelf", 1], ["sack", 1]],
     "density": 0.75
   }

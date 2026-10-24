@@ -178,8 +178,10 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
         const [q, r] = parseHexKey(k);
         const c = hexToWorld(q, r);
         if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6)) continue;
-        // The first one nearest the board's middle, the rest as far from the others as possible.
-        const d = chosen.length ? Math.min(...chosen.map((o) => Math.hypot(o.x - c.x, o.z - c.z))) : -Math.hypot(c.x - layout.centre.x, c.z - layout.centre.z);
+        // The first one nearest the board's middle, the rest as far from the others as possible;
+        // all of them rather behind the board than on the camera's side.
+        const spread = chosen.length ? Math.min(...chosen.map((o) => Math.hypot(o.x - c.x, o.z - c.z))) : -Math.hypot(c.x - layout.centre.x, c.z - layout.centre.z);
+        const d = spread - 1.5 * Math.max(0, c.z - layout.centre.z);
         if (d > bestD || best === null) {
           bestD = d;
           best = k;
