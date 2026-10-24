@@ -1799,6 +1799,33 @@
       "triangleBudget": null,
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "env-cellar",
+      "nameUk": "Набір оточення: підвал",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 48,
+      "wave": 5,
+      "scenarios": [
+        1
+      ],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/cellar.blend",
+      "modelFile": "assets/models/env-cellar/env-cellar.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 16000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }
