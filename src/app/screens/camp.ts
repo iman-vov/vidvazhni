@@ -1,18 +1,22 @@
 // The camp between missions (docs/design/camp.md, art/ui-mockups/camp/v1.png): the heroes in their
 // colours on the left, tabs and the chosen hero's gold on top, the hero's bust in the middle, the
 // mission slots and the two chests below, [До місії ▸] with a summary in the corner. Tabs:
-// «Спорядження», «Крамниця» (shop-v1.png: buy, sell, ★, slot filter, gifts) and «Рівень». Every
+// «Спорядження», «Крамниця» (shop-v1.png: buy, sell, ★, slot filter, gifts) and «Рівень»
+// (level-v1.png: +health, 1 of 2 new cards, a perk with the modifier deck before and after, and
+// «Карти на місію» when the card pool is larger than the hand). Every
 // change goes through the pure rules in src/rules/campaign.ts and is saved at once.
 
-import { buy, canLevelUp, equip, giftGold, playableScenarios, sell, sellPrice, setupFromCampaign, shopStock, takeFromChest, unequip, upgrade, type CampaignHero, type CampaignResult, type CampaignState } from '../../rules/campaign';
+import { availablePerks, buy, canLevelUp, cardPool, equip, giftGold, levelUp, levelUpCards, pickHand, playableScenarios, sell, sellPrice, setupFromCampaign, shopStock, takeFromChest, unequip, upgrade, type CampaignHero, type CampaignResult, type CampaignState } from '../../rules/campaign';
 import type { CampaignRules, ItemDef, ItemSlot } from '../../rules/content';
 import { itemNameKey, UPGRADED } from '../../rules/items';
+import { perkedCards } from '../../rules/modifiers';
 import type { LoadedContent } from '../../rules/load';
-import type { GameSetup } from '../../rules/state';
+import type { GameSetup, GameState, HeroState } from '../../rules/state';
+import { cardView, compactCard } from '../../ui/game/card';
 import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
 import { icon, type IconName } from '../../ui/game/icons';
-import { stepLine } from '../../ui/game/text';
+import { modifierLabel, stepLine } from '../../ui/game/text';
 import { heroBustUrl, portraitUrl } from '../../ui/game/uiArt';
 import { settings } from '../settings';
 import type { SavedCampaign } from '../storage';
@@ -47,6 +51,10 @@ export function campScreen(o: CampOptions): HTMLElement {
   let chosen = state.heroes[0]?.classId ?? '';
   let tab: Tab = 'gear';
   let filter: SlotGroup | null = null;
+  // «Рівень»: the wizard's choices and the hand being picked, for the chosen hero.
+  let newCard: string | null = null;
+  let newPerk: string | null = null;
+  let hand: string[] | null = null;
   let summary = false;
   let confirmNew = false;
   let message = '';
@@ -74,7 +82,7 @@ export function campScreen(o: CampOptions): HTMLElement {
         const url = portraitUrl(x.classId);
         return h(
           'button',
-          { class: 'gcamp-hero', 'aria-pressed': String(x.classId === chosen), style: `--hero: ${c.heroes[x.classId]?.color ?? '#888'}`, onclick: () => ((chosen = x.classId), (message = ''), render()) },
+          { class: 'gcamp-hero', 'aria-pressed': String(x.classId === chosen), style: `--hero: ${c.heroes[x.classId]?.color ?? '#888'}`, onclick: () => ((chosen = x.classId), (message = ''), (newCard = newPerk = null), (hand = null), render()) },
           h('span', { class: 'gcamp-portrait', 'aria-hidden': 'true' }, url ? h('img', { src: url, alt: '', draggable: 'false' }) : null),
           h(
             'span',
@@ -103,7 +111,7 @@ export function campScreen(o: CampOptions): HTMLElement {
         TABS.map((it) =>
           h(
             'button',
-            { class: 'gcamp-tab', role: 'tab', 'aria-selected': String(it.id === tab), disabled: it.id === 'level', title: it.id === 'level' ? t('camp.soon') : null, onclick: () => ((tab = it.id), (message = ''), render()) },
+            { class: 'gcamp-tab', role: 'tab', 'aria-selected': String(it.id === tab), onclick: () => ((tab = it.id), (message = ''), render()) },
             icon(it.icon),
             h('span', null, t(`camp.tab.${it.id}`)),
           ),
@@ -272,6 +280,145 @@ export function campScreen(o: CampOptions): HTMLElement {
     );
   }
 
+  /** The modifier deck as chips «+1 ×5» (the infusing +1 with its icon). */
+  function deckView(cards: string[], fresh: string[] = []): HTMLElement {
+    const counts = new Map<string, number>();
+    for (const id of cards) counts.set(id, (counts.get(id) ?? 0) + 1);
+    const order = ['+2', '+1', '+1:infuse', '+0', '-1', '-2', 'x2', 'miss'];
+    const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
+    const ids = [...counts.keys()].sort((a, b) => rank(a) - rank(b));
+    return h(
+      'div',
+      { class: 'gcamp-deck' },
+      ids.map((id) =>
+        h(
+          'span',
+          { class: `gcamp-mod${fresh.includes(id) ? ' is-new' : ''}` },
+          h('b', null, modifierLabel(id)),
+          id.endsWith(':infuse') ? icon('infuse') : null,
+          h('small', null, `×${counts.get(id)}`),
+        ),
+      ),
+    );
+  }
+
+  const perkOps = (ids: string[]) => ids.flatMap((id) => c.perks[id]?.ops ?? []);
+
+  /** «Рівень»: the wizard when there is enough XP, else the progress and the current perks. */
+  function level(): HTMLElement {
+    const x = hero();
+    const cls = c.heroes[x.classId];
+    const before = perkedCards(perkOps(x.perks));
+    const parts: (HTMLElement | null)[] = [message ? h('p', { class: 'gcamp-msg', role: 'status' }, message) : null];
+    if (canLevelUp(c, x)) {
+      const cards = levelUpCards(c, x);
+      const perks = availablePerks(c, x);
+      const after = newPerk ? perkedCards(perkOps([...x.perks, newPerk])) : before;
+      const fresh = after.filter((id) => after.filter((y) => y === id).length > before.filter((y) => y === id).length);
+      const ready = (!cards.length || !!newCard) && (!perks.length || !!newPerk);
+      const fake = { variants: settings.get().variants } as GameState;
+      const owner = { classId: x.classId } as HeroState;
+      const color = cls?.color ?? '#888';
+      parts.push(
+        h(
+          'div',
+          { class: 'gcamp-panel gcamp-lvl-head' },
+          h('h3', null, icon('xp'), ' ', t('camp.lvl.title', { level: x.level + 1 })),
+          h('span', null, icon('hp'), ' ', t('camp.lvl.hp', { from: cls?.hpByLevel[x.level - 1] ?? '', to: cls?.hpByLevel[x.level] ?? '' })),
+          h('button', { class: 'gbtn gbtn-primary gcamp-lvl-ok', disabled: !ready, onclick: () => {
+                const choice = { card: newCard ?? undefined, perk: newPerk ?? undefined };
+                newCard = newPerk = null;
+                change(levelUp(c, state, x.classId, choice));
+              },
+            }, icon('check'), ' ', t('camp.lvl.confirm')),
+        ),
+        h(
+          'div',
+          { class: 'gcamp-lvl' },
+          cards.length
+            ? h(
+                'section',
+                { class: 'gcamp-panel gcamp-lvl-cards' },
+                h('h3', null, t('camp.lvl.card')),
+                h(
+                  'div',
+                  { class: 'gcamp-lvl-pair' },
+                  cards.map((id) =>
+                    h(
+                      'div',
+                      { class: 'gcamp-lvl-card' },
+                      cardView({ s: fake, content: c, hero: owner, cardId: id, accent: color, picked: newCard === id }),
+                      h('button', { class: `gbtn${newCard === id ? ' gbtn-primary' : ''}`, 'aria-pressed': String(newCard === id), onclick: () => ((newCard = id), render()) }, newCard === id ? icon('check') : null, ' ', t('camp.lvl.pick')),
+                    ),
+                  ),
+                ),
+              )
+            : null,
+          h(
+            'section',
+            { class: 'gcamp-panel gcamp-lvl-perks' },
+            h('h3', null, t('camp.lvl.perk')),
+            h(
+              'div',
+              { class: 'gcamp-perk-list' },
+              Object.keys(c.perks).map((id) =>
+                h(
+                  'button',
+                  { class: 'gcamp-perk', 'aria-pressed': String(newPerk === id), disabled: !perks.includes(id), onclick: () => ((newPerk = id), render()) },
+                  newPerk === id ? icon('check') : null,
+                  h('span', null, t(`perk.${id}`)),
+                ),
+              ),
+            ),
+            h('small', null, t('camp.lvl.before')),
+            deckView(before),
+            h('small', null, t('camp.lvl.after')),
+            deckView(after, fresh),
+          ),
+        ),
+      );
+    } else {
+      const need = c.campaign.xpByLevel[x.level];
+      parts.push(
+        h(
+          'section',
+          { class: 'gcamp-panel gcamp-lvl-head' },
+          h('h3', null, icon('xp'), ' ', need !== undefined ? t('camp.lvl.need', { n: need - x.xp, level: x.level + 1 }) : t('camp.lvl.max')),
+          h('small', null, x.perks.length ? x.perks.map((id) => t(`perk.${id}`)).join(' · ') : t('camp.lvl.noPerks')),
+          deckView(before),
+        ),
+      );
+    }
+    parts.push(handPicker(x));
+    return h('div', { class: 'gcamp-level' }, parts);
+  }
+
+  /** «Карти на місію»: only when the pool is larger than the hand; saved once the hand is full. */
+  function handPicker(x: CampaignHero): HTMLElement | null {
+    const size = c.heroes[x.classId]?.handSize ?? 0;
+    const pool = cardPool(c, x);
+    if (pool.length <= size) return null;
+    const picked = hand ?? (x.handPick ?? []).filter((id) => pool.includes(id));
+    const fake = { variants: settings.get().variants } as GameState;
+    const owner = { classId: x.classId } as HeroState;
+    const toggle = (id: string) => {
+      hand = picked.includes(id) ? picked.filter((y) => y !== id) : picked.length < size ? [...picked, id] : picked;
+      if (hand.length === size) change(pickHand(c, state, x.classId, hand));
+      else render();
+    };
+    return h(
+      'section',
+      { class: 'gcamp-panel gcamp-hand' },
+      h('h3', null, icon('hand'), ' ', t('camp.hand.title'), ' ', h('b', { class: 'gcamp-hand-n' }, `${picked.length} / ${size}`)),
+      h('small', null, picked.length === size ? t('camp.hand.saved') : t('camp.hand.hint', { n: size })),
+      h(
+        'div',
+        { class: 'gcamp-hand-grid' },
+        pool.map((id) => compactCard({ s: fake, content: c, hero: owner, cardId: id, accent: c.heroes[x.classId]?.color, picked: picked.includes(id), onToggle: () => toggle(id) })),
+      ),
+    );
+  }
+
   function nextScenario(): string | undefined {
     return playableScenarios(state)[0];
   }
@@ -334,7 +481,9 @@ export function campScreen(o: CampOptions): HTMLElement {
       h('div', { class: 'gcamp-marta', 'aria-hidden': 'true' }, h('span', null, t('camp.marta'))),
       tab === 'shop'
         ? h('div', { class: 'gcamp-gear' }, shop())
-        : h('div', { class: 'gcamp-gear' }, slots(), message ? h('p', { class: 'gcamp-msg', role: 'status' }, message) : h('p', { class: 'gcamp-hint' }, t('camp.hint')), chests()),
+        : tab === 'level'
+          ? h('div', { class: 'gcamp-gear' }, level())
+          : h('div', { class: 'gcamp-gear' }, slots(), message ? h('p', { class: 'gcamp-msg', role: 'status' }, message) : h('p', { class: 'gcamp-hint' }, t('camp.hint')), chests()),
       h('div', { class: 'gcamp-go' }, artButton('compass', t('camp.toMission'), () => (o.onMap ? o.onMap() : ((summary = true), render())), { cls: 'is-go' })),
       summary ? summaryDialog() : '',
     );

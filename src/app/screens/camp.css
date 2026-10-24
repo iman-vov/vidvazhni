@@ -552,6 +552,165 @@
   gap: 4px;
 }
 
+/* ─── Level (level-v1.png): +health, 1 of 2 cards, a perk with the deck before / after, the hand ─── */
+
+.gcamp-level {
+  --g-card-w: 180px;
+  --g-card-h: 170px;
+  --hud-gold: var(--cp-line);
+  --hud-gold-hi: var(--cp-gold-hi);
+  --hud-ink: var(--cp-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcamp-level h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1em;
+  margin-bottom: 6px;
+}
+
+.gcamp-level small {
+  display: block;
+  font-size: 0.8em;
+  opacity: 0.85;
+  margin: 4px 0;
+}
+
+.gcamp-lvl-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.gcamp-lvl-head h3 {
+  margin: 0;
+}
+
+.gcamp-lvl-head > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gcamp-lvl-ok {
+  margin-left: auto;
+  min-height: 52px;
+}
+
+.gcamp-lvl {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 8px;
+}
+
+.gcamp-lvl h3 {
+  justify-content: center;
+}
+
+.gcamp-lvl-pair {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gcamp-lvl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gcamp-lvl-card .gbtn {
+  min-height: 48px;
+}
+
+.gcamp-perk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gcamp-perk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--cp-line);
+  background: rgba(36, 80, 138, 0.5);
+  color: var(--cp-ink);
+  font: inherit;
+  font-size: 0.9em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gcamp-perk[aria-pressed='true'] {
+  border: 2px solid var(--cp-gold-hi);
+  background: linear-gradient(180deg, #2c5c9a, #173764);
+}
+
+.gcamp-perk:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.gcamp-perk .gi,
+.gcamp-mod .gi {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--cp-gold-hi);
+}
+
+.gcamp-deck {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gcamp-mod {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-line);
+  background: rgba(13, 27, 48, 0.8);
+}
+
+.gcamp-mod small {
+  display: inline;
+  margin: 0;
+}
+
+.gcamp-mod.is-new {
+  border-color: var(--cp-gold-hi);
+  box-shadow: 0 0 8px rgba(247, 212, 111, 0.55);
+}
+
+.gcamp-hand-n {
+  margin-left: auto;
+  color: var(--cp-gold-hi);
+}
+
+.gcamp-hand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 820px) {
+  .gcamp-lvl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ─── Mission summary ─── */
 
 .gcamp-dialog {
