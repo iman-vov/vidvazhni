@@ -6,7 +6,7 @@
 // turned and sized a little differently per hex, each standing on a soft contact shadow.
 
 import * as THREE from 'three';
-import type { Content } from '../rules/content';
+import type { Content, SurfaceId } from '../rules/content';
 import { hexKey as rulesHexKey, neighbors, parseHexKey, type Hex, type HexKey } from '../rules/hex';
 import type { GameState, Tile } from '../rules/state';
 import { blobShadowTexture } from './contactShadow';
@@ -15,6 +15,7 @@ import { listModels } from './models';
 import { hexVariation, loadPropPrototype, propModelFor, type PropPrototype } from './propModels';
 import type { GraphicsQuality } from './quality';
 import type { PropModelSpec } from './environment/types';
+import { surfaceOf, surfaceRoughness, surfaceSide, surfaceTexture, TERRAIN_TINT, terrainOverlayTexture, WATER_DROP } from './surfaces';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const PLATE_RADIUS = 0.96 * HEX_SIZE;
@@ -26,17 +27,12 @@ const KERB_THICK = 0.2;
 const TEXTURE_WORLD_SIZE = 2.6;
 
 type Terrain = Tile['terrain'];
-const TERRAINS: Terrain[] = ['normal', 'difficult', 'hazardous', 'water'];
+type Overlay = 'difficult' | 'hazardous' | 'water';
+const OVERLAYS: readonly Overlay[] = ['difficult', 'hazardous', 'water'];
+/** Height of each terrain overlay above the plate's base (water lies a little under the others). */
+const OVERLAY_Y: Record<Overlay, number> = { difficult: PLATE_HEIGHT + 0.004, hazardous: PLATE_HEIGHT + 0.006, water: PLATE_HEIGHT - WATER_DROP * 0.35 };
 
 const TEXTURE_URLS = import.meta.glob<string>('/assets/textures/*.webp', { query: '?url', import: 'default', eager: true });
-
-/** Texture per terrain; `normal` depends on the scenario's look (s1 is a cellar). */
-const THEME_NORMAL: Record<string, string> = { s1: 'cobblestone', s2: 'forest-floor', s3: 'tavern-planks', s4: 'cobblestone', s5: 'cave-rock' };
-const TERRAIN_TEXTURE: Record<Exclude<Terrain, 'normal'>, string> = { difficult: 'swamp-mud', hazardous: 'cave-rock', water: 'shallow-water' };
-/** Multiplied over the texture: hazardous ground glows a little, the side of a plate is darker. */
-const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#f0e6d0', hazardous: '#ffb8a0', water: '#c4d8de' };
-const TERRAIN_SIDE: Record<Terrain, string> = { normal: '#5c5048', difficult: '#4e4030', hazardous: '#5a3a3a', water: '#3c5a66' };
-const TERRAIN_FALLBACK: Record<Terrain, string> = { normal: '#9a948a', difficult: '#7a6a48', hazardous: '#8a4a48', water: '#5aa8c0' };
 
 /** Prop heights in world units when a prop model is used and the location's table gives none. */
 const PROP_HEIGHT: Record<string, number> = { barrel: 0.95, crate: 0.8, chest: 0.6, trap: 0.18, door: 0.98 };
@@ -153,9 +149,12 @@ function worldUvMaterial(map: THREE.Texture, tint: string): THREE.MeshStandardMa
 interface RoomView {
   id: string;
   group: THREE.Group;
+  /** Plates by surface and terrain, then the terrain overlays on top of them. */
   plates: THREE.InstancedMesh[];
-  /** Per plate mesh: the hexes in instance order. */
+  /** Per plate mesh: the hexes in instance order, its rest height and its material key. */
   plateHexes: Hex[][];
+  plateY: number[];
+  plateKeys: string[];
   walls: THREE.InstancedMesh | null;
   kerbs: THREE.InstancedMesh | null;
   props: THREE.Group;
@@ -184,10 +183,15 @@ export class TileLayer {
   private readonly blockTexture = stoneBlockTexture();
   private readonly wallMaterial = new THREE.MeshStandardMaterial({ color: '#8a7f72', map: this.blockTexture, roughness: 0.95, flatShading: true });
   private readonly kerbMaterial = new THREE.MeshStandardMaterial({ color: '#6a6058', map: this.blockTexture, roughness: 0.95, flatShading: true });
-  private materials = new Map<Terrain, THREE.Material[]>();
+  /** Plate materials by `surface|terrain` and overlay materials by `overlay:<terrain>`, built lazily. */
+  private materials = new Map<string, THREE.Material | THREE.Material[]>();
+  private surfaceTextures = new Map<SurfaceId, THREE.Texture>();
   private textures: THREE.Texture[] = [];
-  private theme = 'cobblestone';
+  private readonly overlayGeometry: THREE.BufferGeometry;
   private quality: GraphicsQuality;
+  /** Surface of each hex of the scenario (room data, per-hex overrides, the location's default). */
+  private surfaceByHex = new Map<HexKey, SurfaceId>();
+  private defaultSurface: SurfaceId = 'cobblestone';
   private readonly propParts = new PropParts();
   private obstacleModels = new Map<HexKey, string>();
   private readonly available = new Set(listModels());
@@ -198,8 +202,7 @@ export class TileLayer {
   /** Every hex of the map when an environment surrounds it: no kerbs toward the outside then
    *  (the environment's floor and walls take over); kerbs stay toward rooms not yet revealed. */
   private footprint: ReadonlySet<HexKey> | null = null;
-  /** Texture of `normal` hexes chosen by the location, instead of the scenario default. */
-  private hexTheme: string | null = null;
+
   /** The location's stand-in for an obstacle model without a GLB (tree, rock, pillar…). */
   obstacleFactory: ((model: string) => THREE.Object3D | null) | null = null;
   /** The location's prop model for an obstacle model, object look or `chest`/`door`/`trap`. Without
@@ -215,74 +218,102 @@ export class TileLayer {
     this.quality = quality;
     this.plateGeometry = new THREE.CylinderGeometry(PLATE_RADIUS, PLATE_RADIUS * 0.97, PLATE_HEIGHT, 6, 1, false, Math.PI / 2);
     this.plateGeometry.translate(0, PLATE_HEIGHT / 2, 0);
+    // A flat hex just inside the plate's top (flat-top: a corner at +X).
+    this.overlayGeometry = new THREE.CircleGeometry(PLATE_RADIUS * 0.985, 6).rotateX(-Math.PI / 2);
   }
 
   get revealed(): string[] {
     return [...this.rooms.keys()];
   }
 
-  /** Rebuilds the terrain materials for a quality level (texture size) and scenario look. */
-  setLook(quality: GraphicsQuality, scenarioId: string): void {
-    const theme = this.hexTheme ?? THEME_NORMAL[scenarioId] ?? 'cobblestone';
-    if (this.materials.size && quality === this.quality && theme === this.theme) return;
+  /** Rebuilds the surface materials for a quality level (texture size). */
+  setLook(quality: GraphicsQuality): void {
+    if (quality === this.quality) return;
     this.quality = quality;
-    this.theme = theme;
     const old = [...this.materials.values()].flat();
-    const oldTextures = this.textures;
+    const oldTextures = [...this.textures, ...this.surfaceTextures.values()];
     this.materials = new Map();
+    this.surfaceTextures = new Map();
     this.textures = [];
-    const loader = new THREE.TextureLoader();
-    for (const terrain of TERRAINS) {
-      const name = terrain === 'normal' ? theme : TERRAIN_TEXTURE[terrain];
-      const url = textureUrl(name, quality);
-      const fallback = noiseTexture(TERRAIN_FALLBACK[terrain]);
-      const top = worldUvMaterial(fallback, url ? '#ffffff' : TERRAIN_TINT[terrain]);
-      this.textures.push(fallback);
-      if (url) {
-        loader.load(url, (tex) => {
-          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-          tex.colorSpace = THREE.SRGBColorSpace;
-          tex.anisotropy = quality === 'low' ? 1 : 4;
-          top.map = tex;
-          top.color.set(TERRAIN_TINT[terrain]);
-          top.needsUpdate = true;
-          this.textures.push(tex);
-          this.onChange();
-        });
-      }
-      if (terrain === 'water') {
-        top.roughness = 0.35;
-        top.metalness = 0.05;
-      }
-      if (terrain === 'hazardous') top.emissive.set('#3a0d08');
-      const side = new THREE.MeshStandardMaterial({ color: TERRAIN_SIDE[terrain], roughness: 1, flatShading: true });
-      this.materials.set(terrain, [side, top, side]);
-    }
-    for (const room of this.rooms.values()) room.plates.forEach((mesh, i) => (mesh.material = this.materials.get(TERRAINS[i]!)!));
+    for (const room of this.rooms.values()) room.plates.forEach((mesh, i) => (mesh.material = this.material(room.plateKeys[i]!)));
     for (const m of old) m.dispose();
     for (const t of oldTextures) t.dispose();
   }
 
-  /** Location settings from the environment: map footprint (kerbs), thin-wall colour, hex texture. */
-  setSurroundings(footprint: ReadonlySet<HexKey> | null, wallColor: string | null, hexTheme: string | null): void {
+  /** Material for a key: `surface|terrain` for plates (sides and top), `overlay:<terrain>`. */
+  private material(key: string): THREE.Material | THREE.Material[] {
+    let m = this.materials.get(key);
+    if (m) return m;
+    if (key.startsWith('overlay:')) {
+      const terrain = key.slice(8) as Overlay;
+      if (terrain === 'water') {
+        const fallback = noiseTexture('#5a8a96');
+        this.textures.push(fallback);
+        const water = worldUvMaterial(fallback, '#cfe6ea');
+        Object.assign(water, { transparent: true, opacity: 0.72, depthWrite: false, roughness: 0.15, metalness: 0.1 });
+        const url = textureUrl('shallow-water', this.quality);
+        if (url) {
+          new THREE.TextureLoader().load(url, (tex) => {
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            water.map = tex;
+            water.needsUpdate = true;
+            this.textures.push(tex);
+            this.onChange();
+          });
+        }
+        m = water;
+      } else {
+        const tex = terrainOverlayTexture(terrain, this.quality);
+        this.textures.push(tex);
+        const overlay = worldUvMaterial(tex, '#ffffff');
+        Object.assign(overlay, { transparent: true, depthWrite: false, roughness: 0.9 });
+        if (terrain === 'hazardous') {
+          overlay.emissive.set('#ff5a20');
+          overlay.emissiveIntensity = 0.55;
+        }
+        m = overlay;
+      }
+    } else {
+      const [surface, terrain] = key.split('|') as [SurfaceId, Terrain];
+      let tex = this.surfaceTextures.get(surface);
+      if (!tex) {
+        tex = surfaceTexture(surface, this.quality, textureUrl, () => this.onChange());
+        this.surfaceTextures.set(surface, tex);
+      }
+      const top = worldUvMaterial(tex, TERRAIN_TINT[terrain]);
+      top.roughness = surfaceRoughness(surface);
+      if (terrain === 'water') top.roughness = 0.4;
+      if (terrain === 'hazardous') top.emissive.set('#2a0a04');
+      const side = new THREE.MeshStandardMaterial({ color: new THREE.Color(surfaceSide(surface)).multiply(new THREE.Color(TERRAIN_TINT[terrain])), roughness: 1, flatShading: true });
+      m = [side, top, side];
+    }
+    this.materials.set(key, m);
+    return m;
+  }
+
+  /** Location settings from the environment: map footprint (kerbs), thin-wall colour, the hexes'
+   *  default surface. */
+  setSurroundings(footprint: ReadonlySet<HexKey> | null, wallColor: string | null, surface: SurfaceId | null): void {
     this.footprint = footprint;
     if (wallColor) {
       this.wallMaterial.color.set(wallColor);
       this.kerbMaterial.color.set(wallColor).multiplyScalar(0.78);
     }
-    if (hexTheme !== this.hexTheme) {
-      this.hexTheme = hexTheme;
-      this.theme = ''; // the next setLook rebuilds the terrain materials
-    }
+    this.defaultSurface = surface ?? 'cobblestone';
   }
 
   /** Adds rooms that are revealed in `s` and not built yet; removes rooms that are not revealed
    *  (undo). Returns the ids of new rooms. Walls and kerbs are rebuilt for every room. */
   syncRooms(s: GameState, content: Content, only?: string): string[] {
-    this.setLook(this.quality, s.scenarioId);
     this.obstacleModels = new Map();
+    this.surfaceByHex = new Map();
     for (const room of content.scenarios[s.scenarioId]?.rooms ?? []) {
       for (const o of room.obstacles ?? []) if (o.model) this.obstacleModels.set(rulesHexKey(o.hex), o.model);
+      for (const h of room.hexes) {
+        const k = rulesHexKey(h);
+        this.surfaceByHex.set(k, surfaceOf(k, room, this.defaultSurface));
+      }
     }
     const wanted = only ? [...new Set([...this.rooms.keys(), only])] : s.board.revealedRooms;
     const added: string[] = [];
@@ -316,32 +347,44 @@ export class TileLayer {
   private buildRoom(id: string, tiles: [HexKey, Tile][]): RoomView {
     const group = new THREE.Group();
     group.name = `room:${id}`;
-    const plates: THREE.InstancedMesh[] = [];
-    const plateHexes: Hex[][] = [];
+    const room: RoomView = { id, group, plates: [], plateHexes: [], plateY: [], plateKeys: [], walls: null, kerbs: null, props: new THREE.Group() };
     const m = new THREE.Matrix4();
     const color = new THREE.Color();
-    for (const terrain of TERRAINS) {
-      const list = tiles.filter(([, t]) => t.terrain === terrain).map(([k]) => parseHexKey(k));
-      const mesh = new THREE.InstancedMesh(this.plateGeometry, this.materials.get(terrain)!, Math.max(1, list.length));
-      mesh.count = list.length;
+    const add = (key: string, geometry: THREE.BufferGeometry, list: Hex[], y: number, vary: boolean) => {
+      if (!list.length) return;
+      const mesh = new THREE.InstancedMesh(geometry, this.material(key), list.length);
       list.forEach(([q, r], i) => {
         const { x, z } = hexToWorld(q, r);
-        m.makeTranslation(x, terrain === 'water' ? -0.05 : 0, z);
+        m.makeTranslation(x, y, z);
         mesh.setMatrixAt(i, m);
         // Small brightness variation so neighbouring plates read as separate painted tiles.
-        const v = 0.9 + 0.1 * (((q * 7 + r * 13) % 5 + 5) % 5) / 4;
-        mesh.setColorAt(i, color.setScalar(v));
+        if (vary) mesh.setColorAt(i, color.setScalar(0.9 + (0.1 * ((((q * 7 + r * 13) % 5) + 5) % 5)) / 4));
       });
       mesh.receiveShadow = true;
-      mesh.name = `plates:${terrain}`;
+      mesh.name = `plates:${key}`;
+      if (!vary) mesh.renderOrder = 1;
       group.add(mesh);
-      plates.push(mesh);
-      plateHexes.push(list);
+      room.plates.push(mesh);
+      room.plateHexes.push(list);
+      room.plateY.push(y);
+      room.plateKeys.push(key);
+    };
+    // Plates by surface and terrain.
+    const byKey = new Map<string, Hex[]>();
+    for (const [k, t] of tiles) {
+      const key = `${this.surfaceByHex.get(k) ?? this.defaultSurface}|${t.terrain}`;
+      let list = byKey.get(key);
+      if (!list) byKey.set(key, (list = []));
+      list.push(parseHexKey(k));
     }
-    const props = new THREE.Group();
-    group.add(props);
+    for (const [key, list] of byKey) add(key, this.plateGeometry, list, key.endsWith('|water') ? -WATER_DROP : 0, true);
+    // Terrain painted over the surface.
+    for (const terrain of OVERLAYS) {
+      add(`overlay:${terrain}`, this.overlayGeometry, tiles.filter(([, t]) => t.terrain === terrain).map(([k]) => parseHexKey(k)), OVERLAY_Y[terrain], false);
+    }
+    group.add(room.props);
     this.root.add(group);
-    return { id, group, plates, plateHexes, walls: null, kerbs: null, props };
+    return room;
   }
 
   /** Thin walls from the state, plus low kerbs on every edge between a tile and the outside. */
@@ -484,7 +527,7 @@ export class TileLayer {
         const d = origin ? Math.hypot(x - origin.x, z - origin.z) : 0;
         const local = THREE.MathUtils.clamp(k * 1.8 - d * 0.12, 0, 1);
         const e = 1 - (1 - local) ** 3;
-        pos.set(x, (TERRAINS[i] === 'water' ? -0.05 : 0) - (1 - e) * 1.4, z);
+        pos.set(x, room.plateY[i]! - (1 - e) * 1.4, z);
         scale.setScalar(0.55 + 0.45 * e);
         m.compose(pos, q, scale);
         mesh.setMatrixAt(j, m);
@@ -667,8 +710,9 @@ export class TileLayer {
     this.props.clear();
     this.root.clear();
     for (const m of [...this.materials.values()].flat()) m.dispose();
-    for (const t of this.textures) t.dispose();
+    for (const t of [...this.textures, ...this.surfaceTextures.values()]) t.dispose();
     this.plateGeometry.dispose();
+    this.overlayGeometry.dispose();
     this.boxGeometry.dispose();
     this.blockTexture.dispose();
     this.wallMaterial.dispose();

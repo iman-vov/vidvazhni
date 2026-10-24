@@ -2,6 +2,8 @@
   "id": "thorn-path",
   "scenarios": ["s2"],
   "edge": "forest",
+  "surface": "forest-floor",
+  "boundary": "thicket",
   "ground": { "texture": "forest-floor", "tint": "#5e5a42", "scale": 2.8 },
   "walls": { "height": 1.0, "low": 0.4, "alt": 3, "inner": "#7a6a52" },
   "palette": { "leaf": "#6f8240", "leafDark": "#3e5632", "leafWarm": "#b87a3c", "bark": "#5a4430", "moss": "#6f8a42" },

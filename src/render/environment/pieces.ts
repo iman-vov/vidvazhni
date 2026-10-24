@@ -319,6 +319,76 @@ function sack(b: Builder, pos: V3, s: number, mat: MaterialKey, rot: V3 = [0, 0,
   b.add(new THREE.TorusGeometry(0.068 * s, 0.014 * s, 4, 9).rotateX(Math.PI / 2).translate(0, 0.445 * s, 0), 'woodDark', pos, rot, [1, 1, 1], true);
 }
 
+/** A bank of reeds and cattails on a low mud ridge. */
+function reedFence(b: Builder, h: number): void {
+  b.blob('moss', 0.3, [0, 0.02, 0], [1.9, 0.25, 0.6]);
+  for (let i = 0; i < 16; i++) {
+    const x = -0.5 + (i / 15) * 1.0 + ((i * 37) % 7) * 0.006;
+    const z = ((i * 53) % 5) * 0.04 - 0.08;
+    const hh = h * (0.6 + ((i * 29) % 7) * 0.06);
+    b.cone('reed', 0.03, hh, 4, [x, 0, z], [((i % 3) - 1) * 0.12, 0, ((i % 4) - 1.5) * 0.08]);
+    if (i % 4 === 1) b.cyl('woodDark', 0.025, 0.025, 0.13, 5, [x + 0.01, hh * 0.72, z], [0, 0, 0], true);
+  }
+}
+
+/** A hedge of brambles and leaves with a few thorns. */
+function hedge(b: Builder, h: number): void {
+  b.blob('leafDark', 0.32, [-0.3, h * 0.42, 0], [1.1, h * 1.3, 0.85]);
+  b.blob('leaf', 0.3, [0.05, h * 0.5, 0.02], [1.15, h * 1.35, 0.85]);
+  b.blob('leafWarm', 0.26, [0.36, h * 0.4, -0.02], [1, h * 1.2, 0.85]);
+  for (let i = 0; i < 6; i++) b.cone('woodDark', 0.025, 0.2, 4, [-0.4 + i * 0.16, h * (0.3 + (i % 3) * 0.2), ((i % 2) - 0.5) * 0.4], [((i % 2) - 0.5) * 1.6, 0, 0.3 * (i - 2.5)], true);
+  for (let i = 0; i < 4; i++) b.blob('berry', 0.04, [-0.3 + i * 0.2, h * (0.6 + (i % 2) * 0.15), 0.22], [1, 1, 1], true);
+}
+
+/** Tumbled rocks along an edge; `n` stones. */
+function rockPile(b: Builder, h: number, seed: number): void {
+  const stones: [number, number, number, number][] = [[-0.36, 0.14, 0.22, 0], [0.02, 0.16, 0.25, 0.04], [0.38, 0.13, 0.21, -0.04], [-0.17, h * 0.55, 0.17, 0.02], [0.2, h * 0.58, 0.16, 0], [0.02, h * 0.82, 0.12, 0.02], [-0.5, 0.08, 0.12, 0.1], [0.52, 0.08, 0.11, -0.1]];
+  stones.forEach(([x, y, r, z], i) => b.rock(i % 3 === 1 ? 'rock' : 'rockDark', r, [x, y, z], [1.2, 0.85, 1], [seed * 0.3 + i, i * 0.9, seed * 0.1], i > 5));
+}
+
+/** Two fallen trunks stacked across an edge, with a stub and moss. */
+function logWall(b: Builder): void {
+  b.cyl('bark', 0.15, 0.17, 1.15, 8, [-0.57, 0.16, 0], [0, 0, -Math.PI / 2]);
+  b.cyl('bark', 0.12, 0.14, 0.95, 8, [-0.45, 0.4, -0.03], [0.1, 0.15, -Math.PI / 2]);
+  for (const x of [-0.57, 0.58]) b.add(new THREE.CircleGeometry(0.15, 8), 'woodLight', [x, 0.16, 0], [0, x < 0 ? -Math.PI / 2 : Math.PI / 2, 0], [1, 1, 1], true);
+  b.blob('moss', 0.11, [0.1, 0.3, 0.02], [2.4, 0.45, 1], true);
+  b.cyl('bark', 0.035, 0.05, 0.3, 5, [0.3, 0.45, 0], [0, 0, -0.6], true);
+}
+
+/** Sharpened stakes and cross planks lashed across a gap. */
+function barricade(b: Builder): void {
+  for (let i = 0; i < 5; i++) {
+    const x = -0.42 + i * 0.21;
+    const h = 0.72 + ((i * 37) % 5) * 0.05;
+    b.cyl('wood', 0.045, 0.05, h, 6, [x, 0, 0], [0, 0, ((i % 2) - 0.5) * 0.12]);
+    b.cone('woodLight', 0.045, 0.14, 6, [x + ((i % 2) - 0.5) * 0.12 * h, h, 0], [0, 0, ((i % 2) - 0.5) * 0.12], true);
+  }
+  for (const [y, a] of [[0.22, 0.05], [0.55, -0.06]] as const) b.box('woodDark', [1.08, 0.09, 0.05], [0, y, 0.07], [0, 0, a]);
+  b.box('woodDark', [1.2, 0.07, 0.04], [0, 0.42, -0.06], [0, 0, 0.55], true);
+  b.cyl('cloth', 0.05, 0.05, 0.06, 6, [-0.21, 0.52, 0.08], [Math.PI / 2, 0, 0], true);
+}
+
+/** A heap of cut branches and brush. */
+function brushPile(b: Builder): void {
+  b.blob('leafDark', 0.3, [-0.22, 0.24, 0], [1.2, 0.8, 0.85]);
+  b.blob('leafWarm', 0.26, [0.22, 0.22, 0.04], [1.2, 0.8, 0.85]);
+  b.blob('leaf', 0.22, [0, 0.45, -0.02], [1.3, 0.7, 0.8]);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI - Math.PI / 2;
+    b.cyl('bark', 0.025, 0.03, 0.7, 5, [-0.35 + i * 0.12, 0.08, ((i % 3) - 1) * 0.12], [((i % 2) - 0.5) * 0.4, 0, Math.PI / 2 + a * 0.45]);
+  }
+}
+
+/** A mine cart: a tapered wooden tub with iron bands on four wheels. */
+function mineCart(b: Builder): void {
+  b.add(new THREE.CylinderGeometry(0.42, 0.34, 0.42, 4, 1).rotateY(Math.PI / 4).scale(1.3, 1, 0.85).translate(0, 0.42, 0), 'wood');
+  b.add(new THREE.CylinderGeometry(0.4, 0.4, 0.04, 4, 1).rotateY(Math.PI / 4).scale(1.32, 1, 0.87).translate(0, 0.6, 0), 'woodDark');
+  for (const y of [0.3, 0.52]) b.add(new THREE.CylinderGeometry(0.4, 0.37, 0.04, 4, 1, true).rotateY(Math.PI / 4).scale(1.31, 1, 0.86).translate(0, y, 0), 'iron', [0, 0, 0], [0, 0, 0], [1, 1, 1], true);
+  for (const x of [-0.26, 0.26]) for (const z of [-0.24, 0.24]) b.cyl('iron', 0.11, 0.11, 0.05, 10, [x, 0.11, z + (z > 0 ? -0.025 : 0.025)], [Math.PI / 2, 0, 0]);
+  b.rock('rockDark', 0.14, [0.08, 0.62, 0], [1.3, 0.6, 1], [0.3, 0.2, 0], true);
+  b.rock('rock', 0.1, [-0.15, 0.62, 0.05], [1.2, 0.6, 1], [0.1, 0.7, 0], true);
+}
+
 function tree(b: Builder, h: number, warm: boolean): void {
   b.cyl('bark', 0.1, 0.2, h * 0.62, 7, [0, 0, 0]);
   b.cyl('bark', 0.05, 0.08, 0.5, 5, [0.1, h * 0.4, 0], [0, 0, -0.7], true);
@@ -839,6 +909,41 @@ const PIECES: Record<string, PieceDef> = {
         b.cyl('stoneLight', 0.025 * s, 0.035 * s, 0.18 * s, 5, [x, 0, z]);
         b.add(new THREE.SphereGeometry(0.09 * s, 7, 3, 0, Math.PI * 2, 0, Math.PI / 2), 'glowCold', [x, 0.17 * s, z]);
       }
+    },
+  },
+
+  // Boundaries between rooms on the board (centred on the hex edge, running along X, 1.06 long).
+  'reed-fence': { kind: 'edge', height: 0.8, radius: 0.55, build: (b) => reedFence(b, 0.8) },
+  'thicket-hedge': { kind: 'edge', height: 0.75, radius: 0.55, build: (b) => hedge(b, 0.75) },
+  'rock-pile': { kind: 'edge', height: 0.55, radius: 0.55, build: (b) => rockPile(b, 0.55, 11) },
+  'log-wall': { kind: 'edge', height: 0.5, radius: 0.55, build: (b) => logWall(b) },
+
+  // Doors between outdoor rooms and in caves (centred on the edge; the board pushes them aside).
+  barricade: { kind: 'prop', height: 0.95, radius: 0.55, build: (b) => barricade(b) },
+  'brush-pile': { kind: 'prop', height: 0.7, radius: 0.55, build: (b) => brushPile(b) },
+  'fallen-log': {
+    kind: 'prop',
+    height: 0.42,
+    radius: 0.6,
+    build: (b) => {
+      // Rooted end on the left (the pivot it swings around), broken top on the right.
+      b.cyl('bark', 0.17, 0.2, 1.15, 9, [-0.55, 0.2, 0], [0, 0, -Math.PI / 2]);
+      b.add(new THREE.CircleGeometry(0.17, 9), 'woodLight', [0.6, 0.2, 0], [0, Math.PI / 2, 0], [1, 1, 1], true);
+      for (const [x, a] of [[-0.62, 0.6], [-0.58, -0.7], [-0.66, 2.4]] as const) b.cone('bark', 0.07, 0.3, 5, [x, 0.2, 0], [a, 0, Math.PI / 2], true);
+      b.cyl('bark', 0.04, 0.06, 0.4, 5, [0.1, 0.3, 0.05], [0.7, 0, -0.5], true);
+      b.blob('moss', 0.12, [-0.1, 0.36, 0], [2.2, 0.45, 1], true);
+      b.blob('leaf', 0.13, [0.2, 0.42, 0.08], [1, 0.8, 1], true);
+    },
+  },
+  'rubble-heap': { kind: 'prop', height: 0.6, radius: 0.55, build: (b) => rockPile(b, 0.6, 5) },
+  'mine-cart': { kind: 'prop', height: 0.75, radius: 0.5, build: (b) => mineCart(b) },
+  rails: {
+    kind: 'prop',
+    height: 0.06,
+    radius: 1.0,
+    build: (b) => {
+      for (const z of [-0.2, 0.2]) b.box('iron', [2.0, 0.04, 0.04], [0.45, 0.04, z]);
+      for (let i = 0; i < 7; i++) b.box('woodDark', [0.1, 0.03, 0.56], [-0.45 + i * 0.3, 0.015, 0]);
     },
   },
 };

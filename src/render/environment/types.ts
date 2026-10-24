@@ -4,6 +4,8 @@
 // the light and the grey fog of Морок. Every built piece has a kit id (see pieces.ts), so a
 // Blender art kit can later replace it one by one (see README.md in this folder).
 
+import type { BoundaryKind, SurfaceId } from '../../rules/content';
+
 /** How the edge of the map is closed: walls indoors, plants and rock outdoors. */
 export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave';
 
@@ -30,8 +32,12 @@ export interface EnvironmentDef {
     water?: number;
     waterColor?: string;
   };
-  /** Texture of `normal` hexes, if it differs from the board's default for the scenario. */
-  hexTexture?: string;
+  /** Default look of the hexes (a room's `surface` in the scenario data wins). */
+  surface?: SurfaceId;
+  /** Default look of thin walls between rooms (a room's `boundary` wins). Default: masonry for
+   *  stone, tower and timber edges, thicket in the forest, reeds on the shore, rock piles in caves. */
+  boundary?: BoundaryKind;
+
   walls?: {
     /** Full wall height (back and side walls). Default 1.6. */
     height?: number;

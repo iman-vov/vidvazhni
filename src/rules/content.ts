@@ -252,15 +252,36 @@ export interface BossType {
 
 export type Terrain = 'normal' | 'difficult' | 'hazardous' | 'water';
 
+/** What a hex looks like underfoot (cosmetic; the rules use `Terrain`). The board draws the surface
+ *  and shows difficult, hazardous and water terrain on top of it. */
+export type SurfaceId = 'planks' | 'flagstones' | 'cobblestone' | 'worn-stone' | 'forest-floor' | 'grass' | 'roots' | 'mud' | 'wet-grass' | 'walkway' | 'rock';
+/** How a room is closed off from its neighbours on the board (cosmetic; the rules see walls). */
+export type BoundaryKind = 'walls' | 'reeds' | 'thicket' | 'rocks' | 'logs';
+/** What a door between rooms looks like and how it opens (cosmetic; the rules see a door). */
+export type DoorKind = 'door' | 'gate' | 'barricade' | 'brush' | 'log' | 'rubble' | 'minecart';
+
 export interface RoomDef {
   id: string; // `s1.cellar`
   hexes: Hex[];
   /** Thin walls between two adjacent hexes. Map edges are walls automatically. */
   walls?: [Hex, Hex][];
-  obstacles?: { hex: Hex; model?: string }[];
+  /** `breakable`: heroes break it with attacks (mining crate, rubble); `movable`: an adjacent hero
+   *  spends a move step to push it aside (barricade, cart). Monsters never break or move them. */
+  obstacles?: { hex: Hex; model?: string; breakable?: { hp: number }; movable?: true }[];
   terrain?: { hex: Hex; terrain: Terrain }[];
+  /** Look of the room's hexes; default from the location (data/environments). Cosmetic. */
+  surface?: SurfaceId;
+  /** Hexes that look different from the room's surface (a walkway across mud, a rug). Cosmetic. */
+  surfaces?: { hex: Hex; surface: SurfaceId }[];
+  /** How the room's thin walls look: masonry indoors, reeds, thicket, rock piles or fallen logs
+   *  outdoors; default from the location. Cosmetic: the rules still treat them as walls. */
+  boundary?: BoundaryKind;
   traps?: { hex: Hex; damage?: number; conditions?: ConditionId[] }[];
-  doors?: { hex: Hex; to: string; key?: string }[];
+  /** `kind`: how the door looks and opens (default from the room's boundary). Cosmetic. */
+  /** `breakable` / `movable`: the door blocks like an obstacle until heroes break it (rubble in a
+   *  cave) or push it aside (a barricade outdoors); then it opens and reveals the room behind. */
+  doors?: { hex: Hex; to: string; key?: string; kind?: DoorKind; breakable?: { hp: number }; movable?: true }[];
+
   /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear. */
   spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>> }[];
   coins?: Hex[];

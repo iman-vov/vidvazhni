@@ -2,6 +2,8 @@
   "id": "cellar",
   "scenarios": ["s1"],
   "edge": "stone",
+  "surface": "flagstones",
+  "boundary": "walls",
   "ground": { "texture": "tavern-planks", "tint": "#5e4434", "scale": 2.4 },
   "walls": { "height": 1.6, "low": 0.3, "alt": 3, "inner": "#a08c76" },
   "palette": { "stone": "#94806b", "stoneDark": "#62524a", "stoneLight": "#a8927a", "wood": "#8c5c36", "woodDark": "#5a3b24" },

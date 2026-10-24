@@ -235,7 +235,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     }
     applyQuality();
     environment.setQuality(q);
-    if (state) tiles.setLook(q, state.scenarioId);
+    tiles.setLook(q);
     for (const fv of figures.values()) void fv.loadModel(q, available, figureCastsShadow(fv));
     requestRender();
   }
@@ -452,9 +452,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (scenario) {
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
-      tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.hexTexture ?? null);
+      tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null);
     }
-    tiles.setLook(quality, s.scenarioId);
     tiles.syncRooms(s, c);
     for (const id of tiles.revealed) tiles.setRoomRise(id, 1, null);
     tiles.syncProps(s);

@@ -2,6 +2,8 @@
   "id": "gloom-heart",
   "scenarios": ["s5"],
   "edge": "cave",
+  "surface": "rock",
+  "boundary": "rocks",
   "ground": { "texture": "cave-rock", "tint": "#4e4a56", "scale": 3.0 },
   "walls": { "height": 1.9, "low": 0.4, "alt": 3, "inner": "#5c5866" },
   "palette": { "rock": "#5e5a66", "rockDark": "#3c3944", "crystal": "#9c6ae2", "moss": "#4e5a52", "glowCold": "#7ad0e8" },

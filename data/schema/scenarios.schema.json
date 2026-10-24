@@ -2,7 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Scenario",
   "definitions": {
+    "surface": { "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock"] },
     "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+    "breakable": {
+      "description": "Heroes break it with attacks (no modifier draw); gone at 0 hp.",
+      "type": "object",
+      "properties": { "hp": { "type": "integer", "minimum": 1 } },
+      "required": ["hp"],
+      "additionalProperties": false
+    },
     "condition": { "enum": ["poison", "wound", "immobilize", "disarm", "stun", "muddle", "invisible", "strengthen"] },
     "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark"] },
     "target": {
@@ -467,7 +475,12 @@
             "type": "array",
             "items": {
               "type": "object",
-              "properties": { "hex": { "$ref": "#/definitions/hex" }, "model": { "type": "string", "minLength": 1 } },
+              "properties": {
+                "hex": { "$ref": "#/definitions/hex" },
+                "model": { "type": "string", "minLength": 1 },
+                "breakable": { "$ref": "#/definitions/breakable" },
+                "movable": { "description": "An adjacent hero spends a move step to push it aside.", "const": true }
+              },
               "required": ["hex"],
               "additionalProperties": false
             }
@@ -484,6 +497,18 @@
               "additionalProperties": false
             }
           },
+          "surface": { "description": "Look of the room's hexes (cosmetic); default from the location.", "$ref": "#/definitions/surface" },
+          "surfaces": {
+            "description": "Hexes that look different from the room's surface (cosmetic).",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "hex": { "$ref": "#/definitions/hex" }, "surface": { "$ref": "#/definitions/surface" } },
+              "required": ["hex", "surface"],
+              "additionalProperties": false
+            }
+          },
+          "boundary": { "description": "How the room's thin walls look (cosmetic; the rules still see walls).", "enum": ["walls", "reeds", "thicket", "rocks", "logs"] },
           "traps": {
             "type": "array",
             "items": {
@@ -504,7 +529,10 @@
               "properties": {
                 "hex": { "$ref": "#/definitions/hex" },
                 "to": { "type": "string", "minLength": 1 },
-                "key": { "type": "string", "minLength": 1 }
+                "key": { "type": "string", "minLength": 1 },
+                "breakable": { "$ref": "#/definitions/breakable" },
+                "movable": { "description": "Blocks until an adjacent hero spends a move step to push it aside; then opens.", "const": true },
+                "kind": { "description": "Look and open animation of the door (cosmetic).", "enum": ["door", "gate", "barricade", "brush", "log", "rubble", "minecart"] }
               },
               "required": ["hex", "to"],
               "additionalProperties": false

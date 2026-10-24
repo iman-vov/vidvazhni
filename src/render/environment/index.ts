@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { ScenarioDef } from '../../rules/content';
+import type { BoundaryKind, ScenarioDef } from '../../rules/content';
 import type { HexKey } from '../../rules/hex';
 import { noiseTexture, textureUrl } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
@@ -23,7 +23,7 @@ import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Morok } from './morok';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
-import type { EnvironmentDef, PropModelSpec } from './types';
+import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
 export type { EnvironmentDef, PropModelSpec } from './types';
 export { environmentFor, ENVIRONMENTS } from './data';
@@ -36,6 +36,14 @@ const QUALITY: Record<GraphicsQuality, { lights: number; wisps: number; roomWisp
 };
 
 const GROUND_EXTRA = 70;
+
+/** The board's natural boundaries between rooms, by kind (pieces.ts ids; an art kit or a prop
+ *  model in the location's `propModels` table can replace them by these ids). */
+export const BOUNDARY_PIECES: Record<Exclude<BoundaryKind, 'walls'>, string> = { reeds: 'reed-fence', thicket: 'thicket-hedge', rocks: 'rock-pile', logs: 'log-wall' };
+/** Default boundary between rooms for a location edge style. */
+const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 'walls', timber: 'walls', forest: 'thicket', shore: 'reeds', cave: 'rocks' };
+/** The map edge style a room boundary stands for (outdoor rooms close with plants, caves with rock). */
+const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
 /** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
@@ -112,7 +120,7 @@ export class BoardEnvironment {
       return;
     }
     this.scenarioId = scenario.id;
-    this.def = environmentFor(scenario.id);
+    this.def = withRoomEdges(environmentFor(scenario.id), scenario);
     this.layout = buildLayout(scenario);
     this.veil.clear();
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
@@ -185,11 +193,22 @@ export class BoardEnvironment {
   makeObstacle(model: string): THREE.Object3D | null {
     const spec = OBSTACLE_PIECES[model];
     if (!spec || !this.def) return null;
-    const group = new THREE.Group();
+    const group = this.makePiece(spec.piece);
+    if (!group) return null;
     group.name = `obstacle:${spec.piece}`;
-    for (const part of this.kitParts.get(spec.piece) ?? buildPiece(spec.piece, { height: pieceMeta(spec.piece)?.height ?? 1 })) {
+    group.scale.setScalar(spec.scale);
+    return group;
+  }
+
+  /** A piece in the location's colours standing on its own origin, one mesh per part (so a door
+   *  body can move its parts, rubble its stones); null for an unknown id. */
+  makePiece(piece: string): THREE.Group | null {
+    if (!this.def || !pieceMeta(piece)) return null;
+    const group = new THREE.Group();
+    group.name = `piece:${piece}`;
+    for (const part of this.kitParts.get(piece) ?? buildPiece(piece, { height: pieceMeta(piece)?.height ?? 1 })) {
       if (this.quality === 'low' && part.detail) continue;
-      const g = this.kitParts.has(spec.piece) ? part.geometry.clone() : part.geometry;
+      const g = this.kitParts.has(piece) ? part.geometry.clone() : part.geometry;
       const pos = g.getAttribute('position');
       if (!g.getAttribute('color')) g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.count * 3).fill(1), 3));
       const mesh = new THREE.Mesh(g, this.material(part.material));
@@ -197,7 +216,79 @@ export class BoardEnvironment {
       group.add(mesh);
       this.obstacleGeometries.push(g);
     }
-    group.scale.setScalar(spec.scale);
+    return group;
+  }
+
+  /** How thin walls between rooms look where the room data does not say: the location's
+   *  `boundary`, else masonry for walled edges, thicket, reeds or rock piles outdoors and in caves. */
+  get defaultBoundary(): BoundaryKind {
+    const def = this.def;
+    if (def?.boundary) return def.boundary;
+    return def ? EDGE_BOUNDARY[def.edge] : 'walls';
+  }
+
+  /**
+   * A natural boundary (reeds, thicket, rocks, logs) standing on the given edge frames (origin on
+   * the edge at plate height, X along it), merged into one mesh per material; `low` for the low
+   * kerbs toward rooms not revealed yet. When the location maps the boundary's piece to a prop
+   * model that exists, the model replaces it, instanced, once it loads. `dispose()` frees it.
+   */
+  boundary(kind: Exclude<BoundaryKind, 'walls'>, frames: THREE.Matrix4[], low: boolean): THREE.Object3D & { dispose(): void } {
+    const piece = BOUNDARY_PIECES[kind];
+    const meta = pieceMeta(piece)!;
+    const owned: { dispose(): void }[] = [];
+    const group = Object.assign(new THREE.Group(), { dispose: () => owned.forEach((d) => d.dispose()) });
+    group.name = `boundary:${kind}${low ? ':low' : ''}`;
+    const squash = new THREE.Matrix4().makeScale(1, low ? 0.45 : 1, 1);
+    const groups = new Map<MaterialKey | THREE.Material, THREE.BufferGeometry[]>();
+    const full = new THREE.Matrix4();
+    const parts = this.kitParts.get(piece) ?? buildPiece(piece, { height: meta.height });
+    frames.forEach((frame, i) => {
+      // Turn every other segment round, so a run of them does not look stamped.
+      const flip = new THREE.Matrix4().makeRotationY(i % 2 ? Math.PI : 0);
+      for (const part of parts) {
+        if (this.quality === 'low' && part.detail) continue;
+        const g = part.geometry.clone();
+        g.applyMatrix4(full.multiplyMatrices(frame, squash).multiply(flip).multiply(part.matrix));
+        for (const name of Object.keys(g.attributes)) if (!['position', 'normal'].includes(name)) g.deleteAttribute(name);
+        const n = g.getAttribute('position').count;
+        g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3).fill(0.92 + 0.16 * ((i * 7) % 3) / 2), 3));
+        g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2));
+        let list = groups.get(part.material);
+        if (!list) groups.set(part.material, (list = []));
+        list.push(g);
+      }
+    });
+    if (!this.kitParts.has(piece)) for (const part of parts) part.geometry.dispose();
+    for (const [key, list] of groups) {
+      const merged = mergeGeometries(list, false);
+      for (const g of list) g.dispose();
+      if (!merged) continue;
+      owned.push(merged);
+      const mesh = new THREE.Mesh(merged, this.material(key));
+      mesh.receiveShadow = true;
+      mesh.castShadow = QUALITY[this.quality].shadows;
+      group.add(mesh);
+    }
+    // A prop model for the boundary (a reed wall from the art kit) replaces it, stretched to the edge.
+    const spec = this.def ? propModelFor(this.def, [piece], this.available, meta.height) : null;
+    if (spec && this.def?.propModels?.[piece]) {
+      void loadPropPrototype(spec, this.quality).then((proto) => {
+        if (!proto || !group.parent) return;
+        const fit = new THREE.Matrix4().makeScale(Math.min(3, 1.06 / Math.max(0.05, proto.radius * 2)), 1, 1);
+        const m = new THREE.Matrix4();
+        for (const c of [...group.children]) group.remove(c);
+        for (const part of prototypeMeshes(proto)) {
+          const mesh = new THREE.InstancedMesh(part.geometry, this.material(part.material), frames.length);
+          frames.forEach((frame, i) => mesh.setMatrixAt(i, m.multiplyMatrices(frame, squash).multiply(fit).multiply(part.matrix)));
+          mesh.computeBoundingSphere();
+          mesh.receiveShadow = true;
+          owned.push({ dispose: () => mesh.dispose() });
+          group.add(mesh);
+        }
+        this.onChange();
+      });
+    }
     return group;
   }
 
@@ -595,6 +686,24 @@ export class BoardEnvironment {
     this.fieldTex?.dispose();
     this.fieldTex = null;
   }
+}
+
+/**
+ * The location with each room's map edge following the room's `boundary` where the location does
+ * not set it: an outdoor room inside a walled location closes with reeds or thicket, an indoor room
+ * (boundary `walls`) in an outdoor location with timber walls.
+ */
+export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): EnvironmentDef {
+  const rooms: Record<string, { edge: EdgeStyle }> = {};
+  const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber';
+  for (const room of scenario.rooms) {
+    const b = room.boundary;
+    if (!b || def.rooms?.[room.id]) continue;
+    if (b === 'walls') {
+      if (!indoor) rooms[room.id] = { edge: 'timber' };
+    } else if (BOUNDARY_EDGE[b] !== def.edge) rooms[room.id] = { edge: BOUNDARY_EDGE[b] };
+  }
+  return Object.keys(rooms).length ? { ...def, rooms: { ...rooms, ...def.rooms } } : def;
 }
 
 function mixHex(a: string, b: string, t: number): string {

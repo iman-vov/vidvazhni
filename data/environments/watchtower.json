@@ -2,6 +2,8 @@
   "id": "watchtower",
   "scenarios": ["s4"],
   "edge": "tower",
+  "surface": "worn-stone",
+  "boundary": "walls",
   "ground": { "texture": "cave-rock", "tint": "#646068", "scale": 2.2 },
   "walls": { "height": 1.8, "low": 0.32, "alt": 3, "inner": "#8c8886" },
   "palette": { "stone": "#7c7876", "stoneDark": "#4e4b4d", "stoneLight": "#86817c", "glowCold": "#9fb4d8", "banner": "#3f2452", "crystal": "#8a62d0" },
