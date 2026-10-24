@@ -1313,6 +1313,18 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     else camera.recentre();
   }
 
+  function pin(id: FigureId, el: HTMLElement): () => void {
+    const item = overlay.add(el, () => {
+      const fv = figures.get(id);
+      return fv && !fv.gone && fv.root.visible ? fv.headPoint().add(new THREE.Vector3(0, 0.55, 0)) : null;
+    });
+    requestRender();
+    return () => {
+      overlay.remove(item);
+      requestRender();
+    };
+  }
+
   function focus(id: FigureId): void {
     const fv = figures.get(id);
     if (fv) camera.focusOn(fv.root.position);
@@ -1379,6 +1391,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     onHexTap: (cb) => subscribe(hexListeners, cb),
     onFigureTap: (cb) => subscribe(figureListeners, cb),
     onFigureHold: (cb) => subscribe(holdListeners, cb),
+    pin,
     focus,
     resetCamera,
     setQuality,

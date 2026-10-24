@@ -54,6 +54,9 @@ export interface BoardView {
   onFigureTap(cb: (figureId: FigureId) => void): () => void;
   /** Long press on a figure (UI shows its details). */
   onFigureHold(cb: (figureId: FigureId) => void): () => void;
+  /** Pins an HTML element over a figure's head (follows it; hidden while the figure is gone),
+   *  e.g. a story speech bubble. Returns the remover. */
+  pin?(figureId: FigureId, el: HTMLElement): () => void;
   /** Smoothly centres the camera on a figure (double tap on own hero does this too). */
   focus(figureId: FigureId): void;
   /** Eases the camera back to the home view: the whole board, unturned, at the home tilt. */

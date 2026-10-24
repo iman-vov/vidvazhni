@@ -17,6 +17,8 @@ export interface EndOptions {
   onAgain: () => void;
   /** A campaign mission: [До табору] (`applyScenarioResult`) instead of «again» and «menu». */
   onCamp?: () => void;
+  /** The story outro slot under the header (src/app/story.ts); none when «Сюжет» is off. */
+  outro?: () => HTMLElement | null;
 }
 
 export function endScreen(o: EndOptions): HTMLElement {
@@ -50,7 +52,7 @@ export function endScreen(o: EndOptions): HTMLElement {
     root.replaceChildren(
       menuBackdrop(true),
       h('h1', { class: 'gend-title' }, won ? t('ui.victory') : t('ui.defeat')),
-      h('p', { class: 'gintro' }, won ? t(`scenario.${s.scenarioId}.outro`) : t('game.end.lossText')),
+      o.outro?.() ?? h('p', { class: 'gintro' }, won ? t(`scenario.${s.scenarioId}.outro`) : t('game.end.lossText')),
       h('p', { class: 'gside-hint' }, t('game.end.rounds', { rounds: s.round })),
       h(
         'table',

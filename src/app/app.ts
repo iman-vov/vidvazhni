@@ -20,6 +20,8 @@ import { menuBackdrop, menuScreen } from './screens/menu';
 import { newGameScreen } from './screens/newGame';
 import { settingsPanel } from './screens/settings';
 import { settings } from './settings';
+import { epilogueLine, introLines, outroLines, scenarioStory, type StoryMode } from './story';
+import { storyLineRow, storyScene } from './screens/storyScene';
 import { campaignStorage, gameStorage, type CampaignStorage, type GameStorage } from './storage';
 import { helpBrowser, openHelpModal, type HelpRules } from './help/helpView';
 import { installKeywordLinks } from './help/keywords';
@@ -27,7 +29,7 @@ import { mountCoach } from './tutorial/coach';
 import { isTutorial, tutorialContent, tutorialPlayers, tutorialSetup, tutorialStorage } from './tutorial/scenario';
 import { saveTutorialProgress, shouldOfferTutorial, tutorialEnd, tutorialOffer } from './tutorial/screens';
 
-type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
+type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'storyIntro' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
 
 export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
@@ -64,7 +66,35 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
   async function openScenario(g: GameController): Promise<void> {
     game = g;
     board ??= await createGameBoard(boardEl, { quality: getGraphicsQuality(), lang: getLang(), speed: settings.get().speed });
-    go('scenario');
+    go(g.actions.length === 0 && storyOf(g, 'intro').length ? 'storyIntro' : 'scenario');
+  }
+
+  // ─── Story (src/app/story.ts) ──────────────────────────────────────────────
+
+  /** «Сюжет»: a campaign mission uses the campaign's, everything else the device setting. */
+  function storyMode(g: GameController | null = game): StoryMode {
+    return (g?.meta.campaign ? campaigns.load()?.story : undefined) ?? settings.get().story;
+  }
+
+  /** A change in Settings also goes into the saved campaign. */
+  function setStoryMode(mode: StoryMode): void {
+    const saved = campaigns.load();
+    if (saved) campaigns.save(saved.campaign, saved.players, mode);
+  }
+
+  function storyOf(g: GameController, part: 'intro' | 'victory' | 'defeat') {
+    const story = scenarioStory(getLang(), g.setup.scenarioId);
+    const party = g.setup.heroes.map((x) => x.classId);
+    return part === 'intro' ? introLines(story, storyMode(g), party, g.setup.seed) : outroLines(story, storyMode(g), part === 'victory', party, g.setup.seed);
+  }
+
+  /** Marta's epilogue over the camp after a won mission. */
+  function showEpilogue(g: GameController): void {
+    if (g.state.phase !== 'won') return;
+    const line = epilogueLine(scenarioStory(getLang(), g.setup.scenarioId), storyMode(g), g.setup.heroes.map((x) => x.classId), g.setup.seed);
+    if (!line) return;
+    const scene: HTMLElement = storyScene({ lines: [line], doneLabel: t('story.toCamp'), onDone: () => scene.remove() });
+    overlay.append(scene);
   }
 
   function startNew(setup: GameSetup, players: PlayerInfo[], campaign = false): void {
@@ -74,7 +104,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
   /** The party from the New Game steps becomes a campaign; the camp comes before s1. */
   function startCampaign(setup: GameSetup, players: PlayerInfo[]): void {
     const state = newCampaign(content, { players: players.map((p) => p.id), heroes: setup.heroes, difficulty: setup.difficulty, firstScenario: setup.scenarioId });
-    campaigns.save(state, players);
+    campaigns.save(state, players, settings.get().story);
     go('camp');
   }
 
@@ -86,7 +116,9 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
       if (r.ok) campaigns.save(r.state, saved.players);
     }
     go('camp');
+    if (game) showEpilogue(game);
   }
+
 
   /** Resumes an unfinished tutorial unless `fresh`. */
   function startTutorial(fresh = false): void {
@@ -171,10 +203,15 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
             { class: 'gpage is-art' },
             menuBackdrop(true),
             h('header', { class: 'gpage-head' }, h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.back'), onclick: () => go('menu') }, icon('left')), h('h1', null, t('ui.settings'))),
-            settingsPanel({ onQuality: (q) => board?.setQuality(q), onSpeed: (n) => board?.setSpeed?.(n) }),
+            settingsPanel({ onQuality: (q) => board?.setQuality(q), onSpeed: (n) => board?.setSpeed?.(n), onStory: setStoryMode }),
           ),
         );
         break;
+      case 'storyIntro': {
+        if (!game) return go('menu');
+        overlay.replaceChildren(h('div', { class: 'gpage is-art' }, menuBackdrop(true)), storyScene({ lines: storyOf(game, 'intro'), doneLabel: t('story.start'), onDone: () => go('scenario') }));
+        break;
+      }
       case 'scenario':
         if (!game || !board) return go('menu');
         unmountScenario?.();
@@ -184,6 +221,8 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
           board,
           onExit: () => go('menu'),
           onHelp: openHelp,
+          storyMode: () => storyMode(),
+          onStoryMode: (m) => (game?.meta.campaign ? setStoryMode(m) : undefined),
           onEnd: () => {
             if (game && isTutorial(game.setup.scenarioId)) {
               if (game.state.phase === 'won') saveTutorialProgress({ done: true });
@@ -213,6 +252,10 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
         overlay.replaceChildren(
           endScreen({
             game,
+            outro: () => {
+              const lines = game ? storyOf(game, game.state.phase === 'won' ? 'victory' : 'defeat') : [];
+              return lines.length ? h('section', { class: 'gstory-outro' }, lines.map(storyLineRow)) : null;
+            },
             onCamp: game.meta.campaign && campaigns.load() ? backToCamp : undefined,
             onMenu: () => go('menu'),
             onAgain: () => {

@@ -20,7 +20,7 @@ import type { BoardHighlights, BoardView } from '../render/view';
 import { stepText } from '../ui/debug/format';
 import { emptySelection, stepModel, tapStep, type StepModel, type StepSelection } from '../ui/debug/stepPicker';
 import { h } from '../ui/dom';
-import { onLangChange, t } from '../ui/i18n';
+import { getLang, onLangChange, t } from '../ui/i18n';
 import { cardKeywords, cardView, compactCard, type Half } from '../ui/game/card';
 import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
@@ -33,6 +33,8 @@ import { cardName, elementName, figureName, modifierLabel, monsterTypeName, play
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
+import { beatLines, beatsFor, scenarioStory, type StoryMode } from './story';
+import { createSpeech } from './storySpeech';
 import { getGraphicsQuality } from '../render/quality';
 import { artButton } from './screens/menu';
 import { settingsPanel } from './screens/settings';
@@ -48,6 +50,9 @@ export interface ScenarioScreenOptions {
   onEnd: () => void;
   /** Opens the rules reference (src/app/help), on a topic if given. */
   onHelp?: (topic?: string | null) => void;
+  /** «Сюжет» of this game (a campaign keeps its own); default: the device setting. */
+  storyMode?: () => StoryMode;
+  onStoryMode?: (mode: StoryMode) => void;
 }
 
 interface Toast {
@@ -160,6 +165,12 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   document.body.classList.add('game');
 
   for (const e of game.state.log.slice(-8)) pushLog(e, game.state);
+
+  // Story beats: bubbles over the speaker or a banner on top; the ones already in the log played before.
+  const storyMode = o.storyMode ?? (() => settings.get().story);
+  const firedBeats = new Set<string>();
+  beatsFor(scenarioStory(getLang(), game.setup.scenarioId), game.state.log, firedBeats);
+  const speech = createSpeech({ root, board, state: () => game.state });
 
   // ─── Board input ─────────────────────────────────────────────────────────
 
@@ -324,6 +335,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       if (e.type === 'roomRevealed') toast(t('log.roomRevealed', { name: t(`room.${e.roomId}`) }), '', 'info');
       if (e.type === 'story') toast(t(e.text), '', 'info');
       if (e.type === 'heroExhausted') toast(t('log.exhausted', { name: figureName(e.heroId) }), '', 'info');
+    }
+    sayBeats(events, actor);
+  }
+
+  function sayBeats(events: GameEvent[], actor: FigureId | null): void {
+    const party = game.heroes().map((x) => x.classId);
+    const actorClass = actor?.startsWith('hero:') ? actor.slice(5) : null;
+    for (const beat of beatsFor(scenarioStory(getLang(), game.setup.scenarioId), events, firedBeats)) {
+      speech.say(beatLines(beat, storyMode(), party, game.setup.seed, actorClass));
     }
   }
 
@@ -1255,7 +1275,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (next && !ui.revealed && !ui.busy && ui.modal !== 'intro') parts.push(curtain(next));
     if (ui.modal === 'intro') parts.push(introModal());
     if (ui.modal === 'menu') parts.push(menuModal());
-    if (ui.modal === 'settings') parts.push(modalBox(t('ui.settings'), settingsPanel({ heroes: game.heroes().map((x) => x.classId), onQuality: (q) => board.setQuality(q), onSpeed: (n) => board.setSpeed?.(n) }), () => ((ui.modal = 'menu'), render())));
+    if (ui.modal === 'settings') parts.push(modalBox(t('ui.settings'), settingsPanel({ heroes: game.heroes().map((x) => x.classId), onQuality: (q) => board.setQuality(q), onSpeed: (n) => board.setSpeed?.(n), story: o.storyMode, onStory: o.onStoryMode }), () => ((ui.modal = 'menu'), render())));
     if (next && ui.revealed && !ui.busy && !ui.peek && ui.modal !== 'intro') parts.push(selectionOverlay(ui.revealed));
     if (ui.modal === 'monster' && ui.monsterInfo) parts.push(monsterModal(ui.monsterInfo));
     if (ui.modal === 'hero' && ui.heroInfo) parts.push(heroModal(ui.heroInfo));
@@ -1625,6 +1645,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   return () => {
     disposed = true;
+    speech.dispose();
     stopRoll();
     document.removeEventListener('pointerdown', skipRoll, true);
     for (const u of unsubs) u();
