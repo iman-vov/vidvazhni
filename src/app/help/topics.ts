@@ -55,6 +55,8 @@ export const TOPICS: readonly HelpTopic[] = [
   { id: 'provoke', group: 'fight', icon: 'provoke', related: ['monsters'] },
   { id: 'summon', group: 'fight', icon: 'summon', related: ['monsters'] },
   { id: 'followUp', group: 'fight', icon: 'targets', rules: 'fork', related: ['attack', 'modifiers'] },
+  { id: 'dodge', group: 'fight', icon: 'dice', rules: 'fork', related: ['cover', 'avoidDamage', 'shield', 'diceItems'] },
+  { id: 'cover', group: 'fight', icon: 'shield', rules: 'fork', related: ['dodge', 'avoidDamage', 'shield', 'retaliate'] },
 
   ...CONDITIONS.map((c): HelpTopic => ({ id: c, group: 'conditions', icon: c, related: ['conditions', 'heal'] })),
   { id: 'conditions', group: 'conditions', icon: 'stun', related: [...CONDITIONS] },
@@ -67,7 +69,7 @@ export const TOPICS: readonly HelpTopic[] = [
   { id: 'loss', group: 'cards', icon: 'loss', diagram: 'piles', related: ['discard', 'rest', 'exhaustion'] },
   { id: 'active', group: 'cards', icon: 'active', related: ['discard', 'loss'] },
   { id: 'rest', group: 'cards', icon: 'rest', diagram: 'piles', related: ['discard', 'loss', 'exhaustion'] },
-  { id: 'avoidDamage', group: 'cards', icon: 'hp', related: ['loss', 'exhaustion'] },
+  { id: 'avoidDamage', group: 'cards', icon: 'hp', related: ['loss', 'exhaustion', 'dodge', 'cover'] },
   { id: 'exhaustion', group: 'cards', icon: 'close', related: ['rest', 'revive', 'goals'] },
   { id: 'revive', group: 'cards', icon: 'revive', rules: 'fork', related: ['exhaustion'] },
   { id: 'xCards', group: 'cards', icon: 'dice', rules: 'fork', related: ['diceItems', 'modifiers', 'monsterX'] },
@@ -211,6 +213,8 @@ export function topicForHint(key: string): string | null {
     dieCards: 'xCards',
     diceGear: 'diceItems',
     monsterDieAbilities: 'monsterX',
+    dodgeDie: 'dodge',
+    coverAlly: 'cover',
     itemFound: 'drops',
   };
   return map[key] ?? (topicById(key) ? key : null);

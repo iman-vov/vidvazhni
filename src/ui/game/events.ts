@@ -53,6 +53,10 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
       return null;
     case 'damageAvoided':
       return t('game.ev.avoided', { name: n(e.heroId) });
+    case 'dodgeRolled':
+      return t(`game.ev.dodge.${e.result}`, { name: n(e.heroId), roll: e.roll, damage: e.damage });
+    case 'allyCovered':
+      return t('game.ev.cover', { name: n(e.heroId), target: n(e.targetId) });
     case 'behaviourDrawn':
       return null;
     case 'itemUsed':
