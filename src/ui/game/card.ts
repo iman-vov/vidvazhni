@@ -2,11 +2,12 @@
 // lines with icons, loss / active / XP marks, the «Наснага» lightning, and orb/element bonuses that
 // will be payable glowing as «Атака 3 → 5» (orbBonusPreview).
 
-import type { CardHalf, Step } from '../../rules/content';
+import type { AreaShape, CardHalf, Step } from '../../rules/content';
 import type { LoadedContent } from '../../rules/load';
 import type { OrbBonusPreview } from '../../rules/queries';
 import type { GameState, HeroState } from '../../rules/state';
 import { h } from '../dom';
+import { areaDiagram, areaText } from './areaDiagram';
 import { t } from '../i18n';
 import { icon, type IconName } from './icons';
 import { rich } from '../icons';
@@ -84,11 +85,15 @@ export function cardView(o: CardOptions): HTMLElement {
   const half = (which: Half, data: CardHalf) => {
     const lines = data.steps.map((step, i) => {
       const p = stepParts(step, orbs);
+      // An area attack draws its shape below, so the words for it go.
+      const area = step.type === 'attack' ? step.area : undefined;
+      const main = area ? p.main.replace(`, ${areaText(area)}`, '') : p.main;
       const bonus = o.bonuses?.find((b) => b.half === which && b.stepIndex === i);
       return h(
         'div',
         { class: 'gstep' },
-        h('div', { class: 'gstep-main' }, icon(p.icon), h('span', null, p.main), p.xp ? h('span', { class: 'gmark gmark-xp', title: t('ui.xp') }, icon('xp'), p.xp) : null),
+        h('div', { class: 'gstep-main' }, icon(p.icon), h('span', null, main), p.xp ? h('span', { class: 'gmark gmark-xp', title: t('ui.xp') }, icon('xp'), p.xp) : null),
+        area ? h('div', { class: 'gstep-area' }, areaDiagram(area)) : null,
         p.consume
           ? h('div', { class: 'gstep-consume' }, icon(p.consumeElement && p.consumeElement !== 'any' ? p.consumeElement : 'any', `el-${p.consumeElement ?? 'any'}`), h('span', null, p.consume))
           : null,
@@ -155,6 +160,8 @@ export function cardView(o: CardOptions): HTMLElement {
 interface Glyph {
   icon: IconName;
   n?: number | string;
+  /** An area attack: drawn as its small hex pattern instead of the icon. */
+  area?: AreaShape;
 }
 
 /** A step as short icons with numbers: «attack 3, range 4, push 1, fire +2». */
@@ -163,7 +170,7 @@ export function stepGlyphs(step: Step): Glyph[] {
   if (step.type === 'attack') {
     if (step.range) g.push({ icon: 'range', n: step.range });
     if (step.targets && step.targets > 1) g.push({ icon: 'targets', n: step.targets });
-    if (step.area) g.push({ icon: 'area' });
+    if (step.area) g.push({ icon: 'area', area: step.area });
     if (step.pierce) g.push({ icon: 'pierce', n: step.pierce });
     if (step.push) g.push({ icon: 'push', n: step.push });
     if (step.pull) g.push({ icon: 'pull', n: step.pull });
@@ -193,7 +200,7 @@ function glyphRow(half: CardHalf): HTMLElement {
     { class: 'gcc-row' },
     half.steps.map((st, i) => [
       i > 0 ? h('span', { class: 'gcc-sep' }) : null,
-      stepGlyphs(st).map((x) => h('span', { class: 'gcc-glyph' }, icon(x.icon), x.n !== undefined ? h('b', null, x.n) : null)),
+      stepGlyphs(st).map((x) => h('span', { class: 'gcc-glyph' }, x.area ? areaDiagram(x.area) : icon(x.icon), x.n !== undefined ? h('b', null, x.n) : null)),
     ]),
     half.loss ? h('span', { class: 'gcc-glyph gmark-loss', title: t('game.card.loss') }, icon('loss')) : null,
     half.active ? h('span', { class: 'gcc-glyph gmark-active', title: t('game.card.active') }, icon('active')) : null,

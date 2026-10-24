@@ -1796,6 +1796,50 @@ body.game.g-bottom-short {
   background: rgba(176, 120, 30, 0.24);
 }
 
+/* Area attacks: the small hex pattern on the card (src/ui/game/areaDiagram.ts). */
+.garea {
+  flex: none;
+  height: 2.2em;
+  width: auto;
+  max-width: 4em;
+  overflow: visible;
+}
+
+.gstep-area {
+  display: flex;
+  padding-left: 1.4em;
+}
+
+.gcc-glyph .garea {
+  height: 1.6em;
+}
+
+.garea polygon {
+  stroke: #3a2a12;
+  stroke-width: 1.4;
+}
+
+.garea-hit {
+  fill: #c8372d;
+}
+
+.garea-anchor {
+  fill: #c8372d;
+  stroke: #1d2433 !important;
+  stroke-width: 2.6 !important;
+}
+
+.garea-self {
+  fill: #8d8d8d;
+}
+
+/* Portrait phones have the height: the damage prompt shows its options without scrolling. */
+@media (max-width: 600px) and (min-height: 700px) {
+  body.game.g-bottom-tall:has(.gbottom .gdef) {
+    --g-bottom: 360px;
+  }
+}
+
 /* The step's confirm, rotate and skip on the card being played, over its other half. */
 .gcard-confirm {
   position: absolute;
