@@ -311,11 +311,11 @@ class Piece:
         faces = [f for f in bm.faces if f not in before]
         return self._finish(faces, paint_name, self.M(pos, rot), grain_axis=2, rnd=rnd, emit_uv=emit_uv)
 
-    def rock(self, paint_name, r, pos=(0, 0, 0), scale=(1, 1, 1), rot=(0, 0, 0), noise=0.18, rnd=None, cut_bottom=True):
+    def rock(self, paint_name, r, pos=(0, 0, 0), scale=(1, 1, 1), rot=(0, 0, 0), noise=0.18, rnd=None, cut_bottom=True, subdiv=1):
         """Faceted rock: subdivided icosphere, pushed around, planed off at its base."""
         bm = self.bm
         before = set(bm.faces)
-        res = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=r)
+        res = bmesh.ops.create_icosphere(bm, subdivisions=subdiv, radius=r)
         verts = res['verts']
         # Planar-ish facets: push each vertex along a few random directions.
         dirs = [Vector((self.rng.uniform(-1, 1), self.rng.uniform(-1, 1), self.rng.uniform(-1, 1))).normalized() for _ in range(4)]
