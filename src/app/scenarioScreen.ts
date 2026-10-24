@@ -1633,8 +1633,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       hl.targets = m.targetIds;
       const step = stepInfo.step;
       if (step.type === 'attack') {
-        // With the consume toggle on, the preview counts the bonus too.
-        const boosted = ui.sel.consume && step.consume ? withConsumeBonus(step, step.consume).step : step;
+        // The preview counts the consume bonus only when the choices left really pay it.
+        const boosted = m.consume && step.consume ? withConsumeBonus(step, step.consume).step : step;
         const dmg: Record<FigureId, number> = {};
         for (const id of m.targetIds) {
           const pv = previewAttack(s, stepInfo.heroId, id, content, boosted.type === 'attack' ? boosted : undefined);

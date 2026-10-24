@@ -26,6 +26,8 @@ export interface StepModel {
   mode: StepMode;
   /** True when the same step can be played with and without its consume bonus. */
   consumeToggle: boolean;
+  /** Whether the choices left pay the consume bonus (only when it is payable and, with a toggle, on). */
+  consume: boolean;
   elementKeys: string[];
   elementKey: string | null;
   /** Choices left after the consume/element filters. */
@@ -71,6 +73,7 @@ export function stepModel(s: GameState, step: Step, all: StepChoice[], sel: Step
   const model: StepModel = {
     mode,
     consumeToggle,
+    consume,
     elementKeys,
     elementKey,
     choices,
