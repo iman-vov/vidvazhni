@@ -33,6 +33,7 @@ import { cardName, elementName, figureName, modifierLabel, monsterTypeName, play
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
+import { isTutorial } from './tutorial/scenario';
 import { beatLines, beatsFor, scenarioStory, type StoryMode } from './story';
 import { createSpeech } from './storySpeech';
 import { getGraphicsQuality } from '../render/quality';
@@ -137,7 +138,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     leftOpen: !narrow,
     rightOpen: false,
     focusHero: null,
-    modal: game.actions.length === 0 ? 'intro' : null,
+    // The tutorial opens on the scenario card; a mission only shows its goal (the goal banner below).
+    modal: game.actions.length === 0 && isTutorial(game.setup.scenarioId) ? 'intro' : null,
     monsterInfo: null,
     itemInfo: null,
     figInfo: null,
@@ -169,6 +171,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   for (const e of game.state.log.slice(-8)) pushLog(e, game.state);
 
   // Story beats: bubbles over the speaker or a banner on top; the ones already in the log played before.
+  // Off in battle for now (storySpeech BATTLE_SPEECH): the talk is in the intro and the outro.
   const storyMode = o.storyMode ?? (() => settings.get().story);
   const firedBeats = new Set<string>();
   beatsFor(scenarioStory(getLang(), game.setup.scenarioId), game.state.log, firedBeats);
@@ -1666,6 +1669,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   if (game.restoreError) toast(t('game.restoreFailed'), game.restoreError, 'error');
   document.addEventListener('pointerdown', skipRoll, true);
   render();
+  // A new mission: a short goal banner; the goal line stays in the HUD.
+  if (game.actions.length === 0 && ui.modal !== 'intro') toast(t('game.goal'), t(`scenario.${game.setup.scenarioId}.goal`), 'info');
 
   return () => {
     disposed = true;

@@ -8,6 +8,10 @@ import { h } from '../ui/dom';
 import { isHeroSpeaker, NPC_FIGURES, type StoryLine } from './story';
 import { speakerBadge, speakerName } from './screens/storyScene';
 
+/** Story talk in battle is off: the board keeps only the goal (the talk is in the intro and the
+ *  end screen). The beats still fire and are marked, so turning this on brings them back. */
+export const BATTLE_SPEECH = false;
+
 const BASE_MS = 2600;
 const PER_CHAR_MS = 45;
 const MAX_MS = 9000;
@@ -69,6 +73,7 @@ export function createSpeech(o: { root: HTMLElement; board: BoardView; state: ()
 
   return {
     say(lines) {
+      if (!BATTLE_SPEECH) return;
       queue.push(...lines);
       if (!timer && !hide) next();
     },
