@@ -22,7 +22,7 @@ import { emptySelection, stepModel, tapStep, type StepModel, type StepSelection 
 import { h } from '../ui/dom';
 import { getLang, onLangChange, t } from '../ui/i18n';
 import { cardKeywords, cardView, compactCard, type Half } from '../ui/game/card';
-import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
+import { chestFinds, eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
 import { isIconName } from '../ui/icons/names';
@@ -333,6 +333,10 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       if (e.type === 'attacked' && e.shield > 0) toast(t('game.ev.shieldBlocked', { name: figureName(e.targetId, s), shield: e.shield }), '', 'info');
       if (e.type === 'retaliated') toast(t('game.ev.retaliated', { name: figureName(e.figureId, s), target: figureName(e.targetId, s), damage: e.damage }), '', 'info');
       if (e.type === 'roomRevealed') toast(t('log.roomRevealed', { name: t(`room.${e.roomId}`) }), '', 'info');
+      if (e.type === 'looted' && e.chest) {
+        const found = [...chestFinds(e, events), ...(e.coins > 0 ? [t('game.ev.chestCoins', { coins: e.coins })] : [])];
+        toast(t('game.ev.chestOpened', { name: figureName(e.heroId, s) }), found.length ? t('game.ev.chestFound', { items: found.join(', ') }) : t('game.ev.chestEmpty'), 'info');
+      }
       if (e.type === 'story') toast(t(e.text), '', 'info');
       if (e.type === 'heroExhausted') toast(t('log.exhausted', { name: figureName(e.heroId) }), '', 'info');
     }

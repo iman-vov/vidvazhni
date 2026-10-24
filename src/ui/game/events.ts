@@ -1,6 +1,7 @@
 // Short sentences for the event log on the game screen, and the first-encounter rule explanations
 // of hint level 1. Bookkeeping events (cards moving, decks shuffling) are left out.
 
+import { itemNameKey } from '../../rules/items';
 import type { GameEvent, GameState } from '../../rules/state';
 import { has, t } from '../i18n';
 import { conditionName, elementName, figureName, modifierLabel, monsterTypeName } from './text';
@@ -73,6 +74,13 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
     default:
       return null;
   }
+}
+
+/** What one opened chest gave, as names: its story items and the shop item found with it. */
+export function chestFinds(e: Extract<GameEvent, { type: 'looted' }>, events: readonly GameEvent[]): string[] {
+  if (!e.chest) return [];
+  const items = events.flatMap((x) => (x.type === 'itemFound' && x.chest === e.chest ? [t(itemNameKey(x.item))] : []));
+  return [...(e.questItems ?? []).map((id) => t(`questItem.${id}`)), ...items];
 }
 
 export interface RuleHint {

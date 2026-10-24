@@ -11,6 +11,7 @@ import type { ScenarioFeedback } from '../../rules/campaign';
 import type { HeroState } from '../../rules/state';
 import { t } from '../../ui/i18n';
 import { icon, type IconName } from '../../ui/game/icons';
+import { chestFinds } from '../../ui/game/events';
 import { className } from '../../ui/game/text';
 import { campHeroUrl, heroBustUrl } from '../../ui/game/uiArt';
 import { artButton } from './menu';
@@ -55,7 +56,10 @@ export function endScreen(o: EndOptions): HTMLElement {
   const goals = won ? (scenario?.secondary ?? []) : [];
   const fromChests: string[] = [];
   const fromEnemies: string[] = [];
-  for (const ev of s.log) if (ev.type === 'itemFound') (ev.chest ? fromChests : fromEnemies).push(ev.item);
+  for (const ev of s.log) {
+    if (ev.type === 'looted') fromChests.push(...chestFinds(ev, s.log));
+    else if (ev.type === 'itemFound' && !ev.chest) fromEnemies.push(t(itemNameKey(ev.item)));
+  }
   const rewardItems = won ? (scenario?.reward.items ?? []) : [];
   const root = h('div', { class: `gpage is-art gend-screen ${won ? 'is-win' : 'is-loss'}` });
 
@@ -102,7 +106,7 @@ export function endScreen(o: EndOptions): HTMLElement {
       'div',
       { class: `gend-slot${items.length || big !== undefined ? '' : ' is-empty'}` },
       icon(iconName),
-      big !== undefined ? h('b', { class: 'gend-slot-big' }, big) : h('span', { class: 'gend-slot-items' }, items.length ? items.map((id) => t(itemNameKey(id))).join(', ') : '—'),
+      big !== undefined ? h('b', { class: 'gend-slot-big' }, big) : h('span', { class: 'gend-slot-items' }, items.length ? items.join(', ') : '—'),
       h('small', null, label),
     );
   }
