@@ -125,7 +125,7 @@ describe('level-up', () => {
 describe('hand and scenario setup', () => {
   const variants = BASE_RULES;
 
-  /** Warden at level 2 with Контрудар: a pool of 11 for a hand of 10. */
+  /** Warden at level 2 with Контрудар: a pool of 14 for a hand of 10. */
   function leveled(): CampaignState {
     const s = fresh();
     hero(s).xp = 20;
@@ -134,7 +134,7 @@ describe('hand and scenario setup', () => {
 
   it('the pool is the level-1 cards plus the chosen level cards', () => {
     const pool = cardPool(c, hero(leveled()));
-    expect(pool).toHaveLength(11);
+    expect(pool).toHaveLength(14);
     expect(pool).toContain('warden.counter-blow');
     expect(pool).not.toContain('warden.stone-bulwark');
   });
@@ -144,14 +144,14 @@ describe('hand and scenario setup', () => {
     const pool = cardPool(c, hero(s));
     expect(err(pickHand(c, s, 'warden', pool))).toBe('choose 10 cards');
     expect(err(pickHand(c, s, 'warden', [...pool.slice(0, 9), 'warden.stone-bulwark']))).toBe('card not in the pool');
-    expect(hero(ok(pickHand(c, s, 'warden', pool.slice(1)))).handPick).toEqual(pool.slice(1));
+    expect(hero(ok(pickHand(c, s, 'warden', pool.slice(4)))).handPick).toEqual(pool.slice(4));
   });
 
   it('setupFromCampaign carries level, perks, ★ items, the card pool and the hand into the game', () => {
     let s = leveled();
     hero(s).gold = 100;
     s = ok(equip(c, ok(upgrade(c, ok(buyDagger(s)), 'warden', 'dagger')), 'warden', 'dagger'));
-    const hand = cardPool(c, hero(s)).slice(1);
+    const hand = cardPool(c, hero(s)).slice(4);
     s = ok(pickHand(c, s, 'warden', hand));
     const r = setupFromCampaign(s, 's1', { seed: 3, variants });
     if (!r.ok) throw new Error(r.error);
@@ -170,7 +170,7 @@ describe('hand and scenario setup', () => {
     expect(w.maxHp).toBe(c.heroes.warden!.hpByLevel[1]);
     expect(w.modifierDeck.draw).toHaveLength(BASE_MODIFIER_CARDS.length - 1);
     expect(w.modifierDeck.draw).not.toContain('-2');
-    // Лучниця (hand 9 of 10 cards) has no camp hand and still picks before the scenario.
+    // Лучниця (hand 9 of 13 cards) has no camp hand and still picks before the scenario.
     expect(g.pending).toEqual({ kind: 'chooseHandBeforeScenario', heroIds: ['hero:wind-archer'] });
   });
 
@@ -179,11 +179,11 @@ describe('hand and scenario setup', () => {
     if (!r.ok) throw new Error(r.error);
     const g = createGame(r.setup, c);
     expect(g.pending).toEqual({ kind: 'chooseHandBeforeScenario', heroIds: ['hero:warden', 'hero:wind-archer'] });
-    expect((g.figures['hero:warden'] as HeroState).cardPool).toHaveLength(11);
+    expect((g.figures['hero:warden'] as HeroState).cardPool).toHaveLength(14);
     const pool = cardPool(c, hero(leveled()));
     const outside = apply(g, { type: 'chooseHand', heroId: 'hero:warden', cards: [...pool.slice(0, 9), 'warden.stone-bulwark'] }, c);
     expect(outside).toEqual({ ok: false, error: 'card not available' });
-    expect(apply(g, { type: 'chooseHand', heroId: 'hero:warden', cards: pool.slice(1) }, c).ok).toBe(true);
+    expect(apply(g, { type: 'chooseHand', heroId: 'hero:warden', cards: pool.slice(4) }, c).ok).toBe(true);
   });
 
   it('only unlocked or won scenarios can be set up', () => {

@@ -26,13 +26,20 @@ describe('hero classes', () => {
     );
   });
 
-  it.each(heroes.map((h) => [h.id, h] as const))('%s: ten level-1 cards, hand size within bounds', (_id, hero) => {
-    expect(starting(hero)).toHaveLength(10);
+  it.each(heroes.map((h) => [h.id, h] as const))('%s: thirteen level-1 cards, hand size within bounds', (_id, hero) => {
+    expect(starting(hero)).toHaveLength(13);
     for (const card of hero.cards) {
       expect(card.initiative).toBeGreaterThanOrEqual(1);
       expect(card.initiative).toBeLessThanOrEqual(99);
     }
     expect(hero.handSize).toBeLessThanOrEqual(starting(hero).length);
+  });
+
+  it.each(heroes.map((h) => [h.id, h] as const))('%s: the recommended hand is handSize different level-1 cards', (_id, hero) => {
+    const hand = hero.recommendedHand ?? [];
+    expect(hand).toHaveLength(hero.handSize);
+    expect(new Set(hand).size).toBe(hand.length);
+    for (const id of hand) expect(starting(hero).map((c) => c.id), id).toContain(id);
   });
 
   const levelled = heroes.filter((h) => h.cards.some((c) => c.level > 1)).map((h) => h.id);

@@ -112,14 +112,16 @@ describe('«Карти з X» (dieCards)', () => {
     expect(fine).toBeGreaterThan(0);
   });
 
-  it('the six level 2–5 X cards carry x, with the fixed average in value', () => {
+  it('the X cards (six of levels 2–5, three extra level-1 ones) carry x, with the fixed average in value', () => {
     const heroes = loadContent().heroes;
     const xCards = Object.values(heroes).flatMap((h) => h.cards.filter((cd) => [...cd.top.steps, ...cd.bottom.steps].some((st) => st.x !== undefined)));
     expect(xCards.map((cd) => cd.id).sort()).toEqual(
-      ['elementalist.unstable-orb', 'elementalist.wild-surge', 'rogue.dodge', 'rogue.fate-strike', 'rogue.risky-strike', 'tinker.homemade-charge'].sort(),
+      [
+        'elementalist.unstable-orb', 'elementalist.wild-surge', 'rogue.dodge', 'rogue.fate-strike', 'rogue.risky-strike', 'tinker.homemade-charge',
+        'rogue.lucky-throw', 'elementalist.wild-spark', 'tinker.crossbow',
+      ].sort(),
     );
     for (const cd of xCards) {
-      expect(cd.level).toBeGreaterThanOrEqual(2);
       for (const st of [...cd.top.steps, ...cd.bottom.steps]) {
         if (st.x === undefined || !('value' in st)) continue;
         expect(Math.abs(st.value - (st.x + 2.2))).toBeLessThanOrEqual(0.5);

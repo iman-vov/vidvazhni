@@ -15,12 +15,22 @@ const players: PlayerInfo[] = [
   { id: 'p2', name: 'Тато' },
 ];
 
+/** The fixtures were recorded when the Вартовий had 10 level-1 cards for a hand of 10: he starts with
+ *  those, the Лучниця still picks 9 before the scenario. */
+const WARDEN_HAND = content.heroes.warden!.cards.filter((c) => c.level === 1).slice(0, 10).map((c) => c.id);
+
+/** A recorded fixture's setup with that hand for the Вартовий. */
+function recorded(fixture: { setup: unknown }): GameSetup {
+  const setup = fixture.setup as GameSetup;
+  return { ...setup, heroes: setup.heroes.map((h) => (h.classId === 'warden' ? { ...h, hand: WARDEN_HAND } : h)) };
+}
+
 function setup(): GameSetup {
   return {
     scenarioId: 's1',
     seed: 12345,
     heroes: [
-      { classId: 'warden', playerId: 'p1', level: 1 },
+      { classId: 'warden', playerId: 'p1', level: 1, hand: WARDEN_HAND },
       { classId: 'wind-archer', playerId: 'p2', level: 1 },
     ],
     difficulty: 'normal',
@@ -64,7 +74,7 @@ describe('GameController', () => {
 
   it('replays the scenario-1 win played through the game UI (base rules)', () => {
     const storage = gameStorage(memoryStore());
-    const saved = { app: 'vidvazhni' as const, version: 1 as const, setup: baseWin.setup as GameSetup, actions: baseWin.actions as Action[], meta: { players, intents: {}, intentsRound: 1, seenHints: [] }, savedAt: 0 };
+    const saved = { app: 'vidvazhni' as const, version: 1 as const, setup: recorded(baseWin), actions: baseWin.actions as Action[], meta: { players, intents: {}, intentsRound: 1, seenHints: [] }, savedAt: 0 };
     const g = GameController.restore(saved, storage, content);
     expect(g.restoreError).toBeNull();
     expect(g.state.phase).toBe('won');
@@ -80,7 +90,7 @@ describe('GameController', () => {
 
   it('gives the camp a scenario result that counts once', () => {
     const meta = { players, intents: {}, intentsRound: 1, seenHints: [], campaign: true, startedAt: 777 };
-    const g = GameController.restore({ app: 'vidvazhni', version: 1, setup: baseWin.setup as GameSetup, actions: baseWin.actions as Action[], meta, savedAt: 0 }, null, content);
+    const g = GameController.restore({ app: 'vidvazhni', version: 1, setup: recorded(baseWin), actions: baseWin.actions as Action[], meta, savedAt: 0 }, null, content);
     const r = g.scenarioResult();
     expect(r).toMatchObject({ id: '777', scenarioId: 's1', won: true });
     expect(r.heroes.map((x) => x.classId)).toEqual(['warden', 'wind-archer']);
@@ -91,7 +101,7 @@ describe('GameController', () => {
   });
 
   it('replays the scenario-1 win played through the game UI (full fork, items, Порив)', () => {
-    const saved = { app: 'vidvazhni' as const, version: 1 as const, setup: forkWin.setup as GameSetup, actions: forkWin.actions as Action[], meta: { players, intents: {}, intentsRound: 1, seenHints: [] }, savedAt: 0 };
+    const saved = { app: 'vidvazhni' as const, version: 1 as const, setup: recorded(forkWin), actions: forkWin.actions as Action[], meta: { players, intents: {}, intentsRound: 1, seenHints: [] }, savedAt: 0 };
     const g = GameController.restore(saved, null, content);
     expect(g.restoreError).toBeNull();
     expect(g.state.phase).toBe('won');
