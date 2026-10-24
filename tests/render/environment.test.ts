@@ -10,7 +10,7 @@ import { pieceIds, pieceMeta } from '../../src/render/environment/pieces';
 import { planEnvironment, STYLE_PIECES } from '../../src/render/environment/plan';
 import { hexToWorld } from '../../src/render/hexLayout';
 import { straightRuns } from '../../src/render/environment/walls';
-import { assignObstacleLooks } from '../../src/render/environment';
+import { assignObstacleLooks, scenarioPartitions } from '../../src/render/environment';
 
 const content = loadContent();
 const SCENARIOS = ['s1', 's2', 's3', 's4', 's5'];
@@ -130,6 +130,34 @@ describe('straight walls', () => {
           expect((c.x - r.ax) * r.nx + (c.z - r.az) * r.nz, `${k}`).toBeLessThan(0.05);
         }
       }
+    });
+  }
+});
+
+describe('partitions between rooms', () => {
+  for (const id of SCENARIOS) {
+    it(`${id}: run end to end to the outer wall and never cut a playable hex`, () => {
+      const scenario = content.scenarios[id]!;
+      const layout = buildLayout(scenario);
+      const parts = scenarioPartitions(layout, scenario);
+      const walls = scenario.rooms.reduce((n, r) => n + (r.walls?.length ?? 0), 0);
+      if (walls) expect(parts.length).toBeGreaterThan(0);
+      for (const part of parts) {
+        // Both ends either reach the outer wall or stop at a doorway hex.
+        for (let i = 0; i + 1 < part.points.length; i++) {
+          const a = part.points[i]!;
+          const b = part.points[i + 1]!;
+          for (const k of layout.footprint.keys()) {
+            const [q, r] = k.split(',').map(Number) as [number, number];
+            const c = hexToWorld(q, r);
+            const t = Math.max(0, Math.min(1, ((c.x - a.x) * (b.x - a.x) + (c.z - a.z) * (b.z - a.z)) / ((b.x - a.x) ** 2 + (b.z - a.z) ** 2)));
+            const d = Math.hypot(c.x - (a.x + (b.x - a.x) * t), c.z - (a.z + (b.z - a.z) * t));
+            expect(d, `${k}`).toBeGreaterThan(0.85);
+          }
+        }
+      }
+      // s1: the door splits the wall in two; each half runs from the doorway to a side wall.
+      if (id === 's1') expect(parts.map((p) => Number(p.extended[0]) + Number(p.extended[1]))).toEqual([1, 1]);
     });
   }
 });

@@ -13,7 +13,7 @@ import type { BoundaryKind, ScenarioDef } from '../../rules/content';
 import { hexKey, parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
-import { hexToWorld } from '../hexLayout';
+import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
 import { surfaceTexture } from '../surfaces';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
@@ -24,6 +24,7 @@ import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
 import { Morok } from './morok';
+import { partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
@@ -113,6 +114,7 @@ export class BoardEnvironment {
   private obstacleGeometries: THREE.BufferGeometry[] = [];
   /** Which set piece stands on each scenario obstacle hex (see `obstacles` in the location data). */
   private obstacleLooks = new Map<HexKey, string>();
+  private partitionLines: Partition[] = [];
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
   private loadToken = 0;
@@ -135,6 +137,7 @@ export class BoardEnvironment {
     this.def = withRoomEdges(environmentFor(scenario.id), scenario);
     this.obstacleLooks = assignObstacleLooks(scenario, this.def);
     this.layout = buildLayout(scenario);
+    this.partitionLines = scenarioPartitions(this.layout, scenario);
     this.veil.clear();
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
     this.kitParts.clear();
@@ -201,6 +204,11 @@ export class BoardEnvironment {
   get innerWallColor(): string | null {
     if (!this.def) return null;
     return this.def.walls?.inner ?? this.palette('stone');
+  }
+
+  /** The walls between rooms as straight runs from outer wall to outer wall (see walls.ts). */
+  partitions(): readonly Partition[] {
+    return this.partitionLines;
   }
 
   /** The set piece shown on an obstacle hex: the location's pick for that hex, else the model. */
@@ -423,7 +431,7 @@ export class BoardEnvironment {
     u.uEnvTexScale.value = 1 / (def.surface ? TEXTURE_WORLD_SIZE : (def.ground.scale ?? 2.6));
 
     this.buildGround(def);
-    this.placements = planEnvironment(layout, def, this.quality);
+    this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
     this.buildPieces(q.shadows);
     this.buildLights(q.lights);
     if (q.wisps > 0) {
@@ -811,6 +819,14 @@ export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): Envir
     } else if (BOUNDARY_EDGE[b] !== def.edge) rooms[room.id] = { edge: BOUNDARY_EDGE[b] };
   }
   return Object.keys(rooms).length ? { ...def, rooms: { ...rooms, ...def.rooms } } : def;
+}
+
+/** The scenario's walls between rooms as partitions over the location's outline. */
+export function scenarioPartitions(layout: EnvLayout, scenario: ScenarioDef): Partition[] {
+  const walls = scenario.rooms.flatMap((room) =>
+    (room.walls ?? []).map(([a, b]) => ({ a, b, rooms: [...new Set([room.id, layout.footprint.get(hexKey(a)), layout.footprint.get(hexKey(b))].filter((r): r is string => !!r))] })),
+  );
+  return partitions(layout, walls, (q, r) => hexToWorld(q, r), (x, z) => hexKey(worldToHex(x, z)), HEX_SIZE);
 }
 
 /**

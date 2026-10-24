@@ -80,7 +80,8 @@ export function styleOf(def: EnvironmentDef, room: string): EdgeStyle {
   return def.rooms?.[room]?.edge ?? def.edge;
 }
 
-export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality: GraphicsQuality): Placement[] {
+/** `partitions`: the walls between rooms as polylines (walls.ts); nothing is put on them. */
+export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality: GraphicsQuality, partitions: { x: number; z: number }[][] = []): Placement[] {
   const rnd = seededRandom(`${def.id}:${layout.scenarioId}`);
   const out: Placement[] = [];
   const taken: { x: number; z: number; r: number }[] = [];
@@ -95,6 +96,15 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     out.push(p);
     taken.push({ x: p.x, z: p.z, r });
   };
+  // The partitions take their line: points along them keep props off.
+  for (const line of partitions) {
+    for (let i = 0; i + 1 < line.length; i++) {
+      const a = line[i]!;
+      const b = line[i + 1]!;
+      const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.25));
+      for (let k = 0; k <= n; k++) taken.push({ x: a.x + ((b.x - a.x) * k) / n, z: a.z + ((b.z - a.z) * k) / n, r: 0.12 });
+    }
+  }
 
   // ── Outline: walls or their outdoor stand-ins, doorways, corners.
   const altCount = new Map<EdgeStyle, number>();
@@ -245,7 +255,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
         if (anchored.has(k)) continue;
         const [q, r] = parseHexKey(k);
         const c = hexToWorld(q, r);
-        if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6)) continue;
+        if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6) || !free(c.x, c.z, meta.radius)) continue;
         // The first one nearest the board's middle, the rest as far from the others as possible;
         // all of them rather behind the board than on the camera's side.
         const spread = chosen.length ? Math.min(...chosen.map((o) => Math.hypot(o.x - c.x, o.z - c.z))) : -Math.hypot(c.x - layout.centre.x, c.z - layout.centre.z);

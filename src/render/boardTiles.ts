@@ -17,6 +17,7 @@ import { listModels } from './models';
 import { hexVariation, loadPropPrototype, propModelFor, type PropPrototype } from './propModels';
 import type { GraphicsQuality } from './quality';
 import type { PropModelSpec } from './environment/types';
+import type { Partition } from './environment/walls';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
@@ -324,6 +325,8 @@ export class TileLayer {
    *  (the environment's floor and walls take over); kerbs stay toward rooms not yet revealed. */
   private footprint: ReadonlySet<HexKey> | null = null;
 
+  /** The walls between rooms as polylines from outer wall to outer wall (environment/walls.ts). */
+  partitionLines: (() => readonly Partition[]) | null = null;
   /** The set piece the location puts on an obstacle hex (barrels here, a table there). */
   obstacleLook: ((model: string, k: HexKey) => string) | null = null;
   /** The location's stand-in for an obstacle model without a GLB (tree, rock, pillar…). */
@@ -551,6 +554,7 @@ export class TileLayer {
       const t = tiles[k];
       return !!t && rooms.includes(t.room);
     };
+    const parts = this.partitionLines?.() ?? [];
     for (const w of wallSet) {
       const [ka, kb] = w.split('|') as [HexKey, HexKey];
       const owner = inRooms(ka) ? tiles[ka]!.room : inRooms(kb) ? tiles[kb]!.room : null;
@@ -559,7 +563,38 @@ export class TileLayer {
       const kind = this.boundaryOf(owner) === 'walls' || this.boundaryOf(other) === 'walls' ? 'walls' : this.boundaryOf(owner);
       const a = parseHexKey(ka);
       const b = parseHexKey(kb);
+      // Masonry runs as whole partitions below; natural boundaries stay piece by piece.
+      if (kind === 'walls' && parts.length) continue;
       add(owner, kind, 'walls', kind === 'walls' ? edgeMatrix(a, b, WALL_HEIGHT, WALL_THICK) : edgeFrame(a, b));
+    }
+    for (const part of parts) {
+      const shown = part.rooms.filter((r) => rooms.includes(r));
+      const owner = shown[0];
+      if (!owner) continue;
+      const kind = part.rooms.some((r) => this.boundaryOf(r) === 'walls') ? 'walls' : this.boundaryOf(owner);
+      const pts = part.points;
+      if (kind === 'walls') {
+        // Straight stretches meeting in mitred joints, a pillar where the wall turns.
+        for (let i = 0; i + 1 < pts.length; i++) add(owner, kind, 'walls', stretchMatrix(pts[i]!, pts[i + 1]!, WALL_HEIGHT, WALL_THICK));
+        for (let i = 1; i + 1 < pts.length; i++) {
+          const p = pts[i]!;
+          add(owner, kind, 'walls', new THREE.Matrix4().compose(new THREE.Vector3(p.x, PLATE_HEIGHT + (WALL_HEIGHT + 0.08) / 2 - 0.02, p.z), new THREE.Quaternion(), new THREE.Vector3(WALL_THICK * 1.8, WALL_HEIGHT + 0.08, WALL_THICK * 1.8)));
+        }
+      } else {
+        // A natural boundary carries on across the ring to the outer edge, piece after piece.
+        const ends: [{ x: number; z: number }, { x: number; z: number }][] = [];
+        if (part.extended[0]) ends.push([pts[0]!, pts[1]!]);
+        if (part.extended[1]) ends.push([pts[pts.length - 1]!, pts[pts.length - 2]!]);
+        for (const [a, b] of ends) {
+          const len = Math.hypot(b.x - a.x, b.z - a.z);
+          const n = Math.max(1, Math.round(len));
+          for (let k = 0; k < n; k++) {
+            const t0 = k / n;
+            const t1 = (k + 1) / n;
+            add(owner, kind, 'walls', stretchFrame({ x: a.x + (b.x - a.x) * t0, z: a.z + (b.z - a.z) * t0 }, { x: a.x + (b.x - a.x) * t1, z: a.z + (b.z - a.z) * t1 }));
+          }
+        }
+      }
     }
     for (const [k, tile] of Object.entries(tiles)) {
       if (!rooms.includes(tile.room)) continue;
@@ -956,6 +991,21 @@ function edgeMatrix(a: Hex, b: Hex, height: number, thick: number): THREE.Matrix
 }
 
 /** Frame on the edge between two adjacent hexes, at plate height: X along the edge, Z across it. */
+/** A wall box from p to q (overlapping at the joints by half its thickness each way). */
+function stretchMatrix(p: { x: number; z: number }, q: { x: number; z: number }, height: number, thick: number): THREE.Matrix4 {
+  const len = Math.hypot(q.x - p.x, q.z - p.z) || 1;
+  const angle = Math.atan2((q.z - p.z) / len, -(q.x - p.x) / len);
+  const pos = new THREE.Vector3((p.x + q.x) / 2, PLATE_HEIGHT + height / 2 - 0.02, (p.z + q.z) / 2);
+  return new THREE.Matrix4().compose(pos, new THREE.Quaternion().setFromAxisAngle(UP, angle), new THREE.Vector3(len + thick, height, thick));
+}
+
+/** Like edgeFrame for a stretch from p to q: origin at its middle on the floor, X along it. */
+function stretchFrame(p: { x: number; z: number }, q: { x: number; z: number }): THREE.Matrix4 {
+  const len = Math.hypot(q.x - p.x, q.z - p.z) || 1;
+  const angle = Math.atan2((q.z - p.z) / len, -(q.x - p.x) / len);
+  return new THREE.Matrix4().compose(new THREE.Vector3((p.x + q.x) / 2, PLATE_HEIGHT - 0.02, (p.z + q.z) / 2), new THREE.Quaternion().setFromAxisAngle(UP, angle), new THREE.Vector3(len / HEX_SIZE, 1, 1));
+}
+
 function edgeFrame(a: Hex, b: Hex): THREE.Matrix4 {
   const wa = hexToWorld(a[0], a[1]);
   const wb = hexToWorld(b[0], b[1]);
