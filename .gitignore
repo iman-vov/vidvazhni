@@ -9,3 +9,6 @@ coverage/
 # Raw Meshy downloads (30 MB each): kept locally, not in git
 art/meshy-source/
 dist-play/
+
+# headless Chrome profile used for renders
+art/.chrome-render-profile/
