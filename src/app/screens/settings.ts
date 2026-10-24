@@ -4,6 +4,7 @@
 import { getGraphicsQuality, GRAPHICS_QUALITIES, setGraphicsQuality, type GraphicsQuality } from '../../render/quality';
 import { h } from '../../ui/dom';
 import { getLang, LANGS, setLang, t } from '../../ui/i18n';
+import { BASE_RULES, FULL_FORK, VARIANT_ORDER, type Variants } from '../../rules/variants';
 import { HINT_LEVELS, settings, type Volumes } from '../settings';
 
 const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
@@ -93,11 +94,45 @@ export function settingsPanel(o: SettingsPanelOptions = {}): HTMLElement {
       h('h3', null, t('settings.hints')),
       h('p', { class: 'gside-hint' }, t('settings.hints.text')),
       (o.heroes ?? CLASS_ORDER).map((classId) => hintRow(classId, render)),
+      rulesSection(render),
       ].flat(),
     );
   };
   render();
   return root;
+}
+
+let rulesOpen = false;
+
+/** Advanced: the rules for new games. The fork is the main set; «Основа» or single mechanics here. */
+function rulesSection(onChange: () => void): HTMLElement {
+  const v = settings.get().variants;
+  const set = (next: Variants) => (settings.update({ variants: next }), onChange());
+  const isPreset = (p: Readonly<Variants>) => VARIANT_ORDER.every((k) => v[k] === p[k]);
+  return h(
+    'details',
+    { class: 'gsection grules', open: rulesOpen, ontoggle: (e: Event) => (rulesOpen = (e.target as HTMLDetailsElement).open) },
+    h('summary', null, t('settings.rules')),
+    h('p', { class: 'gside-hint' }, t('settings.rules.text')),
+    h(
+      'div',
+      { class: 'gseg' },
+      h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(isPreset(FULL_FORK)), onclick: () => set({ ...FULL_FORK }) }, t('menu.rules.fork')),
+      h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(isPreset(BASE_RULES)), onclick: () => set({ ...BASE_RULES }) }, t('menu.rules.base')),
+    ),
+    h(
+      'div',
+      { class: 'gvariants' },
+      VARIANT_ORDER.map((k) =>
+        h(
+          'label',
+          { class: 'gcheck' },
+          h('input', { type: 'checkbox', checked: v[k], onchange: (e: Event) => set({ ...v, [k]: (e.target as HTMLInputElement).checked }) }),
+          h('span', null, h('b', null, t(`variant.${k}`)), h('small', null, t(`variant.${k}.text`))),
+        ),
+      ),
+    ),
+  );
 }
 
 /** Hint level buttons for one hero (also used on the new-game screen). */

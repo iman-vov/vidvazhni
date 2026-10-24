@@ -1,6 +1,7 @@
 // Device settings: volumes and per-hero hint levels live here; language and graphics quality are
 // owned by ui/i18n.ts and render/quality.ts and only re-exported for the settings screen.
 
+import { FULL_FORK, type Variants } from '../rules/variants';
 import { localStore, readJson, type KeyValueStore } from './storage';
 
 /** 0 = off, 1 = explanations, 2 = monster intents, 3 = advice (placeholder in phase 2). */
@@ -19,12 +20,14 @@ export interface Settings {
   speed: number;
   /** By hero class id; absent = 0. */
   hints: Record<string, HintLevel>;
+  /** Rules for new games: the fork by default; Settings → «Правила» switches mechanics off. */
+  variants: Variants;
 }
 
 const KEY = 'vidvazhni.settings';
 
 export function defaultSettings(): Settings {
-  return { volume: { music: 0.6, sound: 0.8, voice: 0.8 }, speed: 1, hints: {} };
+  return { volume: { music: 0.6, sound: 0.8, voice: 0.8 }, speed: 1, hints: {}, variants: { ...FULL_FORK } };
 }
 
 export class SettingsStore {
@@ -34,7 +37,7 @@ export class SettingsStore {
   constructor(private readonly kv: KeyValueStore = localStore) {
     const stored = readJson<Partial<Settings>>(kv, KEY);
     const d = defaultSettings();
-    this.value = { volume: { ...d.volume, ...stored?.volume }, speed: stored?.speed === 2 ? 2 : 1, hints: { ...stored?.hints } };
+    this.value = { volume: { ...d.volume, ...stored?.volume }, speed: stored?.speed === 2 ? 2 : 1, hints: { ...stored?.hints }, variants: { ...FULL_FORK, ...stored?.variants } };
   }
 
   get(): Settings {

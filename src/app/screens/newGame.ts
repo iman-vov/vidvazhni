@@ -9,6 +9,7 @@ import { t } from '../../ui/i18n';
 import { icon } from '../../ui/game/icons';
 import { heroColor } from '../boardViewStub';
 import type { PlayerInfo } from '../game';
+import { settings } from '../settings';
 import { localStore, readJson } from '../storage';
 import { artButton, menuBackdrop } from './menu';
 import { hintRow } from './settings';
@@ -97,12 +98,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     render();
   }
 
-  function setRules(r: RuleSet): void {
-    draft.rules = r;
-    if (r === 'base') draft.variants = { ...BASE_RULES };
-    if (r === 'fork') draft.variants = { ...FULL_FORK };
-    render();
-  }
+
 
   function start(): void {
     if (problem()) return;
@@ -117,7 +113,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
         seed: Math.floor(Math.random() * 1_000_000_000),
         heroes: heroes.map((x) => ({ classId: x.classId, playerId: x.playerId, level: 1, ...(x.items.length ? { items: [...x.items] } : {}) })),
         difficulty: draft.difficulty,
-        variants: { ...draft.variants },
+        variants: { ...settings.get().variants },
       },
       players,
     );
@@ -204,29 +200,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
           (['easy', 'normal', 'hard'] as const).map((d) => h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(d === draft.difficulty), onclick: () => ((draft.difficulty = d), render()) }, t(`ui.difficulty.${d}`))),
         ),
       ),
-      section(
-        t('menu.rules'),
-        h(
-          'div',
-          { class: 'gseg' },
-          (['base', 'fork', 'custom'] as const).map((r) => h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(r === draft.rules), onclick: () => setRules(r) }, t(`menu.rules.${r}`))),
-        ),
-        h('p', { class: 'gside-hint' }, t(`menu.rules.${draft.rules}.text`)),
-        draft.rules === 'custom'
-          ? h(
-              'div',
-              { class: 'gvariants' },
-              VARIANT_ORDER.map((k) =>
-                h(
-                  'label',
-                  { class: 'gcheck' },
-                  h('input', { type: 'checkbox', checked: draft.variants[k], onchange: (e: Event) => ((draft.variants[k] = (e.target as HTMLInputElement).checked), render()) }),
-                  h('span', null, h('b', null, t(`variant.${k}`)), h('small', null, t(`variant.${k}.text`))),
-                ),
-              ),
-            )
-          : null,
-      ),
+      h('p', { class: 'gside-hint gnew-rules' }, rulesSummary(), ' ', h('small', null, t('menu.rules.where'))),
       h(
         'details',
         { class: 'gsection', open: itemsOpen, ontoggle: (e: Event) => (itemsOpen = (e.target as HTMLDetailsElement).open) },
@@ -266,6 +240,14 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
 
   render();
   return root;
+}
+
+/** «Правила: форк» or «Правила: свої (4 з 7)» for the rules set in Settings. */
+function rulesSummary(): string {
+  const v = settings.get().variants;
+  const on = VARIANT_ORDER.filter((k) => v[k]).length;
+  const name = on === VARIANT_ORDER.length ? t('menu.rules.fork') : on === 0 ? t('menu.rules.base') : t('menu.rules.customCount', { n: on, of: VARIANT_ORDER.length });
+  return `${t('menu.rules')}: ${name}.`;
 }
 
 function fill(el: HTMLElement, ...parts: (HTMLElement | null)[]): void {

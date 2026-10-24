@@ -3,7 +3,11 @@
 
 import type { MonsterStats, Step } from '../../rules/content';
 import type { LoadedContent } from '../../rules/load';
+import { planTurn } from '../../rules/ai/index';
+import type { Ctx } from '../../rules/effects/context';
+import type { Hex } from '../../rules/hex';
 import { behaviourCard, monsterInitiative } from '../../rules/round';
+import { figureSteps } from '../../rules/turn';
 import type { Figure, FigureId, GameState, HeroState, MonsterState } from '../../rules/state';
 import { stepText } from '../debug/format';
 import { h } from '../dom';
@@ -49,7 +53,7 @@ export function figureCard(o: FigureCardOptions): HTMLElement | null {
     if (m?.rank === 'elite') tag = t('rank.elite');
     if (m?.rank === 'boss' || o.content.bosses[type]) tag = t('rank.boss');
     if (m) body.push(hpRow(m));
-    body.push(monsterStats(o.content, type, m), m ? statusRow(s, m, o.explain) : groupHp(s, type), intentLines(s, o.content, type));
+    body.push(h('div', { class: 'gfig-base', title: t('game.monster.base') }, h('small', null, t('game.monster.base')), monsterStats(o.content, type, m)), m ? statusRow(s, m, o.explain) : groupHp(s, type), intentLines(s, o.content, type, m));
   }
   const card = h(
     'div',
@@ -141,13 +145,54 @@ function groupHp(s: GameState, typeId: string): HTMLElement | null {
   );
 }
 
-/** This round's behaviour card, or the three possible ones (fork «Три можливі наміри»). */
-function intentLines(s: GameState, content: LoadedContent, typeId: string): HTMLElement {
+/** The steps a monster figure would really perform with this behaviour card: the card's deltas on
+ *  top of its own stats, consume bonuses, immobilize / disarm folded in (the engine's figureSteps). */
+export function resolvedSteps(s: GameState, content: LoadedContent, figure: MonsterState, cardId: string): Step[] {
+  const deck = s.behaviourDecks[figure.typeId];
+  const clone: GameState = deck && deck.current !== cardId ? { ...s, behaviourDecks: { ...s.behaviourDecks, [figure.typeId]: { ...deck, current: cardId } } } : s;
+  const ctx: Ctx = { s: clone, c: content, ev: [], out: [] };
+  try {
+    return figureSteps(ctx, clone.figures[figure.id] ?? figure);
+  } catch {
+    return [];
+  }
+}
+
+/** The monster's plan for this round: whom it goes for and the hexes it will walk through. */
+export function monsterPlan(s: GameState, content: LoadedContent, figure: MonsterState): { focusId: FigureId | null; path: Hex[]; steps: Step[] } | null {
+  if (!s.behaviourDecks[figure.typeId]?.current) return null;
+  const steps = resolvedSteps(s, content, figure, s.behaviourDecks[figure.typeId]?.current as string);
+  try {
+    const plan = planTurn(s, figure.id, steps);
+    return { focusId: plan.focusId, path: plan.path, steps };
+  } catch {
+    return null;
+  }
+}
+
+function resolvedLine(s: GameState, steps: Step[], f: MonsterState): HTMLElement[] {
+  const out: HTMLElement[] = [h('span', null, steps.length ? steps.map((st) => stepText(st, s.variants.orbs)).join('; ') : t('game.monster.nothing'))];
+  if (f.conditions.immobilize) out.push(h('span', { class: 'gtag is-bad' }, t('game.monster.immobilized')));
+  if (f.conditions.disarm) out.push(h('span', { class: 'gtag is-bad' }, t('game.monster.disarmed')));
+  if (f.conditions.stun) out.push(h('span', { class: 'gtag is-bad' }, t('condition.stun')));
+  if (f.conditions.strengthen) out.push(h('span', { class: 'gtag is-gold' }, t('game.monster.advantage')));
+  if (f.conditions.muddle) out.push(h('span', { class: 'gtag is-bad' }, t('game.monster.disadvantage')));
+  return out;
+}
+
+/** This round's card (or the three possible ones in the fork) with the real numbers: per figure,
+ *  or per rank when only the ribbon's monster type was tapped. The card's own deltas stay as a grey
+ *  hint. With a figure after the reveal, its target from the AI plan. */
+function intentLines(s: GameState, content: LoadedContent, typeId: string, figure?: MonsterState): HTMLElement {
   const deck = s.behaviourDecks[typeId];
   const ids = deck?.current ? [deck.current] : s.variants.threeIntents ? (deck?.intents ?? []) : [];
   const ctx = { s, c: content };
   const relative = !content.bosses[typeId];
-  const text = (steps: Step[]) => steps.map((st) => stepText(st, s.variants.orbs, relative)).join('; ');
+  const raw = (steps: Step[]) => steps.map((st) => stepText(st, s.variants.orbs, relative)).join('; ');
+  const all = Object.values(s.figures).filter((f): f is MonsterState => f.kind === 'monster' && f.typeId === typeId);
+  // One line per rank is enough when the figures of a rank are alike; a tapped figure gets its own.
+  const shown = figure ? [figure] : [...new Map(all.map((f) => [f.rank, f])).values()];
+  const plan = figure && deck?.current ? monsterPlan(s, content, figure) : null;
   return h(
     'div',
     { class: 'gfig-intents' },
@@ -158,8 +203,14 @@ function intentLines(s: GameState, content: LoadedContent, typeId: string): HTML
         'div',
         { class: 'gmcard' },
         h('span', { class: 'gcard-ini' }, monsterInitiative(ctx, typeId, card)),
-        h('span', null, card.if ? `${t(`game.if.${card.if}`)}: ` : '', text(card.steps), card.otherwise ? ` | ${t('game.otherwise')}: ${text(card.otherwise)}` : ''),
+        h(
+          'div',
+          { class: 'gcol gmcard-body' },
+          shown.map((f) => h('div', { class: 'grow' }, shown.length > 1 || !figure ? h('b', null, `${figureName(f.id, s)}:`) : null, resolvedLine(s, resolvedSteps(s, content, f, id), f))),
+          h('small', { class: 'gmcard-raw', title: t('game.monster.raw') }, card.if ? `${t(`game.if.${card.if}`)}: ` : '', raw(card.steps), card.otherwise ? ` | ${t('game.otherwise')}: ${raw(card.otherwise)}` : ''),
+        ),
       );
     }),
+    plan ? h('p', { class: 'gfig-plan' }, icon('arrow'), plan.focusId ? t('game.monster.goesFor', { name: figureName(plan.focusId, s) }) : t('game.monster.noFocus'), plan.path.length ? ` · ${t('game.monster.steps', { n: plan.path.length })}` : '') : null,
   );
 }

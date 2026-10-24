@@ -26,7 +26,7 @@ import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
 import { isIconName } from '../ui/icons/names';
 import { elementsRow, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow, type RibbonTarget } from '../ui/game/panels';
-import { figureCard } from '../ui/game/figureCard';
+import { figureCard, monsterPlan } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
 import { heroColor } from './boardViewStub';
@@ -895,6 +895,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     }
     if (m.mode === 'plain') {
       for (const c of m.choices) out.push(h('button', { class: 'gbtn gbtn-primary', onclick: () => resolve(c) }, plainChoiceLabel(c)));
+    } else {
+      // Breakable and movable obstacles: hit or push one aside instead of a figure or a path.
+      for (const c of m.choices) {
+        if (c.targets?.length || c.path?.length || !(c.obstacles?.length || c.moveObstacle)) continue;
+        const hex = c.obstacles?.[0];
+        const tile = hex ? s.board.tiles[hexKey(hex)] : undefined;
+        const hp = tile?.breakable ?? tile?.door?.breakable;
+        out.push(h('button', { class: 'gbtn', onclick: () => resolve(c) }, plainChoiceLabel(c), hp ? ` ${hp.hp}/${hp.maxHp}` : null));
+      }
     }
     const ready = m.mode === 'targets' && m.maxTargets > 1 ? m.ready : m.mode === 'area' ? m.ready : ui.chosen;
     if (m.mode !== 'plain') {
@@ -909,6 +918,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   function plainChoiceLabel(c: StepChoice): (Element | string)[] {
     const orbs = game.state.variants.orbs;
     if (c.element) return [icon(c.element), elementName(c.element, orbs)];
+    if (c.obstacles?.length) return [icon('attack'), t('game.obstacle.attack')];
+    if (c.moveObstacle) return [icon('push'), t('game.obstacle.move')];
     if (c.elements) return c.elements.flatMap((e, i) => (i ? [icon('arrow'), elementName(e, orbs)] : [elementName(e, orbs)]));
     return [icon('check'), c.consume ? t('game.doWithConsume') : t('game.do')];
   }
@@ -1104,7 +1115,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         colorOf,
         explain,
         onMore: () => ui.figInfo && moreAbout(ui.figInfo),
-        onClose: () => ((ui.figInfo = null), renderLayer()),
+        onClose: () => ((ui.figInfo = null), renderLayer(), updateBoard()),
       });
       if (card) parts.push(card);
     }
@@ -1285,12 +1296,14 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (!pinned && ui.figInfo?.pinned) return;
     ui.figInfo = { ...tg, pinned };
     renderLayer();
+    updateBoard();
   }
 
   function closeHoverFigure(): void {
     if (ui.figInfo && !ui.figInfo.pinned) {
       ui.figInfo = null;
       renderLayer();
+      updateBoard();
     }
   }
 
@@ -1403,6 +1416,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function updateBoard(): void {
     const s = game.state;
+    // A monster's stat card shows its plan: the path it will walk and whom it goes for.
+    const figOpen = ui.figInfo?.figureId ? s.figures[ui.figInfo.figureId] : undefined;
+    if (!stepInfo && !ui.busy && figOpen?.kind === 'monster') {
+      const plan = monsterPlan(s, content, figOpen);
+      if (plan) {
+        board.highlight({ ...(plan.path.length ? { path: plan.path } : {}), ...(plan.focusId ? { targets: [plan.focusId] } : {}) });
+        return;
+      }
+    }
     if (!stepInfo || ui.busy) {
       board.clearHighlights();
       return;
