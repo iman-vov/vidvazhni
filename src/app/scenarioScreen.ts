@@ -727,7 +727,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   /** Card selection for one hero: the hand strip, intent tokens, long rest, confirm. */
   /** Choosing the round's cards over the dimmed board, as in Gloomhaven digital: the whole hand as
-   *  small full cards, tap one for the big card with «Обрати»; picks go to two slots, the first is
+   *  small full cards, a tap picks a card and a long press opens the big one; picks go to two slots, the first is
    *  the leading one (its initiative), tapping a slot card puts it back; «Готово» once both are set. Intents fold into one button; «Поле» peeks at the board. */
   function selectionOverlay(heroId: FigureId): HTMLElement {
     const s = game.state;
@@ -739,8 +739,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const bonuses = choosingHand ? [] : orbBonusPreview(s, content, heroId);
     const accent = colorOf(heroId);
     const open = (cardId: CardId) => openCard(heroId, cardId);
+    const pick = (cardId: CardId) => (choosingHand ? toggleHandPick(cardId, need) : togglePick(cardId));
     // The whole hand as small full cards, sized to fit without scrolling (fitHand); a picked card
-    // leaves a ghost behind and sits in its slot. Tap or hold: the big card with «Обрати».
+    // leaves a ghost behind and sits in its slot. Tap: pick or put back; hold: the big card.
     const hand = h(
       'div',
       { class: 'gsel-hand', role: 'list' },
@@ -752,7 +753,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         if (picked && !choosingHand) el.classList.add('is-lifted');
         if (picked && choosingHand) el.append(h('span', { class: 'gsel-badge' }, icon('check')));
         onPress(el, {
-          tap: () => open(cardId),
+          tap: () => pick(cardId),
           down: () => {
             if (choosingHand) return;
             ui.pressCard = cardId;
@@ -765,7 +766,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           },
           hold: () => open(cardId),
         });
-        el.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open(cardId)));
+        // Keyboard: Enter or Space picks, I opens the big card.
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') (e.preventDefault(), pick(cardId));
+          else if (e.key.toLowerCase() === 'i') (e.preventDefault(), open(cardId));
+        });
         return el;
       }),
     );

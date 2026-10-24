@@ -1185,7 +1185,7 @@
   "game.end.goalLost": "Ziel nicht gewertet",
   "menu.version": "Version {version}",
   "game.undo": "Rückgängig",
-  "game.select.hint2": "Wähle noch {n}: Karte antippen, dann „Wählen“. Die erste gewählte führt.",
+  "game.select.hint2": "Wähle noch {n}: Karte antippen zum Wählen, gedrückt halten zum Vergrößern. Die erste gewählte führt.",
   "game.card.pick": "Wählen",
   "game.card.unpick": "Abwählen",
   "game.close": "Schließen",

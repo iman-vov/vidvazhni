@@ -1185,7 +1185,7 @@
   "game.end.goalLost": "Goal not counted",
   "menu.version": "version {version}",
   "game.undo": "Undo",
-  "game.select.hint2": "Pick {n} more: tap a card, then \"Pick\". The first one picked leads.",
+  "game.select.hint2": "Pick {n} more: tap a card to pick it, hold to look closer. The first one picked leads.",
   "game.card.pick": "Pick",
   "game.card.unpick": "Unpick",
   "game.close": "Close",
