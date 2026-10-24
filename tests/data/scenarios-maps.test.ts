@@ -1,7 +1,5 @@
 // Every scenario map in data/scenarios/: schema, shared cross-checks, map checks of the editor,
 // the design doc tables (osnova.md «Сценарії») and a dry run through the engine's room setup.
-// Act II (s6–s10) is not listed in src/rules/load.ts yet, so the maps are read from disk and its monsters
-// and boss are added to the content here (tests/data/act2.ts).
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +14,6 @@ import type { MonsterState } from '../../src/rules/state';
 import { BASE_RULES, FULL_FORK } from '../../src/rules/variants';
 import { checkAll, formatCounts, hexCount, mapIssues, schemaErrors, sightLine, spawnSummary, walkable } from '../../tools/map-editor/checks';
 import { formatScenario, sealRooms, toggleWall } from '../../tools/map-editor/model';
-import { ACT2, withAct2 } from './act2';
 import { checkScenario } from './crossref';
 
 const dir = 'data/scenarios';
@@ -29,12 +26,12 @@ const scenarios: Record<string, ScenarioDef> = Object.fromEntries(
   Object.entries(texts).map(([id, t]) => [id, JSON.parse(t) as ScenarioDef]),
 );
 const base = loadContent();
-const content: Content = withAct2({ ...base, scenarios });
+const content: Content = { ...base, scenarios };
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 describe('scenario files', () => {
   it('are s1–s10', () => {
-    expect(Object.keys(scenarios).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))).toEqual(['s1', 's2', 's3', 's4', 's5', ...ACT2]);
+    expect(Object.keys(scenarios).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
   });
 
   for (const [id, s] of Object.entries(scenarios))
@@ -51,7 +48,7 @@ describe('scenario files', () => {
     });
 
   it('loadContent() serves every scenario file as it is on disk', () => {
-    expect(Object.keys(base.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5']);
+    expect(Object.keys(base.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
     for (const id of Object.keys(base.scenarios)) expect(base.scenarios[id]).toEqual(scenarios[id]);
   });
 });
@@ -176,8 +173,7 @@ describe('scenario texts', () => {
   it('every scenario has names, briefings, rooms, rules, specials and objects in uk, de and en', () => {
     const tables = loadTranslations();
     const need: string[] = [];
-    // Act II gets its texts together with the de/en step.
-    for (const s of Object.values(scenarios).filter((sc) => !ACT2.includes(sc.id))) {
+    for (const s of Object.values(scenarios)) {
       need.push(`scenario.${s.id}`, `scenario.${s.id}.goal`, `scenario.${s.id}.intro`, `scenario.${s.id}.outro`);
       need.push(`goal.type.${s.goal.type}`);
       for (const i of s.introduces) need.push(`introduces.${i}`);

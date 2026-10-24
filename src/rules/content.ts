@@ -413,7 +413,8 @@ export interface ScenarioDef {
   specials?: string[];
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
-  reward: { goldEach: number; items?: string[]; unlock?: string[] };
+  /** `closes`: the other options of a story choice (s6 or s7), dropped from the unlocked list on a win. */
+  reward: { goldEach: number; items?: string[]; unlock?: string[]; closes?: string[] };
   /** Scenario events: ambushes, calls for help, alarms, waves (events.ts). */
   events?: ScenarioEventDef[];
   /** Drafted in the map editor, not yet playtested or balanced. */

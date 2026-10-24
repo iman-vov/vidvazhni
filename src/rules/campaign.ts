@@ -266,7 +266,8 @@ export function setScenarioFeedback(s: CampaignState, scenarioId: string, rating
 }
 
 /** Scenario result → campaign. A loss keeps the gold, XP and found items («поразка м'яка»); a win also
- *  puts `reward.items` in the party chest, marks the scenario completed and unlocks `reward.unlock`. */
+ *  puts `reward.items` in the party chest, marks the scenario completed, unlocks `reward.unlock` and
+ *  closes the other options of its story choice (`reward.closes`, docs/design/story.md «Вузли вибору»). */
 export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: ScenarioResult): CampaignResult {
   if (s.lastResultId === r.id) return fail('result already applied');
   const scenario = c.scenarios[r.scenarioId];
@@ -282,7 +283,8 @@ export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: Sce
   if (r.won) {
     next.partyChest.push(...(scenario.reward.items ?? []));
     if (!next.completed.includes(r.scenarioId)) next.completed.push(r.scenarioId);
-    next.unlocked = next.unlocked.filter((id) => id !== r.scenarioId);
+    const closes = scenario.reward.closes ?? [];
+    next.unlocked = next.unlocked.filter((id) => id !== r.scenarioId && !closes.includes(id));
     for (const id of scenario.reward.unlock ?? []) {
       if (!next.completed.includes(id) && !next.unlocked.includes(id)) next.unlocked.push(id);
     }

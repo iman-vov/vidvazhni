@@ -77,6 +77,20 @@ describe('applyScenarioResult', () => {
     expect(hero(ok(applyScenarioResult(c, s, { id: 'g2', scenarioId: 's1', won: true, heroes }))).xp).toBe(18);
   });
 
+  it('Act II: s5 opens the choice s6 or s7, one win closes the other, both lead to s8 … s10 and the hammer', () => {
+    const win = (s: CampaignState, scenarioId: string) => ok(applyScenarioResult(c, s, { id: scenarioId, scenarioId, won: true, heroes }));
+    const afterS5 = win({ ...fresh(), unlocked: ['s5'] }, 's5');
+    expect(afterS5.unlocked).toEqual(['s6', 's7']);
+    for (const [pick, other] of [['s6', 's7'], ['s7', 's6']] as const) {
+      const s = win(afterS5, pick);
+      expect(s.unlocked).toEqual(['s8']);
+      expect(s.unlocked).not.toContain(other);
+      const end = win(win(win(s, 's8'), 's9'), 's10');
+      expect(end.completed).toEqual(['s5', pick, 's8', 's9', 's10']);
+      expect(end.partyChest).toContain('hammerfist-hammer');
+    }
+  });
+
   it('refuses unknown scenarios and heroes', () => {
     expect(err(applyScenarioResult(c, fresh(), { id: 'g', scenarioId: 'nope', won: true, heroes }))).toBe('unknown scenario nope');
     expect(err(applyScenarioResult(c, fresh(), { id: 'g', scenarioId: 's1', won: true, heroes: [{ classId: 'rogue', xp: 1, gold: 1 }] }))).toBe('no hero rogue');

@@ -823,7 +823,8 @@
       "properties": {
         "goldEach": { "type": "integer", "minimum": 0 },
         "items": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "unlock": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "unlock": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "closes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Other options of the same story choice: a win takes them off the unlocked list." }
       },
       "required": ["goldEach"],
       "additionalProperties": false

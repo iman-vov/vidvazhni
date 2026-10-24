@@ -9,14 +9,14 @@ describe('loadContent', () => {
     expect(Object.keys(content.heroes)).toHaveLength(6);
     expect(Object.keys(content.monsters).sort()).toEqual([
       'bandit-brute', 'bandit-crossbow', 'bog-slime', 'cellar-rat', 'gloom-cultist',
-      'gremlin', 'grey-wolf', 'shadow-wraith', 'stone-sentinel', 'thornling',
+      'gremlin', 'grey-wolf', 'mountain-ram', 'night-moth', 'shadow-wraith', 'stone-sentinel', 'thornling',
     ]);
-    expect(Object.keys(content.bosses).sort()).toEqual(['bog-miller', 'shadowhand']);
+    expect(Object.keys(content.bosses).sort()).toEqual(['bog-miller', 'hammerfist', 'shadowhand']);
     expect(Object.keys(content.decks).sort()).toEqual(
-      ['archer', 'boss.miller', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
+      ['archer', 'boss.hammerfist', 'boss.miller', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
     );
-    expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5']);
-    expect(Object.keys(content.items)).toHaveLength(18);
+    expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
+    expect(Object.keys(content.items)).toHaveLength(19);
     expect(Object.keys(content.battleGoals)).toHaveLength(8);
     expect(Object.keys(content.perks)).toHaveLength(6);
     expect(content.campaign.xpByLevel).toEqual([0, 20, 45, 75, 110]);
@@ -61,14 +61,17 @@ describe('monsters', () => {
     expect(cards[1]?.if).toBe('selfHpAtMostHalf');
   });
 
-  it('every other type has one or two conditional fork cards', () => {
+  it('every other type has one or two fork cards, at least one conditional', () => {
+    // Act II types (docs/design/act2.md) pair a plain card with a conditional one.
+    const plainAllowed = ['mountain-ram', 'night-moth'];
     for (const mon of Object.values(m)) {
       if (mon.id === 'grey-wolf') continue;
       expect(mon.forkCards?.length, mon.id).toBeGreaterThanOrEqual(1);
       expect(mon.forkCards?.length, mon.id).toBeLessThanOrEqual(2);
+      expect(mon.forkCards?.some((card) => card.if), mon.id).toBe(true);
       for (const card of mon.forkCards ?? []) {
-        expect(card.if, card.id).toBeTruthy();
-        expect(card.otherwise, card.id).toBeTruthy();
+        if (!plainAllowed.includes(mon.id)) expect(card.if, card.id).toBeTruthy();
+        expect(!!card.otherwise, card.id).toBe(!!card.if);
       }
     }
   });

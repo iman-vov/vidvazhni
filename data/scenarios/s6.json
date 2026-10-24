@@ -85,7 +85,7 @@
       "chests": [{ "hex": [19, -5], "id": "s6.theo-helmet", "loot": { "questItem": "theo-helmet" } }]
     }
   ],
-  "reward": { "goldEach": 15, "unlock": ["s8"] },
+  "reward": { "goldEach": 15, "unlock": ["s8"], "closes": ["s7"] },
   "zones": [{ "id": "s6.lift", "hexes": [[19, -8], [19, -7], [19, -6], [18, -7]] }],
   "secondary": [
     {

@@ -54,7 +54,7 @@
       ]
     }
   ],
-  "reward": { "goldEach": 25 },
+  "reward": { "goldEach": 25, "unlock": ["s6", "s7"] },
   "events": [
     {
       "id": "s5.pulse",

@@ -28,15 +28,19 @@ import bogSlime from '../../data/monsters/bog-slime.json';
 import cellarRat from '../../data/monsters/cellar-rat.json';
 import gloomCultist from '../../data/monsters/gloom-cultist.json';
 import gremlin from '../../data/monsters/gremlin.json';
+import mountainRam from '../../data/monsters/mountain-ram.json';
+import nightMoth from '../../data/monsters/night-moth.json';
 import greyWolf from '../../data/monsters/grey-wolf.json';
 import shadowWraith from '../../data/monsters/shadow-wraith.json';
 import stoneSentinel from '../../data/monsters/stone-sentinel.json';
 import thornling from '../../data/monsters/thornling.json';
 
 import bogMiller from '../../data/bosses/bog-miller.json';
+import hammerfist from '../../data/bosses/hammerfist.json';
 import shadowhand from '../../data/bosses/shadowhand.json';
 
 import archerDeck from '../../data/decks/archer.json';
+import bossHammerfistDeck from '../../data/decks/boss.hammerfist.json';
 import bossMillerDeck from '../../data/decks/boss.miller.json';
 import bossShadowhandDeck from '../../data/decks/boss.shadowhand.json';
 import casterDeck from '../../data/decks/caster.json';
@@ -49,6 +53,11 @@ import s2 from '../../data/scenarios/s2.json';
 import s3 from '../../data/scenarios/s3.json';
 import s4 from '../../data/scenarios/s4.json';
 import s5 from '../../data/scenarios/s5.json';
+import s6 from '../../data/scenarios/s6.json';
+import s7 from '../../data/scenarios/s7.json';
+import s8 from '../../data/scenarios/s8.json';
+import s9 from '../../data/scenarios/s9.json';
+import s10 from '../../data/scenarios/s10.json';
 
 import items from '../../data/items.json';
 import battleGoals from '../../data/battle-goals.json';
@@ -91,12 +100,13 @@ export function loadContent(): LoadedContent {
     monsters: indexById<MonsterType>([
       cellarRat, gremlin, thornling, greyWolf, banditBrute,
       banditCrossbow, bogSlime, stoneSentinel, gloomCultist, shadowWraith,
+      mountainRam, nightMoth,
     ]),
-    bosses: indexById<BossType>([bogMiller, shadowhand]),
+    bosses: indexById<BossType>([bogMiller, shadowhand, hammerfist]),
     decks: indexById<BehaviourDeck>([
-      meleeDeck, guardDeck, archerDeck, casterDeck, ghostDeck, bossMillerDeck, bossShadowhandDeck,
+      meleeDeck, guardDeck, archerDeck, casterDeck, ghostDeck, bossMillerDeck, bossShadowhandDeck, bossHammerfistDeck,
     ]),
-    scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5]),
+    scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10]),
     items: indexById<ItemDef>(items),
     battleGoals: indexById<BattleGoalDef>(battleGoals),
     perks: indexById<PerkDef>(perks),

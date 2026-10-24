@@ -80,7 +80,7 @@
       ]
     }
   ],
-  "reward": { "goldEach": 30 },
+  "reward": { "goldEach": 30, "items": ["hammerfist-hammer"] },
   "secondary": [
     { "id": "s10.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } },
     { "id": "s10.ten-rounds", "check": "withinRounds", "params": { "rounds": 10 }, "reward": { "gold": 5 } }
