@@ -30,6 +30,9 @@ def thorn_paints():
     paint('wood_dark', [C('#5a3c26'), C('#664429')], C('#1e120a'), C('#a87a4e'), 'wood', grain=(9, 1.3), edge=0.5)
     paint('stone_dark', [C('#7a7068'), C('#6a625c'), C('#82746a')], C('#1e1a16'), C('#c0b4a4'), 'stone', grain=(3, 3), edge=0.45)
     paint('iron', [C('#3e4048'), C('#46424a')], C('#121216'), C('#a0a2ac'), 'metal', grain=(5, 5), edge=0.7)
+    paint('mud', [C('#5a4634'), C('#4e3e30'), C('#64503a')], C('#1a120c'), C('#9a8264'), 'stone', grain=(2, 2), edge=0.25, ao=0.6, feet=0.15)
+    paint('plank', [C('#9a7a56'), C('#8a7660'), C('#a4825a')], C('#2e2014'), C('#e0c49a'), 'wood', grain=(9, 1.3), edge=0.5)
+    paint('rope', [C('#b49868'), C('#a08458')], C('#4a3a22'), C('#ecd8a8'), 'wood', grain=(12, 2), edge=0.3, feet=0.0)
     paint('glow', [C('#ffe6a8')], C('#ff9a40'), C('#ffb860'), 'emit')
     paint('flame', [C('#fff4c4')], C('#ff7a1c'), C('#ff8a26'), 'emit')
 

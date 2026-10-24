@@ -18,6 +18,10 @@ def gloom_paints():
     paint('crystal_dim', [C('#3a1a70')], C('#1a0a40'), C('#a888e8'), 'emit')
     paint('glow_cold', [C('#2a7a9a')], C('#0e3a4a'), C('#c8f4ff'), 'emit')
     paint('mush_stem', [C('#a8b4c0'), C('#98a4b4')], C('#3a4450'), C('#e0eaf4'), 'soft', grain=(3, 3), edge=0.3, feet=0.2)
+    paint('iron', [C('#44464e'), C('#4c4850')], C('#121216'), C('#a8aab4'), 'metal', grain=(5, 5), edge=0.75)
+    paint('wood', [C('#6e5038'), C('#7a5a3c')], C('#20140c'), C('#c09468'), 'wood', grain=(9, 1.3), edge=0.55)
+    paint('wood_dark', [C('#4a3426'), C('#54392a')], C('#160c06'), C('#94704c'), 'wood', grain=(9, 1.3), edge=0.5)
+    paint('cloth', [C('#e0d2b0'), C('#d4c4a0')], C('#6a5a3c'), C('#fff4d8'), 'soft', grain=(3, 3), edge=0.3, feet=0.0)
     paint('shadow', [C('#0e0c12')], C('#060508'), C('#1c1a22'), 'soft', grain=(2, 2), edge=0.0, ao=0.0, feet=0.0)
 
 

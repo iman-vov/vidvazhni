@@ -619,7 +619,7 @@ def unwrap_and_pack(objs, margin=0.003, island_margin=0.02, low_paints=('mortar'
         bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def bake_atlas(objs, image_name, size=2048, samples=2):
+def bake_atlas(objs, image_name, size=2048, samples=2, batch=4):
     """Bakes the painted emission of every piece into one image (Cycles EMIT)."""
     restore_paint(objs)
     img = bpy.data.images.get(image_name)
@@ -656,11 +656,19 @@ def bake_atlas(objs, image_name, size=2048, samples=2):
         n.select = True
     for ob in objs:
         ob.data.uv_layers.active = ob.data.uv_layers['atlas']
-    bpy.ops.object.select_all(action='DESELECT')
-    for ob in objs:
-        ob.select_set(True)
-    bpy.context.view_layer.objects.active = objs[0]
-    bpy.ops.object.bake(type='EMIT', margin=6, use_clear=True)
+    # A few pieces per bake call keeps each call short (one long call once hung Blender).
+    import time
+    log = os.path.join(SOURCE_DIR, 'bake.log')
+    for i in range(0, len(objs), batch):
+        group = objs[i:i + batch]
+        t = time.time()
+        bpy.ops.object.select_all(action='DESELECT')
+        for ob in group:
+            ob.select_set(True)
+        bpy.context.view_layer.objects.active = group[0]
+        bpy.ops.object.bake(type='EMIT', margin=6, use_clear=(i == 0))
+        with open(log, 'a', encoding='utf8') as f:
+            f.write(f'{image_name} {[o.name for o in group]} {time.time() - t:.1f}s\n')
     sc.render.engine = prev_engine
     # The atlas lives next to the exported GLB (gitignored); the pipeline makes the WebP tiers from it.
     loc = image_name[4:-6] if image_name.startswith('env-') and image_name.endswith('-atlas') else 'tmp'
