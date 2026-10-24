@@ -64,3 +64,13 @@
 ## Рішення користувача
 
 `shadowhand`: користувач вирішив лишити низьку й пухку постать (за стильовим замком), а не «високу й тонку» з промпту. Фронт прийнято, продовжувати `side`, `back`, `portrait` у чаті `01a16a1d-32a2-7381-99ab-6e77fb5728bf`.
+
+## Пройда (`rogue`): нова версія, зрозуміліша для Meshy (2026-10-24)
+
+Чат: `01a16a14-aba0-7a32-a3e6-31d38a3c933d`. 3D-модель кілька разів поспіль вийшла з дірками в плащі біля поясних торбинок і пряжок. Перегенеруй **front, side, back** за рядком `rogue` у `REVIEW.md`; portrait не чіпай.
+
+Додай до фрази front:
+```
+Simplify the outfit for 3D conversion while keeping her look: the violet hooded cloak hugs her back and shoulders tightly and ends at the hips, open at the front so it never covers the belt; no pouches, no dangling straps on the belt; two daggers in sheaths lie flat against her hips; few small buckles, big solid shapes, no gaps between the cloak and the body. Same A-pose, empty hands.
+```
+Потім side і back звичайними фразами, тією самою позою. Старі файли перезапиши; після моделі — рядок у `REPORT.md`.
