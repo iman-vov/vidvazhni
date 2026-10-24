@@ -1,0 +1,25 @@
+{
+  "background": {
+    "path": "background.png",
+    "size": { "width": 1448, "height": 1086 },
+    "opaque": true,
+    "sourceMockup": "../v1.png",
+    "description": "Clean hand-painted parchment geography only; no text, UI, mission graph, nodes, statuses, or icons."
+  },
+  "engineDraws": [
+    "all text and localization",
+    "act tabs and UI panels",
+    "mission nodes, graph paths, choices, and status markers",
+    "legend, buttons, and all icons"
+  ],
+  "regions": {
+    "I. Згаслий Ліхтар": "left and lower-left: Альба and nearby countryside",
+    "II. Сиві гори": "upper-middle: mountains and mine country",
+    "III. Сліди Лумо": "center/lower-middle: Сонні болота; lower-middle: Скляне місто",
+    "IV. Новий світанок": "right: approach to Альба and far-right Тіньова вежа"
+  },
+  "sharedUi": {
+    "blueSlateGoldSurface": "../../main-menu/assets/button-base.png",
+    "use": "Existing shared blue-slate, thin-gold surface for runtime buttons and panels; crop or nine-slice in engine."
+  }
+}
