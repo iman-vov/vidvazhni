@@ -110,6 +110,7 @@ export const SCRIPT: readonly CoachStep[] = [
   },
   { id: 'ready', when: (c) => selecting(c) && c.screen.has(SEL.leadingSet) && c.acked.has('leading'), done: (c) => !firstRound(c) || !selecting(c), target: () => ({ selector: SEL.ready }), params: button('game.ready') },
   { id: 'order', info: true, when: (c) => c.s.phase === 'turns' || ownTurn(c), done: (c) => c.acked.has('order') || !firstRound(c) || played(c) > 0, target: () => ({ selector: SEL.ribbon, all: true }) },
+  { id: 'die', info: true, when: (c) => c.s.phase === 'turns' || ownTurn(c), done: (c) => c.acked.has('die') || !firstRound(c) || played(c) > 0, target: () => ({ selector: SEL.ribbon, all: true }) },
   { id: 'plan', info: true, when: (c) => ownTurn(c), done: (c) => c.acked.has('plan') || c.screen.has(SEL.figureCard) || !firstRound(c) || played(c) > 0 || !!c.s.half, target: () => ({ selector: SEL.monsterEntry }) },
   {
     id: 'halfMove',

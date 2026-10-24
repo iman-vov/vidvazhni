@@ -112,6 +112,8 @@ describe('tutorial coach', () => {
     expect(r.g.state.pending?.kind).toBe('heroTurn');
     expect(look()?.step.id).toBe('order');
     script.ack('order');
+    expect(look()?.step.id).toBe('die');
+    script.ack('die');
     expect(look()?.step.id).toBe('plan');
     script.ack('plan');
     expect(look()?.step.id).toBe('halfMove');
@@ -150,7 +152,7 @@ describe('tutorial coach', () => {
     act({ type: 'shortRest', heroId: HERO, rest: false });
     expect(ackAll()?.step.id).toBe('round2');
 
-    for (const id of ['welcome', 'intro', 'curtain', 'hand', 'leading', 'ready', 'order', 'plan', 'halfMove', 'hex', 'halfAttack', 'target', 'infuse', 'endTurn', 'round2'])
+    for (const id of ['welcome', 'intro', 'curtain', 'hand', 'leading', 'ready', 'order', 'die', 'plan', 'halfMove', 'hex', 'halfAttack', 'target', 'infuse', 'endTurn', 'round2'])
       expect(r.shown, id).toContain(id);
     for (const id of ['momentum', 'orb', 'modifier', 'monsters', 'avoid', 'shortRest']) expect(r.shown, id).toContain(id);
     expect(r.shown.indexOf('hex')).toBeLessThan(r.shown.indexOf('halfAttack'));

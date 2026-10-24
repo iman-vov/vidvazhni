@@ -6,7 +6,7 @@
 import type { IconName } from '../../ui/icons/names';
 import type { DiagramId } from './diagrams';
 
-export type TopicGroup = 'basics' | 'board' | 'fight' | 'conditions' | 'elements' | 'cards' | 'world';
+export type TopicGroup = 'basics' | 'board' | 'fight' | 'conditions' | 'elements' | 'cards' | 'world' | 'missions' | 'campaign';
 
 export interface HelpTopic {
   id: string;
@@ -18,7 +18,7 @@ export interface HelpTopic {
   related: string[];
 }
 
-export const TOPIC_GROUPS: readonly TopicGroup[] = ['basics', 'board', 'fight', 'conditions', 'elements', 'cards', 'world'];
+export const TOPIC_GROUPS: readonly TopicGroup[] = ['basics', 'board', 'fight', 'conditions', 'elements', 'cards', 'world', 'missions', 'campaign'];
 
 export const CONDITIONS = ['poison', 'wound', 'immobilize', 'disarm', 'stun', 'muddle', 'invisible', 'strengthen'] as const;
 
@@ -26,10 +26,11 @@ export const TOPICS: readonly HelpTopic[] = [
   { id: 'round', group: 'basics', icon: 'rotate', diagram: 'round', related: ['cards', 'initiative', 'turn', 'rest'] },
   { id: 'cards', group: 'basics', icon: 'hand', diagram: 'card', related: ['halves', 'initiative', 'discard'] },
   { id: 'halves', group: 'basics', icon: 'up', diagram: 'card', related: ['cards', 'turn', 'discard'] },
-  { id: 'initiative', group: 'basics', icon: 'initiative', diagram: 'initiative', related: ['cards', 'round', 'intents'] },
+  { id: 'initiative', group: 'basics', icon: 'initiative', diagram: 'initiative', related: ['cards', 'round', 'intents', 'initiativeDie'] },
+  { id: 'initiativeDie', group: 'basics', icon: 'dice', rules: 'fork', related: ['initiative', 'diceItems', 'xCards'] },
   { id: 'turn', group: 'basics', icon: 'hero', related: ['halves', 'move', 'attack', 'undo'] },
   { id: 'undo', group: 'basics', icon: 'undo', related: ['turn', 'modifiers'] },
-  { id: 'goals', group: 'basics', icon: 'compass', related: ['round', 'exhaustion', 'levels'] },
+  { id: 'goals', group: 'basics', icon: 'compass', related: ['secondary', 'zones', 'events', 'exhaustion'] },
   { id: 'hints', group: 'basics', icon: 'hint', related: ['intents', 'tutorial'] },
   { id: 'tutorial', group: 'basics', icon: 'play', related: ['round', 'cards'] },
 
@@ -37,7 +38,7 @@ export const TOPICS: readonly HelpTopic[] = [
   { id: 'terrain', group: 'board', icon: 'trap', diagram: 'move', related: ['move', 'doors'] },
   { id: 'jump', group: 'board', icon: 'jump', related: ['move', 'terrain'] },
   { id: 'doors', group: 'board', icon: 'door', related: ['terrain', 'monsters'] },
-  { id: 'loot', group: 'board', icon: 'loot', related: ['items', 'levels'] },
+  { id: 'loot', group: 'board', icon: 'loot', related: ['drops', 'items', 'shop'] },
 
   { id: 'attack', group: 'fight', icon: 'attack', diagram: 'attack', related: ['modifiers', 'shield', 'pierce', 'range'] },
   { id: 'range', group: 'fight', icon: 'ranged', related: ['attack', 'area'] },
@@ -69,13 +70,34 @@ export const TOPICS: readonly HelpTopic[] = [
   { id: 'avoidDamage', group: 'cards', icon: 'hp', related: ['loss', 'exhaustion'] },
   { id: 'exhaustion', group: 'cards', icon: 'close', related: ['rest', 'revive', 'goals'] },
   { id: 'revive', group: 'cards', icon: 'revive', rules: 'fork', related: ['exhaustion'] },
+  { id: 'xCards', group: 'cards', icon: 'dice', rules: 'fork', related: ['diceItems', 'modifiers', 'monsterX'] },
 
   { id: 'monsters', group: 'world', icon: 'monster', related: ['intents', 'provoke', 'elite'] },
   { id: 'elite', group: 'world', icon: 'elite', related: ['monsters'] },
-  { id: 'intents', group: 'world', icon: 'approach', rules: 'fork', related: ['monsters', 'initiative'] },
-  { id: 'items', group: 'world', icon: 'item', related: ['loot', 'rest'] },
+  { id: 'intents', group: 'world', icon: 'approach', rules: 'fork', related: ['monsters', 'initiative', 'events', 'monsterX'] },
+  { id: 'monsterX', group: 'world', icon: 'dice', rules: 'fork', related: ['xCards', 'intents', 'monsters'] },
+  { id: 'items', group: 'world', icon: 'item', related: ['loot', 'rest', 'shop', 'diceItems'] },
+  { id: 'diceItems', group: 'world', icon: 'reroll', rules: 'fork', related: ['initiativeDie', 'xCards', 'items', 'shop'] },
   { id: 'xp', group: 'world', icon: 'xp', related: ['levels'] },
-  { id: 'levels', group: 'world', icon: 'xp', related: ['xp', 'modifiers'] },
+  { id: 'levels', group: 'world', icon: 'xp', related: ['xp', 'modifiers', 'camp'] },
+
+  { id: 'secondary', group: 'missions', icon: 'objective-flag', related: ['goals', 'levers'] },
+  { id: 'zones', group: 'missions', icon: 'compass', related: ['goals', 'survive', 'escape', 'escort', 'collect'] },
+  { id: 'survive', group: 'missions', icon: 'defend-point', related: ['zones', 'events', 'goals'] },
+  { id: 'escape', group: 'missions', icon: 'door', related: ['zones', 'revive', 'goals'] },
+  { id: 'escort', group: 'missions', icon: 'escort', related: ['zones', 'goals'] },
+  { id: 'collect', group: 'missions', icon: 'item', related: ['zones', 'halves', 'goals'] },
+  { id: 'levers', group: 'missions', icon: 'lever', related: ['doors', 'secondary', 'events'] },
+  { id: 'events', group: 'missions', icon: 'monster', related: ['intents', 'survive', 'doors'] },
+
+  { id: 'campaign', group: 'campaign', icon: 'map', related: ['camp', 'story'] },
+  { id: 'story', group: 'campaign', icon: 'light', related: ['campaign'] },
+  { id: 'camp', group: 'campaign', icon: 'rest', related: ['shop', 'partyChest', 'levels', 'campaign'] },
+  { id: 'shop', group: 'campaign', icon: 'gold', related: ['upgrade', 'gifts', 'items'] },
+  { id: 'upgrade', group: 'campaign', icon: 'up', related: ['shop', 'items'] },
+  { id: 'gifts', group: 'campaign', icon: 'coin', related: ['shop', 'camp'] },
+  { id: 'partyChest', group: 'campaign', icon: 'chest', related: ['drops', 'camp', 'shop'] },
+  { id: 'drops', group: 'campaign', icon: 'loot', related: ['loot', 'partyChest'] },
 ];
 
 const BY_ID = new Map(TOPICS.map((x) => [x.id, x]));
@@ -143,6 +165,14 @@ const ICON_TOPICS: Partial<Record<IconName, string>> = {
   revive: 'revive',
   approach: 'intents',
   undo: 'undo',
+  dice: 'initiativeDie',
+  reroll: 'diceItems',
+  gold: 'shop',
+  'objective-flag': 'secondary',
+  escort: 'escort',
+  'defend-point': 'survive',
+  lever: 'levers',
+  map: 'campaign',
 };
 
 /** Topic for an icon; elements go to the orbs or the elements topic by the rules in play. */
@@ -177,6 +207,11 @@ export function topicForHint(key: string): string | null {
     surge: 'momentum',
     items: 'items',
     exhaustion: 'exhaustion',
+    initiativeDie: 'initiativeDie',
+    dieCards: 'xCards',
+    diceGear: 'diceItems',
+    monsterDieAbilities: 'monsterX',
+    itemFound: 'drops',
   };
   return map[key] ?? (topicById(key) ? key : null);
 }
