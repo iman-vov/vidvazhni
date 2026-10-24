@@ -14,6 +14,7 @@
 | logo | DE v3 — «Die» / «Mutherzen» | `ui-mockups/logos/de/v3.png` | 1774×887 | Built-in ImageGen prompt: shared Lantern at left of specified compact two-line title, warm light gold, transparent background requested. Text and layout correct; generated PNG has no alpha channel (black background), noted for selection. |
 | logo | UK final — «Відважні» | `ui-mockups/logos/uk/final.png` | 1774×887 | Built-in ImageGen from approved `main-menu/v2.png`: light gold wordmark and shared Lantern only, transparent background requested. Wordmark and mark visually match direction; generated PNG has no alpha channel (black background), noted for selection. |
 | main-menu asset | Background | `ui-mockups/main-menu/assets/background.png` | 1448×1086 | Built-in ImageGen edit of approved hybrid v2. Removed only title, UI controls, labels, icons and `v0.1`; warm town, lighting, composition and tower Lantern retained. Opaque PNG verified. |
+| main-menu asset | Button base | `ui-mockups/main-menu/assets/button-base.png` | 2172×724 | Built-in ImageGen from v2 reference: textless/iconless blue-slate rounded body, double gold border and side diamonds. Transparent background requested; generated PNG has no alpha channel (black background), noted for composition. |
 
 2026-10-24 — Локалізація: користувач підтвердив українську, англійську й німецьку. Знак Ліхтаря спільний; назви та підписи мають локалізуватися. Запропоновані, ще не затверджені назви: Відважні / The Brave / Die Tapferen. Гібрид v2: фон A, кнопки й легкий логотип B; чекає схвалення користувача.
 
@@ -21,3 +22,7 @@
 Користувач затвердив: UK — «Відважні»; EN — «The Braveheart Guild»; DE — «Die Mutherzen». Попередні The Brave / Die Tapferen більше не використовувати. Знак Ліхтаря спільний. Гібрид A+B прийнятий для завершення українського меню. Далі — 3 EN та 3 DE логотипи у спільному стилі, одна генерація за раз. Готові результати зберігати одразу: Клод сам перевіряє файли й може продовжувати інтеграцію. UI-чат не архівувати.
 
 2026-10-24 — Нове доручення: після термінового перемалювання rogue продовжити логотипи та підготувати меню шарами: чистий фон, кнопки без написів, окремі підписи UK/EN/DE. Клод має отримати окремі компоненти для композиції меню. Поточну генерацію логотипа дозволено зберегти; решта на паузі до завершення rogue. UI-чат не архівувати.
+
+2026-10-24 — Користувач підтвердив «Все прийняли»: поточні меню A+B та локалізовані логотипи прийнято. Завершити компоненти для композиції; далі екрани за prompts/ui/README.md по одному, Terra 5.6 / medium. UI-чати залишати відкритими. Наступний екран — scenario-hud.
+
+2026-10-24 — Вибір координатора за словами користувача: логотипи **EN v2** («The Braveheart» / «Guild», Ліхтар зверху, два рядки) і **DE v1** («Die Mutherzen», Ліхтар зверху, один рядок), разом з **UK final**. Так усі три мають однакову композицію: Ліхтар над назвою. Чорне тло логотипів і кнопки в грі прибирається програмно (з яскравості в альфу), тож перегенеровувати не треба.
