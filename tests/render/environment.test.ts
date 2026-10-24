@@ -10,6 +10,7 @@ import { pieceIds, pieceMeta } from '../../src/render/environment/pieces';
 import { planEnvironment, STYLE_PIECES } from '../../src/render/environment/plan';
 import { hexToWorld } from '../../src/render/hexLayout';
 import { straightRuns } from '../../src/render/environment/walls';
+import { assignObstacleLooks } from '../../src/render/environment';
 
 const content = loadContent();
 const SCENARIOS = ['s1', 's2', 's3', 's4', 's5'];
@@ -136,6 +137,24 @@ describe('straight walls', () => {
 describe('showcase cellar (s1)', () => {
   const layout = buildLayout(content.scenarios.s1!);
   const def = environmentFor('s1');
+
+  it('groups ring props (several pieces per group, some stacked) and gives obstacles varied set pieces', () => {
+    const plan = planEnvironment(layout, def, 'high');
+    const ring = plan.filter((p) => p.band === 'ring');
+    expect(ring.some((p) => (p.y ?? 0) > 0)).toBe(true);
+    expect(new Set(ring.map((p) => p.piece)).size).toBeGreaterThanOrEqual(4);
+    const looks = assignObstacleLooks(content.scenarios.s1!, def);
+    expect(looks.size).toBe(7);
+    expect(new Set(looks.values()).size).toBeGreaterThanOrEqual(4);
+    for (const [k, look] of looks) {
+      const [q, r] = k.split(',').map(Number) as [number, number];
+      for (const [k2, look2] of looks) {
+        const [q2, r2] = k2.split(',').map(Number) as [number, number];
+        const d = (Math.abs(q - q2) + Math.abs(r - r2) + Math.abs(q + r - q2 - r2)) / 2;
+        if (k !== k2 && d <= 2) expect(look2, `${k} ${k2}`).not.toBe(look);
+      }
+    }
+  });
 
   it('hangs torches on full walls and keeps two lit braziers at every quality', () => {
     for (const q of ['low', 'medium', 'high'] as const) {

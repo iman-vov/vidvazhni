@@ -5,7 +5,7 @@
 // in the fog. Nothing tall is put where it would hide a playable hex from the camera.
 
 import { hexKey, parseHexKey } from '../../rules/hex';
-import { hexToWorld } from '../hexLayout';
+import { hexToWorld, worldToHex } from '../hexLayout';
 import type { GraphicsQuality } from '../quality';
 import { distanceToFootprint, hidesBoard, seededRandom, type EnvLayout, type OutlineEdge } from './layout';
 import { pieceMeta } from './pieces';
@@ -23,6 +23,10 @@ export interface Placement {
   scale: number;
   /** Extra stretch along the piece's X (a wall segment fitted to a straight run). Default 1. */
   sx?: number;
+  /** Height of the piece's foot (a crate stacked on a crate). Default 0. */
+  y?: number;
+  /** Small lean (radians) about the piece's own X and Z after its turn (a sack leaning). */
+  tilt?: [number, number];
   /** Build height for walls, corners and doorways. */
   height: number;
   /** Room whose fog veil covers this piece until it is revealed (null: always clear). */
@@ -266,9 +270,15 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     }
   }
 
+  // ── Ring strip, in groups: barrels together, a crate on a crate, a sack leaning on a barrel.
+  if (def.dressing.sets?.length) {
+    placeSets(layout, def, rnd, share * density, anchored, put, free);
+  }
+
   // ── Ring strip: props against the walls (or along the forest edge).
   const ringList = def.dressing.ring;
   for (const k of [...layout.ring.keys()].sort()) {
+    if (def.dressing.sets?.length) break;
     if (layout.clear.has(k) || anchored.has(k)) continue;
     if (rnd() > share * density) continue;
     const [q, r] = parseHexKey(k);
@@ -338,6 +348,83 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     }
   }
   return out;
+}
+
+/** How tall a piece stands once shown (its prop model's height in the location's table, else the
+ *  procedural piece's). */
+function standHeight(def: EnvironmentDef, piece: string): number {
+  const entry = def.propModels?.[piece];
+  const h = entry && typeof entry !== 'string' ? entry.height : undefined;
+  return h ?? pieceMeta(piece)?.height ?? 0;
+}
+
+function placeSets(
+  layout: EnvLayout,
+  def: EnvironmentDef,
+  rnd: () => number,
+  chance: number,
+  used: Set<string>,
+  put: (p: Placement, r: number) => void,
+  free: (x: number, z: number, r: number) => boolean,
+): void {
+  const sets = def.dressing.sets!;
+  const total = sets.reduce((s, x) => s + x.weight, 0);
+  const ownEdges = (k: string) => layout.edges.filter((e) => hexKey(e.inner) === k && !e.door);
+  // Corners (two or more walls) first: that is where things pile up.
+  const keys = [...layout.ring.keys()].sort().filter((k) => !layout.clear.has(k) && !used.has(k));
+  keys.sort((a, b) => ownEdges(b).length - ownEdges(a).length);
+  for (const k of keys) {
+    const own = ownEdges(k);
+    if (!own.length) continue;
+    // Fewer groups on the camera's side: they would fill the foreground.
+    const front = own.every((e) => e.front);
+    if (rnd() > Math.min(1, chance * (own.length > 1 ? 1.5 : 1) * (front ? 0.35 : 1))) continue;
+    let t = rnd() * total;
+    const set = sets.find((x) => (t -= x.weight) <= 0) ?? sets[sets.length - 1]!;
+    const [q, r] = parseHexKey(k);
+    const c = hexToWorld(q, r);
+    let nx = own.reduce((s, e) => s + e.nx, 0);
+    let nz = own.reduce((s, e) => s + e.nz, 0);
+    const len = Math.hypot(nx, nz) || 1;
+    nx /= len;
+    nz /= len;
+    const flip = rnd() < 0.5 ? -1 : 1;
+    const spin = (rnd() - 0.5) * 0.3;
+    const ax = Math.cos(spin) * -nz - Math.sin(spin) * nx;
+    const az = Math.cos(spin) * nx - Math.sin(spin) * nz;
+    const ox = c.x + nx * 0.28;
+    const oz = c.z + nz * 0.28;
+    const base = inward(nx, nz);
+    const tops: (number | null)[] = [];
+    let placed = 0;
+    for (const item of set.items) {
+      const meta = pieceMeta(item.piece);
+      const below = item.on !== undefined ? tops[item.on] : 0;
+      if (!meta || below === null || below === undefined) {
+        tops.push(null);
+        continue;
+      }
+      const x = ox + ax * item.x * flip - nx * item.z;
+      const z = oz + az * item.x * flip - nz * item.z;
+      const scale = 0.92 + rnd() * 0.16;
+      const height = standHeight(def, item.piece) * scale;
+      const onHex = layout.footprint.has(hexKey(worldToHex(x, z)));
+      const hides = below + height > LOW_PIECE && hidesBoard(layout, x, z, below + height, meta.radius * 0.6);
+      if (onHex || hides || (below === 0 && !free(x, z, meta.radius * 0.75))) {
+        tops.push(null);
+        continue;
+      }
+      const rot = item.align ? base + (rnd() - 0.5) * 0.2 : rnd() * Math.PI * 2;
+      const lean = item.tilt ? item.tilt * flip : below === 0 && rnd() < 0.25 ? (rnd() - 0.5) * 0.08 : 0;
+      const p: Placement = { piece: item.piece, x, z, rot, scale, height: meta.height, room: layout.ring.get(k)!, band: 'ring' };
+      if (below > 0) p.y = below;
+      if (lean) p.tilt = [0, lean];
+      put(p, below > 0 ? 0 : meta.radius * 0.75);
+      tops.push(below + height);
+      placed++;
+    }
+    if (placed) used.add(k);
+  }
 }
 
 /** The entrance or exit piece beyond a doorway edge: stairs start right behind it, a lantern post

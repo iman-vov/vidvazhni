@@ -324,6 +324,8 @@ export class TileLayer {
    *  (the environment's floor and walls take over); kerbs stay toward rooms not yet revealed. */
   private footprint: ReadonlySet<HexKey> | null = null;
 
+  /** The set piece the location puts on an obstacle hex (barrels here, a table there). */
+  obstacleLook: ((model: string, k: HexKey) => string) | null = null;
   /** The location's stand-in for an obstacle model without a GLB (tree, rock, pillar…). */
   obstacleFactory: ((model: string) => THREE.Object3D | null) | null = null;
   /** The location's prop model for an obstacle model, object look or `chest`/`door`/`trap`. Without
@@ -757,12 +759,17 @@ export class TileLayer {
   }
 
   private makeObstacle(k: HexKey, hex: Hex, room: string): PropView {
-    const model = this.obstacleModels.get(k) ?? 'barrel';
-    // Turned and sized a little differently per hex, so a row of barrels does not look stamped.
+    const base = this.obstacleModels.get(k) ?? 'barrel';
+    const model = this.obstacleLook?.(base, k) ?? base;
+    // Turned, sized, nudged off the centre and sometimes leaning a little, differently per hex, so
+    // obstacles look set down rather than stamped (still clearly on their hex).
     const v = hexVariation(hex[0], hex[1]);
+    const w = hexVariation(hex[1] * 3 + 11, hex[0] * 5 - 7);
     const part = (this.obstacleFactory?.(model) as THREE.Group | null) ?? (model === 'crate' ? this.propParts.crate() : this.propParts.barrel());
     part.rotation.y = v.rot;
     part.scale.multiplyScalar(v.scale);
+    part.position.set(Math.cos(w.rot) * 0.12, 0, Math.sin(w.rot) * 0.12);
+    if (w.scale > 1.02) part.rotation.z = (w.scale - 1.02) * 0.9;
     part.userData['variation'] = v.scale;
     return this.makeSimple(`${k}:obstacle`, hex, room, model, part, 'obstacle');
   }
@@ -839,6 +846,8 @@ export class TileLayer {
       if (!proto || !placeholder.parent) return;
       const model = this.instance(proto);
       model.rotation.y += placeholder.rotation.y;
+      model.rotation.z += placeholder.rotation.z;
+      model.position.add(placeholder.position);
       model.scale.multiplyScalar((placeholder.userData['variation'] as number | undefined) ?? 1);
 
       placeholder.parent.add(model);

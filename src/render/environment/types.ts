@@ -90,6 +90,9 @@ export interface EnvironmentDef {
    * `door`, `trap`. Missing models fall back to the procedural piece. A plain string is the model id.
    */
   propModels?: Record<string, string | PropModelSpec>;
+  /** Set pieces that stand on scenario obstacles of a model (`barrel`), picked per hex by a seeded
+   *  random so neighbouring obstacles differ: barrels here, a table there, a stack of crates. */
+  obstacles?: Record<string, string[]>;
   dressing: {
     /** Props on the non-playable strip between the hexes and the edge (against the walls). */
     ring: Weighted[];
@@ -102,7 +105,27 @@ export interface EnvironmentDef {
     /** Pieces that always stand in the ring (at every quality), spread apart along the far and side
      *  walls before the random dressing: a pair of braziers, a lantern. */
     anchors?: Weighted[];
+    /** Groups placed instead of single ring props: a few barrels together, a crate on a crate, a
+     *  sack leaning on a barrel. Corners first; each instance turned, sized and nudged a little. */
+    sets?: DressingSet[];
   };
+}
+
+/** A group of pieces against a wall. Frame: x along the wall, z out from it toward the board,
+ *  origin a little in front of the wall face. */
+export interface DressingSet {
+  weight: number;
+  items: {
+    piece: string;
+    x: number;
+    z: number;
+    /** Index of an earlier item this one stands on (its height lifts this one). */
+    on?: number;
+    /** Lean in radians (a sack against a barrel). */
+    tilt?: number;
+    /** Keep the turn along the wall (racks, shelves), only a little jitter. */
+    align?: boolean;
+  }[];
 }
 
 /** A prop model standing in for a piece: which model, how tall (world units, before the

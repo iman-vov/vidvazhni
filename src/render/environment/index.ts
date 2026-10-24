@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { BoundaryKind, ScenarioDef } from '../../rules/content';
-import { parseHexKey, type HexKey } from '../../rules/hex';
+import { hexKey, parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
 import { hexToWorld } from '../hexLayout';
@@ -111,6 +111,8 @@ export class BoardEnvironment {
   private blobTexture: THREE.Texture | null = null;
   private readonly veil = new Map<string, number>();
   private obstacleGeometries: THREE.BufferGeometry[] = [];
+  /** Which set piece stands on each scenario obstacle hex (see `obstacles` in the location data). */
+  private obstacleLooks = new Map<HexKey, string>();
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
   private loadToken = 0;
@@ -131,6 +133,7 @@ export class BoardEnvironment {
     }
     this.scenarioId = scenario.id;
     this.def = withRoomEdges(environmentFor(scenario.id), scenario);
+    this.obstacleLooks = assignObstacleLooks(scenario, this.def);
     this.layout = buildLayout(scenario);
     this.veil.clear();
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
@@ -200,11 +203,16 @@ export class BoardEnvironment {
     return this.def.walls?.inner ?? this.palette('stone');
   }
 
+  /** The set piece shown on an obstacle hex: the location's pick for that hex, else the model. */
+  obstacleLook(model: string, hex: HexKey): string {
+    return this.obstacleLooks.get(hex) ?? model;
+  }
+
   /** A stand-in for a scenario obstacle model (tree, rock, pillar, bed, table, hut) or a scenario
    *  object (`brazier:lit`, `lever:down`, `millstone`) in the location's colours, standing on its
    *  own origin; null for what the tile layer draws itself. */
   makeObstacle(model: string): THREE.Object3D | null {
-    const spec = OBSTACLE_PIECES[model];
+    const spec = OBSTACLE_PIECES[model] ?? (pieceMeta(model)?.kind === 'prop' ? { piece: model, scale: 1 } : undefined);
     if (!spec || !this.def) return null;
     const group = this.makePiece(spec.piece);
     if (!group) return null;
@@ -522,13 +530,15 @@ export class BoardEnvironment {
     const q = new THREE.Quaternion();
     const up = new THREE.Vector3(0, 1, 0);
     const modelled = new Map<PropPrototype, THREE.Matrix4[]>();
+    const euler = new THREE.Euler();
     const blobs: THREE.Matrix4[] = [];
     for (const p of this.placements) {
       const proto = this.propProtos.get(p.piece);
       const meta = pieceMeta(p.piece);
-      place.compose(new THREE.Vector3(p.x, 0, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(p.scale * (p.sx ?? 1), p.scale, p.scale));
-      // Props stand on a soft contact shadow (the far silhouettes in the fog do not need one).
-      if (meta?.kind === 'prop' && p.band !== 'far') {
+      q.setFromEuler(euler.set(p.tilt?.[0] ?? 0, p.rot, p.tilt?.[1] ?? 0, 'YXZ'));
+      place.compose(new THREE.Vector3(p.x, p.y ?? 0, p.z), q, new THREE.Vector3(p.scale * (p.sx ?? 1), p.scale, p.scale));
+      // Props stand on a soft contact shadow (not one stacked on another, nor the far silhouettes).
+      if (meta?.kind === 'prop' && p.band !== 'far' && !p.y) {
         const r = (proto?.radius ?? meta.radius) * p.scale * 2.5;
         blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(p.x, 0.012, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(r, 1, r)));
       }
@@ -588,7 +598,8 @@ export class BoardEnvironment {
         mesh.instanceMatrix.needsUpdate = true;
         mesh.computeBoundingSphere();
         mesh.name = `env:model:${proto.spec.model}`;
-        mesh.castShadow = shadows;
+        // Modelled props are few and instanced: they cast shadows wherever figures do.
+        mesh.castShadow = shadows || this.quality !== 'low';
         mesh.receiveShadow = true;
         this.root.add(mesh);
         this.disposables.push({ dispose: () => mesh.dispose() });
@@ -800,6 +811,32 @@ export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): Envir
     } else if (BOUNDARY_EDGE[b] !== def.edge) rooms[room.id] = { edge: BOUNDARY_EDGE[b] };
   }
   return Object.keys(rooms).length ? { ...def, rooms: { ...rooms, ...def.rooms } } : def;
+}
+
+/**
+ * A set piece for every scenario obstacle whose model the location lists (`obstacles`), by a seeded
+ * random per hex, never the same as an obstacle within two hexes that already has one when the
+ * list allows it.
+ */
+export function assignObstacleLooks(scenario: ScenarioDef, def: Pick<EnvironmentDef, 'id' | 'obstacles'>): Map<HexKey, string> {
+  const out = new Map<HexKey, string>();
+  if (!def.obstacles) return out;
+  const all = scenario.rooms.flatMap((r) => r.obstacles ?? []).filter((o) => o.model && def.obstacles![o.model]?.length);
+  all.sort((a, b) => a.hex[0] - b.hex[0] || a.hex[1] - b.hex[1]);
+  for (const o of all) {
+    const list = def.obstacles[o.model!]!;
+    const rnd = seededRandom(`${def.id}:${scenario.id}:${o.hex[0]},${o.hex[1]}`);
+    const order = list.map((look) => ({ look, k: rnd() })).sort((a, b) => a.k - b.k).map((x) => x.look);
+    const near = new Set<string>();
+    for (const [k, look] of out) {
+      const [q, r] = parseHexKey(k);
+      const dq = q - o.hex[0];
+      const dr = r - o.hex[1];
+      if ((Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2 <= 2) near.add(look);
+    }
+    out.set(hexKey(o.hex), order.find((l) => !near.has(l)) ?? order[0]!);
+  }
+  return out;
 }
 
 function mixHex(a: string, b: string, t: number): string {

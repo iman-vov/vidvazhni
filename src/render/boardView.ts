@@ -348,6 +348,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.onChange = requestRender;
   environment.onChange = requestRender;
   tiles.obstacleFactory = (model) => environment.makeObstacle(model);
+  tiles.obstacleLook = (model, k) => environment.obstacleLook(model, k);
   tiles.propModel = (key, height) => environment.propModel(key, height);
   tiles.propGlow = (key, height) => environment.propGlow(key, height);
   tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);

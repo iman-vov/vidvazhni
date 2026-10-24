@@ -19,8 +19,8 @@
   "fog": { "color": "#1d1612", "glow": "#2c2018", "start": 2.0, "end": 6, "morok": "#aba8b2", "morokOpacity": 0.35 },
   "entrance": "stairs",
   "propModels": {
-    "barrel": { "model": "barrel", "height": 0.92 },
-    "crate": { "model": "crate", "height": 0.62 },
+    "barrel": { "model": "barrel", "height": 0.8 },
+    "crate": { "model": "crate", "height": 0.55 },
     "sack": { "model": "flour-sack", "height": 0.5 },
     "brazier": { "model": "brazier", "height": 0.68 },
     "brazier-lit": { "model": "brazier", "height": 0.72 },
@@ -29,9 +29,19 @@
     "door": { "model": "dungeon-door", "height": 1.0 },
     "trap": { "model": "bear-trap", "height": 0.18 }
   },
+  "obstacles": { "barrel": ["barrel", "crate", "table", "crate-stack", "sacks", "keg-rack"] },
   "dressing": {
     "anchors": [["brazier-lit", 2], ["table", 1]],
+    "sets": [
+      { "weight": 2, "items": [{ "piece": "barrel", "x": -0.36, "z": 0 }, { "piece": "barrel", "x": 0.34, "z": -0.02 }, { "piece": "barrel", "x": 0.02, "z": 0.52 }] },
+      { "weight": 2, "items": [{ "piece": "barrel", "x": -0.25, "z": 0 }, { "piece": "barrel", "x": 0.42, "z": 0.08 }, { "piece": "sack", "x": 0.1, "z": 0.55, "tilt": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "crate", "x": 0.03, "z": 0.02, "on": 0 }, { "piece": "crate", "x": 0.68, "z": 0.12 }] },
+      { "weight": 2, "items": [{ "piece": "sacks", "x": 0, "z": 0 }, { "piece": "sack", "x": 0.5, "z": 0.25, "tilt": 0.35 }, { "piece": "crate", "x": -0.62, "z": 0.02 }] },
+      { "weight": 1, "items": [{ "piece": "wine-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "barrel", "x": 0.75, "z": 0.2 }] },
+      { "weight": 1, "items": [{ "piece": "shelf", "x": 0, "z": -0.08, "align": true }, { "piece": "candles", "x": 0.66, "z": 0.15 }] },
+      { "weight": 1, "items": [{ "piece": "keg-rack", "x": 0, "z": 0, "align": true }, { "piece": "barrel", "x": -0.72, "z": 0.1 }] }
+    ],
     "ring": [["barrel", 3], ["keg-rack", 2], ["crate", 2], ["crate-stack", 2], ["sacks", 2], ["wine-rack", 2], ["candles", 2], ["shelf", 1], ["sack", 1]],
-    "density": 0.75
+    "density": 0.5
   }
 }

@@ -130,6 +130,11 @@
         ]
       }
     },
+    "obstacles": {
+      "description": "Set pieces that stand on scenario obstacles of a model, picked per hex so neighbours differ.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+    },
     "dressing": {
       "type": "object",
       "properties": {
@@ -137,7 +142,36 @@
         "outside": { "$ref": "#/definitions/weighted" },
         "far": { "$ref": "#/definitions/weighted" },
         "density": { "type": "number", "minimum": 0, "maximum": 1 },
-        "anchors": { "description": "Pieces that always stand in the ring, spread along the far and side walls (count instead of weight).", "$ref": "#/definitions/weighted" }
+        "anchors": { "description": "Pieces that always stand in the ring, spread along the far and side walls (count instead of weight).", "$ref": "#/definitions/weighted" },
+        "sets": {
+          "description": "Groups placed instead of single ring props. Frame: x along the wall, z out from it toward the board.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "weight": { "type": "number", "exclusiveMinimum": 0 },
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "piece": { "type": "string" },
+                    "x": { "type": "number" },
+                    "z": { "type": "number" },
+                    "on": { "type": "integer", "minimum": 0 },
+                    "tilt": { "type": "number" },
+                    "align": { "type": "boolean" }
+                  },
+                  "required": ["piece", "x", "z"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["weight", "items"],
+            "additionalProperties": false
+          }
+        }
       },
       "required": ["ring"],
       "additionalProperties": false
