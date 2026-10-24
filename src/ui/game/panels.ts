@@ -1,0 +1,354 @@
+// Panels around the board: initiative bar (top), hero panel (left), elements or orbs and the
+// event log (right). Pure render functions; the scenario screen passes state and callbacks.
+
+import type { ConditionId, ElementId, OrbId } from '../../rules/content';
+import type { InitiativeForecast } from '../../rules/queries';
+import type { FigureId, Figure, GameState, HeroState, TurnEntry } from '../../rules/state';
+import type { LoadedContent } from '../../rules/load';
+import { MOMENTUM_MAX } from '../../rules/variants';
+import type { IntentId } from '../../app/game';
+import { h } from '../dom';
+import { t } from '../i18n';
+import { icon } from './icons';
+import { onPress } from './press';
+import { cardName, className, conditionName, elementName, figureName, monsterTypeName } from './text';
+
+export const ELEMENTS: ElementId[] = ['fire', 'ice', 'air', 'earth', 'light', 'dark'];
+export const ORB_IDS: OrbId[] = ['fire', 'earth', 'air'];
+
+export interface Explain {
+  (title: string, text: string): void;
+}
+
+/** Long press (or tap) on an icon explains it. */
+export function explained(el: HTMLElement, explain: Explain, title: string, text: string): HTMLElement {
+  onPress(el, { hold: () => explain(title, text), tap: () => explain(title, text) });
+  return el;
+}
+
+export function heroIndex(s: GameState, heroId: FigureId): number {
+  return Object.values(s.figures)
+    .filter((f) => f.kind === 'hero')
+    .findIndex((f) => f.id === heroId);
+}
+
+export function heroBadge(s: GameState, heroId: FigureId, color: string, small = false): HTMLElement {
+  const classId = heroId.split(':')[1] ?? '';
+  return h('span', { class: `gbadge${small ? ' is-small' : ''}`, style: { background: color } }, className(classId).slice(0, 1));
+}
+
+export function intentIcons(list: IntentId[]): HTMLElement | null {
+  if (list.length === 0) return null;
+  return h(
+    'span',
+    { class: 'gintents' },
+    list.map((id) => h('span', { class: 'gintent', title: t(`game.intent.${id}`) }, icon(intentIcon(id)))),
+  );
+}
+
+export function intentIcon(id: IntentId): string {
+  return { attack: 'attack', heal: 'heal', approach: 'approach', hold: 'hold', rest: 'rest', early: 'early', late: 'late' }[id];
+}
+
+// ─── Initiative bar ─────────────────────────────────────────────────────────
+
+export interface InitiativeBarOptions {
+  s: GameState;
+  content: LoadedContent;
+  colorOf: (heroId: FigureId) => string;
+  intentsOf: (heroId: FigureId) => IntentId[];
+  /** Fork «Прогноз раунду» while a card is held or chosen as leading. */
+  forecast: InitiativeForecast | null;
+  /** Hint level 2: who each monster type is going for this round. */
+  monsterFocus: Record<string, FigureId[]> | null;
+  onMonster: (typeId: string) => void;
+}
+
+export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
+  const s = o.s;
+  const entries: HTMLElement[] = [];
+  if (o.forecast) {
+    for (const e of o.forecast.order) {
+      if (e.kind === 'hero') entries.push(heroEntry(o, e.figureId, e.initiative, { self: !!e.self }));
+      else entries.push(monsterEntry(o, e.typeId, String(e.initiative), { intent: true }));
+    }
+    return h('div', { class: 'ginibar is-forecast', 'aria-label': t('variant.roundForecast') }, h('span', { class: 'ginibar-tag' }, icon('initiative'), t('game.forecast', { n: o.forecast.position + 1 })), entries);
+  }
+  if (s.phase === 'selectCards' || s.turnOrder.length === 0) {
+    for (const f of Object.values(s.figures)) {
+      if (f.kind !== 'hero' || f.exhausted) continue;
+      entries.push(heroEntry(o, f.id, null, { chosen: f.selection !== null && s.pending?.kind === 'selectCards' }));
+    }
+    for (const typeId of typesShown(s)) {
+      const deck = s.behaviourDecks[typeId];
+      const inis = s.variants.threeIntents && deck?.intents.length ? deck.intents.map((c) => String(monsterIni(o.content, typeId, c))) : [];
+      entries.push(monsterEntry(o, typeId, inis.length ? inis.join(' · ') : '?', {}));
+    }
+  } else {
+    const current = s.phase === 'turns' ? s.turnIndex : s.turnOrder.length;
+    s.turnOrder.forEach((e: TurnEntry, i) => {
+      const state = { current: i === current && s.phase === 'turns', done: i < current };
+      if (e.kind === 'monsterGroup') {
+        if (!Object.values(s.figures).some((f) => f.kind === 'monster' && f.typeId === e.typeId) && i > current) return;
+        entries.push(monsterEntry(o, e.typeId, String(e.initiative), state));
+      } else if (e.kind === 'hero') entries.push(heroEntry(o, e.figureId, e.initiative, state));
+      else entries.push(h('span', { class: `gini is-summon${state.done ? ' is-done' : ''}` }, h('b', null, e.initiative), figureName(e.figureId, s)));
+    });
+  }
+  return h('div', { class: 'ginibar', 'aria-label': t('ui.initiative') }, entries);
+}
+
+function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | null, st: { self?: boolean; chosen?: boolean; current?: boolean; done?: boolean }): HTMLElement {
+  const f = o.s.figures[heroId] as HeroState | undefined;
+  const cls = ['gini', 'is-hero'];
+  if (st.self) cls.push('is-self');
+  if (st.current) cls.push('is-current');
+  if (st.done) cls.push('is-done');
+  if (f?.downed || f?.exhausted) cls.push('is-out');
+  const iniText = ini === null ? (st.chosen ? '✓' : '?') : f?.selection?.kind === 'longRest' ? '99' : String(ini);
+  return h(
+    'span',
+    { class: cls.join(' ') },
+    heroBadge(o.s, heroId, o.colorOf(heroId), true),
+    h('b', null, iniText),
+    h('span', { class: 'gini-name' }, figureName(heroId)),
+    st.self ? h('span', { class: 'gini-you' }, t('game.you')) : null,
+    intentIcons(o.intentsOf(heroId)),
+  );
+}
+
+function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string, st: { current?: boolean; done?: boolean; intent?: boolean }): HTMLElement {
+  const cls = ['gini', 'is-monster'];
+  if (st.current) cls.push('is-current');
+  if (st.done) cls.push('is-done');
+  if (st.intent) cls.push('is-intent');
+  const focus = o.monsterFocus?.[typeId] ?? [];
+  const el = h(
+    'button',
+    { class: cls.join(' '), 'aria-label': monsterTypeName(typeId) },
+    icon('monster'),
+    h('b', null, ini),
+    h('span', { class: 'gini-name' }, monsterTypeName(typeId)),
+    focus.length ? h('span', { class: 'gini-focus', title: t('game.hint.focus') }, '→ ', [...new Set(focus)].map((id) => figureName(id)).join(', ')) : null,
+  );
+  el.addEventListener('click', () => o.onMonster(typeId));
+  return el;
+}
+
+function typesShown(s: GameState): string[] {
+  const out: string[] = [];
+  for (const f of Object.values(s.figures)) if (f.kind === 'monster' && !out.includes(f.typeId)) out.push(f.typeId);
+  return out;
+}
+
+function monsterIni(content: LoadedContent, typeId: string, cardId: string): number {
+  const m = content.monsters[typeId];
+  const deckId = m?.deck ?? content.bosses[typeId]?.deck;
+  const card = (deckId ? content.decks[deckId]?.cards.find((c) => c.id === cardId) : undefined) ?? m?.forkCards?.find((c) => c.id === cardId);
+  return card ? Math.min(99, Math.max(1, card.initiative + (m?.initiativeOffset ?? 0))) : 0;
+}
+
+// ─── Hero panel ─────────────────────────────────────────────────────────────
+
+export interface HeroPanelOptions {
+  s: GameState;
+  content: LoadedContent;
+  open: boolean;
+  focusId: FigureId | null;
+  colorOf: (heroId: FigureId) => string;
+  playerName: (heroId: FigureId) => string;
+  intentsOf: (heroId: FigureId) => IntentId[];
+  /** Item buttons: usable now (glow) and the click handler when legal. */
+  items: (heroId: FigureId) => { id: string; state: string; usable: boolean; onUse: (() => void) | null }[];
+  explain: Explain;
+  onToggle: () => void;
+  onFocus: (heroId: FigureId) => void;
+}
+
+export function heroPanel(o: HeroPanelOptions): HTMLElement {
+  const heroes = Object.values(o.s.figures).filter((f): f is HeroState => f.kind === 'hero');
+  const toggle = h(
+    'button',
+    { class: 'gbtn gbtn-icon gpanel-toggle', 'aria-expanded': String(o.open), 'aria-label': t('game.panel.heroes'), onclick: o.onToggle },
+    icon(o.open ? 'left' : 'right'),
+  );
+  if (!o.open) {
+    return h(
+      'aside',
+      { class: 'gleft is-closed' },
+      toggle,
+      heroes.map((hero) =>
+        h(
+          'button',
+          { class: 'gmini', onclick: () => (o.onFocus(hero.id), o.onToggle()) },
+          heroBadge(o.s, hero.id, o.colorOf(hero.id)),
+          h('span', { class: `gmini-hp${hero.hp * 3 <= hero.maxHp ? ' is-low' : ''}` }, hero.hp),
+        ),
+      ),
+    );
+  }
+  return h('aside', { class: 'gleft' }, h('div', { class: 'gpanel-head' }, h('span', null, t('game.panel.heroes')), toggle), heroes.map((hero) => heroBlock(o, hero, hero.id === o.focusId)));
+}
+
+function heroBlock(o: HeroPanelOptions, hero: HeroState, expanded: boolean): HTMLElement {
+  const s = o.s;
+  const tags: HTMLElement[] = [];
+  if (hero.exhausted) tags.push(h('span', { class: 'gtag is-bad' }, t('ui.exhausted')));
+  if (hero.downed) tags.push(h('span', { class: 'gtag is-bad' }, t('ui.downed')));
+  if (hero.selection?.kind === 'longRest' && s.phase === 'turns') tags.push(h('span', { class: 'gtag' }, t('ui.longRest')));
+  if (hero.wantsShortRest) tags.push(h('span', { class: 'gtag' }, t('ui.shortRest')));
+  const pct = Math.max(0, Math.min(100, (100 * hero.hp) / Math.max(1, hero.maxHp)));
+  const body: (HTMLElement | null)[] = [
+    h(
+      'button',
+      { class: 'ghero-head', onclick: () => o.onFocus(hero.id), 'aria-expanded': String(expanded) },
+      heroBadge(s, hero.id, o.colorOf(hero.id)),
+      h('span', { class: 'ghero-name' }, h('b', null, figureName(hero.id)), h('small', null, o.playerName(hero.id))),
+      intentIcons(o.intentsOf(hero.id)),
+    ),
+    h(
+      'div',
+      { class: 'ghp', title: t('ui.hp') },
+      icon('hp'),
+      h('div', { class: 'ghp-bar' }, h('div', { class: `ghp-fill${pct <= 34 ? ' is-low' : ''}`, style: { width: `${pct}%` } })),
+      h('b', null, `${hero.hp}/${hero.maxHp}`),
+    ),
+    statusRow(s, hero, o.explain),
+    tags.length ? h('div', { class: 'grow' }, tags) : null,
+  ];
+  if (expanded) {
+    if (s.variants.momentum) {
+      body.push(
+        explained(
+          h(
+            'div',
+            { class: 'gmomentum', title: t('ui.momentum') },
+            icon('momentum'),
+            Array.from({ length: MOMENTUM_MAX }, (_, i) => h('span', { class: `gpip${i < hero.momentum ? ' is-on' : ''}` })),
+            h('small', null, t('ui.momentum')),
+          ),
+          o.explain,
+          t('variant.momentum'),
+          t('variant.momentum.text'),
+        ),
+      );
+    }
+    body.push(
+      h(
+        'div',
+        { class: 'gstats' },
+        stat('xp', t('ui.xp'), hero.xp),
+        stat('coin', t('ui.coins'), hero.coins),
+        stat('hand', t('ui.hand'), hero.hand.length),
+        stat('discard', t('ui.discard'), hero.discard.length),
+        stat('loss', t('ui.lost'), hero.lost.length),
+      ),
+    );
+    if (hero.active.length) {
+      body.push(
+        h(
+          'div',
+          { class: 'gactive' },
+          h('small', null, t('ui.activeCards')),
+          hero.active.map((a) => h('div', { class: 'gactive-card' }, icon('active'), cardName(a.cardId), a.usesLeft !== undefined ? h('span', { class: 'gtag' }, `×${a.usesLeft}`) : null)),
+        ),
+      );
+    }
+    const items = o.items(hero.id);
+    if (items.length) {
+      body.push(
+        h(
+          'div',
+          { class: 'gitems' },
+          items.map((it) =>
+            h(
+              'button',
+              { class: `gbtn gitem is-${it.state}${it.usable ? ' is-glow' : ''}`, disabled: !it.onUse, onclick: () => it.onUse?.() },
+              icon('item'),
+              h('span', null, t(`item.${it.id}`)),
+              it.state !== 'ready' ? h('small', null, t(`game.itemState.${it.state}`)) : null,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+  return h('section', { class: `ghero${expanded ? ' is-open' : ''}${hero.exhausted ? ' is-out' : ''}`, style: { borderColor: o.colorOf(hero.id) } }, body);
+}
+
+function stat(iconName: string, label: string, value: number): HTMLElement {
+  return h('span', { class: 'gstat', title: label }, icon(iconName), h('b', null, value));
+}
+
+/** Conditions, shields, retaliate and provoke of a figure as icons; tap or hold explains. */
+export function statusRow(s: GameState, f: Figure, explain: Explain): HTMLElement | null {
+  const bits: HTMLElement[] = [];
+  for (const [c, st] of Object.entries(f.conditions)) {
+    if (!st) continue;
+    const id = c as ConditionId;
+    bits.push(explained(h('span', { class: `gcond c-${id}`, title: conditionName(id) }, icon(id), h('small', null, conditionName(id))), explain, conditionName(id), t(`condition.${id}.text`)));
+  }
+  const shield = f.shields.reduce((n, x) => n + x.value, 0);
+  if (shield) bits.push(explained(h('span', { class: 'gcond is-good' }, icon('shield'), h('small', null, `${t('stat.shield')} ${shield}`)), explain, t('stat.shield'), t('game.explain.shield')));
+  const ret = f.retaliates.reduce((n, x) => n + x.value, 0);
+  if (ret) bits.push(explained(h('span', { class: 'gcond is-good' }, icon('retaliate'), h('small', null, `${t('stat.retaliate')} ${ret}`)), explain, t('stat.retaliate'), t('game.explain.retaliate')));
+  if (f.kind === 'hero' && f.provokeRadius) bits.push(h('span', { class: 'gcond is-good' }, icon('provoke'), h('small', null, t('step.provoke', { radius: f.provokeRadius }))));
+  if (f.kind === 'monster' && s.variants.followUp && f.attackedBy.length) bits.push(explained(h('span', { class: 'gcond is-good' }, icon('targets'), h('small', null, t('variant.followUp'))), explain, t('variant.followUp'), t('variant.followUp.text')));
+  return bits.length ? h('div', { class: 'gstatus' }, bits) : null;
+}
+
+// ─── Elements / orbs ────────────────────────────────────────────────────────
+
+export interface ElementsPanelOptions {
+  s: GameState;
+  open: boolean;
+  log: HTMLElement;
+  explain: Explain;
+  onToggle: () => void;
+}
+
+export function elementsPanel(o: ElementsPanelOptions): HTMLElement {
+  const s = o.s;
+  const toggle = h(
+    'button',
+    { class: 'gbtn gbtn-icon gpanel-toggle', 'aria-expanded': String(o.open), 'aria-label': t(s.variants.orbs ? 'ui.orbs' : 'ui.elements'), onclick: o.onToggle },
+    icon(o.open ? 'right' : 'left'),
+  );
+  const list = s.variants.orbs
+    ? ORB_IDS.map((id) => {
+        const orb = s.orbs[id];
+        const state = orb ? (orb.age === 0 ? 'strong' : 'waning') : 'inert';
+        const owner = orb ? (orb.ownerId.includes(':') ? figureName(orb.ownerId, s) : t('game.orb.scenario')) : '';
+        return explained(
+          h(
+            'div',
+            { class: `gel el-${id} is-${state}`, title: elementName(id, true) },
+            icon(id),
+            o.open ? h('span', { class: 'gel-text' }, h('b', null, elementName(id, true)), h('small', null, orb ? `${owner} · ${t(orb.age === 0 ? 'orb.state.fresh' : 'orb.state.dimmed')}` : t('game.orb.none'))) : null,
+          ),
+          o.explain,
+          elementName(id, true),
+          `${t(`orb.${id}.text`)}. ${t('game.explain.orbs')}`,
+        );
+      })
+    : ELEMENTS.map((id) =>
+        explained(
+          h(
+            'div',
+            { class: `gel el-${id} is-${s.elements[id]}`, title: elementName(id, false) },
+            icon(id),
+            o.open ? h('span', { class: 'gel-text' }, h('b', null, elementName(id, false)), h('small', null, t(`element.state.${s.elements[id]}`))) : null,
+          ),
+          o.explain,
+          elementName(id, false),
+          t('game.explain.elements'),
+        ),
+      );
+  return h(
+    'aside',
+    { class: `gright${o.open ? '' : ' is-closed'}` },
+    h('div', { class: 'gpanel-head' }, toggle, o.open ? h('span', null, t(s.variants.orbs ? 'ui.orbs' : 'ui.elements')) : null),
+    h('div', { class: 'gels' }, list),
+    o.open ? o.log : null,
+  );
+}
