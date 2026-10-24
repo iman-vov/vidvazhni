@@ -8,3 +8,4 @@ coverage/
 
 # Raw Meshy downloads (30 MB each): kept locally, not in git
 art/meshy-source/
+dist-play/

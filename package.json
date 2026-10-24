@@ -13,7 +13,8 @@
     "validate": "node tools/validate-data.mjs",
     "icons": "node tools/make-icons.mjs",
     "models": "node tools/optimize-models.mjs",
-    "ui-assets": "node tools/ui-assets.mjs"
+    "ui-assets": "node tools/ui-assets.mjs",
+    "play": "vite build --outDir dist-play --emptyOutDir && vite preview --outDir dist-play --host --port 5181 --strictPort"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",
