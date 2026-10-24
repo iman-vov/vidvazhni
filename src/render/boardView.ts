@@ -18,7 +18,7 @@ import { BoardOverlay, CONDITION_ICONS, FigureBadge, type OverlayItem } from './
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
 import { createFigureParts, disposeFigureParts, FigureView } from './figureView';
-import { CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
+import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
@@ -28,11 +28,11 @@ import { iconSvg } from '../ui/icons/svg';
 
 const BACKGROUND = '#1b1d27';
 
-/** Floating words; everything else on the board is digits or icons. */
-const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string }> = {
-  uk: { miss: 'Промах', shield: 'Щит' },
-  de: { miss: 'Daneben', shield: 'Schild' },
-  en: { miss: 'Miss', shield: 'Shield' },
+/** Floating words and the reset button's label; everything else on the board is digits or icons. */
+const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string }> = {
+  uk: { miss: 'Промах', shield: 'Щит', resetView: 'Повернути огляд' },
+  de: { miss: 'Daneben', shield: 'Schild', resetView: 'Ansicht zurücksetzen' },
+  en: { miss: 'Miss', shield: 'Shield', resetView: 'Reset view' },
 };
 
 /** Extra handles for the dev page and tests; not part of the BoardView contract. */
@@ -53,6 +53,8 @@ export interface BoardViewDebug {
   /** What the environment around the board is built of. */
   environment(): EnvironmentStats;
   readonly scene: THREE.Scene;
+  /** The camera's goal pose (yaw/pitch in radians) and the pose drawn now. */
+  camera(): BoardCamera['state'];
   /** Figures on the board with their model state. */
   figures(): { id: FigureId; model: string | null; clip: string | null; hex: Hex; visible: boolean }[];
 }
@@ -151,6 +153,26 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     hold: (x, y) => onHold(x, y),
     changed: () => requestRender(),
   });
+
+  // «Reset view»: shown only while the camera is away from home.
+  let resetButton: HTMLButtonElement | null = null;
+  if (opts.resetButton !== false) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'bv-reset';
+    b.title = b.ariaLabel = LABELS[lang].resetView;
+    b.innerHTML = iconSvg('compass', { size: 24 });
+    b.hidden = true;
+    // Keep the press away from the board's gestures (no pan, no tap through to a hex).
+    b.addEventListener('pointerdown', (e) => e.stopPropagation());
+    b.addEventListener('click', () => resetCamera());
+    root.appendChild(b);
+    resetButton = b;
+  }
+
+  function resetCamera(): void {
+    camera.recentre();
+  }
 
   // ─── Renderer & quality ─────────────────────────────────────────────────
 
@@ -252,6 +274,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     renderer.render(scene, camera.camera);
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
+    if (resetButton) resetButton.hidden = camera.atHome;
   }
 
   function renderFrame(now: number): void {
@@ -299,6 +322,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.onChange = requestRender;
   environment.onChange = requestRender;
   tiles.obstacleFactory = (model) => environment.makeObstacle(model);
+  tiles.propModel = (key, height) => environment.propModel(key, height);
+  tiles.propGlow = (key, height) => environment.propGlow(key, height);
+
   const stopQuality = onGraphicsQualityChange((q) => setQuality(q));
 
   function updateBounds(animate = false): void {
@@ -342,7 +368,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.onChange = () => {
         settle(0.3);
       };
-      const badge = new FigureBadge(look.kind === 'hero');
+      const badge = new FigureBadge(look.kind);
       fv.badge = badge;
       const view = fv;
       fv.badgeItem = overlay.add(badge.el, () => (view.root.visible ? view.headPoint() : null));
@@ -431,7 +457,6 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.root.scale.setScalar(1);
       fv.setSquash(1);
       fv.setOpacity(1);
-      fv.setFog(1);
       fv.setYaw(fv.yaw);
       applyFigureState(fv, f);
       if (!fv.downed && fv.model && fv.model.current !== 'idle') fv.playClip('idle', { crossFade: 0 });
@@ -926,10 +951,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const puff = fog
       ? effects.puff(at, '#b9bfcc', { count: 14, size: 1.2, seconds: 1.3, rise: 0.9 })
       : effects.puff(at, '#fff2c8', { count: 8, size: 0.5, additive: true, seconds: 1.0, rise: 1.4 });
-    await anim.tween(0.6, (k) => {
-      fv.setOpacity(1 - k);
-      fv.setFog(1 - k);
-    });
+    fv.setGlow(null);
+    await anim.tween(0.6, (k) => fv.setOpacity(1 - k));
     await puff;
     if (fv.gone && figures.get(id) === fv && alive(ctx)) removeFigure(fv);
   }
@@ -1118,8 +1141,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       dots.renderOrder = 2;
       scene.add(dots);
     }
-    const targeted = new Set(highlightPlan.targets.map((t) => t.figureId));
-    for (const fv of figures.values()) fv.setTargeted(targeted.has(fv.id) && (highlights.targets ?? []).includes(fv.id));
+    const targeted = new Set(highlights.targets ?? []);
+    const active = highlights.active !== undefined ? highlights.active : state ? activeFigure(state) : null;
+    const selected = highlights.selected ?? null;
+    for (const fv of figures.values()) {
+      const target = targeted.has(fv.id);
+      fv.setTargeted(target);
+      fv.setGlow(fv.gone ? null : target ? 'target' : fv.id === selected ? 'selected' : fv.id === active ? 'active' : null);
+    }
     for (const mark of highlightPlan.targets) {
       if (mark.expectedDamage === undefined) continue;
       const fv = figures.get(mark.figureId);
@@ -1244,6 +1273,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     onFigureTap: (cb) => subscribe(figureListeners, cb),
     onFigureHold: (cb) => subscribe(holdListeners, cb),
     focus,
+    resetCamera,
     setQuality,
     dispose,
     get speed() {
@@ -1281,6 +1311,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       return (performance.now() - t0) / n;
     },
     environment: () => environment.stats(),
+    camera: () => camera.state,
     scene,
     figures: () =>
       [...figures.values()].map((fv) => ({ id: fv.id, model: fv.model ? `${fv.model.id}@${fv.model.quality}` : null, clip: fv.model?.current ?? null, hex: fv.hex, visible: fv.root.visible })),

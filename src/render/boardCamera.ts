@@ -1,14 +1,31 @@
-// Camera and gestures of the 3D board: a target point on the ground and a distance along a fixed
-// pitch (55°, inside the style guide's 45–60°). One pointer pans, two pinch, the wheel zooms; taps,
-// double taps and long presses are reported with screen coordinates for picking. Same behaviour
-// as render/board.ts (phase 0), plus long press, focus on a point and bounds that grow with rooms.
+// Camera and gestures of the 3D board: a target point on the ground, a distance, a yaw around the
+// target and a pitch (home 55°, the player may tilt within 35–70°). Gestures move a goal camera;
+// the shown camera follows it with smooth damping. Touch: one finger pans, two fingers pinch-zoom,
+// twist to turn the view and pan together, or slide up/down together to tilt. Mouse: left (or
+// middle, or shift+left) drag pans, right drag turns and tilts, the wheel zooms; Q/E turn the view.
+// Taps, double taps and long presses are reported with screen coordinates for picking. Bounds keep
+// the view centre over the board, so the board never leaves the screen.
 
 import * as THREE from 'three';
 import { HEX_SIZE } from './hexLayout';
 import { PLATE_HEIGHT } from './boardTiles';
+import {
+  classifyTwoFinger,
+  clampPitch,
+  dampAngle,
+  dampFactor,
+  fingerFrame,
+  KEY_YAW_STEP,
+  PITCH_HOME,
+  pinchChange,
+  tiltAfterDrag,
+  wrapAngle,
+  yawAfterDrag,
+  type Pt,
+  type TwoFingerMode,
+} from './cameraGestures';
 
 const FOV = 40;
-const PITCH = THREE.MathUtils.degToRad(55);
 const MIN_DISTANCE = 4 * HEX_SIZE;
 const FIT_MARGIN = 0.9;
 /** The game UI puts the initiative bar along the top, so the board leaves more room there. */
@@ -18,7 +35,6 @@ const TAP_MAX_MS = 350;
 const HOLD_MS = 500;
 const DOUBLE_TAP_MS = 300;
 const DOUBLE_TAP_SLOP_PX = 40;
-const TWEEN_MS = 450;
 const FIGURE_TOP = 1.8;
 
 export interface CameraHandlers {
@@ -28,23 +44,46 @@ export interface CameraHandlers {
   changed(): void;
 }
 
-interface Tween {
-  start: number;
-  fromTarget: THREE.Vector3;
-  toTarget: THREE.Vector3;
-  fromDistance: number;
-  toDistance: number;
+/** Where the camera is: what it looks at, from how far, turned and tilted how much. */
+export interface CameraPose {
+  target: THREE.Vector3;
+  distance: number;
+  yaw: number;
+  pitch: number;
+}
+
+/** Puts a camera at a pose: it sits `distance` from the target, `pitch` above the ground, turned by
+ *  `yaw` around the vertical axis (yaw 0 looks toward −Z, as the home view). */
+export function placeCamera(camera: THREE.Camera, p: CameraPose): void {
+  const flat = Math.cos(p.pitch) * p.distance;
+  camera.position.set(p.target.x + Math.sin(p.yaw) * flat, p.target.y + Math.sin(p.pitch) * p.distance, p.target.z + Math.cos(p.yaw) * flat);
+  camera.lookAt(p.target);
+  camera.updateMatrixWorld();
+}
+
+interface TwoFinger {
+  a0: Pt;
+  b0: Pt;
+  mode: TwoFingerMode | null;
+  distance: number;
+  yaw: number;
+  pitch: number;
+  /** Ground point under the fingers' midpoint at the start (stays under it while pinching). */
+  anchor: THREE.Vector3 | null;
 }
 
 export class BoardCamera {
+  /** The camera that is drawn; it eases toward the goal pose. */
   readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 500);
-  private readonly target = new THREE.Vector3();
+  /** Where gestures put the camera; rays for gestures are cast from here, so fingers stay glued. */
+  private readonly goalCamera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 500);
+  private readonly shown: CameraPose = { target: new THREE.Vector3(), distance: 20, yaw: 0, pitch: PITCH_HOME };
+  private readonly goal: CameraPose = { target: new THREE.Vector3(), distance: 20, yaw: 0, pitch: PITCH_HOME };
   private readonly homeTarget = new THREE.Vector3();
-  private distance = 20;
   private fitDistance = 20;
   private maxDistance = 40;
   private userMoved = false;
-  private tween: Tween | null = null;
+  private lastStep = 0;
   private bounds = new THREE.Box2(new THREE.Vector2(-3, -3), new THREE.Vector2(3, 3));
   private readonly raycaster = new THREE.Raycaster();
   private readonly ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PLATE_HEIGHT);
@@ -55,13 +94,13 @@ export class BoardCamera {
 
   // Gestures.
   private readonly pointers = new Map<number, { x: number; y: number }>();
-  private mode: 'none' | 'pan' | 'pinch' = 'none';
+  private mode: 'none' | 'pan' | 'two' | 'orbit' = 'none';
   private readonly dragAnchor = new THREE.Vector3();
-  private pinchStartSpread = 1;
-  private pinchStartDistance = 20;
+  private two: TwoFinger | null = null;
+  private orbitStart: { x: number; y: number; yaw: number; pitch: number } | null = null;
   private tapCandidate: { id: number; x: number; y: number; t: number } | null = null;
   private lastTap: { x: number; y: number; t: number } | null = null;
-  private holdTimer = 0;
+  private holdTimer: ReturnType<typeof setTimeout> | 0 = 0;
   private held = false;
   private readonly wheelAnchor = new THREE.Vector3();
 
@@ -75,10 +114,30 @@ export class BoardCamera {
     el.addEventListener('pointercancel', this.onPointerCancel);
     el.addEventListener('wheel', this.onWheel, { passive: false });
     el.addEventListener('contextmenu', this.onContextMenu);
+    if (typeof window !== 'undefined') window.addEventListener('keydown', this.onKeyDown);
   }
 
+  /** Whether the shown camera is still easing toward the goal. */
   get animating(): boolean {
-    return this.tween !== null;
+    const s = this.shown;
+    const g = this.goal;
+    return (
+      s.target.distanceToSquared(g.target) > 1e-6 ||
+      Math.abs(s.distance - g.distance) > 1e-3 ||
+      Math.abs(wrapAngle(s.yaw - g.yaw)) > 1e-4 ||
+      Math.abs(s.pitch - g.pitch) > 1e-4
+    );
+  }
+
+  /** Whether the view is (or is heading back to) the home view: nothing to reset. */
+  get atHome(): boolean {
+    const g = this.goal;
+    return (
+      Math.abs(wrapAngle(g.yaw)) < 0.02 &&
+      Math.abs(g.pitch - PITCH_HOME) < 0.02 &&
+      Math.abs(g.distance / this.fitDistance - 1) < 0.08 &&
+      g.target.distanceTo(this.homeTarget) < 0.6 * HEX_SIZE
+    );
   }
 
   /** Sets the board extent (XZ). Refits the home view unless the player moved the camera. */
@@ -88,38 +147,48 @@ export class BoardCamera {
     this.bounds = next;
     if (animate && !this.userMoved) {
       // A room opened: glide out to the new home view instead of jumping.
-      this.fitHome(false);
-      this.tween = { start: -1, fromTarget: this.target.clone(), toTarget: this.homeTarget.clone(), fromDistance: this.distance, toDistance: this.fitDistance };
+      this.fitHome();
+      this.goHome();
       this.on.changed();
-    } else this.fitHome(!this.userMoved);
+    } else {
+      this.fitHome();
+      if (!this.userMoved) this.jumpHome();
+      else this.clampGoal();
+    }
   }
 
   resize(w: number, h: number): void {
     this.width = w;
     this.height = h;
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
-    this.fitHome(!this.userMoved);
+    for (const c of [this.camera, this.goalCamera]) {
+      c.aspect = w / h;
+      c.updateProjectionMatrix();
+    }
+    this.fitHome();
+    if (!this.userMoved) this.jumpHome();
+    else this.update();
   }
 
   private update(): void {
-    const t = this.target;
-    this.camera.position.set(t.x, t.y + Math.sin(PITCH) * this.distance, t.z + Math.cos(PITCH) * this.distance);
-    this.camera.lookAt(t);
-    this.camera.updateMatrixWorld();
+    placeCamera(this.camera, this.shown);
+    placeCamera(this.goalCamera, this.goal);
   }
 
-  private clampTarget(): void {
-    this.target.x = THREE.MathUtils.clamp(this.target.x, this.bounds.min.x, this.bounds.max.x);
-    this.target.z = THREE.MathUtils.clamp(this.target.z, this.bounds.min.y, this.bounds.max.y);
+  private clampGoal(): void {
+    const t = this.goal.target;
+    t.x = THREE.MathUtils.clamp(t.x, this.bounds.min.x, this.bounds.max.x);
+    t.z = THREE.MathUtils.clamp(t.z, this.bounds.min.y, this.bounds.max.y);
+    this.goal.distance = this.clampDistance(this.goal.distance);
+    this.goal.pitch = clampPitch(this.goal.pitch);
+    placeCamera(this.goalCamera, this.goal);
   }
 
   private clampDistance(d: number): number {
     return THREE.MathUtils.clamp(d, MIN_DISTANCE, this.maxDistance);
   }
 
-  /** Screen extent of the board in NDC for the current camera: [maxAbsX, minY, maxY]. */
-  private projectedExtent(): [number, number, number] {
+  /** Screen extent of the board in NDC for a camera: [maxAbsX, minY, maxY]. */
+  private projectedExtent(camera: THREE.Camera): [number, number, number] {
     const b = this.bounds;
     let maxX = 0;
     let minY = Infinity;
@@ -134,7 +203,7 @@ export class BoardCamera {
       [b.min.x, FIGURE_TOP, b.min.y + HEX_SIZE],
       [b.max.x, FIGURE_TOP, b.min.y + HEX_SIZE],
     ] as const) {
-      p.set(x, y, z).project(this.camera);
+      p.set(x, y, z).project(camera);
       maxX = Math.max(maxX, Math.abs(p.x));
       minY = Math.min(minY, p.y);
       maxY = Math.max(maxY, p.y);
@@ -142,70 +211,106 @@ export class BoardCamera {
     return [maxX, minY, maxY];
   }
 
-  /** Finds the view that shows the whole board centred on screen; `apply` moves the camera there. */
-  private fitHome(apply: boolean): void {
-    const keepTarget = this.target.clone();
-    const keepDistance = this.distance;
+  /** Finds the home view (yaw 0, pitch 55°) that shows the whole board centred on screen. */
+  private fitHome(): void {
+    const cam = new THREE.PerspectiveCamera(FOV, this.width / this.height, 0.1, 500);
     const c = this.bounds.getCenter(new THREE.Vector2());
-    this.target.set(c.x, 0, c.y);
+    const pose: CameraPose = { target: new THREE.Vector3(c.x, 0, c.y), distance: 20, yaw: 0, pitch: PITCH_HOME };
     for (let pass = 0; pass < 3; pass++) {
       let lo = 0.5;
       let hi = 500;
       for (let i = 0; i < 30; i++) {
-        this.distance = (lo + hi) / 2;
-        this.update();
-        const [x, minY, maxY] = this.projectedExtent();
-        if (x <= FIT_MARGIN && minY >= -FIT_MARGIN && maxY <= FIT_MARGIN_TOP) hi = this.distance;
-        else lo = this.distance;
+        pose.distance = (lo + hi) / 2;
+        placeCamera(cam, pose);
+        const [x, minY, maxY] = this.projectedExtent(cam);
+        if (x <= FIT_MARGIN && minY >= -FIT_MARGIN && maxY <= FIT_MARGIN_TOP) hi = pose.distance;
+        else lo = pose.distance;
       }
-      this.distance = hi;
-      this.update();
-      const [, minY, maxY] = this.projectedExtent();
-      this.raycaster.setFromCamera(this.ndc.set(0, (minY + maxY) / 2), this.camera);
-      if (this.raycaster.ray.intersectPlane(this.ground, this.scratch)) this.target.z = this.scratch.z;
+      pose.distance = hi;
+      placeCamera(cam, pose);
+      const [, minY, maxY] = this.projectedExtent(cam);
+      this.raycaster.setFromCamera(this.ndc.set(0, (minY + maxY) / 2), cam);
+      if (this.raycaster.ray.intersectPlane(this.ground, this.scratch)) pose.target.z = this.scratch.z;
     }
-    this.homeTarget.copy(this.target);
-    this.fitDistance = this.distance;
+    this.homeTarget.copy(pose.target);
+    this.fitDistance = pose.distance;
     this.maxDistance = Math.max(this.fitDistance * 1.6, MIN_DISTANCE);
-    if (!apply) {
-      this.target.copy(keepTarget);
-      this.distance = this.clampDistance(keepDistance);
-    }
+  }
+
+  private setGoalHome(): void {
+    this.goal.target.copy(this.homeTarget);
+    this.goal.distance = this.fitDistance;
+    this.goal.yaw = this.shown.yaw - wrapAngle(this.shown.yaw); // the nearest full turn: no spin
+    this.goal.pitch = PITCH_HOME;
+    placeCamera(this.goalCamera, this.goal);
+  }
+
+  /** Home view at once (first layout, resize before the player touched the camera). */
+  private jumpHome(): void {
+    this.setGoalHome();
+    this.shown.target.copy(this.goal.target);
+    this.shown.distance = this.goal.distance;
+    this.shown.yaw = this.goal.yaw;
+    this.shown.pitch = this.goal.pitch;
     this.update();
+  }
+
+  /** Eases back to the home view. */
+  private goHome(): void {
+    this.setGoalHome();
+    this.lastStep = 0;
   }
 
   /** Smoothly moves to a ground point; `closer` zooms in to a focus distance. */
   focusOn(point: THREE.Vector3, closer = true): void {
-    const toDistance = closer ? Math.max(MIN_DISTANCE * 1.4, Math.min(this.distance, this.fitDistance * 0.62)) : this.distance;
-    this.tween = { start: -1, fromTarget: this.target.clone(), toTarget: new THREE.Vector3(point.x, 0, point.z), fromDistance: this.distance, toDistance };
+    if (closer) this.goal.distance = Math.max(MIN_DISTANCE * 1.4, Math.min(this.goal.distance, this.fitDistance * 0.62));
+    this.goal.target.set(point.x, 0, point.z);
+    this.clampGoal();
     this.userMoved = true;
+    this.lastStep = 0;
     this.on.changed();
   }
 
+  /** Back to the home view: the whole board, unturned, at the home tilt. */
   recentre(): void {
-    this.tween = { start: -1, fromTarget: this.target.clone(), toTarget: this.homeTarget.clone(), fromDistance: this.distance, toDistance: this.fitDistance };
+    this.goHome();
     this.userMoved = false;
     this.on.changed();
   }
 
-  /** Advances the camera tween; call each frame. */
+  /** Eases the shown camera toward the goal; call each frame. */
   step(now: number): void {
-    const t = this.tween;
-    if (!t) return;
-    if (t.start < 0) t.start = now;
-    const k = Math.min(1, (now - t.start) / TWEEN_MS);
-    const e = 1 - (1 - k) ** 3;
-    this.target.lerpVectors(t.fromTarget, t.toTarget, e);
-    this.distance = THREE.MathUtils.lerp(t.fromDistance, t.toDistance, e);
-    this.update();
-    if (k >= 1) this.tween = null;
+    const dt = this.lastStep ? Math.min(0.1, (now - this.lastStep) / 1000) : 1 / 60;
+    this.lastStep = now;
+    if (!this.animating) {
+      this.lastStep = 0;
+      return;
+    }
+    const k = dampFactor(dt);
+    const s = this.shown;
+    const g = this.goal;
+    s.target.lerp(g.target, k);
+    s.distance += (g.distance - s.distance) * k;
+    s.yaw = dampAngle(s.yaw, g.yaw, k);
+    s.pitch += (g.pitch - s.pitch) * k;
+    if (!this.animating) {
+      s.target.copy(g.target);
+      s.distance = g.distance;
+      s.yaw = g.yaw;
+      s.pitch = g.pitch;
+    }
+    placeCamera(this.camera, s);
   }
 
-  /** Ray from a screen point (client coordinates). */
+  /** Ray from a screen point (client coordinates) through the shown camera (for picking). */
   rayAt(clientX: number, clientY: number): THREE.Raycaster {
+    return this.rayFrom(this.camera, clientX, clientY);
+  }
+
+  private rayFrom(camera: THREE.Camera, clientX: number, clientY: number): THREE.Raycaster {
     const rect = this.el.getBoundingClientRect();
     this.ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-    this.raycaster.setFromCamera(this.ndc, this.camera);
+    this.raycaster.setFromCamera(this.ndc, camera);
     return this.raycaster;
   }
 
@@ -213,16 +318,22 @@ export class BoardCamera {
     return this.rayAt(clientX, clientY).ray.intersectPlane(this.ground, out) !== null;
   }
 
+  /** Ground point under a screen point for the goal camera (gestures). */
+  private goalGroundAt(clientX: number, clientY: number, out: THREE.Vector3): boolean {
+    return this.rayFrom(this.goalCamera, clientX, clientY).ray.intersectPlane(this.ground, out) !== null;
+  }
+
+  /** Moves the goal so the ground point `anchor` sits under the screen point (x, y). */
   private dragTo(anchor: THREE.Vector3, x: number, y: number): void {
-    if (this.groundAt(x, y, this.scratch)) {
-      this.target.add(anchor).sub(this.scratch);
-      this.clampTarget();
+    placeCamera(this.goalCamera, this.goal);
+    if (this.goalGroundAt(x, y, this.scratch)) {
+      this.goal.target.add(anchor).sub(this.scratch);
+      this.clampGoal();
     }
-    this.update();
     this.on.changed();
   }
 
-  private firstTwo(): [{ x: number; y: number }, { x: number; y: number }] | null {
+  private firstTwo(): [Pt, Pt] | null {
     const it = this.pointers.values();
     const a = it.next().value;
     const b = it.next().value;
@@ -230,16 +341,28 @@ export class BoardCamera {
   }
 
   private restartGesture(): void {
+    this.two = null;
+    if (this.mode === 'orbit' && this.pointers.size === 1) return;
+    this.orbitStart = null;
     if (this.pointers.size >= 2) {
       const pair = this.firstTwo();
       if (!pair) return;
       const [a, b] = pair;
-      this.pinchStartSpread = Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1);
-      this.pinchStartDistance = this.distance;
-      this.mode = this.groundAt((a.x + b.x) / 2, (a.y + b.y) / 2, this.dragAnchor) ? 'pinch' : 'none';
+      const mid = fingerFrame(a, b).mid;
+      const anchor = new THREE.Vector3();
+      this.two = {
+        a0: { ...a },
+        b0: { ...b },
+        mode: null,
+        distance: this.goal.distance,
+        yaw: this.goal.yaw,
+        pitch: this.goal.pitch,
+        anchor: this.goalGroundAt(mid.x, mid.y, anchor) ? anchor : null,
+      };
+      this.mode = 'two';
     } else if (this.pointers.size === 1) {
       const p = this.pointers.values().next().value;
-      this.mode = p && this.groundAt(p.x, p.y, this.dragAnchor) ? 'pan' : 'none';
+      this.mode = p && this.goalGroundAt(p.x, p.y, this.dragAnchor) ? 'pan' : 'none';
     } else this.mode = 'none';
   }
 
@@ -249,20 +372,28 @@ export class BoardCamera {
   }
 
   private readonly onPointerDown = (e: PointerEvent): void => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const mouse = e.pointerType === 'mouse';
+    if (mouse && e.button !== 0 && e.button !== 1 && e.button !== 2) return;
+    if (mouse && e.button === 1) e.preventDefault(); // no autoscroll
     try {
       this.el.setPointerCapture(e.pointerId);
     } catch {
       // Synthetic pointers cannot be captured; the gesture works without it.
     }
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    this.tween = null;
     this.held = false;
     this.cancelHold();
-    if (this.pointers.size === 1) {
+    if (mouse && e.button === 2) {
+      // Right drag turns and tilts the view; it never taps.
+      this.tapCandidate = null;
+      this.mode = 'orbit';
+      this.orbitStart = { x: e.clientX, y: e.clientY, yaw: this.goal.yaw, pitch: this.goal.pitch };
+      return;
+    }
+    if (this.pointers.size === 1 && !(mouse && e.button === 1)) {
       this.tapCandidate = { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp };
       const { clientX, clientY } = e;
-      this.holdTimer = window.setTimeout(() => {
+      this.holdTimer = setTimeout(() => {
         this.holdTimer = 0;
         if (!this.tapCandidate) return;
         this.held = true;
@@ -284,20 +415,44 @@ export class BoardCamera {
       this.cancelHold();
     }
     if (this.held) return;
-    if (this.mode === 'pan' && !this.tapCandidate) {
+    if (this.mode === 'orbit' && this.orbitStart) {
+      const o = this.orbitStart;
+      this.userMoved = true;
+      this.goal.yaw = yawAfterDrag(o.yaw, e.clientX - o.x, this.width);
+      this.goal.pitch = tiltAfterDrag(o.pitch, e.clientY - o.y, this.height);
+      placeCamera(this.goalCamera, this.goal);
+      this.on.changed();
+    } else if (this.mode === 'pan' && !this.tapCandidate) {
       this.userMoved = true;
       this.dragTo(this.dragAnchor, e.clientX, e.clientY);
-    } else if (this.mode === 'pinch') {
+    } else if (this.mode === 'two' && this.two) {
       const pair = this.firstTwo();
-      if (!pair) return;
-      const [a, b] = pair;
-      const spread = Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1);
-      this.userMoved = true;
-      this.distance = this.clampDistance((this.pinchStartDistance * this.pinchStartSpread) / spread);
-      this.update();
-      this.dragTo(this.dragAnchor, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      if (pair) this.twoFingers(this.two, pair[0], pair[1]);
     }
   };
+
+  private twoFingers(t: TwoFinger, a: Pt, b: Pt): void {
+    t.mode ??= classifyTwoFinger(t.a0, t.b0, a, b);
+    if (!t.mode) return;
+    this.userMoved = true;
+    if (t.mode === 'tilt') {
+      const dy = (a.y - t.a0.y + (b.y - t.b0.y)) / 2;
+      this.goal.pitch = tiltAfterDrag(t.pitch, dy, this.height);
+      placeCamera(this.goalCamera, this.goal);
+      this.on.changed();
+      return;
+    }
+    const change = pinchChange(t.a0, t.b0, a, b);
+    this.goal.distance = this.clampDistance(t.distance * change.distanceScale);
+    // The board turns with the fingers: a clockwise twist on screen turns the view the other way.
+    this.goal.yaw = t.yaw + change.twist;
+    const mid = fingerFrame(a, b).mid;
+    if (t.anchor) this.dragTo(t.anchor, mid.x, mid.y);
+    else {
+      placeCamera(this.goalCamera, this.goal);
+      this.on.changed();
+    }
+  }
 
   private endPointer(e: PointerEvent, cancelled: boolean): void {
     if (!this.pointers.delete(e.pointerId)) return;
@@ -305,7 +460,10 @@ export class BoardCamera {
     this.tapCandidate = null;
     this.cancelHold();
     if (!cancelled && !this.held && tap && tap.id === e.pointerId && e.timeStamp - tap.t <= TAP_MAX_MS) this.handleTap(e.clientX, e.clientY, e.timeStamp);
-    if (this.pointers.size === 0) this.held = false;
+    if (this.pointers.size === 0) {
+      this.held = false;
+      if (this.mode === 'orbit') this.mode = 'none';
+    }
     this.restartGesture();
   }
 
@@ -325,21 +483,50 @@ export class BoardCamera {
 
   private readonly onWheel = (e: WheelEvent): void => {
     e.preventDefault();
-    this.tween = null;
     this.userMoved = true;
     const step = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 0.05 : 0.0015;
-    const hasAnchor = this.groundAt(e.clientX, e.clientY, this.wheelAnchor);
-    this.distance = this.clampDistance(this.distance * Math.exp(e.deltaY * step));
-    this.update();
+    const hasAnchor = this.goalGroundAt(e.clientX, e.clientY, this.wheelAnchor);
+    this.goal.distance = this.clampDistance(this.goal.distance * Math.exp(e.deltaY * step));
     if (hasAnchor) this.dragTo(this.wheelAnchor, e.clientX, e.clientY);
-    else this.on.changed();
+    else {
+      placeCamera(this.goalCamera, this.goal);
+      this.on.changed();
+    }
   };
+
+  private readonly onKeyDown = (e: KeyboardEvent): void => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const key = e.key.toLowerCase();
+    if (key !== 'q' && key !== 'e') return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
+    // Only the board that is on screen.
+    if (!this.el.isConnected || this.el.getClientRects().length === 0) return;
+    this.rotateBy(key === 'q' ? -KEY_YAW_STEP : KEY_YAW_STEP);
+  };
+
+  /** Turns the view around its centre by `radians` (eased). */
+  rotateBy(radians: number): void {
+    this.userMoved = true;
+    this.goal.yaw += radians;
+    placeCamera(this.goalCamera, this.goal);
+    this.on.changed();
+  }
 
   private readonly onContextMenu = (e: Event): void => e.preventDefault();
 
-  /** Camera state for tests and the dev page. */
-  get state(): { target: THREE.Vector3; distance: number; size: [number, number] } {
-    return { target: this.target.clone(), distance: this.distance, size: [this.width, this.height] };
+  /** Camera state for tests and the dev page (the goal pose; `shown` is what is drawn now). */
+  get state(): { target: THREE.Vector3; distance: number; yaw: number; pitch: number; size: [number, number]; shown: CameraPose } {
+    const g = this.goal;
+    const s = this.shown;
+    return {
+      target: g.target.clone(),
+      distance: g.distance,
+      yaw: g.yaw,
+      pitch: g.pitch,
+      size: [this.width, this.height],
+      shown: { target: s.target.clone(), distance: s.distance, yaw: s.yaw, pitch: s.pitch },
+    };
   }
 
   dispose(): void {
@@ -350,5 +537,6 @@ export class BoardCamera {
     this.el.removeEventListener('pointercancel', this.onPointerCancel);
     this.el.removeEventListener('wheel', this.onWheel);
     this.el.removeEventListener('contextmenu', this.onContextMenu);
+    if (typeof window !== 'undefined') window.removeEventListener('keydown', this.onKeyDown);
   }
 }

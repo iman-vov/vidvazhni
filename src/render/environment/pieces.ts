@@ -259,23 +259,64 @@ function wall(build: (b: Builder, o: BuildOptions) => void, kind: PieceKind = 'w
 
 // ─── Props ─────────────────────────────────────────────────────────────────
 
-function barrel(b: Builder, pos: V3 = [0, 0, 0], s = 1): void {
-  const pts = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.88].map((y, i, a) => new THREE.Vector2((0.27 + 0.06 * Math.sin((i / (a.length - 1)) * Math.PI)) * s, y * s));
-  b.add(new THREE.LatheGeometry(pts, 10), 'wood', pos);
-  b.add(new THREE.CircleGeometry(0.27 * s, 10).rotateX(-Math.PI / 2), 'woodDark', [pos[0], pos[1] + 0.88 * s, pos[2]]);
-  for (const y of [0.16, 0.72]) b.add(new THREE.TorusGeometry(0.31 * s, 0.018 * s, 4, 12).rotateX(Math.PI / 2), 'iron', [pos[0], pos[1] + y * s, pos[2]], [0, 0, 0], [1, 1, 1], true);
+/** Bulge of a barrel's staves at height t (0..1 of its height), in units of its scale. */
+function barrelRadius(t: number): number {
+  return 0.27 + 0.06 * Math.sin(t * Math.PI);
 }
 
-function crate(b: Builder, size: number, pos: V3, ry = 0): void {
-  b.box('wood', [size, size, size], [pos[0], pos[1] + size / 2, pos[2]], [0, ry, 0]);
-  const s = size / 2 + 0.005;
-  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
-    const c = Math.cos(ry);
-    const n = Math.sin(ry);
-    const px = x * s * 0.92;
-    const pz = z * s * 0.92;
-    b.box('woodDark', [0.07, size + 0.01, 0.07], [pos[0] + px * c + pz * n, pos[1] + size / 2, pos[2] - px * n + pz * c], [0, ry, 0], true);
+/** A cooper's barrel: separate staves with dark gaps, iron hoops, a sunk lid with plank seams. */
+function barrel(b: Builder, pos: V3 = [0, 0, 0], s = 1, rot: V3 = [0, 0, 0]): void {
+  const h = 0.88;
+  const staves = 12;
+  const step = (Math.PI * 2) / staves;
+  const pts = [0, 0.12, 0.3, 0.5, 0.7, 0.88, 1].map((t) => new THREE.Vector2(barrelRadius(t) * s, t * h * s));
+  // Every part is built around the barrel's foot, then placed by `pos` and turned by `rot`.
+  const part = (g: THREE.BufferGeometry, mat: MaterialKey, detail = false) => b.add(g, mat, pos, rot, [1, 1, 1], detail);
+  for (let i = 0; i < staves; i++) part(new THREE.LatheGeometry(pts, 2, i * step, step * 0.9), i % 3 === 1 ? 'woodLight' : 'wood');
+  part(new THREE.CylinderGeometry(0.26 * s, 0.26 * s, h * s * 0.97, staves, 1, true).translate(0, (h * s) / 2, 0), 'woodDark');
+  part(new THREE.CircleGeometry(0.265 * s, staves).rotateX(-Math.PI / 2).translate(0, h * s * 0.96, 0), 'woodDark');
+  for (const x of [-0.09, 0.09]) part(new THREE.BoxGeometry(0.012 * s, 0.004 * s, 0.48 * s).translate(x * s, h * s * 0.965, 0), 'shadow', true);
+  for (const [t, detail] of [[0.1, false], [0.38, true], [0.9, false]] as const) {
+    const r = (barrelRadius(t) + 0.012) * s;
+    part(new THREE.CylinderGeometry(r, r, 0.045 * s, staves * 2, 1, true).translate(0, t * h * s, 0), 'iron', detail);
   }
+}
+
+/** Turns a point (x, z) by `ry` around the vertical axis. */
+function turned(x: number, z: number, ry: number): [number, number] {
+  return [x * Math.cos(ry) + z * Math.sin(ry), -x * Math.sin(ry) + z * Math.cos(ry)];
+}
+
+/** A plank crate: a panelled box framed by dark beams on all twelve edges, braced across the sides. */
+function crate(b: Builder, size: number, pos: V3, ry = 0): void {
+  const half = size / 2;
+  const beam = size * 0.11;
+  const at = (x: number, y: number, z: number): V3 => {
+    const [tx, tz] = turned(x, z, ry);
+    return [pos[0] + tx, pos[1] + y, pos[2] + tz];
+  };
+  b.box('wood', [size * 0.96, size * 0.96, size * 0.96], at(0, half, 0), [0, ry, 0]);
+  const e = half - beam / 2;
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) b.box('woodDark', [beam, size, beam], at(x * e, half, z * e), [0, ry, 0]);
+  for (const y of [beam / 2, size - beam / 2]) {
+    for (const z of [-1, 1]) b.box('woodDark', [size, beam, beam], at(0, y, z * e), [0, ry, 0]);
+    for (const x of [-1, 1]) b.box('woodDark', [beam, beam, size], at(x * e, y, 0), [0, ry, 0]);
+  }
+  // A diagonal brace on each side and a seam between two planks.
+  const brace = Math.hypot(size, size) * 0.78;
+  for (let side = 0; side < 4; side++) {
+    const a = ry + (side * Math.PI) / 2;
+    const [nx, nz] = [Math.sin(a), Math.cos(a)];
+    b.box('woodDark', [beam * 0.8, brace, beam * 0.45], [pos[0] + nx * half, pos[1] + half, pos[2] + nz * half], [0, a, Math.PI / 4 * (side % 2 ? 1 : -1)], true);
+    b.box('shadow', [size * 0.8, 0.008, 0.004], [pos[0] + nx * (half - 0.002), pos[1] + size * 0.36, pos[2] + nz * (half - 0.002)], [0, a, 0], true);
+  }
+}
+
+/** A tied grain sack standing on its bottom. */
+function sack(b: Builder, pos: V3, s: number, mat: MaterialKey, rot: V3 = [0, 0, 0]): void {
+  const pts = [[0, 0], [0.19, 0.01], [0.25, 0.08], [0.27, 0.2], [0.24, 0.31], [0.15, 0.39], [0.07, 0.43], [0.06, 0.46], [0.1, 0.5], [0.08, 0.54], [0, 0.55]].map(([x, y]) => new THREE.Vector2(x! * s, y! * s));
+  b.add(new THREE.LatheGeometry(pts, 9), mat, pos, rot);
+  b.add(new THREE.TorusGeometry(0.068 * s, 0.014 * s, 4, 9).rotateX(Math.PI / 2).translate(0, 0.445 * s, 0), 'woodDark', pos, rot, [1, 1, 1], true);
 }
 
 function tree(b: Builder, h: number, warm: boolean): void {
@@ -447,11 +488,10 @@ const PIECES: Record<string, PieceDef> = {
     height: 0.95,
     radius: 0.6,
     build: (b) => {
-      for (const [x, y] of [[-0.25, 0.2], [0.25, 0.2], [0, 0.6]] as const) {
-        b.cyl('wood', 0.2, 0.2, 0.55, 9, [x, y, -0.27], [Math.PI / 2, 0, 0]);
-        b.add(new THREE.CircleGeometry(0.2, 9), 'woodDark', [x, y, 0.285]);
-      }
-      b.box('woodDark', [0.95, 0.08, 0.6], [0, 0.03, 0]);
+      // Kegs lying on a cradle, their lids toward the board.
+      for (const [x, y] of [[-0.25, 0.25], [0.25, 0.25], [0, 0.63]] as const) barrel(b, [x, y, -0.3], 0.66, [Math.PI / 2, 0, 0]);
+      b.box('woodDark', [0.95, 0.08, 0.6], [0, 0.04, -0.02]);
+      for (const x of [-0.42, 0, 0.42]) b.box('woodDark', [0.08, 0.12, 0.62], [x, 0.1, -0.02], [0, 0, 0], true);
     },
   },
   crate: { kind: 'prop', height: 0.6, radius: 0.4, build: (b) => crate(b, 0.58, [0, 0, 0]) },
@@ -465,25 +505,19 @@ const PIECES: Record<string, PieceDef> = {
       crate(b, 0.36, [0.5, 0, 0.12], -0.3);
     },
   },
-  sack: {
-    kind: 'prop',
-    height: 0.5,
-    radius: 0.3,
-    build: (b) => {
-      b.blob('cloth', 0.26, [0, 0.22, 0], [1, 0.95, 0.85]);
-      b.cone('clothDark', 0.1, 0.16, 5, [0, 0.42, 0]);
-    },
-  },
+  sack: { kind: 'prop', height: 0.5, radius: 0.3, build: (b) => sack(b, [0, 0, 0], 0.95, 'cloth', [0, 0, 0.06]) },
   sacks: {
     kind: 'prop',
     height: 0.55,
     radius: 0.5,
     build: (b) => {
-      b.blob('cloth', 0.25, [-0.2, 0.21, 0], [1, 0.9, 0.85]);
-      b.blob('clothDark', 0.23, [0.22, 0.19, 0.05], [1, 0.85, 0.85]);
-      b.blob('cloth', 0.2, [0.02, 0.48, -0.02], [1.2, 0.7, 0.8]);
+      sack(b, [-0.2, 0, 0], 0.9, 'cloth', [0, 0, 0.1]);
+      sack(b, [0.22, 0, 0.05], 0.85, 'clothDark', [0.05, 0, -0.12]);
+      // One lying across the others' feet.
+      sack(b, [-0.15, 0.17, 0.26], 0.75, 'cloth', [0, 0.4, -Math.PI / 2 + 0.1]);
     },
   },
+
   'wine-rack': {
     kind: 'prop',
     height: 1.3,

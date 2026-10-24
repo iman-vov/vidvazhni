@@ -1,6 +1,9 @@
-// One figure on the board: its model (or a placeholder standee until a model exists or loads), a
-// painted base (gold ring for elites), the target ring and outline, an invisible pick cylinder,
-// and the HTML badge with health and conditions. Positions and clips are driven by boardView.
+// One figure on the board: its model (or a small painted standee until a model exists or loads)
+// standing straight on the hex like a real miniature: no base disc, a soft contact shadow under its
+// feet, a thin hex-edge tint for its side (heroes warm gold, monsters cool grey-violet), a glowing
+// hex edge when it is active, selected or a target (targets also get an outline), an invisible
+// pick cylinder, and the HTML badge with health and conditions. Positions and clips are driven by
+// boardView.
 
 import * as THREE from 'three';
 import type { ConditionId } from '../rules/content';
@@ -9,7 +12,8 @@ import type { Figure, FigureId } from '../rules/state';
 import type { FigureBadge, OverlayItem } from './boardOverlay';
 import { modelScale, type FigureLook } from './figureLook';
 import { PLATE_HEIGHT } from './boardTiles';
-import { hexToWorld } from './hexLayout';
+import { HEX_SIZE, hexToWorld } from './hexLayout';
+import { blobShadowTexture } from './contactShadow';
 import { HOVER_HEIGHT, hoverBob } from './motion';
 import { attachWeapon, loadModel, type Model } from './models';
 import type { GraphicsQuality } from './quality';
@@ -42,45 +46,75 @@ function measureHeight(model: Model): number {
   return h;
 }
 
+/** Side colours of the thin hex edge under a figure. */
+export const SIDE_EDGE_COLORS: Record<'hero' | 'foe', string> = { hero: '#f0c470', foe: '#9a90c0' };
+/** Glowing hex edge: the active figure (warm), a selected one (soft white), a valid target (ember). */
+export type FigureGlow = 'active' | 'selected' | 'target';
+export const GLOW_COLORS: Record<FigureGlow, string> = { active: '#ffbe3a', selected: '#eef1ff', target: '#ff4f1f' };
+const GLOW_OPACITY: Record<FigureGlow, number> = { active: 0.85, selected: 0.6, target: 0.9 };
+
 export interface FigureParts {
-  baseGeometry: THREE.BufferGeometry;
-  ringGeometry: THREE.BufferGeometry;
-  targetGeometry: THREE.BufferGeometry;
+  edgeGeometry: THREE.BufferGeometry;
+  glowGeometry: THREE.BufferGeometry;
+  blobGeometry: THREE.BufferGeometry;
   proxyGeometry: THREE.BufferGeometry;
-  fogTexture: THREE.Texture;
-  goldMaterial: THREE.Material;
-  targetMaterial: THREE.Material;
+  blobTexture: THREE.Texture;
+  glowMaterials: Record<FigureGlow, THREE.Material>;
   proxyMaterial: THREE.Material;
 }
 
+/**
+ * A flat hexagonal band on the ground (XZ, flat-top hex: a corner at +X) through loops at the given
+ * radii (in hex sizes), with an alpha per loop in the vertex colour (RGBA), so a glow fades out
+ * toward its rims while keeping its own colour on light and dark ground alike.
+ */
+export function hexBand(radii: readonly number[], levels: readonly number[]): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const col: number[] = [];
+  const index: number[] = [];
+  const corners = 6;
+  radii.forEach((r, loop) => {
+    const l = levels[loop] ?? 1;
+    for (let i = 0; i < corners; i++) {
+      const a = (i / corners) * Math.PI * 2;
+      pos.push(Math.cos(a) * r * HEX_SIZE, 0, -Math.sin(a) * r * HEX_SIZE);
+      col.push(1, 1, 1, l);
+    }
+  });
+  for (let loop = 0; loop < radii.length - 1; loop++) {
+    for (let i = 0; i < corners; i++) {
+      const a = loop * corners + i;
+      const b = loop * corners + ((i + 1) % corners);
+      // Counter-clockwise seen from above, so the band faces up.
+      index.push(a, b + corners, b, a, a + corners, b + corners);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+  g.setIndex(index);
+  return g;
+}
+
 export function createFigureParts(): FigureParts {
-  const c = document.createElement('canvas');
-  c.width = c.height = 128;
-  const ctx = c.getContext('2d')!;
-  const g = ctx.createRadialGradient(64, 64, 10, 64, 64, 64);
-  g.addColorStop(0, 'rgba(190,196,210,0.55)');
-  g.addColorStop(0.6, 'rgba(160,166,182,0.28)');
-  g.addColorStop(1, 'rgba(150,156,170,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 128, 128);
-  const fogTexture = new THREE.CanvasTexture(c);
-  fogTexture.colorSpace = THREE.SRGBColorSpace;
   const proxyMaterial = new THREE.MeshBasicMaterial();
   proxyMaterial.visible = false;
+  const glow = (g: FigureGlow) => new THREE.MeshBasicMaterial({ color: GLOW_COLORS[g], vertexColors: true, transparent: true, opacity: GLOW_OPACITY[g], depthWrite: false });
   return {
-    baseGeometry: new THREE.CylinderGeometry(0.56, 0.6, 0.07, 28).translate(0, 0.035, 0),
-    ringGeometry: new THREE.TorusGeometry(0.6, 0.045, 6, 36).rotateX(Math.PI / 2).translate(0, 0.07, 0),
-    targetGeometry: new THREE.RingGeometry(0.66, 0.8, 36).rotateX(-Math.PI / 2).translate(0, 0.03, 0),
+    edgeGeometry: hexBand([0.83, 0.9], [1, 1]),
+    // Brightest just inside the plate's rim, fading toward the middle and over the rim.
+    glowGeometry: hexBand([0.66, 0.86, 0.9, 0.97], [0, 0.75, 0.75, 0]),
+    blobGeometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
     proxyGeometry: new THREE.CylinderGeometry(0.62, 0.62, 1, 10).translate(0, 0.5, 0),
-    fogTexture,
-    goldMaterial: new THREE.MeshStandardMaterial({ color: '#f0c040', metalness: 0.7, roughness: 0.3, emissive: '#5a3a00' }),
-    targetMaterial: new THREE.MeshBasicMaterial({ color: '#ff7a3d', transparent: true, opacity: 0.95, depthWrite: false }),
+    blobTexture: blobShadowTexture(),
+    glowMaterials: { active: glow('active'), selected: glow('selected'), target: glow('target') },
+
     proxyMaterial,
   };
 }
 
 export function disposeFigureParts(p: FigureParts): void {
-  for (const x of [p.baseGeometry, p.ringGeometry, p.targetGeometry, p.proxyGeometry, p.fogTexture, p.goldMaterial, p.targetMaterial, p.proxyMaterial]) x.dispose();
+  for (const x of [p.edgeGeometry, p.glowGeometry, p.blobGeometry, p.proxyGeometry, p.blobTexture, p.proxyMaterial, ...Object.values(p.glowMaterials)]) x.dispose();
 }
 
 /** Inverted-hull outline material; works with skinning (pushes vertices along the skinned normal). */
@@ -111,8 +145,12 @@ export class FigureView {
   private content: THREE.Object3D | null = null;
   private placeholder: THREE.Group | null = null;
   model: Model | null = null;
+  /** Things on the ground under the figure: contact shadow, side edge, glow. Not lifted by jumps. */
   private readonly base = new THREE.Group();
-  private readonly targetRing: THREE.Mesh;
+  private readonly blob: THREE.Mesh;
+  private readonly blobRadius: number;
+  private readonly glowMesh: THREE.Mesh;
+  private glow: FigureGlow | null = null;
   readonly proxy: THREE.Mesh;
   private outlines: THREE.Mesh[] = [];
   private materials: THREE.Material[] = [];
@@ -151,11 +189,13 @@ export class FigureView {
     // Yaw first, then the lean in the figure's own frame (jumps and pushes tilt it).
     this.body.rotation.order = 'YXZ';
     this.hoverPhase = (f.hex[0] * 1.7 + f.hex[1] * 2.3) % (Math.PI * 2);
-    this.buildBase();
-    this.targetRing = new THREE.Mesh(parts.targetGeometry, parts.targetMaterial);
-    this.targetRing.visible = false;
-    this.targetRing.renderOrder = 2;
-    this.root.add(this.targetRing);
+    this.blobRadius = THREE.MathUtils.clamp(look.height * 0.42, 0.42, 0.85);
+    this.blob = this.buildBase();
+    this.glowMesh = new THREE.Mesh(parts.glowGeometry, parts.glowMaterials.active);
+    this.glowMesh.position.y = PLATE_HEIGHT + 0.012;
+    this.glowMesh.renderOrder = 3;
+    this.glowMesh.visible = false;
+    this.base.add(this.glowMesh);
     this.proxy = new THREE.Mesh(parts.proxyGeometry, parts.proxyMaterial);
     this.proxy.scale.y = look.height + 0.2;
     this.proxy.userData['figureId'] = f.id;
@@ -166,36 +206,31 @@ export class FigureView {
     this.setYaw(f.kind === 'hero' ? Math.PI : 0);
   }
 
-  private buildBase(): void {
+  /** Contact shadow and the thin side-coloured hex edge. */
+  private buildBase(): THREE.Mesh {
+    const blobMat = new THREE.MeshBasicMaterial({ map: this.parts.blobTexture, color: '#000000', transparent: true, depthWrite: false, opacity: 0.8 });
+    blobMat.userData['alwaysTransparent'] = true;
+    this.ownMaterials.push(blobMat);
+    const blob = new THREE.Mesh(this.parts.blobGeometry, blobMat);
+    blob.position.y = PLATE_HEIGHT + 0.006;
+    blob.scale.setScalar(this.blobRadius * 2.3);
+    blob.renderOrder = 1;
+    blob.name = 'contact-shadow';
     const kind = this.look.kind;
-    const baseColor = kind === 'hero' ? this.look.color : kind === 'summon' ? '#2f8f8a' : '#4a4e58';
-    const m = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.6 });
-    this.ownMaterials.push(m);
-    const disc = new THREE.Mesh(this.parts.baseGeometry, m);
-    disc.receiveShadow = true;
-    disc.position.y = PLATE_HEIGHT;
-    this.base.add(disc);
-    if (kind === 'elite' || kind === 'boss') {
-      const ring = new THREE.Mesh(this.parts.ringGeometry, this.parts.goldMaterial);
-      ring.position.y = PLATE_HEIGHT;
-      if (kind === 'boss') ring.scale.setScalar(1.15);
-      this.base.add(ring);
-    }
-    if (kind !== 'hero' && kind !== 'summon') {
-      // The grey fog that has «заморочило» the creature, pooling around its feet.
-      const fogMat = new THREE.MeshBasicMaterial({ map: this.parts.fogTexture, transparent: true, depthWrite: false, opacity: 0.9 });
-      this.ownMaterials.push(fogMat);
-      const fogGeometry = new THREE.PlaneGeometry(1.9, 1.9).rotateX(-Math.PI / 2);
-      this.ownGeometries.push(fogGeometry);
-      const fog = new THREE.Mesh(fogGeometry, fogMat);
-      fog.position.y = PLATE_HEIGHT + 0.09;
-      fog.renderOrder = 1;
-      fog.name = 'fog';
-      this.base.add(fog);
-    }
+    const hero = kind === 'hero' || kind === 'summon';
+    const edgeMat = new THREE.MeshBasicMaterial({ color: SIDE_EDGE_COLORS[hero ? 'hero' : 'foe'], transparent: true, opacity: hero ? 0.55 : 0.5, depthWrite: false });
+    edgeMat.userData['alwaysTransparent'] = true;
+    this.ownMaterials.push(edgeMat);
+    const edge = new THREE.Mesh(this.parts.edgeGeometry, edgeMat);
+    edge.position.y = PLATE_HEIGHT + 0.009;
+    edge.renderOrder = 2;
+    edge.name = 'side-edge';
+    this.base.add(blob, edge);
+    return blob;
   }
 
-  /** The standee: a painted card with the initial and standee number, used until a model loads. */
+  /** The standee: a small painted card with the initial and standee number in a plastic clip, used
+   *  until a model loads. */
   private setPlaceholder(): void {
     const look = this.look;
     const w = 256;
@@ -212,8 +247,21 @@ export class FigureView {
     ctx.roundRect(6, 6, w - 12, h - 12, 28);
     ctx.fill();
     ctx.lineWidth = 10;
-    ctx.strokeStyle = look.kind === 'elite' ? '#f0c040' : 'rgba(255,255,255,0.85)';
+    ctx.strokeStyle = look.kind === 'elite' || look.kind === 'boss' ? '#f0c040' : 'rgba(255,240,215,0.85)';
     ctx.stroke();
+    // Painted, not printed: a few soft brush strokes across the face.
+    ctx.save();
+    ctx.clip();
+    for (let i = 0; i < 14; i++) {
+      const y = (i * 41) % h;
+      ctx.strokeStyle = `rgba(${i % 2 ? '255,255,255' : '0,0,0'},0.07)`;
+      ctx.lineWidth = 14 + (i % 4) * 6;
+      ctx.beginPath();
+      ctx.moveTo(-20, y);
+      ctx.quadraticCurveTo(w / 2, y + 30 - (i % 3) * 25, w + 20, ((i * 67) % h) - 10);
+      ctx.stroke();
+    }
+    ctx.restore();
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -234,17 +282,24 @@ export class FigureView {
     const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 });
     const edge = new THREE.MeshStandardMaterial({ color: look.color, roughness: 0.7 });
     this.ownMaterials.push(face, edge);
-    const height = look.height * 0.78;
-    const cardGeometry = new THREE.BoxGeometry(height * 0.8, height, 0.06);
-    this.ownGeometries.push(cardGeometry);
+    const height = look.height * 0.72;
+    const clipHeight = 0.07;
+    const cardGeometry = new THREE.BoxGeometry(height * 0.78, height, 0.04);
+    const clipGeometry = new THREE.BoxGeometry(height * 0.5, clipHeight, 0.16);
+    this.ownGeometries.push(cardGeometry, clipGeometry);
     const card = new THREE.Mesh(cardGeometry, [edge, edge, edge, edge, face, face]);
-    card.position.y = PLATE_HEIGHT + 0.07 + height / 2;
+    card.position.y = PLATE_HEIGHT + clipHeight * 0.6 + height / 2;
     card.castShadow = true;
+    const clipMat = new THREE.MeshStandardMaterial({ color: '#2a2622', roughness: 0.5 });
+    const clip = new THREE.Mesh(clipGeometry, clipMat);
+    clip.position.y = PLATE_HEIGHT + clipHeight / 2;
+    clip.castShadow = true;
+    this.ownMaterials.push(clipMat);
     const g = new THREE.Group();
-    g.add(card);
+    g.add(card, clip);
     this.placeholder = g;
-    this.setContent(g, [face, edge]);
-    this.height = height + 0.1;
+    this.setContent(g, [face, edge, clipMat]);
+    this.height = height + clipHeight;
   }
 
   private setContent(object: THREE.Object3D, materials: THREE.Material[]): void {
@@ -276,7 +331,7 @@ export class FigureView {
     const measured = measureHeight(model);
     const scale = modelScale(this.look.height, measured);
     model.scene.scale.setScalar(scale);
-    model.scene.position.y = PLATE_HEIGHT + 0.07;
+    model.scene.position.y = PLATE_HEIGHT;
     // Own material copies, so fading, greying and outlining one figure leaves the others alone.
     const materials: THREE.Material[] = [];
     model.scene.traverse((o) => {
@@ -367,6 +422,17 @@ export class FigureView {
     this.model?.update(dt);
     this.clock += dt;
     if (this.look.flying && this.content) this.content.position.y = this.contentBaseY + this.hover;
+    this.updateBlob();
+  }
+
+  /** The contact shadow spreads and fades as the figure leaves the ground (jumps, hovering). */
+  private updateBlob(): void {
+    const lift = Math.max(0, this.body.position.y + this.hover);
+    const k = 1 / (1 + lift * 1.6);
+    this.blob.scale.setScalar(this.blobRadius * 2.3 * (1 + (1 - k) * 0.5));
+    const m = this.blob.material as THREE.MeshBasicMaterial;
+    m.userData['baseOpacity'] = 0.8 * k;
+    m.opacity = 0.8 * k * this.opacity;
   }
 
   /** How far above its stance the figure floats now (ghosts hover and bob; others 0). */
@@ -425,7 +491,7 @@ export class FigureView {
     const a = this.opacity;
     for (const m of [...this.materials, ...this.ownMaterials]) {
       if (m.name === 'bv-keep') continue;
-      const transparent = a < 0.999 || (m as THREE.MeshBasicMaterial).map === this.parts.fogTexture;
+      const transparent = a < 0.999 || m.userData['alwaysTransparent'] === true;
       if (m.transparent !== transparent) {
         m.transparent = transparent;
         m.needsUpdate = true;
@@ -434,6 +500,7 @@ export class FigureView {
       m.opacity = (m.userData['baseOpacity'] as number) * a;
     }
     this.root.visible = a > 0.001;
+    this.glowMesh.visible = this.glow !== null && a > 0.5;
   }
 
   /** Grey tint for a downed hero. */
@@ -447,12 +514,18 @@ export class FigureView {
     }
   }
 
-  /** Target ring on the ground and an outline around the figure. */
+  /** An outline around the figure (valid targets); the glowing hex edge comes from setGlow. */
   setTargeted(on: boolean): void {
     this.targeted = on;
-    this.targetRing.visible = on;
     if (on && this.outlines.length === 0) this.buildOutline();
     for (const o of this.outlines) o.visible = on;
+  }
+
+  /** Glowing hex edge for the active figure, a selected one or a valid target; null for none. */
+  setGlow(glow: FigureGlow | null): void {
+    this.glow = glow;
+    if (glow) this.glowMesh.material = this.parts.glowMaterials[glow];
+    this.glowMesh.visible = glow !== null && this.opacity > 0.5;
   }
 
   private buildOutline(): void {
@@ -487,14 +560,6 @@ export class FigureView {
       mesh.parent?.add(outline);
       this.outlines.push(outline);
     }
-  }
-
-  /** Hides the fog pool (a dispersed creature no longer stands in fog). */
-  setFog(opacity: number): void {
-    const fog = this.base.getObjectByName('fog') as THREE.Mesh | undefined;
-    if (!fog) return;
-    (fog.material as THREE.Material).userData['baseOpacity'] = 0.9 * opacity;
-    this.applyOpacity();
   }
 
   /** Changes the look (e.g. a hero's class colour is the same, but a monster may turn elite after undo). */

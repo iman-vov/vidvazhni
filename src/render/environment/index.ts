@@ -2,7 +2,9 @@
 // location's fog, the map edge closed by walls (or thicket, reeds, rock), doorways at the entrance
 // and exit, props in the strip by the walls and beyond, the location's light (candles, torches,
 // lanterns as point lights), drifting Морок and a veil of fog over rooms not yet revealed.
-// All pieces are procedural placeholders with kit ids; an art kit replaces them by id (kit.ts).
+// All pieces are procedural placeholders with kit ids; an art kit replaces them by id (kit.ts), and
+// a prop model from Meshy (assets/models, mapped by the location's `propModels`) replaces a prop
+// piece once it exists, drawn instanced. Props stand on soft contact shadows.
 // Static geometry is merged per material, so the whole environment costs ~15–30 draw calls.
 
 import * as THREE from 'three';
@@ -10,6 +12,9 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ScenarioDef } from '../../rules/content';
 import type { HexKey } from '../../rules/hex';
 import { noiseTexture, textureUrl } from '../boardTiles';
+import { blobShadowTexture } from '../contactShadow';
+import { listModels } from '../models';
+import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
 import type { GraphicsQuality } from '../quality';
 import { environmentFor } from './data';
 import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
@@ -18,9 +23,9 @@ import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Morok } from './morok';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
-import type { EnvironmentDef } from './types';
+import type { EnvironmentDef, PropModelSpec } from './types';
 
-export type { EnvironmentDef } from './types';
+export type { EnvironmentDef, PropModelSpec } from './types';
 export { environmentFor, ENVIRONMENTS } from './data';
 
 /** Per quality: point lights at candles and lanterns, Морок wisps, wisps per veiled hex, field size. */
@@ -34,6 +39,8 @@ const GROUND_EXTRA = 70;
 
 /** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
+  barrel: { piece: 'barrel', scale: 1.04 },
+  crate: { piece: 'crate', scale: 1.3 },
   tree: { piece: 'obstacle-tree', scale: 1 },
   rock: { piece: 'boulder', scale: 1 },
   hut: { piece: 'hut', scale: 0.4 },
@@ -63,6 +70,8 @@ export interface EnvironmentStats {
   lights: number;
   wisps: number;
   kitPieces: string[];
+  /** Pieces shown by a prop model (assets/models) instead of their procedural placeholder. */
+  propModels: string[];
 }
 
 export class BoardEnvironment {
@@ -82,6 +91,10 @@ export class BoardEnvironment {
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
   private placements: Placement[] = [];
   private kitParts = new Map<string, Part[]>();
+  /** Prop models that loaded for pieces of this location, by piece id. */
+  private propProtos = new Map<string, PropPrototype>();
+  private readonly available = new Set(listModels());
+  private blobTexture: THREE.Texture | null = null;
   private readonly veil = new Map<string, number>();
   private obstacleGeometries: THREE.BufferGeometry[] = [];
   private buildToken = 0;
@@ -104,14 +117,55 @@ export class BoardEnvironment {
     this.veil.clear();
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
     this.kitParts.clear();
+    this.propProtos.clear();
     this.rebuild();
     this.loadKit();
+    this.loadPropModels();
   }
 
   setQuality(q: GraphicsQuality): void {
     if (q === this.quality) return;
     this.quality = q;
-    if (this.layout) this.rebuild();
+    if (!this.layout) return;
+    this.propProtos.clear();
+    this.rebuild();
+    this.loadPropModels();
+  }
+
+  /**
+   * The prop model that shows a scenario obstacle (`barrel`, `table`), an object look
+   * (`brazier:lit`, `lever:down`, `rune`) or a tile thing (`chest`, `door`, `trap`), by the
+   * location's table; null while no such model exists (the procedural stand-in stays).
+   */
+  propModel(key: string, defaultHeight: number): Required<PropModelSpec> | null {
+    const stand = OBSTACLE_PIECES[key];
+    const keys = [...new Set([key, stand?.piece, key.split(':')[0]].filter((k): k is string => !!k))];
+    const meta = stand ? pieceMeta(stand.piece) : undefined;
+    return propModelFor(this.def, keys, this.available, meta ? meta.height * stand!.scale : defaultHeight);
+  }
+
+  /** The glowing bits (flames, glow) of an obstacle's procedural piece, to keep on top of its prop
+   *  model (a lit brazier), scaled to the model's height; null when the piece has none. */
+  propGlow(key: string, height: number): THREE.Object3D | null {
+    const stand = OBSTACLE_PIECES[key];
+    const meta = stand ? pieceMeta(stand.piece) : undefined;
+    if (!stand || !meta) return null;
+    const group = new THREE.Group();
+    for (const part of buildPiece(stand.piece, { height: meta.height })) {
+      if (typeof part.material !== 'string' || !UNLIT.has(part.material) || part.material === 'shadow') {
+        part.geometry.dispose();
+        continue;
+      }
+      const g = part.geometry;
+      if (!g.getAttribute('color')) g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 3).fill(1), 3));
+      const mesh = new THREE.Mesh(g, this.material(part.material));
+      mesh.applyMatrix4(part.matrix);
+      group.add(mesh);
+      this.obstacleGeometries.push(g);
+    }
+    if (!group.children.length) return null;
+    group.scale.setScalar(height / meta.height);
+    return group;
   }
 
   /** Playable hexes of the whole map (every room), or null before a build. */
@@ -206,6 +260,7 @@ export class BoardEnvironment {
       lights: this.lights.length,
       wisps: this.morok?.mesh.count ?? 0,
       kitPieces: [...this.kitParts.keys()],
+      propModels: [...this.propProtos.keys()],
     };
   }
 
@@ -351,9 +406,24 @@ export class BoardEnvironment {
     const full = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const up = new THREE.Vector3(0, 1, 0);
+    const modelled = new Map<PropPrototype, THREE.Matrix4[]>();
+    const blobs: THREE.Matrix4[] = [];
     for (const p of this.placements) {
-      const parts = this.partsFor(p.piece, p.height, cache);
+      const proto = this.propProtos.get(p.piece);
+      const meta = pieceMeta(p.piece);
       place.compose(new THREE.Vector3(p.x, 0, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(p.scale, p.scale, p.scale));
+      // Props stand on a soft contact shadow (the far silhouettes in the fog do not need one).
+      if (meta?.kind === 'prop' && p.band !== 'far') {
+        const r = (proto?.radius ?? meta.radius) * p.scale * 2.5;
+        blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(p.x, 0.012, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(r, 1, r)));
+      }
+      if (proto) {
+        let list = modelled.get(proto);
+        if (!list) modelled.set(proto, (list = []));
+        list.push(place.clone());
+      }
+      // A prop model keeps only the glowing bits of its placeholder (candle flames).
+      const parts = this.partsFor(p.piece, p.height, cache).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
       // A painted variation per piece and a darker foot (cheap baked occlusion).
       const tint = 0.86 + rnd() * 0.24;
       for (const part of parts) {
@@ -389,6 +459,63 @@ export class BoardEnvironment {
       this.disposables.push(merged);
       this.root.add(mesh);
     }
+    this.buildModelled(modelled, shadows);
+    this.buildBlobs(blobs);
+  }
+
+  /** Prop models drawn instanced: one draw call per mesh of each model, wherever it stands. */
+  private buildModelled(modelled: Map<PropPrototype, THREE.Matrix4[]>, shadows: boolean): void {
+    const m = new THREE.Matrix4();
+    for (const [proto, places] of modelled) {
+      for (const part of prototypeMeshes(proto)) {
+        const mesh = new THREE.InstancedMesh(part.geometry, this.material(part.material), places.length);
+        places.forEach((place, i) => mesh.setMatrixAt(i, m.multiplyMatrices(place, part.matrix)));
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+        mesh.name = `env:model:${proto.spec.model}`;
+        mesh.castShadow = shadows;
+        mesh.receiveShadow = true;
+        this.root.add(mesh);
+        this.disposables.push({ dispose: () => mesh.dispose() });
+      }
+    }
+  }
+
+  /** Soft contact shadows under the props, all in one instanced draw call. */
+  private buildBlobs(blobs: THREE.Matrix4[]): void {
+    if (!blobs.length) return;
+    this.blobTexture ??= blobShadowTexture();
+    const geo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    const mat = new THREE.MeshBasicMaterial({ map: this.blobTexture, color: '#000000', transparent: true, opacity: 0.55, depthWrite: false });
+    patchMaterial(mat, this.uniforms, 'prop');
+    const mesh = new THREE.InstancedMesh(geo, mat, blobs.length);
+    blobs.forEach((b, i) => mesh.setMatrixAt(i, b));
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+    mesh.name = 'env:contact-shadows';
+    mesh.renderOrder = 0;
+    this.root.add(mesh);
+    this.disposables.push(geo, mat, { dispose: () => mesh.dispose() });
+  }
+
+  /** Loads the prop models the location's table names for its pieces, then rebuilds with them. */
+  private loadPropModels(): void {
+    const def = this.def!;
+    const wanted = new Map<string, Required<PropModelSpec>>();
+    for (const p of this.placements) {
+      if (wanted.has(p.piece)) continue;
+      const meta = pieceMeta(p.piece);
+      const spec = meta?.kind === 'prop' || meta?.kind === 'feature' ? propModelFor(def, [p.piece], this.available, meta.height) : null;
+      if (spec && def.propModels?.[p.piece]) wanted.set(p.piece, spec);
+    }
+    if (!wanted.size) return;
+    const token = this.buildToken;
+    const quality = this.quality;
+    void Promise.all([...wanted].map(async ([piece, spec]) => [piece, await loadPropPrototype(spec, quality)] as const)).then((loaded) => {
+      if (token !== this.buildToken) return;
+      for (const [piece, proto] of loaded) if (proto) this.propProtos.set(piece, proto);
+      if (this.propProtos.size) this.rebuild();
+    });
   }
 
   /** Point lights at the brightest-looking light spots, spread over the location. */
@@ -460,6 +587,9 @@ export class BoardEnvironment {
   dispose(): void {
     this.buildToken++;
     this.clear();
+    this.blobTexture?.dispose();
+    this.blobTexture = null;
+
     for (const g of this.obstacleGeometries) g.dispose();
     this.obstacleGeometries = [];
     this.fieldTex?.dispose();

@@ -15,7 +15,15 @@ export const DEFAULT_ENVIRONMENT: EnvironmentDef = {
   walls: { height: 1.5, low: 0.3, alt: 0 },
   light: { sky: '#fff3dc', ground: '#2c2836', hemi: 1.1, sun: '#fff1d8', sunIntensity: 2.0 },
   fog: { color: '#1b1d27', start: 2.6, end: 8, morok: '#aab0bd', morokOpacity: 0.4 },
+  propModels: {
+    barrel: { model: 'barrel', height: 0.92 },
+    crate: { model: 'crate', height: 0.62 },
+    chest: { model: 'chest', height: 0.6 },
+    door: { model: 'dungeon-door', height: 1.0 },
+    trap: { model: 'bear-trap', height: 0.18 },
+  },
   dressing: { ring: [['barrel', 2], ['crate', 2], ['sack', 1]], density: 0.5 },
+
 };
 
 export function environmentFor(scenarioId: string): EnvironmentDef {

@@ -16,6 +16,14 @@
   },
   "fog": { "color": "#1d1612", "glow": "#2c2018", "start": 2.0, "end": 6, "morok": "#aba8b2", "morokOpacity": 0.35 },
   "entrance": "stairs",
+  "propModels": {
+    "barrel": { "model": "barrel", "height": 0.92 },
+    "crate": { "model": "crate", "height": 0.62 },
+    "sack": { "model": "flour-sack", "height": 0.5 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1.0 },
+    "trap": { "model": "bear-trap", "height": 0.18 }
+  },
   "dressing": {
     "ring": [["barrel", 3], ["keg-rack", 2], ["crate", 2], ["crate-stack", 2], ["sacks", 2], ["wine-rack", 2], ["candles", 2], ["shelf", 1], ["sack", 1]],
     "density": 0.75

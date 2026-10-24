@@ -16,6 +16,13 @@
   },
   "fog": { "color": "#121119", "glow": "#241d36", "start": 2.6, "end": 8.5, "morok": "#9c9cb4", "morokOpacity": 0.5 },
   "entrance": null,
+  "propModels": {
+    "brazier": { "model": "brazier", "height": 0.8 },
+    "brazier-lit": { "model": "brazier", "height": 0.8 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1.0 },
+    "trap": { "model": "bear-trap", "height": 0.18 }
+  },
   "dressing": {
     "ring": [["stalagmite", 3], ["rock", 3], ["crystals", 2], ["glow-mushrooms", 2]],
     "outside": [["stalagmite", 2], ["rock", 2], ["crystals", 1]],

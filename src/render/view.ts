@@ -18,6 +18,11 @@ export interface BoardHighlights {
   path?: Hex[];
   /** Expected damage before the modifier, shown over each target. */
   expectedDamage?: Record<FigureId, number>;
+  /** The figure whose turn it is (glowing hex edge). Default: taken from the state
+   *  (pending hero turn, else the current turn-order entry); null shows none. */
+  active?: FigureId | null;
+  /** A figure the player picked to look at (a soft white hex edge). */
+  selected?: FigureId | null;
 }
 
 export interface BoardViewOptions {
@@ -28,6 +33,9 @@ export interface BoardViewOptions {
   speed?: number;
   /** Heroes a double tap focuses on (this device's players). Default: every hero. */
   ownHeroes?: FigureId[];
+  /** A small «reset view» button on the board's right edge, shown while the camera is turned,
+   *  tilted, zoomed or panned away from home. Default true; false if the UI has its own. */
+  resetButton?: boolean;
 }
 
 export interface BoardView {
@@ -48,6 +56,8 @@ export interface BoardView {
   onFigureHold(cb: (figureId: FigureId) => void): () => void;
   /** Smoothly centres the camera on a figure (double tap on own hero does this too). */
   focus(figureId: FigureId): void;
+  /** Eases the camera back to the home view: the whole board, unturned, at the home tilt. */
+  resetCamera?(): void;
   setQuality(quality: GraphicsQuality): void;
   /** Animation speed setting (1× or 2×); applies to the running queue at once. */
   setSpeed?(speed: number): void;

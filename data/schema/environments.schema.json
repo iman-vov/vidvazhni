@@ -101,6 +101,26 @@
         "additionalProperties": false
       }
     },
+    "propModels": {
+      "description": "Prop models (assets/models/<model>/) that replace a piece, obstacle, object look or tile thing (chest, door, trap) once the model exists; procedural otherwise.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/piece" },
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/definitions/piece" },
+          {
+            "type": "object",
+            "properties": {
+              "model": { "$ref": "#/definitions/piece" },
+              "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 4 },
+              "rotY": { "type": "number", "minimum": -360, "maximum": 360 }
+            },
+            "required": ["model"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
     "dressing": {
       "type": "object",
       "properties": {

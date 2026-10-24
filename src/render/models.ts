@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
-import { castsShadow, getGraphicsQuality, rendererPreset, type GraphicsQuality } from './quality';
+import { castsShadow, getGraphicsQuality, GRAPHICS_QUALITIES, rendererPreset, type GraphicsQuality } from './quality';
 
 /** The game's clip names; `npm run models` renames Meshy's clips to these. */
 export type ClipName = 'idle' | 'walk' | 'run' | 'attack' | 'hit' | 'cast' | 'death';
@@ -78,9 +78,23 @@ export const MODEL_CACHE = 'vidvazhni-models';
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = new Map<string, Promise<GLTF>>();
 
+/** Models added at run time (dev pages and tests: fixtures outside assets/models), by id and tier. */
+const EXTRA_URLS = new Map<string, Partial<Record<GraphicsQuality, string>>>();
+
+/**
+ * Makes a GLB outside assets/models loadable under an id (a dev page showing a test fixture before
+ * the real model exists). Register before the board is created; the real model wins if both exist.
+ */
+export function registerModelUrl(id: string, url: string, quality: GraphicsQuality = 'medium'): void {
+  EXTRA_URLS.set(id, { ...EXTRA_URLS.get(id), [quality]: url });
+}
+
 /** URL of a model's GLB in exactly this tier, or undefined if `npm run models` has not produced it. */
 export function modelUrl(id: string, quality: GraphicsQuality = 'medium'): string | undefined {
-  return MODEL_URLS[`/assets/models/${id}/${id}${TIER_SUFFIX[quality]}.glb`];
+  const built = (q: GraphicsQuality) => MODEL_URLS[`/assets/models/${id}/${id}${TIER_SUFFIX[q]}.glb`];
+  const url = built(quality);
+  if (url || GRAPHICS_QUALITIES.some(built)) return url;
+  return EXTRA_URLS.get(id)?.[quality];
 }
 
 /** The tier loadModel will use for this request, after fallback; undefined if the model is missing. */
@@ -95,6 +109,7 @@ export function listModels(): string[] {
     const id = /^\/assets\/models\/([^/]+)\/\1(?:\.low|\.hq)?\.glb$/.exec(path)?.[1];
     if (id) ids.add(id);
   }
+  for (const id of EXTRA_URLS.keys()) ids.add(id);
   return [...ids].sort();
 }
 

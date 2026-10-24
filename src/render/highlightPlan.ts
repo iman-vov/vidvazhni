@@ -3,7 +3,7 @@
 // keeps its cost label under a path dot.
 
 import { hexKey, type Hex, type HexKey } from '../rules/hex';
-import type { FigureId } from '../rules/state';
+import type { FigureId, GameState } from '../rules/state';
 import type { BoardHighlights } from './view';
 
 export type CellKind = 'reach' | 'path' | 'pathEnd' | 'area';
@@ -62,4 +62,15 @@ export function planHighlights(h: BoardHighlights): HighlightPlan {
     marks.set(id, m);
   }
   return { cells: [...cells.values()], targets: [...marks.values()], path: path.map((x) => [x[0], x[1]] as Hex) };
+}
+
+/** The figure whose turn it is: the hero the engine waits for, else the current turn-order entry
+ *  (a hero or summon; a monster group has no single figure). Null between rounds. */
+export function activeFigure(s: Pick<GameState, 'phase' | 'pending' | 'turnOrder' | 'turnIndex' | 'figures'>): FigureId | null {
+  const p = s.pending;
+  if (p && (p.kind === 'heroTurn' || p.kind === 'stepChoice')) return p.heroId;
+  if (s.phase !== 'turns') return null;
+  const entry = s.turnOrder[s.turnIndex];
+  if (!entry || entry.kind === 'monsterGroup') return null;
+  return s.figures[entry.figureId] ? entry.figureId : null;
 }

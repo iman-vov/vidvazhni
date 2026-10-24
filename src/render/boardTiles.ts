@@ -1,16 +1,20 @@
 // The board's ground: hex plates of revealed rooms by terrain, thin walls and low edge kerbs, and the
 // things that stand on tiles (barrels, doors, traps, coins, chests, scenario objects). Each room is
 // its own group, so a room being revealed can rise out of the dark. Props use the prop models from
-// assets/models when they exist (barrel, chest, bear-trap, dungeon-door) and simple painted
-// geometry otherwise.
+// assets/models when they exist (by the location's `propModels` table: barrel, chest, bear-trap,
+// dungeon-door, brazier, floor-lever, rune-stone…) and the location's painted pieces otherwise,
+// turned and sized a little differently per hex, each standing on a soft contact shadow.
 
 import * as THREE from 'three';
 import type { Content } from '../rules/content';
 import { hexKey as rulesHexKey, neighbors, parseHexKey, type Hex, type HexKey } from '../rules/hex';
 import type { GameState, Tile } from '../rules/state';
+import { blobShadowTexture } from './contactShadow';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
-import { listModels, loadModel } from './models';
+import { listModels } from './models';
+import { hexVariation, loadPropPrototype, propModelFor, type PropPrototype } from './propModels';
 import type { GraphicsQuality } from './quality';
+import type { PropModelSpec } from './environment/types';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const PLATE_RADIUS = 0.96 * HEX_SIZE;
@@ -34,8 +38,10 @@ const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#
 const TERRAIN_SIDE: Record<Terrain, string> = { normal: '#5c5048', difficult: '#4e4030', hazardous: '#5a3a3a', water: '#3c5a66' };
 const TERRAIN_FALLBACK: Record<Terrain, string> = { normal: '#9a948a', difficult: '#7a6a48', hazardous: '#8a4a48', water: '#5aa8c0' };
 
-/** Prop heights in world units when a prop model is used. */
-const PROP_HEIGHT: Record<string, number> = { barrel: 0.95, crate: 0.8, chest: 0.6, 'bear-trap': 0.18, 'dungeon-door': 1.25 };
+/** Prop heights in world units when a prop model is used and the location's table gives none. */
+const PROP_HEIGHT: Record<string, number> = { barrel: 0.95, crate: 0.8, chest: 0.6, trap: 0.18, door: 0.98 };
+/** Contact shadow radius under props that stand on a hex. */
+const PROP_SHADOW_RADIUS: Record<string, number> = { obstacle: 0.48, object: 0.42, chest: 0.42 };
 
 export function textureUrl(name: string, quality: GraphicsQuality): string | undefined {
   const size = quality === 'low' ? 512 : 1024;
@@ -69,7 +75,53 @@ export function noiseTexture(color: string): THREE.Texture {
   return tex;
 }
 
+/**
+ * Three courses of dressed stone with mortar seams, light in the middle and darker at the edges,
+ * for one wall face (a unit box's face UVs run 0..1 over each wall segment).
+ */
+function stoneBlockTexture(): THREE.Texture {
+  const w = 256;
+  const h = 160;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#6e665e';
+  ctx.fillRect(0, 0, w, h);
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const rows = 3;
+  const rowH = h / rows;
+  for (let row = 0; row < rows; row++) {
+    let x = row % 2 ? -rnd() * 50 : -rnd() * 20;
+    while (x < w) {
+      const bw = 62 + rnd() * 40;
+      const shade = 200 + Math.floor(rnd() * 45);
+      const g = ctx.createLinearGradient(0, row * rowH, 0, (row + 1) * rowH);
+      g.addColorStop(0, `rgb(${shade + 10},${shade + 8},${shade + 4})`);
+      g.addColorStop(1, `rgb(${shade - 28},${shade - 30},${shade - 32})`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.roundRect(x + 3, row * rowH + 3, bw - 6, rowH - 6, 6);
+      ctx.fill();
+      // A few chips and stains.
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = `rgba(${rnd() > 0.5 ? '255,255,255' : '40,30,20'},0.08)`;
+        ctx.beginPath();
+        ctx.arc(x + 8 + rnd() * (bw - 16), row * rowH + 8 + rnd() * (rowH - 16), 3 + rnd() * 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      x += bw;
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 /** MeshStandardMaterial that samples its map at world XZ instead of mesh UVs. */
+
 function worldUvMaterial(map: THREE.Texture, tint: string): THREE.MeshStandardMaterial {
   const m = new THREE.MeshStandardMaterial({ map, color: tint, roughness: 0.92, metalness: 0 });
   m.onBeforeCompile = (shader) => {
@@ -128,8 +180,10 @@ export class TileLayer {
   private readonly props = new Map<string, PropView>();
   private readonly plateGeometry: THREE.CylinderGeometry;
   private readonly boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-  private readonly wallMaterial = new THREE.MeshStandardMaterial({ color: '#8a7f72', roughness: 0.95, flatShading: true });
-  private readonly kerbMaterial = new THREE.MeshStandardMaterial({ color: '#6a6058', roughness: 0.95, flatShading: true });
+  /** Dressed stone blocks painted over the walls between rooms and the kerbs (multiplied by their colour). */
+  private readonly blockTexture = stoneBlockTexture();
+  private readonly wallMaterial = new THREE.MeshStandardMaterial({ color: '#8a7f72', map: this.blockTexture, roughness: 0.95, flatShading: true });
+  private readonly kerbMaterial = new THREE.MeshStandardMaterial({ color: '#6a6058', map: this.blockTexture, roughness: 0.95, flatShading: true });
   private materials = new Map<Terrain, THREE.Material[]>();
   private textures: THREE.Texture[] = [];
   private theme = 'cobblestone';
@@ -148,6 +202,14 @@ export class TileLayer {
   private hexTheme: string | null = null;
   /** The location's stand-in for an obstacle model without a GLB (tree, rock, pillar…). */
   obstacleFactory: ((model: string) => THREE.Object3D | null) | null = null;
+  /** The location's prop model for an obstacle model, object look or `chest`/`door`/`trap`. Without
+   *  it, a model whose id equals the key is used when it exists. */
+  propModel: ((key: string, defaultHeight: number) => Required<PropModelSpec> | null) | null = null;
+  /** Glowing bits (a brazier's fire) to keep on top of a prop model of that key. */
+  propGlow: ((key: string, height: number) => THREE.Object3D | null) | null = null;
+  private readonly blobTexture = blobShadowTexture();
+  private readonly blobGeometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  private readonly blobMaterial = new THREE.MeshBasicMaterial({ map: this.blobTexture, color: '#000000', transparent: true, opacity: 0.6, depthWrite: false });
 
   constructor(quality: GraphicsQuality) {
     this.quality = quality;
@@ -352,14 +414,14 @@ export class TileLayer {
       // A blocking scenario object (brazier, lever) is drawn as the object, not as an obstacle too.
       if (tile.obstacle && !tile.object) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
       if (tile.door) wanted.push([`${k}:door`, () => this.makeDoor(k, hex, tile, s)]);
-      if (tile.trap) wanted.push([`${k}:trap`, () => this.makeSimple(`${k}:trap`, hex, tile.room, 'bear-trap', this.propParts.trap())]);
+      if (tile.trap) wanted.push([`${k}:trap`, () => this.makeSimple(`${k}:trap`, hex, tile.room, 'trap', this.propParts.trap())]);
       if (tile.coins) wanted.push([`${k}:coins`, () => this.makeSimple(`${k}:coins`, hex, tile.room, null, this.propParts.coins(tile.coins ?? 1))]);
       if (tile.chest) wanted.push([`${k}:chest`, () => this.makeChest(k, hex, tile.room)]);
       if (tile.object) {
         // The state is part of the key, so a lever pulled or a brazier lit is rebuilt in its new look.
         const look = tile.object.state ? `${tile.object.kind}:${tile.object.state}` : tile.object.kind;
         const key = `${k}:object:${look}`;
-        wanted.push([key, () => this.makeSimple(key, hex, tile.room, tile.object!.kind, (this.obstacleFactory?.(look) as THREE.Group | null) ?? this.propParts.rune())]);
+        wanted.push([key, () => this.makeSimple(key, hex, tile.room, look, (this.obstacleFactory?.(look) as THREE.Group | null) ?? this.propParts.rune(), 'object')]);
       }
       for (const [key, make] of wanted) {
         seen.add(key);
@@ -451,32 +513,44 @@ export class TileLayer {
     });
   }
 
-  private makeSimple(key: string, hex: Hex, room: string, modelId: string | null, placeholder: THREE.Group): PropView {
+  /** A prop on a hex: its placeholder now, swapped for the prop model of `modelKey` once that
+   *  loads; `shadow` names the contact shadow under it (none for flat things). */
+  private makeSimple(key: string, hex: Hex, room: string, modelKey: string | null, placeholder: THREE.Group, shadow?: keyof typeof PROP_SHADOW_RADIUS): PropView {
     const object = new THREE.Group();
     object.add(placeholder);
     this.place(object, hex);
     this.shadow(object);
-    if (modelId) this.swapInModel(object, placeholder, modelId);
-    return { key, object, room };
+    const view: PropView = { key, object, room };
+    if (shadow) object.add(this.contactShadow(PROP_SHADOW_RADIUS[shadow]!));
+    if (modelKey) this.swapInProp(view, placeholder, modelKey);
+    return view;
+  }
+
+  private contactShadow(radius: number): THREE.Mesh {
+    const blob = new THREE.Mesh(this.blobGeometry, this.blobMaterial);
+    blob.scale.setScalar(radius * 2.4);
+    blob.position.y = 0.005;
+    blob.renderOrder = 1;
+    blob.name = 'contact-shadow';
+    return blob;
   }
 
   private makeObstacle(k: HexKey, hex: Hex, room: string): PropView {
     const model = this.obstacleModels.get(k) ?? 'barrel';
-    const custom = this.available.has(model) ? null : this.obstacleFactory?.(model);
-    if (custom) {
-      custom.rotation.y = ((hex[0] * 37 + hex[1] * 61) % 360) * (Math.PI / 180);
-      return this.makeSimple(`${k}:obstacle`, hex, room, null, custom as THREE.Group);
-    }
-    const part = model === 'crate' ? this.propParts.crate() : this.propParts.barrel();
-    // Barrels lean a little differently so a row of them does not look stamped.
-    part.rotation.y = ((hex[0] * 37 + hex[1] * 61) % 360) * (Math.PI / 180);
-    return this.makeSimple(`${k}:obstacle`, hex, room, model, part);
+    // Turned and sized a little differently per hex, so a row of barrels does not look stamped.
+    const v = hexVariation(hex[0], hex[1]);
+    const part = (this.obstacleFactory?.(model) as THREE.Group | null) ?? (model === 'crate' ? this.propParts.crate() : this.propParts.barrel());
+    part.rotation.y = v.rot;
+    part.scale.multiplyScalar(v.scale);
+    part.userData['variation'] = v.scale;
+    return this.makeSimple(`${k}:obstacle`, hex, room, model, part, 'obstacle');
   }
 
   private makeChest(k: HexKey, hex: Hex, room: string): PropView {
     const { group, lid } = this.propParts.chest();
-    const p = this.makeSimple(`${k}:chest`, hex, room, null, group);
-    p.lid = lid;
+    group.rotation.y = (hexVariation(hex[0], hex[1]).rot - Math.PI) * 0.15; // roughly facing the camera
+    const p = this.makeSimple(`${k}:chest`, hex, room, 'chest', group, 'chest');
+    p.lid ??= lid;
     return p;
   }
 
@@ -494,27 +568,59 @@ export class TileLayer {
     this.shadow(object);
     const p: PropView = { key: `${k}:door`, object, room: tile.room, panel, open: false };
     this.setDoorOpen(p, !!tile.door?.open, false);
+    this.swapDoorPanel(panel);
     return p;
   }
 
-  /** Replaces a placeholder with a prop model once it loads (if the build has one). */
-  private swapInModel(object: THREE.Group, placeholder: THREE.Object3D, modelId: string): void {
-    if (!this.available.has(modelId)) return;
-    loadModel(modelId, { quality: this.quality })
-      .then((model) => {
-        if (!placeholder.parent) return;
-        const box = new THREE.Box3().setFromObject(model.scene);
-        const h = box.max.y - box.min.y;
-        model.scene.scale.setScalar(h > 0 ? (PROP_HEIGHT[modelId] ?? 0.8) / h : 1);
-        model.scene.rotation.y = placeholder.rotation.y;
-        object.remove(placeholder);
-        object.add(model.scene);
-        this.shadow(object);
-        this.onChange();
-      })
-      .catch(() => {
-        // Keep the placeholder.
-      });
+  private propSpec(key: string): Required<PropModelSpec> | null {
+    const height = PROP_HEIGHT[key] ?? 0.9;
+    return this.propModel ? this.propModel(key, height) : propModelFor(null, [key], this.available, height);
+  }
+
+  /** Replaces a placeholder with the prop model for `key` once it loads (if there is one). */
+  private swapInProp(view: PropView, placeholder: THREE.Object3D, key: string): void {
+    const spec = this.propSpec(key);
+    if (!spec) return;
+    void loadPropPrototype(spec, this.quality).then((proto) => {
+      if (!proto || !placeholder.parent) return;
+      const model = this.instance(proto);
+      model.rotation.y += placeholder.rotation.y;
+      model.scale.multiplyScalar((placeholder.userData['variation'] as number | undefined) ?? 1);
+
+      placeholder.parent.add(model);
+      placeholder.removeFromParent();
+      const glow = this.propGlow?.(key, spec.height);
+      if (glow) model.add(glow);
+      // A modelled chest opens by vanishing (it has no lid of its own).
+      if (view.lid) view.lid = undefined;
+      this.shadow(view.object);
+      this.onChange();
+    });
+  }
+
+  /** The door panel turns into the prop model's door (the frame stays) once it loads. */
+  private swapDoorPanel(panel: THREE.Group): void {
+    const spec = this.propSpec('door');
+    if (!spec) return;
+    void loadPropPrototype(spec, this.quality).then((proto) => {
+      if (!proto || !panel.parent) return;
+      const model = this.instance(proto);
+      // Fit the panel's opening (0.88 wide): hinge on the left post, centred in the frame.
+      if (proto.radius * 2 > 0.95) model.scale.multiplyScalar(0.95 / (proto.radius * 2));
+      model.position.x = 0.44;
+      panel.clear();
+      panel.add(model);
+      this.shadow(panel);
+      this.onChange();
+    });
+  }
+
+  private instance(proto: PropPrototype): THREE.Object3D {
+    const o = proto.object.clone();
+    o.traverse((c) => {
+      if ((c as THREE.Mesh).isMesh) c.receiveShadow = true;
+    });
+    return o;
   }
 
   setCastShadows(on: boolean): void {
@@ -564,9 +670,14 @@ export class TileLayer {
     for (const t of this.textures) t.dispose();
     this.plateGeometry.dispose();
     this.boxGeometry.dispose();
+    this.blockTexture.dispose();
     this.wallMaterial.dispose();
     this.kerbMaterial.dispose();
     this.propParts.dispose();
+    this.blobTexture.dispose();
+    this.blobGeometry.dispose();
+    this.blobMaterial.dispose();
+
   }
 }
 
@@ -606,6 +717,9 @@ class PropParts {
   private readonly disposables: { dispose(): void }[] = [];
   private readonly wood = this.keep(new THREE.MeshStandardMaterial({ color: '#8a5a32', roughness: 0.85 }));
   private readonly darkWood = this.keep(new THREE.MeshStandardMaterial({ color: '#5e3c22', roughness: 0.9 }));
+  private readonly lightWood = this.keep(new THREE.MeshStandardMaterial({ color: '#9a6a3e', roughness: 0.85 }));
+  private readonly ringGeo = this.keep(new THREE.TorusGeometry(0.055, 0.012, 5, 12));
+
   private readonly iron = this.keep(new THREE.MeshStandardMaterial({ color: '#4a4c52', roughness: 0.55, metalness: 0.6 }));
   private readonly gold = this.keep(new THREE.MeshStandardMaterial({ color: '#f2c24a', roughness: 0.35, metalness: 0.7, emissive: '#3a2600' }));
   private readonly runeMat = this.keep(new THREE.MeshStandardMaterial({ color: '#6c6a8a', roughness: 0.8, emissive: '#2a1f55' }));
@@ -695,19 +809,28 @@ class PropParts {
     lintel.scale.set(1.12, 0.12, 0.18);
     lintel.position.set(0, 1.08, 0);
     frame.add(lintel);
-    // The panel hinges on the left post.
+    // The panel hinges on the left post: four planks with dark gaps, iron straps, a ring pull.
     const panel = new THREE.Group();
     panel.position.set(-0.44, 0, 0);
-    const boards = new THREE.Mesh(this.box, this.wood);
-    boards.scale.set(0.88, 0.98, 0.07);
-    boards.position.set(0.44, 0.5, 0);
-    panel.add(boards);
+    const back = new THREE.Mesh(this.box, this.darkWood);
+    back.scale.set(0.86, 0.96, 0.04);
+    back.position.set(0.44, 0.5, -0.012);
+    panel.add(back);
+    for (let i = 0; i < 4; i++) {
+      const plank = new THREE.Mesh(this.box, i % 2 ? this.wood : this.lightWood);
+      plank.scale.set(0.205, 0.97 - (i % 2) * 0.02, 0.06);
+      plank.position.set(0.44 + (i - 1.5) * 0.22, 0.5, 0);
+      panel.add(plank);
+    }
     for (const y of [0.22, 0.78]) {
       const strap = new THREE.Mesh(this.box, this.iron);
       strap.scale.set(0.8, 0.06, 0.09);
       strap.position.set(0.44, y, 0);
       panel.add(strap);
     }
+    const ring = new THREE.Mesh(this.ringGeo, this.iron);
+    ring.position.set(0.74, 0.5, 0.06);
+    panel.add(ring);
     return { frame, panel };
   }
 

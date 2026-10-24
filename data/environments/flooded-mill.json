@@ -19,6 +19,16 @@
   "fog": { "color": "#3a4446", "glow": "#7c8a88", "start": 3, "end": 10, "morok": "#c2c8ca", "morokOpacity": 0.55 },
   "entrance": "lantern-post",
   "landmarks": [{ "piece": "mill-wheel", "room": "s3.mill-hall" }],
+  "propModels": {
+    "mill-wheel": { "model": "mill-wheel", "height": 2.2 },
+    "sack": { "model": "flour-sack", "height": 0.5 },
+    "crate": { "model": "crate", "height": 0.62 },
+    "lever": "floor-lever",
+    "lever-down": { "model": "floor-lever", "rotY": 180 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1.0 },
+    "trap": { "model": "bear-trap", "height": 0.18 }
+  },
   "dressing": {
     "ring": [["reeds", 3], ["rock", 2], ["sacks", 1], ["post", 2], ["fence", 2], ["log", 1], ["lilies", 2]],
     "outside": [["reeds", 3], ["lilies", 3], ["rock", 1], ["post", 1], ["tree-green", 1], ["log", 1]],

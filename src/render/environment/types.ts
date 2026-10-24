@@ -73,6 +73,13 @@ export interface EnvironmentDef {
   exit?: string | null;
   /** Big pieces that belong to a room: placed just beyond its far edge (the mill wheel by the mill hall). */
   landmarks?: { piece: string; room: string }[];
+  /**
+   * Which prop model (assets/models/<model>/, from Meshy) shows a piece or a board thing once the
+   * model exists: keys are dressing piece ids (`barrel`, `sacks`), scenario obstacle models
+   * (`table`), object looks (`brazier-lit`, `lever-down`, `rune`) and the tile things `chest`,
+   * `door`, `trap`. Missing models fall back to the procedural piece. A plain string is the model id.
+   */
+  propModels?: Record<string, string | PropModelSpec>;
   dressing: {
     /** Props on the non-playable strip between the hexes and the edge (against the walls). */
     ring: Weighted[];
@@ -83,4 +90,13 @@ export interface EnvironmentDef {
     /** 0..1, multiplied by the quality's share. Default 0.6. */
     density?: number;
   };
+}
+
+/** A prop model standing in for a piece: which model, how tall (world units, before the
+ *  placement's own scale; default the piece's height) and an extra turn (degrees) for a state such
+ *  as a pulled lever. */
+export interface PropModelSpec {
+  model: string;
+  height?: number;
+  rotY?: number;
 }

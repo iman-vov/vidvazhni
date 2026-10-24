@@ -10,6 +10,8 @@
 //   &play=1                                     start the script at once
 //   ?board=s1…s5                                any scenario map with its environment, every room
 //                                               revealed (&reveal=0 keeps the start room only)
+//   &props=fixture                              prop models from tests/fixtures/props (a test barrel)
+//                                               where assets/models has none yet
 
 import { createGame, apply } from '../rules/engine';
 import type { ConditionId, ElementId, OrbId } from '../rules/content';
@@ -21,13 +23,18 @@ import { revealRoom } from '../rules/setup';
 import type { FigureId, GameEvent, GameState } from '../rules/state';
 import { BASE_RULES, FULL_FORK } from '../rules/variants';
 import { createBoardView } from './boardView';
-import { listModels } from './models';
+import { listModels, registerModelUrl } from './models';
 import { GRAPHICS_QUALITIES, getGraphicsQuality, type GraphicsQuality } from './quality';
 import type { BoardHighlights } from './view';
 import type { IconName } from '../ui/icons/names';
 import { iconSvg } from '../ui/icons/svg';
 
 const params = new URLSearchParams(location.search);
+if (params.get('props') === 'fixture') {
+  const fixtures = import.meta.glob<string>('/tests/fixtures/props/*.glb', { query: '?url', import: 'default', eager: true });
+  for (const [path, url] of Object.entries(fixtures)) registerModelUrl(path.replace(/^.*\/|\.glb$/g, ''), url);
+}
+
 const view = document.getElementById('view')!;
 const panel = document.getElementById('panel')!;
 const info = document.getElementById('info')!;
@@ -61,6 +68,8 @@ function freshGame(): GameState {
 const board = createBoardView(view, { quality, speed: Number(params.get('speed') ?? 1), lang: 'uk' });
 let state: GameState = freshGame();
 board.sync(state, content);
+// For automated checks (screenshots, emulated touch) from the browser's console.
+Object.assign(window, { board, content, getState: () => state, setHighlights: (h: BoardHighlights) => board.highlight(h) });
 
 // ─── Scripted events ─────────────────────────────────────────────────────
 

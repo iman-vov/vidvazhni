@@ -17,6 +17,12 @@
   "fog": { "color": "#2a2e3a", "glow": "#6c5262", "start": 3.2, "end": 11, "morok": "#b8bcc8", "morokOpacity": 0.45 },
   "entrance": "lantern-post",
   "exit": "hut",
+  "propModels": {
+    "thorn-bush": { "model": "thorn-bush", "height": 0.75 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1.0 },
+    "trap": { "model": "bear-trap", "height": 0.18 }
+  },
   "dressing": {
     "ring": [["fern", 3], ["mushrooms", 2], ["rock", 2], ["roots", 2], ["bush", 2], ["stump", 1], ["log", 1]],
     "outside": [["tree", 4], ["tree-green", 3], ["pine", 2], ["thorn-bush", 2], ["bush", 2], ["rock", 1], ["stump", 1], ["fern", 1]],
