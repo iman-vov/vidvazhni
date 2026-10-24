@@ -30,20 +30,20 @@ const TEXTURE_URLS = import.meta.glob<string>('/assets/textures/*.webp', { query
 const THEME_NORMAL: Record<string, string> = { s1: 'cobblestone', s2: 'forest-floor', s3: 'tavern-planks', s4: 'cobblestone', s5: 'cave-rock' };
 const TERRAIN_TEXTURE: Record<Exclude<Terrain, 'normal'>, string> = { difficult: 'swamp-mud', hazardous: 'cave-rock', water: 'shallow-water' };
 /** Multiplied over the texture: hazardous ground glows a little, the side of a plate is darker. */
-const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#f0e6d0', hazardous: '#ffb8a0', water: '#e8f6ff' };
+const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#f0e6d0', hazardous: '#ffb8a0', water: '#c4d8de' };
 const TERRAIN_SIDE: Record<Terrain, string> = { normal: '#5c5048', difficult: '#4e4030', hazardous: '#5a3a3a', water: '#3c5a66' };
 const TERRAIN_FALLBACK: Record<Terrain, string> = { normal: '#9a948a', difficult: '#7a6a48', hazardous: '#8a4a48', water: '#5aa8c0' };
 
 /** Prop heights in world units when a prop model is used. */
 const PROP_HEIGHT: Record<string, number> = { barrel: 0.95, crate: 0.8, chest: 0.6, 'bear-trap': 0.18, 'dungeon-door': 1.25 };
 
-function textureUrl(name: string, quality: GraphicsQuality): string | undefined {
+export function textureUrl(name: string, quality: GraphicsQuality): string | undefined {
   const size = quality === 'low' ? 512 : 1024;
   return TEXTURE_URLS[`/assets/textures/${name}.${size}.webp`] ?? TEXTURE_URLS[`/assets/textures/${name}.512.webp`];
 }
 
 /** A soft noise texture for when an image is missing (keeps the painted look, costs nothing). */
-function noiseTexture(color: string): THREE.Texture {
+export function noiseTexture(color: string): THREE.Texture {
   const size = 128;
   const c = document.createElement('canvas');
   c.width = c.height = size;
@@ -141,6 +141,13 @@ export class TileLayer {
   onChange: () => void = () => {};
   /** Shadow casting for props (none on the low preset). */
   castShadows = false;
+  /** Every hex of the map when an environment surrounds it: no kerbs toward the outside then
+   *  (the environment's floor and walls take over); kerbs stay toward rooms not yet revealed. */
+  private footprint: ReadonlySet<HexKey> | null = null;
+  /** Texture of `normal` hexes chosen by the location, instead of the scenario default. */
+  private hexTheme: string | null = null;
+  /** The location's stand-in for an obstacle model without a GLB (tree, rock, pillar…). */
+  obstacleFactory: ((model: string) => THREE.Object3D | null) | null = null;
 
   constructor(quality: GraphicsQuality) {
     this.quality = quality;
@@ -154,7 +161,7 @@ export class TileLayer {
 
   /** Rebuilds the terrain materials for a quality level (texture size) and scenario look. */
   setLook(quality: GraphicsQuality, scenarioId: string): void {
-    const theme = THEME_NORMAL[scenarioId] ?? 'cobblestone';
+    const theme = this.hexTheme ?? THEME_NORMAL[scenarioId] ?? 'cobblestone';
     if (this.materials.size && quality === this.quality && theme === this.theme) return;
     this.quality = quality;
     this.theme = theme;
@@ -192,6 +199,19 @@ export class TileLayer {
     for (const room of this.rooms.values()) room.plates.forEach((mesh, i) => (mesh.material = this.materials.get(TERRAINS[i]!)!));
     for (const m of old) m.dispose();
     for (const t of oldTextures) t.dispose();
+  }
+
+  /** Location settings from the environment: map footprint (kerbs), thin-wall colour, hex texture. */
+  setSurroundings(footprint: ReadonlySet<HexKey> | null, wallColor: string | null, hexTheme: string | null): void {
+    this.footprint = footprint;
+    if (wallColor) {
+      this.wallMaterial.color.set(wallColor);
+      this.kerbMaterial.color.set(wallColor).multiplyScalar(0.78);
+    }
+    if (hexTheme !== this.hexTheme) {
+      this.hexTheme = hexTheme;
+      this.theme = ''; // the next setLook rebuilds the terrain materials
+    }
   }
 
   /** Adds rooms that are revealed in `s` and not built yet; removes rooms that are not revealed
@@ -293,6 +313,7 @@ export class TileLayer {
         if (wallSet.has(wk)) continue;
         // A door leads out of the room: no kerb in front of it.
         if (tile.door) continue;
+        if (this.footprint && !this.footprint.has(nk)) continue;
         add(perRoomKerbs, tile.room, edgeMatrix(hex, n, KERB_HEIGHT, KERB_THICK));
       }
     }
@@ -328,12 +349,18 @@ export class TileLayer {
       if (!room) continue;
       const hex = parseHexKey(k);
       const wanted: [string, () => PropView][] = [];
-      if (tile.obstacle) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
+      // A blocking scenario object (brazier, lever) is drawn as the object, not as an obstacle too.
+      if (tile.obstacle && !tile.object) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
       if (tile.door) wanted.push([`${k}:door`, () => this.makeDoor(k, hex, tile, s)]);
       if (tile.trap) wanted.push([`${k}:trap`, () => this.makeSimple(`${k}:trap`, hex, tile.room, 'bear-trap', this.propParts.trap())]);
       if (tile.coins) wanted.push([`${k}:coins`, () => this.makeSimple(`${k}:coins`, hex, tile.room, null, this.propParts.coins(tile.coins ?? 1))]);
       if (tile.chest) wanted.push([`${k}:chest`, () => this.makeChest(k, hex, tile.room)]);
-      if (tile.object) wanted.push([`${k}:object`, () => this.makeSimple(`${k}:object`, hex, tile.room, tile.object!.kind, this.propParts.rune())]);
+      if (tile.object) {
+        // The state is part of the key, so a lever pulled or a brazier lit is rebuilt in its new look.
+        const look = tile.object.state ? `${tile.object.kind}:${tile.object.state}` : tile.object.kind;
+        const key = `${k}:object:${look}`;
+        wanted.push([key, () => this.makeSimple(key, hex, tile.room, tile.object!.kind, (this.obstacleFactory?.(look) as THREE.Group | null) ?? this.propParts.rune())]);
+      }
       for (const [key, make] of wanted) {
         seen.add(key);
         let p = this.props.get(key);
@@ -435,6 +462,11 @@ export class TileLayer {
 
   private makeObstacle(k: HexKey, hex: Hex, room: string): PropView {
     const model = this.obstacleModels.get(k) ?? 'barrel';
+    const custom = this.available.has(model) ? null : this.obstacleFactory?.(model);
+    if (custom) {
+      custom.rotation.y = ((hex[0] * 37 + hex[1] * 61) % 360) * (Math.PI / 180);
+      return this.makeSimple(`${k}:obstacle`, hex, room, null, custom as THREE.Group);
+    }
     const part = model === 'crate' ? this.propParts.crate() : this.propParts.barrel();
     // Barrels lean a little differently so a row of them does not look stamped.
     part.rotation.y = ((hex[0] * 37 + hex[1] * 61) % 360) * (Math.PI / 180);

@@ -1,0 +1,28 @@
+{
+  "id": "flooded-mill",
+  "scenarios": ["s3"],
+  "edge": "shore",
+  "hexTexture": "cobblestone",
+  "rooms": { "s3.mill-hall": { "edge": "timber" } },
+  "ground": { "texture": "swamp-mud", "tint": "#76694e", "scale": 2.6, "water": 0.5, "waterColor": "#5c8c92" },
+  "walls": { "height": 1.5, "low": 0.3, "alt": 3, "inner": "#7a5c3e" },
+  "palette": { "wood": "#7e5b3b", "woodDark": "#4e3826", "reed": "#9ca25a", "rock": "#7e7a6e", "leaf": "#6a8248" },
+  "light": {
+    "sky": "#e2e8ea",
+    "ground": "#3a3a34",
+    "hemi": 1.05,
+    "sun": "#fff0d2",
+    "sunIntensity": 1.55,
+    "env": 0.45,
+    "point": { "color": "#ffb868", "intensity": 4, "distance": 6 }
+  },
+  "fog": { "color": "#3a4446", "glow": "#7c8a88", "start": 3, "end": 10, "morok": "#c2c8ca", "morokOpacity": 0.55 },
+  "entrance": "lantern-post",
+  "landmarks": [{ "piece": "mill-wheel", "room": "s3.mill-hall" }],
+  "dressing": {
+    "ring": [["reeds", 3], ["rock", 2], ["sacks", 1], ["post", 2], ["fence", 2], ["log", 1], ["lilies", 2]],
+    "outside": [["reeds", 3], ["lilies", 3], ["rock", 1], ["post", 1], ["tree-green", 1], ["log", 1]],
+    "far": [["tree-far", 2], ["reeds", 1]],
+    "density": 0.65
+  }
+}

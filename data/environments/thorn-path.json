@@ -1,0 +1,26 @@
+{
+  "id": "thorn-path",
+  "scenarios": ["s2"],
+  "edge": "forest",
+  "ground": { "texture": "forest-floor", "tint": "#5e5a42", "scale": 2.8 },
+  "walls": { "height": 1.0, "low": 0.4, "alt": 3, "inner": "#7a6a52" },
+  "palette": { "leaf": "#6f8240", "leafDark": "#3e5632", "leafWarm": "#b87a3c", "bark": "#5a4430", "moss": "#6f8a42" },
+  "light": {
+    "sky": "#ffcf9e",
+    "ground": "#2e3442",
+    "hemi": 1.0,
+    "sun": "#ffbd7e",
+    "sunIntensity": 1.95,
+    "env": 0.4,
+    "point": { "color": "#ffc260", "intensity": 5, "distance": 7 }
+  },
+  "fog": { "color": "#2a2e3a", "glow": "#6c5262", "start": 3.2, "end": 11, "morok": "#b8bcc8", "morokOpacity": 0.45 },
+  "entrance": "lantern-post",
+  "exit": "hut",
+  "dressing": {
+    "ring": [["fern", 3], ["mushrooms", 2], ["rock", 2], ["roots", 2], ["bush", 2], ["stump", 1], ["log", 1]],
+    "outside": [["tree", 4], ["tree-green", 3], ["pine", 2], ["thorn-bush", 2], ["bush", 2], ["rock", 1], ["stump", 1], ["fern", 1]],
+    "far": [["tree-far", 3], ["pine", 2]],
+    "density": 0.7
+  }
+}

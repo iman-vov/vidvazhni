@@ -1,0 +1,25 @@
+{
+  "id": "gloom-heart",
+  "scenarios": ["s5"],
+  "edge": "cave",
+  "ground": { "texture": "cave-rock", "tint": "#4e4a56", "scale": 3.0 },
+  "walls": { "height": 1.9, "low": 0.4, "alt": 3, "inner": "#5c5866" },
+  "palette": { "rock": "#5e5a66", "rockDark": "#3c3944", "crystal": "#9c6ae2", "moss": "#4e5a52", "glowCold": "#7ad0e8" },
+  "light": {
+    "sky": "#bcc6ea",
+    "ground": "#1c1a26",
+    "hemi": 0.8,
+    "sun": "#cad6ff",
+    "sunIntensity": 1.4,
+    "env": 0.3,
+    "point": { "color": "#a884ff", "intensity": 4, "distance": 6 }
+  },
+  "fog": { "color": "#121119", "glow": "#241d36", "start": 2.6, "end": 8.5, "morok": "#9c9cb4", "morokOpacity": 0.5 },
+  "entrance": null,
+  "dressing": {
+    "ring": [["stalagmite", 3], ["rock", 3], ["crystals", 2], ["glow-mushrooms", 2]],
+    "outside": [["stalagmite", 2], ["rock", 2], ["crystals", 1]],
+    "far": [["stalagmite-big", 3]],
+    "density": 0.7
+  }
+}

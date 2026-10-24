@@ -10,9 +10,9 @@ import type { ElementLevel, FigureId, GameEvent } from '../rules/state';
 
 export const TIMING = {
   walkPerHex: 0.3,
-  jumpBase: 0.35,
-  jumpPerHex: 0.14,
-  slidePerHex: 0.2,
+  jumpBase: 0.6,
+  jumpPerHex: 0.12,
+  slidePerHex: 0.26,
   turn: 0.15,
   attackWindup: 0.42, // from the start of the attack clip to the moment of the hit / release
   attack: 0.95,

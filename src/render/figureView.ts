@@ -10,6 +10,7 @@ import type { FigureBadge, OverlayItem } from './boardOverlay';
 import { modelScale, type FigureLook } from './figureLook';
 import { PLATE_HEIGHT } from './boardTiles';
 import { hexToWorld } from './hexLayout';
+import { HOVER_HEIGHT, hoverBob } from './motion';
 import { attachWeapon, loadModel, type Model } from './models';
 import type { GraphicsQuality } from './quality';
 
@@ -119,6 +120,10 @@ export class FigureView {
   private ownTextures: THREE.Texture[] = [];
   private ownGeometries: THREE.BufferGeometry[] = [];
   private loadToken = 0;
+  /** Rest height of the content inside the body (flying figures hover above it). */
+  private contentBaseY = 0;
+  private clock = 0;
+  private readonly hoverPhase: number;
   private opacity = 1;
   private targeted = false;
   /** Height of the standing figure in world units (after scale). */
@@ -143,6 +148,9 @@ export class FigureView {
     this.height = look.height;
     this.root.name = `figure:${f.id}`;
     this.root.add(this.base, this.body);
+    // Yaw first, then the lean in the figure's own frame (jumps and pushes tilt it).
+    this.body.rotation.order = 'YXZ';
+    this.hoverPhase = (f.hex[0] * 1.7 + f.hex[1] * 2.3) % (Math.PI * 2);
     this.buildBase();
     this.targetRing = new THREE.Mesh(parts.targetGeometry, parts.targetMaterial);
     this.targetRing.visible = false;
@@ -242,6 +250,7 @@ export class FigureView {
   private setContent(object: THREE.Object3D, materials: THREE.Material[]): void {
     if (this.content) this.body.remove(this.content);
     this.content = object;
+    this.contentBaseY = object.position.y;
     this.materials = materials;
     this.body.add(object);
     this.outlines = [];
@@ -356,6 +365,27 @@ export class FigureView {
 
   update(dt: number): void {
     this.model?.update(dt);
+    this.clock += dt;
+    if (this.look.flying && this.content) this.content.position.y = this.contentBaseY + this.hover;
+  }
+
+  /** How far above its stance the figure floats now (ghosts hover and bob; others 0). */
+  get hover(): number {
+    if (!this.look.flying || this.downed || this.gone) return 0;
+    return HOVER_HEIGHT + hoverBob(this.clock, this.hoverPhase);
+  }
+
+  /** Time scale of the clip playing now (a slowed run while airborne). */
+  setClipSpeed(scale: number): void {
+    const m = this.model;
+    const clip = m?.current ? m.clips[m.current] : undefined;
+    if (m && clip) m.mixer.existingAction(clip)?.setEffectiveTimeScale(scale);
+  }
+
+  /** Squash (< 1) or stretch (> 1) of the body, keeping its volume. */
+  setSquash(s: number): void {
+    const side = 1 / Math.sqrt(Math.max(0.2, s));
+    this.body.scale.set(side, s, side);
   }
 
   placeAt(hex: Hex): void {
@@ -378,12 +408,12 @@ export class FigureView {
   /** Point above the head for the badge and floating numbers. */
   headPoint(out = new THREE.Vector3()): THREE.Vector3 {
     const lying = this.downed ? 0.45 : 1;
-    return out.copy(this.root.position).setY(this.root.position.y + PLATE_HEIGHT + this.height * lying + 0.18);
+    return out.copy(this.root.position).setY(this.root.position.y + this.body.position.y + this.hover + PLATE_HEIGHT + this.height * lying + 0.18);
   }
 
   /** Chest height: where projectiles hit. */
   chestPoint(out = new THREE.Vector3()): THREE.Vector3 {
-    return out.copy(this.root.position).setY(this.root.position.y + PLATE_HEIGHT + this.height * 0.6);
+    return out.copy(this.root.position).setY(this.root.position.y + this.body.position.y + this.hover + PLATE_HEIGHT + this.height * 0.6);
   }
 
   setOpacity(a: number): void {

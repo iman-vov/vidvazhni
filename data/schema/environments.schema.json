@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Environment",
+  "description": "What surrounds the playable hexes of a scenario location (src/render/environment). Piece ids are the kit ids in src/render/environment/pieces.ts.",
+  "definitions": {
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "edge": { "enum": ["stone", "tower", "timber", "forest", "shore", "cave"] },
+    "piece": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "weighted": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": [{ "$ref": "#/definitions/piece" }, { "type": "number", "exclusiveMinimum": 0 }],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "scenarios": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "edge": { "$ref": "#/definitions/edge" },
+    "rooms": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": { "edge": { "$ref": "#/definitions/edge" } },
+        "required": ["edge"],
+        "additionalProperties": false
+      }
+    },
+    "ground": {
+      "type": "object",
+      "properties": {
+        "texture": { "type": "string" },
+        "tint": { "$ref": "#/definitions/color" },
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "water": { "type": "number", "minimum": 0, "maximum": 1 },
+        "waterColor": { "$ref": "#/definitions/color" }
+      },
+      "required": ["tint"],
+      "additionalProperties": false
+    },
+    "hexTexture": { "type": "string" },
+    "walls": {
+      "type": "object",
+      "properties": {
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "low": { "type": "number", "exclusiveMinimum": 0 },
+        "alt": { "type": "integer", "minimum": 0 },
+        "inner": { "$ref": "#/definitions/color" }
+      },
+      "additionalProperties": false
+    },
+    "palette": { "type": "object", "additionalProperties": { "$ref": "#/definitions/color" } },
+    "light": {
+      "type": "object",
+      "properties": {
+        "sky": { "$ref": "#/definitions/color" },
+        "ground": { "$ref": "#/definitions/color" },
+        "hemi": { "type": "number", "minimum": 0 },
+        "sun": { "$ref": "#/definitions/color" },
+        "sunIntensity": { "type": "number", "minimum": 0 },
+        "env": { "type": "number", "minimum": 0 },
+        "point": {
+          "type": "object",
+          "properties": {
+            "color": { "$ref": "#/definitions/color" },
+            "intensity": { "type": "number", "minimum": 0 },
+            "distance": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "required": ["color", "intensity", "distance"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["sky", "ground", "hemi", "sun", "sunIntensity"],
+      "additionalProperties": false
+    },
+    "fog": {
+      "type": "object",
+      "properties": {
+        "color": { "$ref": "#/definitions/color" },
+        "glow": { "$ref": "#/definitions/color" },
+        "start": { "type": "number", "minimum": 0 },
+        "end": { "type": "number", "exclusiveMinimum": 0 },
+        "morok": { "$ref": "#/definitions/color" },
+        "morokOpacity": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["color", "start", "end", "morok", "morokOpacity"],
+      "additionalProperties": false
+    },
+    "entrance": { "oneOf": [{ "$ref": "#/definitions/piece" }, { "type": "null" }] },
+    "exit": { "oneOf": [{ "$ref": "#/definitions/piece" }, { "type": "null" }] },
+    "landmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": { "piece": { "$ref": "#/definitions/piece" }, "room": { "type": "string" } },
+        "required": ["piece", "room"],
+        "additionalProperties": false
+      }
+    },
+    "dressing": {
+      "type": "object",
+      "properties": {
+        "ring": { "$ref": "#/definitions/weighted" },
+        "outside": { "$ref": "#/definitions/weighted" },
+        "far": { "$ref": "#/definitions/weighted" },
+        "density": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["ring"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["id", "scenarios", "edge", "ground", "light", "fog", "dressing"],
+  "additionalProperties": false
+}

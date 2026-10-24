@@ -13,12 +13,14 @@ import { Animator, easeOut, linear } from './animator';
 import { planAnimation, TIMING, type AnimStep } from './animPlan';
 import { BoardCamera } from './boardCamera';
 import { BoardEffects, ELEMENT_COLORS } from './boardEffects';
+import { BoardEnvironment, type EnvironmentStats } from './environment';
 import { BoardOverlay, CONDITION_ICONS, FigureBadge, type OverlayItem } from './boardOverlay';
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
 import { createFigureParts, disposeFigureParts, FigureView } from './figureView';
 import { CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
+import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
@@ -48,6 +50,9 @@ export interface BoardViewDebug {
   freeze(on: boolean): void;
   /** Renders `frames` frames back to back (waiting for the GPU) and returns ms per frame. */
   benchmark(frames: number): number;
+  /** What the environment around the board is built of. */
+  environment(): EnvironmentStats;
+  readonly scene: THREE.Scene;
   /** Figures on the board with their model state. */
   figures(): { id: FigureId; model: string | null; clip: string | null; hex: Hex; visible: boolean }[];
 }
@@ -113,11 +118,12 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   let envTexture: THREE.Texture | null = null;
 
   const tiles = new TileLayer(quality);
+  const environment = new BoardEnvironment(quality);
   const anim = new Animator();
   anim.speed = opts.speed ?? 1;
   const effects = new BoardEffects(anim);
   const parts = createFigureParts();
-  scene.add(tiles.root, effects.root);
+  scene.add(environment.root, tiles.root, effects.root);
 
   // Highlights: hex fills and frames (instanced), path dots.
   const fillGeo = new THREE.CircleGeometry(0.86 * HEX_SIZE, 6, Math.PI / 6).rotateX(-Math.PI / 2);
@@ -203,6 +209,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       resize();
     }
     applyQuality();
+    environment.setQuality(q);
     if (state) tiles.setLook(q, state.scenarioId);
     for (const fv of figures.values()) void fv.loadModel(q, available, figureCastsShadow(fv));
     requestRender();
@@ -240,6 +247,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     anim.tick(dt);
     const animDt = dt * anim.speed;
     overlay.time += animDt;
+    environment.update(now / 1000);
     for (const fv of figures.values()) fv.update(animDt);
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     renderer.render(scene, camera.camera);
@@ -264,7 +272,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fpsFrames = 0;
       fpsStart = now;
     }
-    const busy = anim.busy || camera.animating || playing || overlay.hasTimed || now < settleUntil;
+    // Frozen (screenshots of a moment): hold the last frame; advance() still draws.
+    const busy = !frozen && (anim.busy || camera.animating || playing || overlay.hasTimed || now < settleUntil);
     if (busy) frame = requestAnimationFrame(renderFrame);
     else {
       lastTime = 0;
@@ -288,6 +297,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   resizeObserver.observe(root);
   resize();
   tiles.onChange = requestRender;
+  environment.onChange = requestRender;
+  tiles.obstacleFactory = (model) => environment.makeObstacle(model);
   const stopQuality = onGraphicsQualityChange((q) => setQuality(q));
 
   function updateBounds(animate = false): void {
@@ -295,7 +306,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (!b) return;
     camera.setBounds(b, animate);
     const c = b.getCenter(new THREE.Vector2());
-    const half = Math.max(b.max.x - b.min.x, b.max.y - b.min.y) / 2 + 2 * HEX_SIZE;
+    // Walls stand a hex ring outside the board: keep their shadows inside the shadow camera.
+    const half = Math.max(b.max.x - b.min.x, b.max.y - b.min.y) / 2 + 3 * HEX_SIZE;
     sun.target.position.set(c.x, 0, c.y);
     sun.position.set(c.x - 5, 12, c.y + 7);
     const cam = sun.shadow.camera;
@@ -394,6 +406,12 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   function syncNow(s: GameState, c: Content): void {
     state = s;
     content = c;
+    const scenario = c.scenarios[s.scenarioId];
+    if (scenario) {
+      environment.build(scenario, s.board.revealedRooms);
+      environment.applyLighting(scene, hemi, sun);
+      tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.hexTexture ?? null);
+    }
     tiles.setLook(quality, s.scenarioId);
     tiles.syncRooms(s, c);
     for (const id of tiles.revealed) tiles.setRoomRise(id, 1, null);
@@ -411,6 +429,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.body.position.set(0, 0, 0);
       fv.body.rotation.set(0, fv.body.rotation.y, 0);
       fv.root.scale.setScalar(1);
+      fv.setSquash(1);
       fv.setOpacity(1);
       fv.setFog(1);
       fv.setYaw(fv.yaw);
@@ -715,18 +734,85 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     settle();
   }
 
+  /** Puts a figure at a pose at (x, z), leaning toward `dir`. Only the body leaves the ground: the
+   *  painted base slides along underneath like the mini's shadow. */
+  function applyPose(fv: FigureView, p: MovePose, x: number, z: number, dirX: number, dirZ: number, squash = true): void {
+    fv.root.position.set(x, 0, z);
+    fv.body.position.y = p.y;
+    if (squash) fv.setSquash(p.squash);
+    const { pitch, roll } = leanAngles(p.lean, fv.body.rotation.y, dirX, dirZ);
+    fv.body.rotation.x = pitch;
+    fv.body.rotation.z = roll;
+  }
+
+  function endPose(fv: FigureView, hex: Hex): void {
+    fv.placeAt(hex);
+    fv.body.position.y = 0;
+    fv.setSquash(1);
+    fv.body.rotation.x = 0;
+    fv.body.rotation.z = 0;
+  }
+
+  /** The tallest thing a jump from a to b passes over (obstacles and figures between the ends). */
+  function clearanceAlong(id: FigureId, path: Hex[]): number {
+    const a = hexToWorld(path[0]![0], path[0]![1]);
+    const b = hexToWorld(path[path.length - 1]![0], path[path.length - 1]![1]);
+    const ends = new Set([hexKey(path[0]!), hexKey(path[path.length - 1]!)]);
+    const under = new Set<string>(path.slice(1, -1).map((h) => hexKey(h)));
+    for (let t = 0.1; t < 0.95; t += 0.1) under.add(hexKey(worldToHex(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)));
+    let top = 0;
+    for (const k of under) {
+      if (ends.has(k)) continue;
+      if (state?.board.tiles[k]?.obstacle) top = Math.max(top, 1.0);
+      for (const o of figures.values()) if (o.id !== id && o.root.visible && hexKey(o.hex) === k) top = Math.max(top, Math.min(1.2, o.height * 0.75));
+    }
+    return top;
+  }
+
   async function jump(id: FigureId, path: Hex[], fly: boolean, seconds: number): Promise<void> {
     const fv = figures.get(id);
     if (!fv || path.length < 2) return;
+    const last = path[path.length - 1]!;
     const a = hexToWorld(path[0]![0], path[0]![1]);
-    const b = hexToWorld(path[path.length - 1]![0], path[path.length - 1]![1]);
-    await turnTo(fv, Math.atan2(b.x - a.x, b.z - a.z), 0.12);
-    const lift = fly ? 0.8 : 0.7 + 0.12 * (path.length - 1);
+    const b = hexToWorld(last[0], last[1]);
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    await turnTo(fv, Math.atan2(dx, dz), 0.12);
+    const hexes = path.length - 1;
+    if (fly || fv.look.flying) {
+      // Glide: rise, float across with the hover bob going on, settle onto the new hex.
+      const height = (fv.look.flying ? 0.45 : 0.85) + 0.05 * Math.min(6, hexes);
+      if (!fv.look.flying && fv.playClip('walk', { crossFade: 0.2 })) fv.setClipSpeed(0.45);
+      await anim.tween(seconds, (k) => {
+        const p = flyPose(k, height);
+        applyPose(fv, p, a.x + dx * p.travel, a.z + dz * p.travel, dx, dz, false);
+      }, { ease: linear });
+      endPose(fv, last);
+      if (!fv.look.flying) fv.playClip('idle', { crossFade: 0.25 });
+      settle();
+      return;
+    }
+    // Jump: crouch, take off, arc over whatever is in the way, land with a squash and a puff of dust.
+    const clip = fv.hasClip('jump');
+    const height = jumpHeight(hexes, clearanceAlong(id, path)) * (clip ? 0.6 : 1);
+    if (clip) fv.playClip('jump', { seconds, crossFade: 0.1 });
+    let phase: 'crouch' | 'air' | 'land' = 'crouch';
     await anim.tween(seconds, (k) => {
-      fv.root.position.set(a.x + (b.x - a.x) * k, fly ? Math.sin(Math.min(1, k * 1.5) * Math.PI * 0.5) * lift * (1 - Math.max(0, k - 0.7) / 0.3) : Math.sin(k * Math.PI) * lift, a.z + (b.z - a.z) * k);
-    });
-    fv.root.position.y = 0;
-    fv.hex = path[path.length - 1]!;
+      const p = jumpPose(k, height);
+      applyPose(fv, p, a.x + dx * p.travel, a.z + dz * p.travel, dx, dz, !clip);
+      if (phase === 'crouch' && k >= JUMP_CROUCH) {
+        phase = 'air';
+        // No jump clip: a slowed stride while airborne reads as a leap rather than a hop in place.
+        if (!clip && fv.playClip(fv.hasClip('run') ? 'run' : 'walk', { crossFade: 0.08 })) fv.setClipSpeed(0.35);
+      } else if (phase === 'air' && k >= 1 - JUMP_LAND) {
+        phase = 'land';
+        fv.playClip('idle', { crossFade: 0.18 });
+        void effects.puff(new THREE.Vector3(b.x, PLATE_HEIGHT + 0.08, b.z), '#cdbb9e', { count: 6, size: 0.4, seconds: 0.55, rise: 0.15 });
+      }
+    }, { ease: linear });
+    endPose(fv, last);
+    if ((phase as string) !== 'land') fv.playClip('idle', { crossFade: 0.18 });
+    settle();
   }
 
   async function slide(id: FigureId, path: Hex[], seconds: number): Promise<void> {
@@ -734,21 +820,25 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (!fv || path.length < 2) return;
     const pts = path.map(([q, r]) => hexToWorld(q, r));
     const segs = pts.length - 1;
+    const dx = pts[segs]!.x - pts[0]!.x;
+    const dz = pts[segs]!.z - pts[0]!.z;
     fv.playClip('hit');
     await anim.tween(
       seconds,
       (k) => {
-        const t = Math.min(segs - 1e-6, k * segs);
+        // Shoved (or yanked) along the path: stumbling steps, the body thrown along and catching itself.
+        const p = slidePose(k, segs);
+        const t = Math.min(segs - 1e-6, p.travel * segs);
         const i = Math.floor(t);
         const u = t - i;
         const a = pts[i]!;
         const b = pts[i + 1]!;
-        fv.root.position.set(a.x + (b.x - a.x) * u, 0, a.z + (b.z - a.z) * u);
-        if (k >= 1) fv.root.position.set(pts[segs]!.x, 0, pts[segs]!.z);
+        applyPose(fv, p, a.x + (b.x - a.x) * u, a.z + (b.z - a.z) * u, dx, dz);
       },
-      { ease: easeOut },
+      { ease: linear },
     );
-    fv.hex = path[path.length - 1]!;
+    endPose(fv, path[path.length - 1]!);
+    void effects.puff(new THREE.Vector3(pts[segs]!.x, PLATE_HEIGHT + 0.06, pts[segs]!.z), '#cdbb9e', { count: 4, size: 0.32, seconds: 0.45, rise: 0.1 });
     settle();
   }
 
@@ -881,7 +971,15 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         for (const p of doors) if (p) tiles.setDoorOpen(p, true, true, k);
       });
     }
-    await anim.tween(TIMING.room - 0.35, (k) => tiles.setRoomRise(roomId, k, origin), { ease: linear });
+    await anim.tween(
+      TIMING.room - 0.35,
+      (k) => {
+        tiles.setRoomRise(roomId, k, origin);
+        environment.revealRoom(roomId, k);
+      },
+      { ease: linear },
+    );
+    environment.revealRoom(roomId, 1);
     tiles.setRoomRise(roomId, 1, origin);
   }
 
@@ -1124,6 +1222,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     for (const m of [fills, frames, dots]) m?.dispose();
     for (const x of [fillGeo, frameGeo, dotGeo, fillMat, frameMat, dotMat]) x.dispose();
     tiles.dispose();
+    environment.dispose();
     effects.dispose();
     disposeFigureParts(parts);
     envTexture?.dispose();
@@ -1170,6 +1269,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     },
     freeze(on: boolean) {
       frozen = on;
+      if (!on) requestRender();
     },
     benchmark(n: number) {
       const gl = renderer.getContext();
@@ -1180,6 +1280,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       }
       return (performance.now() - t0) / n;
     },
+    environment: () => environment.stats(),
+    scene,
     figures: () =>
       [...figures.values()].map((fv) => ({ id: fv.id, model: fv.model ? `${fv.model.id}@${fv.model.quality}` : null, clip: fv.model?.current ?? null, hex: fv.hex, visible: fv.root.visible })),
   };

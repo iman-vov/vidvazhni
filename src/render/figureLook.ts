@@ -102,6 +102,8 @@ export interface FigureLook {
   weapons: string[];
   projectile: ProjectileKind;
   attackYaw: number;
+  /** Flying monsters (ghosts) hover above their hex with a bob and fly instead of jumping. */
+  flying: boolean;
 }
 
 export function figureKind(f: Figure): FigureKind {
@@ -153,6 +155,7 @@ export function lookOf(f: Figure, content?: Content): FigureLook {
     weapons: WEAPONS[modelId] ?? [],
     projectile: PROJECTILE[modelId] ?? 'stone',
     attackYaw: ATTACK_YAW[modelId] ?? 0,
+    flying: f.kind === 'monster' && !!content?.monsters[f.typeId]?.[f.rank === 'normal' ? 'normal' : 'elite']?.flying,
   };
 }
 

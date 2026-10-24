@@ -1,0 +1,50 @@
+# Оточення дошки (`src/render/environment`)
+
+Навколо ігрових гексів будується місце: підлога, що тягнеться з-під дошки в туман локації, край мапи (стіни, хащі, очерет, скелі), проходи на вході й виході, пропси, світло й Морок. Усе зараз процедурне (заглушки), але кожна деталь має **kit id**, тож набір з Blender замінює її поштучно, нічого не змінюючи в коді розміщення.
+
+| Файл | Що робить |
+|---|---|
+| `data/environments/<id>.json` | локація: сценарії, стиль краю, підлога, палітра, світло, туман, пропси (схема `data/schema/environments.schema.json`) |
+| `layout.ts` | з мапи сценарію: footprint (усі кімнати), кільце негральних гексів навколо, контур кільця (краї, кути), вхід і вихід, «передні» краї між камерою й дошкою |
+| `plan.ts` | де стоїть кожна деталь: стіни або хащі по контуру, кути, проходи, пропси в кільці, дерева й силуети за краєм; нічого високого там, де воно закрило б гекс |
+| `pieces.ts` | процедурні деталі за kit id і їхні розміри |
+| `field.ts` | одна текстура над локацією: туман з відстанню (R), завіса над нерозкритими кімнатами (G), вода (B), затінення біля плит і стін (A) |
+| `morok.ts` | клуби Мороку (medium і high) |
+| `kit.ts` | заміна деталей GLB-файлами з `assets/environment/` |
+| `index.ts` | `BoardEnvironment`: збирає все, зливає геометрію за матеріалом (~10–20 викликів малювання), ставить світло |
+
+## Рівні якості
+
+| | low | medium | high |
+|---|---|---|---|
+| пропси (частка) | 40 % | 75 % | 100 % |
+| дрібні деталі (обручі бочок, колючки) | ні | так | так |
+| матеріали оточення | Lambert | Standard | Standard |
+| точкові світла (свічки, ліхтарі) | 0 | 2 | 4 |
+| клуби Мороку | 0 | ~14 + над нерозкритими кімнатами | ~30 + більше |
+| тіні від стін і пропсів | ні | ні | так |
+
+## Контракт арт-кіту
+
+Файл `assets/environment/<локація>/<kit id>.glb` (або `assets/environment/common/<kit id>.glb` для спільних) замінює процедурну деталь з тим самим id. Нічого реєструвати не треба: файл підхоплюється при збірці.
+
+- 1 одиниця = розмір гекса (від центру до кута); фігури ≈ 1,3, бочка ≈ 0,9.
+- Початок координат — внизу по центру; деталь «дивиться» на +Z (до дошки).
+- **Стіни** (`*-wall`, `*-arch`, `*-slit`, `*-window`, `*-wall-low`, `*-doorway`) йдуть уздовж X, довжина 1,06 (з напуском на кути), внутрішня грань на z = 0, тіло стіни позаду (−Z). Висота повної стіни — `walls.height` локації (1,5–1,9), низької «зрізаної» — `walls.low` (0,3–0,4).
+- **Кути** (`*-pillar`, `*-post`, `rock-pillar`) стоять на вершині контуру; кут між стінами 120° або 240°.
+- Матеріали з GLB зберігаються; туман і завіса додаються до них автоматично.
+- Бюджет: стіна ≤ 300 трикутників, проп ≤ 600, велика деталь (хатина, колесо) ≤ 2000; одна текстура-атлас 512 px на локацію (low) і 1024 (medium/high).
+
+### Деталі за локаціями
+
+| Локація | Край (стіни, кути, проходи) | Пропси в кільці й за краєм | Особливе |
+|---|---|---|---|
+| `cellar` (с. 1) | `stone-wall`, `stone-arch` (ніша зі свічкою), `stone-wall-low`, `stone-pillar`, `stone-pillar-low`, `stone-doorway` | `barrel`, `keg-rack`, `crate`, `crate-stack`, `sack`, `sacks`, `wine-rack`, `candles`, `shelf` | `stairs` нагору в корчму (вхід) |
+| `thorn-path` (с. 2) | `thicket`, `thicket-thorn`, `thicket-low`, `forest-gap` | `fern`, `mushrooms`, `rock`, `roots`, `bush`, `stump`, `log`, `tree`, `tree-green`, `pine`, `thorn-bush`, `tree-far` | `lantern-post` (вхід), `hut` лісничівка (вихід) |
+| `flooded-mill` (с. 3) | `reeds-bank`, `reeds-low`, `forest-gap`; зала млина: `timber-wall`, `timber-window`, `timber-wall-low`, `timber-post`, `timber-doorway` | `reeds`, `lilies`, `post`, `fence`, `rock`, `sacks`, `log`, `tree-green`, `tree-far` | `mill-wheel` біля зали, `lantern-post` |
+| `watchtower` (с. 4) | `tower-wall`, `tower-slit`, `tower-wall-low`, `tower-pillar`, `tower-pillar-low`, `tower-doorway` | `crate`, `barrel`, `banner`, `torch`, `rubble`, `weapon-rack`, `sacks`, `crate-stack` | — |
+| `gloom-heart` (с. 5) | `rock-wall`, `rock-wall-crystal`, `rock-low`, `rock-pillar`, `rock-pillar-low`, `cave-mouth` | `stalagmite`, `rock`, `crystals`, `glow-mushrooms`, `stalagmite-big` | — |
+
+Перешкоди й об'єкти на гексах без власної моделі теж беруться звідси: `obstacle-tree`, `boulder`, `pillar`, `bunk`, `table`, `hut` (зменшена), `brazier` / `brazier-lit`, `lever` / `lever-down`, `millstone`.
+
+Підлогу задає текстура `ground.texture` (з `assets/textures/`); для готового кіту краще окрема текстура підлоги локації, темніша й спокійніша за гекси.

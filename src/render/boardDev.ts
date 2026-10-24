@@ -8,6 +8,8 @@
 //   &quality=low|medium|high                    graphics quality (default: device)
 //   &speed=2                                    animation speed
 //   &play=1                                     start the script at once
+//   ?board=s1…s5                                any scenario map with its environment, every room
+//                                               revealed (&reveal=0 keeps the start room only)
 
 import { createGame, apply } from '../rules/engine';
 import type { ConditionId, ElementId, OrbId } from '../rules/content';
@@ -34,7 +36,7 @@ const content = loadContent();
 const heroes = (params.get('heroes') ?? 'warden,wind-archer,herbalist,rogue').split(',').filter((id) => content.heroes[id]);
 const fork = params.get('fork') === '1';
 const setup = {
-  scenarioId: 's1',
+  scenarioId: content.scenarios[params.get('board') ?? ''] ? params.get('board')! : 's1',
   seed: Number(params.get('seed') ?? 7),
   heroes: heroes.map((classId, i) => ({ classId, playerId: `p${i + 1}`, level: 1 })),
   difficulty: 'normal' as const,
@@ -42,8 +44,22 @@ const setup = {
 };
 let quality: GraphicsQuality = GRAPHICS_QUALITIES.find((q) => q === params.get('quality')) ?? getGraphicsQuality();
 
+const revealAll = params.has('board') && params.get('reveal') !== '0';
+
+/** A new game; with ?board= every room is revealed, so the whole location can be looked at. */
+function freshGame(): GameState {
+  const s = createGame(setup, content);
+  if (!revealAll) return s;
+  const scenario = content.scenarios[s.scenarioId]!;
+  for (const room of scenario.rooms) {
+    if (s.board.revealedRooms.includes(room.id)) continue;
+    revealRoom({ s, c: content, ev: [], out: [] } as Ctx, scenario, room.id);
+  }
+  return s;
+}
+
 const board = createBoardView(view, { quality, speed: Number(params.get('speed') ?? 1), lang: 'uk' });
-let state: GameState = createGame(setup, content);
+let state: GameState = freshGame();
 board.sync(state, content);
 
 // ─── Scripted events ─────────────────────────────────────────────────────
@@ -321,6 +337,74 @@ const BEATS: { name: string; run: (s: GameState) => Beat }[] = [
   },
 ];
 
+// ─── Movement demo (any board): jump over something, a flight, a push ──────
+
+function freeHex(s: GameState, h: Hex): boolean {
+  const t = s.board.tiles[hexKey(h)];
+  return !!t && !t.obstacle && !Object.values(s.figures).some((f) => f.hex[0] === h[0] && f.hex[1] === h[1]);
+}
+
+function blocked(s: GameState, h: Hex): boolean {
+  const t = s.board.tiles[hexKey(h)];
+  return !!t && (!!t.obstacle || Object.values(s.figures).some((f) => f.hex[0] === h[0] && f.hex[1] === h[1]));
+}
+
+/** Beats that show a jump (over an obstacle or a figure when there is one), a flight and a push. */
+function moveBeats(s0: GameState): Beat[] {
+  const beats: Beat[] = [];
+  let s = s0;
+  const hero = Object.values(s.figures).find((f) => f.kind === 'hero');
+  if (hero) {
+    const options = hexesInRadius(hero.hex, 3).filter((h) => distance(h, hero.hex) >= 2 && freeHex(s, h) && !s.board.tiles[hexKey(h)]!.door && s.board.revealedRooms.includes(s.board.tiles[hexKey(h)]!.room));
+    const over = options.find((h) => lineTo(hero.hex, h).slice(0, -1).some((m) => blocked(s, m))) ?? options[0];
+    if (over) {
+      const b = new Beat(s).turn(hero.id).move(hero.id, lineTo(hero.hex, over), { jump: true });
+      beats.push(b);
+      s = b.s;
+    }
+  }
+  const flyer = Object.values(s.figures).find((f) => f.kind === 'monster' && content.monsters[f.typeId]?.normal.flying) ?? Object.values(s.figures).filter((f) => f.kind === 'hero')[1];
+  if (flyer) {
+    const to = hexesInRadius(flyer.hex, 3).find((h) => distance(h, flyer.hex) === 3 && freeHex(s, h));
+    if (to) {
+      const b = new Beat(s).turn(flyer.id).move(flyer.id, lineTo(flyer.hex, to), { fly: true });
+      beats.push(b);
+      s = b.s;
+    }
+  }
+  const actor = Object.values(s.figures).find((f) => f.kind === 'hero');
+  const victim = actor && Object.values(s.figures).filter((f) => f.kind === 'monster').sort((a, b) => distance(a.hex, actor.hex) - distance(b.hex, actor.hex))[0];
+  if (actor && victim) {
+    // Away from the hero, two hexes if free.
+    const dq = Math.sign(victim.hex[0] - actor.hex[0]);
+    const dr = Math.sign(victim.hex[1] - actor.hex[1]);
+    const path: Hex[] = [];
+    let at: Hex = victim.hex;
+    for (let i = 0; i < 2; i++) {
+      const next: Hex = [at[0] + dq, at[1] + (dq && dr && dq === dr ? 0 : dr)];
+      if (!freeHex(s, next)) break;
+      path.push(next);
+      at = next;
+    }
+    if (path.length) {
+      const b = new Beat(s).turn(actor.id).attack(actor.id, victim.id, 1, '+0', 0).push(victim.id, path);
+      beats.push(b);
+    }
+  }
+  return beats;
+}
+
+async function playMoves(): Promise<void> {
+  if (busy) return;
+  busy = true;
+  for (const b of moveBeats(state)) {
+    current = b.ev.find((e) => e.type === 'moved' || e.type === 'pushed')?.type ?? 'рух';
+    state = b.s;
+    await board.play(b.ev, b.s, content);
+  }
+  busy = false;
+}
+
 let beatIndex = 0;
 let busy = false;
 
@@ -432,6 +516,7 @@ button('Сценарій', () => void playAll(), 'right');
 button('Крок', () => {
   if (!busy) void playBeat();
 });
+button('Рухи', () => void playMoves());
 button('Пропустити', () => board.skip(), 'skip');
 const speedButton = button(`${board.speed}×`, () => {
   board.setSpeed(board.speed === 1 ? 2 : 1);
@@ -459,7 +544,7 @@ button('Скинути', () => {
   board.skip();
   botOn = false;
   beatIndex = 0;
-  state = createGame(setup, content);
+  state = freshGame();
   board.sync(state, content);
   current = 'готово';
 }, 'undo');
@@ -474,13 +559,18 @@ setInterval(() => {
   if (st.fps > 0) maxFps = st.fps;
   info.textContent =
     `${current}  |  ${st.quality}, ${board.speed}×  |  fps ${st.fps || '—'} (last ${maxFps})  calls ${st.calls}  tris ${st.triangles}\n` +
-    `раунд ${state.round}, фаза ${state.phase}  |  ${lastTap}`;
+    `раунд ${state.round}, фаза ${state.phase}  |  ${lastTap}  |  env ${envLine()}`;
 }, 250);
+
+function envLine(): string {
+  const e = board.environment();
+  return `${e.id}: ${e.pieces} pieces, ${e.meshes} meshes, ${e.lights} lights, ${e.wisps} wisps`;
+}
 
 /** For screenshots: jumps to the start of beat `n` without animation, then plays it for `t` seconds. */
 async function seek(n: number, t: number, focusOn?: string): Promise<string> {
   board.skip();
-  state = createGame(setup, content);
+  state = freshGame();
   board.sync(state, content);
   for (let i = 0; i < n && i < BEATS.length; i++) {
     state = BEATS[i]!.run(state).s;
@@ -509,5 +599,5 @@ async function modelsReady(timeoutMs = 8000): Promise<void> {
   }
 }
 
-Object.assign(window, { board, devBoard: { get state() { return state; }, content, playAll, playBeat, seek, modelsReady, BEATS } });
+Object.assign(window, { board, devBoard: { get state() { return state; }, content, playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
 if (params.get('play') === '1') void playAll();
