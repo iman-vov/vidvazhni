@@ -12,3 +12,6 @@ dist-play/
 
 # headless Chrome profile used for renders
 art/.chrome-render-profile/
+
+# Raw audio downloads (CC0 packs): kept locally, not in git
+art/audio-source/
