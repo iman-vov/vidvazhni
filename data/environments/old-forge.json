@@ -1,0 +1,53 @@
+{
+  "id": "old-forge",
+  "scenarios": ["s10"],
+  "edge": "forge",
+  "surface": "worn-stone",
+  "boundary": "walls",
+  "ground": { "texture": "cobblestone", "tint": "#4a3a32", "scale": 2.4 },
+  "walls": { "height": 1.9, "low": 0.34, "alt": 3, "inner": "#4a3c36", "sconce": { "piece": "wall-torch", "every": 4 } },
+  "palette": { "stone": "#6a5a50", "stoneDark": "#3e3430", "stoneLight": "#7a6a5e", "rock": "#5a4c44", "rockDark": "#2a2420", "iron": "#3c3c42", "wood": "#6a4a30", "woodDark": "#3e2a1c", "ember": "#ff6a20", "banner": "#4a2a5e", "crystal": "#9a62e0", "glowCold": "#b080ff", "ore": "#b8743a", "bottle": "#1c2a2e" },
+  "light": {
+    "sky": "#6a5a6a",
+    "ground": "#1a100a",
+    "hemi": 0.45,
+    "sun": "#b0a0b8",
+    "sunIntensity": 0.8,
+    "env": 0.35,
+    "point": { "color": "#ff7a2a", "intensity": 9, "distance": 7 }
+  },
+  "fog": { "color": "#120a06", "glow": "#3a1a0a", "start": 2.0, "end": 7, "morok": "#a89cb0", "morokOpacity": 0.35 },
+  "weather": { "kind": "sparks", "count": 600, "color": "#ff8a30", "wind": [0.1, -0.05] },
+  "entrance": null,
+  "propModels": {
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "cage": { "model": "prisoner-cage", "height": 1.1 },
+    "totem": { "model": "tribal-totem", "height": 1.5 },
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
+    "barrel": { "model": "barrel", "height": 0.85 },
+    "crate": { "model": "crate", "height": 0.6 },
+    "crate-stack": { "model": "crate-stack", "height": 1.05 },
+    "forge": { "model": "forge", "height": 1.9 },
+    "dark-lantern": { "model": "dark-lantern", "height": 1.15 },
+    "anvil": { "model": "anvil", "height": 0.6 },
+    "ore-pile": { "model": "ore-pile", "height": 0.45 },
+    "chain-hoist": { "model": "chain-hoist", "height": 1.8 }
+  },
+  "obstacles": { "rubble": ["rubble-heap", "coal-pile", "rubble-heap"], "barrel": ["barrel", "quench-trough"], "crate-stack": ["crate-stack", "anvil"] },
+  "dressing": {
+    "anchors": [["chain-hoist", 2], ["anvil", 1]],
+    "sets": [
+      { "weight": 2, "items": [{ "piece": "anvil", "x": 0, "z": 0.1 }, { "piece": "quench-trough", "x": 0.75, "z": 0.1, "align": true }, { "piece": "coal-pile", "x": -0.6, "z": 0.25 }] },
+      { "weight": 2, "items": [{ "piece": "coal-pile", "x": 0, "z": 0.05 }, { "piece": "ore-pile", "x": 0.6, "z": 0.2 }, { "piece": "barrel", "x": -0.55, "z": 0.1 }] },
+      { "weight": 1, "items": [{ "piece": "weapon-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "anvil", "x": 0.72, "z": 0.2 }] },
+      { "weight": 1, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "crate", "x": 0.03, "z": 0.02, "on": 0 }, { "piece": "crate", "x": 0.62, "z": 0.12 }, { "piece": "rubble", "x": -0.56, "z": 0.36 }] },
+      { "weight": 1, "items": [{ "piece": "rubble-heap", "x": 0, "z": 0.05 }, { "piece": "timber-stack", "x": 0.75, "z": 0.1, "align": true }] }
+    ],
+    "ring": [["coal-pile", 3], ["anvil", 2], ["ore-pile", 2], ["quench-trough", 1], ["chain-hoist", 1], ["rubble-heap", 2], ["barrel", 1], ["crate-stack", 1], ["weapon-rack", 1]],
+    "density": 0.65
+  }
+}

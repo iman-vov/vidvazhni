@@ -11,16 +11,20 @@ import { planEnvironment, STYLE_PIECES } from '../../src/render/environment/plan
 import { hexToWorld } from '../../src/render/hexLayout';
 import { straightRuns } from '../../src/render/environment/walls';
 import { assignObstacleLooks, scenarioPartitions } from '../../src/render/environment';
+import type { ScenarioDef } from '../../src/rules/content';
+import { ACT2 } from '../data/act2';
 
-const content = loadContent();
-const SCENARIOS = ['s1', 's2', 's3', 's4', 's5'];
+// Act II (s6–s10) is not in loadContent() yet: its maps are read from disk.
+const loaded = loadContent();
+const content = { ...loaded, scenarios: { ...loaded.scenarios, ...Object.fromEntries(ACT2.map((id) => [id, JSON.parse(readFileSync(`data/scenarios/${id}.json`, 'utf8')) as ScenarioDef])) } };
+const SCENARIOS = ['s1', 's2', 's3', 's4', 's5', ...ACT2];
 
 describe('environment data', () => {
   it('every file matches the schema and every scenario has its own location', () => {
     const ajv = new Ajv({ allErrors: true, strict: false });
     const validate = ajv.compile(JSON.parse(readFileSync('data/schema/environments.schema.json', 'utf8')));
     for (const env of ENVIRONMENTS) expect(validate(env), `${env.id}: ${JSON.stringify(validate.errors?.slice(0, 3))}`).toBe(true);
-    for (const id of SCENARIOS) expect(environmentFor(id).id).not.toBe('default');
+    for (const id of SCENARIOS) expect(environmentFor(id).id, id).not.toBe("default");
   });
 
   it('names only pieces that exist', () => {
