@@ -20,14 +20,14 @@ import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } 
 import type { ColorGrade } from '../post';
 import type { GraphicsQuality } from '../quality';
 import { environmentFor } from './data';
-import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
+import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, sampleField, writeVeil, type EnvUniforms, type Field } from './field';
 import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam, type Weather } from './ambient';
 import { atmosphereFor } from './atmosphere';
 import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
-import { patchWater, setWaterLook, SPIN, Spinner, tickLife } from './life';
+import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SPIN, Spinner, swayFor, tickLife, type SwaySpec } from './life';
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
@@ -115,6 +115,11 @@ export class BoardEnvironment {
   private atmosphere: AtmosphereBuild | null = null;
   /** Modelled parts that turn (the mill wheel). */
   private spinners: Spinner[] = [];
+  /** Fireflies and falling leaves (life.ts). */
+  private life: Life | null = null;
+  /** Materials bending in the wind, by base material and sway; the set marks them as built. */
+  private swayMats = new Map<string, THREE.Material>();
+  private swayed = new Set<THREE.Material>();
   /** Unlit flame and glow materials with their base colour (they flicker with the lights). */
   private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
@@ -308,7 +313,8 @@ export class BoardEnvironment {
       for (const g of list) g.dispose();
       if (!merged) continue;
       owned.push(merged);
-      const mesh = new THREE.Mesh(merged, this.material(key));
+      const sway = swayFor(piece, key);
+      const mesh = new THREE.Mesh(merged, sway ? this.swayMaterial(key, sway) : this.material(key));
       mesh.receiveShadow = true;
       mesh.castShadow = QUALITY[this.quality].shadows;
       group.add(mesh);
@@ -376,6 +382,7 @@ export class BoardEnvironment {
   update(time: number): void {
     const life = tickLife(time);
     for (const s of this.spinners) s.update(life);
+    this.life?.update(life);
     if (this.morok) this.morok.uniforms.uTime.value = time;
     this.ambient?.update(time);
     this.atmosphere?.update(time);
@@ -390,7 +397,7 @@ export class BoardEnvironment {
 
   /** Whether anything animates over time (the board may keep drawing slowly for it). */
   get animated(): boolean {
-    return !!this.morok || this.lights.length > 0 || !!this.ambient || this.spinners.length > 0;
+    return !!this.morok || this.lights.length > 0 || !!this.ambient || this.spinners.length > 0 || !!this.life;
   }
 
   stats(): EnvironmentStats {
@@ -429,6 +436,9 @@ export class BoardEnvironment {
     this.ambient = null;
     this.atmosphere = null;
     this.spinners = [];
+    this.life = null;
+    this.swayMats.clear();
+    this.swayed.clear();
     this.flicker = [];
     this.lights = [];
   }
@@ -467,6 +477,7 @@ export class BoardEnvironment {
       this.disposables.push(this.morok);
     }
     this.buildAmbient();
+    this.buildLife();
     this.onChange();
   }
 
@@ -616,8 +627,11 @@ export class BoardEnvironment {
         g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
         if (!g.getAttribute('uv')) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(pos.count * 2), 2));
-        let list = groups.get(part.material);
-        if (!list) groups.set(part.material, (list = []));
+        // Reeds, grass and banners bend in the wind: their parts go to a swaying material.
+        const sway = swayFor(p.piece, part.material);
+        const key = sway ? this.swayMaterial(part.material, sway) : part.material;
+        let list = groups.get(key);
+        if (!list) groups.set(key, (list = []));
         list.push(g);
       }
     }
@@ -626,7 +640,7 @@ export class BoardEnvironment {
       const merged = mergeGeometries(list, false);
       for (const g of list) g.dispose();
       if (!merged) continue;
-      const mesh = new THREE.Mesh(merged, this.material(key));
+      const mesh = new THREE.Mesh(merged, typeof key !== 'string' && this.swayed.has(key) ? key : this.material(key));
       mesh.name = `env:${typeof key === 'string' ? key : key.name || 'kit'}`;
       const lit = typeof key !== 'string' || !UNLIT.has(key);
       mesh.castShadow = shadows && lit;
@@ -636,6 +650,21 @@ export class BoardEnvironment {
     }
     this.buildModelled(modelled, shadows);
     this.buildBlobs(blobs);
+  }
+
+  /** A material bending in the wind (life.ts) for the swaying parts of plants and banners. */
+  private swayMaterial(key: MaterialKey | THREE.Material, spec: SwaySpec): THREE.Material {
+    const id = `${typeof key === 'string' ? key : key.uuid}|${spec.amp}|${spec.cloth ? 1 : 0}`;
+    let m = this.swayMats.get(id);
+    if (!m) {
+      m = this.material(key).clone();
+      patchMaterial(m, this.uniforms, 'prop');
+      patchSway(m, spec);
+      this.swayMats.set(id, m);
+      this.swayed.add(m);
+      this.disposables.push(m);
+    }
+    return m;
   }
 
   /** Prop models drawn instanced: one draw call per mesh of each model, wherever it stands. */
@@ -830,6 +859,30 @@ export class BoardEnvironment {
     this.ambient = ambient;
     this.root.add(ambient.root);
     this.disposables.push(ambient);
+  }
+
+  /** Fireflies over the marsh (over the water, out of the fog) and leaves falling on the forest
+   *  path, by location and quality (life.ts). */
+  private buildLife(): void {
+    const layout = this.layout!;
+    const n = lifeCounts(this.def?.id, this.quality);
+    if (!n.fireflies && !n.leaves) return;
+    const min = new THREE.Vector2(layout.min.x - 3, layout.min.z - 3);
+    const max = new THREE.Vector2(layout.max.x + 3, layout.max.z + 3);
+    const field = this.field;
+    const accept = (x: number, z: number): number => {
+      if (!field) return 1;
+      const clear = 1 - sampleField(field, x, z, 0);
+      return field.hasWater ? clear * (0.2 + 0.8 * sampleField(field, x, z, 2)) : clear;
+    };
+    const life = new Life({
+      fireflies: n.fireflies ? fireflySpots(n.fireflies, { min, max }, accept) : [],
+      leaves: n.leaves ? { min: min.clone().addScalar(1), max: max.clone().subScalar(1), count: n.leaves } : null,
+    });
+    if (life.empty) return;
+    this.life = life;
+    this.root.add(life.root);
+    this.disposables.push(life);
   }
 
   private applyVeil(): void {
