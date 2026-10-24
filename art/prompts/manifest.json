@@ -1853,6 +1853,33 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "env-flooded-mill",
+      "nameUk": "Набір оточення: затоплений млин",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 50,
+      "wave": 5,
+      "scenarios": [
+        3
+      ],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/flooded-mill.blend",
+      "modelFile": "assets/models/env-flooded-mill/env-flooded-mill.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 16000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }
