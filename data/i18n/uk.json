@@ -926,5 +926,21 @@
   "game.react.text": "Ще до карти модифікатора можна застосувати предмет.",
   "game.react.pass": "Без предмета",
   "game.react.shield": "{item}: щит {shield}, шкода {damage} {icon:arrow} {reduced}",
-  "game.react.disadvantage": "{item}: атака з вадою"
+  "game.react.disadvantage": "{item}: атака з вадою",
+  "settings.rules": "Правила (для досвідчених)",
+  "settings.rules.text": "Основний набір — форк. Тут можна повернутися до правил настільної гри або вимкнути окремі механіки. Діє на нові ігри.",
+  "menu.rules.where": "Змінити можна в налаштуваннях, розділ «Правила».",
+  "menu.rules.customCount": "свої ({n} з {of})",
+  "game.obstacle.attack": "Розбити перешкоду",
+  "game.obstacle.move": "Відсунути перешкоду",
+  "game.monster.nothing": "нічого не робить",
+  "game.monster.immobilized": "Рух 0 (знерухомлений)",
+  "game.monster.disarmed": "без атаки (обеззброєний)",
+  "game.monster.advantage": "атака з перевагою",
+  "game.monster.disadvantage": "атака з вадою",
+  "game.monster.raw": "Числа на самій карті поведінки",
+  "game.monster.base": "основа",
+  "game.monster.goesFor": "Іде на: {name}",
+  "game.monster.noFocus": "Нікого не досягає",
+  "game.monster.steps": "кроків: {n}"
 }

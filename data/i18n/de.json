@@ -926,5 +926,21 @@
   "game.react.text": "Noch vor der Modifikatorkarte kannst du einen Gegenstand benutzen.",
   "game.react.pass": "Ohne Gegenstand",
   "game.react.shield": "{item}: Schild {shield}, Schaden {damage} {icon:arrow} {reduced}",
-  "game.react.disadvantage": "{item}: Angriff mit Nachteil"
+  "game.react.disadvantage": "{item}: Angriff mit Nachteil",
+  "settings.rules": "Regeln (für Erfahrene)",
+  "settings.rules.text": "Der Hauptsatz ist der Fork. Hier kannst du zu den Brettspielregeln zurück oder einzelne Mechaniken abschalten. Gilt für neue Spiele.",
+  "menu.rules.where": "Ändern in den Einstellungen, Abschnitt „Regeln“.",
+  "menu.rules.customCount": "eigene ({n} von {of})",
+  "game.obstacle.attack": "Hindernis zerschlagen",
+  "game.obstacle.move": "Hindernis wegschieben",
+  "game.monster.nothing": "tut nichts",
+  "game.monster.immobilized": "Bewegung 0 (bewegungsunfähig)",
+  "game.monster.disarmed": "kein Angriff (entwaffnet)",
+  "game.monster.advantage": "Angriff mit Vorteil",
+  "game.monster.disadvantage": "Angriff mit Nachteil",
+  "game.monster.raw": "Zahlen auf der Verhaltenskarte selbst",
+  "game.monster.base": "Grundwerte",
+  "game.monster.goesFor": "Geht auf: {name}",
+  "game.monster.noFocus": "Erreicht niemanden",
+  "game.monster.steps": "Schritte: {n}"
 }

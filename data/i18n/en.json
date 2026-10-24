@@ -926,5 +926,21 @@
   "game.react.text": "Before the modifier card is drawn, you can still use an item.",
   "game.react.pass": "No item",
   "game.react.shield": "{item}: shield {shield}, damage {damage} {icon:arrow} {reduced}",
-  "game.react.disadvantage": "{item}: attack with disadvantage"
+  "game.react.disadvantage": "{item}: attack with disadvantage",
+  "settings.rules": "Rules (advanced)",
+  "settings.rules.text": "The main set is the fork. Here you can go back to the board game rules or switch single mechanics off. Applies to new games.",
+  "menu.rules.where": "Change it in Settings, section “Rules”.",
+  "menu.rules.customCount": "custom ({n} of {of})",
+  "game.obstacle.attack": "Break the obstacle",
+  "game.obstacle.move": "Push the obstacle aside",
+  "game.monster.nothing": "does nothing",
+  "game.monster.immobilized": "Move 0 (immobilized)",
+  "game.monster.disarmed": "no attack (disarmed)",
+  "game.monster.advantage": "attack with advantage",
+  "game.monster.disadvantage": "attack with disadvantage",
+  "game.monster.raw": "Numbers printed on the behaviour card",
+  "game.monster.base": "base",
+  "game.monster.goesFor": "Goes for: {name}",
+  "game.monster.noFocus": "Reaches no one",
+  "game.monster.steps": "steps: {n}"
 }
