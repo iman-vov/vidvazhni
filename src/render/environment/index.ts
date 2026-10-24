@@ -24,7 +24,7 @@ import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
 import { Morok } from './morok';
-import { partitions, type Partition } from './walls';
+import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
@@ -826,7 +826,10 @@ export function scenarioPartitions(layout: EnvLayout, scenario: ScenarioDef): Pa
   const walls = scenario.rooms.flatMap((room) =>
     (room.walls ?? []).map(([a, b]) => ({ a, b, rooms: [...new Set([room.id, layout.footprint.get(hexKey(a)), layout.footprint.get(hexKey(b))].filter((r): r is string => !!r))] })),
   );
-  return partitions(layout, walls, (q, r) => hexToWorld(q, r), (x, z) => hexKey(worldToHex(x, z)), HEX_SIZE);
+  const centre = (q: number, r: number) => hexToWorld(q, r);
+  const at = (x: number, z: number) => hexKey(worldToHex(x, z));
+  const doors = scenario.rooms.flatMap((room) => (room.doors ?? []).map((d) => ({ hex: d.hex, room: room.id, to: d.to })));
+  return [...partitions(layout, walls, centre, at, HEX_SIZE), ...gapPartitions(layout, doors, centre, at, HEX_SIZE)];
 }
 
 /**

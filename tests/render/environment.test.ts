@@ -157,6 +157,12 @@ describe('partitions between rooms', () => {
         }
       }
       // s1: the door splits the wall in two; each half runs from the doorway to a side wall.
+      // s4: straight walls across the hex rows, down the strips the map leaves out, split by the doors.
+      if (id === 's4') {
+        expect(parts).toHaveLength(4);
+        for (const p of parts) expect(p.points).toHaveLength(2);
+        expect(parts.filter((p) => p.door).length).toBe(4);
+      }
       if (id === 's1') expect(parts.map((p) => Number(p.extended[0]) + Number(p.extended[1]))).toEqual([1, 1]);
     });
   }

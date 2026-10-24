@@ -823,7 +823,10 @@ export class TileLayer {
     const object = new THREE.Group();
     const holder = new THREE.Group();
     // Stand the door on the hex edge it leads through: local X along the edge, +Z into the next room.
-    holder.position.set(dir.x * 0.62, 0, dir.z * 0.62);
+    // A doorway in a wall that runs through the door hex stands in its middle, on the wall's line.
+    const inWall = (this.partitionLines?.() ?? []).some((p) => p.door === k);
+    const edge = inWall ? 0 : 0.62;
+    holder.position.set(dir.x * edge, 0, dir.z * edge);
     holder.rotation.y = Math.atan2(dir.x, dir.z);
     object.add(holder);
     const p: PropView = { key: `${k}:door`, object, room: tile.room, doorKind: kind, open: false };
