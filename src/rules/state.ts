@@ -490,6 +490,8 @@ export type GameEvent =
   /** `collect` goal: a hero ended its turn in the goal zone and handed over `count` objects. */
   | { type: 'itemsDelivered'; heroId: FigureId; item: string; count: number; total: number }
   | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
+  /** A boss's health fell to half or below (no rules effect; story beats listen to it). */
+  | { type: 'bossHalfHp'; figureId: FigureId }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }
   /** A scenario event's story line (i18n key). */

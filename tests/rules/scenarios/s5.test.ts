@@ -175,6 +175,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     takeDamage(ctx, m, 1, 'test');
     expect(m.bossPhase).toBe(2);
     expect(eventsOf(ctx.ev, 'bossPhaseChanged')).toEqual([{ type: 'bossPhaseChanged', figureId: m.id, phase: 2 }]);
+    expect(eventsOf(ctx.ev, 'bossHalfHp')).toEqual([{ type: 'bossHalfHp', figureId: m.id }]);
     expect(monsterStats(ctx, m).attack).toBe(4);
     healFigure(ctx, m, 10);
     expect(m.hp).toBe(20);

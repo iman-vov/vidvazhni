@@ -93,9 +93,12 @@ export function resolveAvoidDamage(
 export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string): void {
   if (amount <= 0) return;
   const dealt = Math.min(amount, f.hp);
+  const above = f.hp * 2 > f.maxHp;
   f.hp -= dealt;
   emit(ctx, { type: 'damaged', figureId: f.id, amount: dealt, source });
   if (f.hp > 0) {
+    // Story beats only: a boss crossing half health (again after a heal), for every boss.
+    if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) emit(ctx, { type: 'bossHalfHp', figureId: f.id });
     if (f.kind === 'monster') checkBossPhase(ctx, f);
     return;
   }
