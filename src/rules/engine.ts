@@ -11,6 +11,7 @@ import type { Action, ApplyResult, GameSetup, GameState } from './state';
 import { endTurn, interact, resolveStep, reviveAlly, run, skipStep, startHalf, surge } from './turn';
 import { resolveFadeOut } from './special/fadeOut';
 import { passReaction, useItem } from './items';
+import { coverAlly, dodge } from './defense';
 
 /** Builds the initial state: start room revealed, monsters spawned, decks shuffled with the seed,
  *  phase `selectCards` (or `chooseHandBeforeScenario` when a hand is smaller than the deck). */
@@ -72,6 +73,10 @@ function dispatch(ctx: Ctx, action: Exclude<Action, { type: 'undo' }>): string |
       if (p?.kind !== 'avoidDamage' || p.heroId !== action.heroId) return 'no damage to avoid';
       return resolveAvoidDamage(ctx, action.heroId, action.choice);
     }
+    case 'dodge':
+      return dodge(ctx, action.heroId, action.pay, action.itemId);
+    case 'coverAlly':
+      return coverAlly(ctx, action.heroId, action.targetId);
     case 'surge':
       return surge(ctx, action.heroId);
     case 'reviveAlly':

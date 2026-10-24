@@ -99,6 +99,8 @@ export interface HeroState extends FigureBase {
   surgeGrants?: SurgeGrant[];
   /** Item «Шкіряний шолом»: the next attack against this hero this round has disadvantage. */
   attackedDisadvantage?: boolean;
+  /** «Прикрий друга»: the hero already took a hit for an ally this round. */
+  coverUsed?: boolean;
 }
 
 /** One carried item: `ready` can be used, `spent` comes back with a long rest, `lost` is gone
@@ -343,7 +345,12 @@ export type EngineTask =
       source: string;
       avoidable: boolean;
       conditions?: ConditionId[];
-      attack?: { value: number; shield: number; pierce: number };
+      /** `halved`: a half dodge («Ухилитися» 4–7) halves the damage after the shield. */
+      attack?: { value: number; shield: number; pierce: number; halved?: boolean };
+      /** «Ухилитися» was rolled against this attack. */
+      dodged?: boolean;
+      /** «Прикрий друга»: an ally took this attack (now `targetId`). */
+      covered?: boolean;
     }
   | { t: 'stepDone' }
   | { t: 'endRound' }
@@ -381,6 +388,11 @@ export type Action =
   | { type: 'shortRest'; heroId: FigureId; rest: boolean }
   | { type: 'shortRestReroll'; heroId: FigureId; reroll: boolean }
   | { type: 'avoidDamage'; heroId: FigureId; choice: { kind: 'take' } | { kind: 'loseHand'; cardId: CardId } | { kind: 'loseDiscard'; cardIds: [CardId, CardId] } }
+  /** «Ухилитися» (damage window of an attack): pay a hand card to the discard or 1 Наснага charge and
+   *  roll a d12; `itemId` = a dice item (Зілля удачі, Щаслива кістка) for the best of more rolls. */
+  | { type: 'dodge'; heroId: FigureId; pay: { kind: 'card'; cardId: CardId } | { kind: 'momentum' }; itemId?: string }
+  /** «Прикрий друга»: `heroId` (adjacent ally, who decides) takes the attack aimed at `targetId`. */
+  | { type: 'coverAlly'; heroId: FigureId; targetId: FigureId }
   /** Fork «Наснага»: use the class Порив now (3 charges, own turn). */
   | { type: 'surge'; heroId: FigureId }
   /** Fork «Підняти друга»: spend the top or bottom action of a card to raise an adjacent downed ally. */
@@ -464,6 +476,22 @@ export type GameEvent =
   | { type: 'scenarioLost' }
   | { type: 'behaviourDrawn'; typeId: string; cardId: string; initiative: number }
   | { type: 'damageAvoided'; heroId: FigureId; amount: number; lost: CardId[] }
+  /** «Ухилитися»: the d12 `rolls` (several with a dice item), the kept `roll`, its result and the
+   *  damage before and after; `pay` = what it cost. */
+  | {
+      type: 'dodgeRolled';
+      heroId: FigureId;
+      rolls: number[];
+      roll: number;
+      result: 'full' | 'half' | 'none';
+      damageBefore: number;
+      damage: number;
+      pay: 'card' | 'momentum';
+      itemId?: string;
+    }
+  /** «Прикрий друга»: `heroId` took the attack of `attackerId` aimed at `targetId`; the damage
+   *  counted again with the ally's shield (before their own damage window). */
+  | { type: 'allyCovered'; heroId: FigureId; targetId: FigureId; attackerId: string; damageBefore: number; damage: number }
   | { type: 'trapPlaced'; hex: Hex }
   | { type: 'roundEnded'; round: number }
   | { type: 'itemUsed'; heroId: FigureId; itemId: string; to: 'spent' | 'lost' }

@@ -19,6 +19,7 @@ import type { ItemDef, Step } from './content';
 import { addCondition } from './conditions';
 import { emit, hero, type Ctx } from './effects/context';
 import { performStep } from './effects/index';
+import { attackDamage } from './defense';
 import type { EngineTask, HeroState } from './state';
 import {
   applyInitiativeItem,
@@ -238,7 +239,7 @@ function shieldReaction(ctx: Ctx, h: HeroState, itemId: string, added: number): 
   if (!task?.attack || p?.kind !== 'avoidDamage') return;
   const before = p.amount;
   task.attack.shield += added;
-  task.amount = Math.max(0, task.attack.value - Math.max(0, task.attack.shield - task.attack.pierce));
+  task.amount = attackDamage(task.attack);
   p.amount = Math.min(before, task.amount);
   emit(ctx, { type: 'itemReaction', heroId: h.id, itemId, window: 'damage', shield: added, damageBefore: before, damage: p.amount });
   if (p.amount > 0) return;

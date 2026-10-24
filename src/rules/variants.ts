@@ -37,6 +37,12 @@ export interface Variants {
   /** «Монстри з X» (dice.md §4): monster card steps with `x` roll the X die when the intent is
    *  revealed; off = the fixed average in `value`. */
   monsterDieAbilities: boolean;
+  /** «Ухилитися» (docs/design/defense.md §1): in the damage window of an attack the hero may pay a hand
+   *  card (to the discard) or 1 Наснага charge and roll a d12: 8+ no damage, 4–7 half, 1–3 nothing. */
+  dodgeDie: boolean;
+  /** «Прикрий друга» (defense.md §2): an adjacent ally hero may take the attack instead, with their own
+   *  shield, once per round. */
+  coverAlly: boolean;
 }
 
 export type VariantId = keyof Variants;
@@ -53,6 +59,8 @@ export const BASE_RULES: Readonly<Variants> = {
   dieCards: false,
   diceGear: false,
   monsterDieAbilities: false,
+  dodgeDie: false,
+  coverAlly: false,
 };
 
 export const FULL_FORK: Readonly<Variants> = {
@@ -67,6 +75,8 @@ export const FULL_FORK: Readonly<Variants> = {
   dieCards: true,
   diceGear: true,
   monsterDieAbilities: true,
+  dodgeDie: true,
+  coverAlly: true,
 };
 
 /** Order of implementation, cheapest first (from the design doc). */
@@ -82,6 +92,8 @@ export const VARIANT_ORDER: readonly VariantId[] = [
   'dieCards',
   'diceGear',
   'monsterDieAbilities',
+  'dodgeDie',
+  'coverAlly',
 ];
 
 export const MONSTER_HP_BONUS_WITH_INTENTS = 0.1;
@@ -95,3 +107,7 @@ export const INITIATIVE_DIE_MAX = 98;
 export const X_DIE_FACES: readonly number[] = [1, 1, 2, 2, 3, 4];
 /** Тихі черевики: the leading card's initiative never goes below this. */
 export const INITIATIVE_MIN = 1;
+/** «Ухилитися»: a d12; from DODGE_FULL_AT no damage, from DODGE_HALF_AT half (rounded down). */
+export const DODGE_DIE_SIDES = 12;
+export const DODGE_FULL_AT = 8;
+export const DODGE_HALF_AT = 4;

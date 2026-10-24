@@ -3,6 +3,7 @@
 import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
+import { canDodge, coverAllies } from './defense';
 import { isShieldItem, readyItems } from './items';
 import { adjustDamage, checkBossPhase, onHeroExhausted, onMonsterDied } from './scenarioRules';
 import type { CardId, EngineTask, Figure, HeroState } from './state';
@@ -42,7 +43,9 @@ export function runDamage(ctx: Ctx, task: DamageTask): boolean {
   }
   // The window also opens for attack damage when the hero carries a ready shield item.
   const shieldItem = !!task.attack && target.kind === 'hero' && readyItems(ctx, target, (d) => isShieldItem(ctx, d)).length > 0;
-  if (target.kind === 'hero' && task.avoidable && (canAvoidDamage(target) || shieldItem)) {
+  // «Ухилитися» and «Прикрий друга» (defense.ts) open it for attack damage as well.
+  const defence = target.kind === 'hero' && (canDodge(ctx, target, task) || coverAllies(ctx, task).length > 0);
+  if (target.kind === 'hero' && task.avoidable && (canAvoidDamage(target) || shieldItem || defence)) {
     // Sources are a figure id, 'trap', 'hazard' or 'condition' (wound).
     ctx.s.pending = { kind: 'avoidDamage', heroId: target.id, amount, source: task.source };
     return false;

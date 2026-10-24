@@ -12,6 +12,7 @@ import { reachableHexes } from './geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from './hex';
 import { itemDef, itemEffect, itemNameKey } from './items';
 import { interactiveObstacles } from './obstacles';
+import { dodgeChances, dodgeItemRolls } from './defense';
 import { behaviourCard, groupInitiative, monsterInitiative, typesOnBoard } from './round';
 import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
 import { availableCards } from './setup';
@@ -96,6 +97,7 @@ function candidateActions(state: GameState, content: Content): Action[] {
         if (a && b) out.push({ type: 'avoidDamage', heroId: h.id, choice: { kind: 'loseDiscard', cardIds: [a, b] } });
       }
       for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
+      defenceCandidates(state, h, out);
       break;
     }
     case 'beforeAttacked': {
@@ -139,6 +141,15 @@ function candidateActions(state: GameState, content: Content): Action[] {
 }
 
 /** Порив (fork «Наснага») and carried items, offered during the hero's own turn. */
+/** «Ухилитися» (each hand card, a Наснага charge, with each dice item) and «Прикрий друга» (each
+ *  adjacent ally) in the damage window; `apply` checks the variants and the attack. */
+function defenceCandidates(state: GameState, h: HeroState, out: Action[]): void {
+  const pays: Extract<Action, { type: 'dodge' }>['pay'][] = [...h.hand.map((cardId) => ({ kind: 'card' as const, cardId })), { kind: 'momentum' }];
+  const items = [undefined, ...(h.items ?? []).filter((it) => it.state === 'ready').map((it) => it.id)];
+  for (const itemId of items) for (const pay of pays) out.push({ type: 'dodge', heroId: h.id, pay, ...(itemId ? { itemId } : {}) });
+  for (const f of Object.values(state.figures)) if (f.kind === 'hero' && f.id !== h.id) out.push({ type: 'coverAlly', heroId: f.id, targetId: h.id });
+}
+
 function ownTurnExtras(state: GameState, h: HeroState, out: Action[]): void {
   if (state.variants.momentum && h.momentum >= MOMENTUM_MAX) out.push({ type: 'surge', heroId: h.id });
   for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
@@ -680,4 +691,65 @@ export function isDoorLocked(state: GameState, hex: Hex): boolean {
 /** Scenario objects on the board (lever, braziers, runes, millstones) with their state. */
 export function scenarioObjects(state: GameState): { id: string; kind: string; state?: string; hex: Hex }[] {
   return boardObjects(state).map((o) => ({ ...o.tile.object, hex: o.hex }));
+}
+
+export interface DefenseOption {
+  kind: 'take' | 'dodge' | 'cover' | 'item' | 'loseCard';
+  action: Action;
+  /** Who decides (the covering ally for `cover`): name them in the prompt on a shared tablet. */
+  deciderId: FigureId;
+  /** The hero the damage is aimed at. */
+  targetId: FigureId;
+  /** i18n key of the option's label (`defense.*`). */
+  labelKey: string;
+  /** Incoming damage now. */
+  damage: number;
+  /** Damage after the option, when it is known in advance (not for `dodge`). */
+  after?: number;
+  /** `dodge`: chances of each result and the damage of a half dodge. */
+  chances?: { full: number; half: number; none: number };
+  halfDamage?: number;
+  cardId?: CardId;
+  cardIds?: CardId[];
+  itemId?: string;
+  /** Losing cards: the last resort. */
+  fallback?: true;
+}
+
+/** Every legal answer to the pending damage window with its label and effect, in the order a prompt
+ *  shows them: take, dodge, cover, shield items, and losing cards last. */
+export function defenseOptions(state: GameState, content: Content): DefenseOption[] {
+  const p = state.pending;
+  if (p?.kind !== 'avoidDamage') return [];
+  const order: DefenseOption['kind'][] = ['take', 'dodge', 'cover', 'item', 'loseCard'];
+  const out: DefenseOption[] = [];
+  for (const { action, events } of legalActionResults(state, content)) {
+    const base = { action, targetId: p.heroId, damage: p.amount };
+    if (action.type === 'avoidDamage') {
+      const c = action.choice;
+      if (c.kind === 'take') out.push({ ...base, kind: 'take', deciderId: p.heroId, labelKey: 'defense.take', after: p.amount });
+      else if (c.kind === 'loseHand') out.push({ ...base, kind: 'loseCard', deciderId: p.heroId, labelKey: 'defense.loseHand', after: 0, cardId: c.cardId, fallback: true });
+      else out.push({ ...base, kind: 'loseCard', deciderId: p.heroId, labelKey: 'defense.loseDiscard', after: 0, cardIds: [...c.cardIds], fallback: true });
+    } else if (action.type === 'dodge') {
+      const def = action.itemId ? itemDef({ c: content }, action.itemId) : undefined;
+      const chances = dodgeChances(1 + (def ? dodgeItemRolls({ s: state }, def) : 0));
+      out.push({
+        ...base,
+        kind: 'dodge',
+        deciderId: p.heroId,
+        labelKey: action.pay.kind === 'card' ? 'defense.dodge' : 'defense.dodgeMomentum',
+        chances,
+        halfDamage: Math.floor(p.amount / 2),
+        ...(action.pay.kind === 'card' ? { cardId: action.pay.cardId } : {}),
+        ...(action.itemId ? { itemId: action.itemId } : {}),
+      });
+    } else if (action.type === 'coverAlly') {
+      const ev = events.find((e): e is Extract<GameEvent, { type: 'allyCovered' }> => e.type === 'allyCovered');
+      out.push({ ...base, kind: 'cover', deciderId: action.heroId, labelKey: 'defense.cover', after: ev?.damage ?? p.amount });
+    } else if (action.type === 'useItem') {
+      const ev = events.find((e): e is Extract<GameEvent, { type: 'itemReaction' }> => e.type === 'itemReaction');
+      out.push({ ...base, kind: 'item', deciderId: p.heroId, labelKey: 'defense.item', after: ev?.damage ?? p.amount, itemId: action.itemId });
+    }
+  }
+  return out.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
 }
