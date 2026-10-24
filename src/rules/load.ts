@@ -56,6 +56,9 @@ import perks from '../../data/perks.json';
 import uk from '../../data/i18n/uk.json';
 import de from '../../data/i18n/de.json';
 import en from '../../data/i18n/en.json';
+import helpUk from '../../data/help/uk.json';
+import helpDe from '../../data/help/de.json';
+import helpEn from '../../data/help/en.json';
 
 /** `loadContent()` always fills the optional parts of `Content`. */
 export interface LoadedContent extends Content {
@@ -98,7 +101,12 @@ export function loadContent(): LoadedContent {
   return cached;
 }
 
-/** Flat key → text tables; keys are documented by the tests in tests/data/i18n.test.ts. */
+let tables: Record<Lang, Record<string, string>> | undefined;
+
+/** Flat key → text tables; keys are documented by the tests in tests/data/i18n.test.ts. The rules
+ *  reference and the tutorial keep their texts in data/help (`help.*`, `tutorial.*`, the tutorial map's
+ *  names); they are merged in here, the game texts win on a clash (tests/app/help.test.ts forbids it). */
 export function loadTranslations(): Record<Lang, Record<string, string>> {
-  return { uk, de, en };
+  tables ??= { uk: { ...helpUk, ...uk }, de: { ...helpDe, ...de }, en: { ...helpEn, ...en } };
+  return tables;
 }

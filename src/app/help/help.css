@@ -1,0 +1,427 @@
+/* Rules reference («Довідник»), keyword popovers and the help modal over the scenario screen. */
+
+.hhelp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  color: var(--ink);
+}
+
+.hhelp-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hhelp-head h1 {
+  margin: 0;
+  font-size: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.hhelp-head h1 .gi {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--accent);
+}
+
+.hhelp-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+  min-height: var(--tap);
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.hhelp-body {
+  overflow-y: auto;
+  touch-action: pan-y;
+  min-height: 0;
+}
+
+.hhelp-lead,
+.hhelp-none {
+  color: var(--quiet);
+  margin: 0 0 8px;
+}
+
+.hhelp-group h2 {
+  font-size: 1.05em;
+  margin: 14px 0 8px;
+  color: var(--accent);
+}
+
+.hhelp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.hhelp-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  min-height: 56px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.hhelp-item:active {
+  transform: translateY(1px);
+}
+
+.hhelp-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hhelp-item small {
+  color: var(--quiet);
+  line-height: 1.3;
+}
+
+.hhelp-item small .vi,
+.hhelp-short .vi,
+.hhelp-text .vi,
+.hpop p .vi {
+  vertical-align: -0.25em;
+}
+
+.hhelp-icon {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--panel-2);
+}
+
+.hhelp-icon .gi {
+  width: 24px;
+  height: 24px;
+}
+
+.hhelp-icon.is-big {
+  width: 56px;
+  height: 56px;
+}
+
+.hhelp-icon.is-big .gi {
+  width: 38px;
+  height: 38px;
+}
+
+.hhelp-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 18px 18px;
+}
+
+.hhelp-back {
+  align-self: flex-start;
+}
+
+.hhelp-topic-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hhelp-topic-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.35em;
+}
+
+.hhelp-short {
+  margin: 0;
+  font-size: 1.08em;
+  color: var(--accent);
+}
+
+.hhelp-text p {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.hhelp-diagram {
+  align-self: center;
+  width: min(100%, 420px);
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+}
+
+.hhelp-related h3 {
+  margin: 4px 0 6px;
+  font-size: 1em;
+  color: var(--quiet);
+}
+
+.hhelp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The diagrams: hexes, cards and arrows in the panel colours. */
+.hdiagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--ink);
+  --icon-line: #2a2016;
+}
+
+.hdiagram .hd-text {
+  fill: var(--ink);
+}
+
+.hdiagram .hd-ini-text {
+  fill: var(--ink);
+  font-weight: 700;
+}
+
+.hdiagram .hd-step {
+  fill: var(--ink);
+  font-weight: 700;
+}
+
+.hdiagram .hd-node,
+.hdiagram .hd-card {
+  fill: var(--panel-2);
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.hdiagram .hd-node.is-hero {
+  stroke: var(--good);
+}
+
+.hdiagram .hd-node.is-monster {
+  stroke: var(--bad);
+}
+
+.hdiagram .hd-node.is-hit {
+  stroke: var(--bad);
+}
+
+.hdiagram .hd-card-head {
+  fill: #3a3424;
+}
+
+.hdiagram .hd-half {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: var(--line);
+}
+
+.hdiagram .hd-ini {
+  fill: #6b4a12;
+  stroke: var(--accent);
+}
+
+.hdiagram .hd-hex {
+  fill: #2c3548;
+  stroke: #56627d;
+  stroke-width: 1.2;
+}
+
+.hdiagram .hd-hex.is-hero {
+  fill: #2f4a3a;
+  stroke: var(--good);
+}
+
+.hdiagram .hd-hex.is-foe {
+  fill: #4a2f2f;
+  stroke: var(--bad);
+}
+
+.hdiagram .hd-hex.is-path {
+  fill: #3c4a66;
+  stroke: var(--accent);
+}
+
+.hdiagram .hd-hex.is-rough {
+  fill: #4b4434;
+  stroke: var(--accent);
+  stroke-dasharray: 3 2;
+}
+
+.hdiagram .hd-hex.is-end {
+  fill: #3d5a45;
+  stroke: var(--good);
+  stroke-width: 2;
+}
+
+.hdiagram .hd-hex.is-block {
+  fill: #1a1f2b;
+}
+
+.hdiagram .hd-hex.is-trap {
+  fill: #3b3336;
+}
+
+.hdiagram .hd-arrow,
+.hdiagram .hd-loop {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.hdiagram .hd-loop.is-pull {
+  stroke: #8fd3f4;
+}
+
+.hdiagram .hd-head {
+  fill: var(--accent);
+}
+
+.hdiagram .hd-mod {
+  fill: #e9dfc6;
+  stroke: #6b4a12;
+}
+
+.hdiagram .hd-mod + text {
+  fill: #2a2016;
+}
+
+.hdiagram .hd-mod.is-crit {
+  fill: #f6e08a;
+}
+
+.hdiagram .hd-orb {
+  fill: rgba(163, 162, 74, 0.25);
+  stroke: #a3a24a;
+  stroke-width: 2;
+}
+
+.hdiagram .hd-orb.is-weak {
+  fill: rgba(163, 162, 74, 0.1);
+  stroke-dasharray: 4 3;
+}
+
+.hdiagram .hd-orb.is-gone {
+  fill: none;
+  stroke: var(--line);
+}
+
+/* Help over the scenario screen. */
+.hhelp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  background: rgba(10, 14, 22, 0.72);
+}
+
+.hhelp.is-modal {
+  width: min(980px, 100%);
+  max-height: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 16px 16px;
+  box-sizing: border-box;
+}
+
+.hhelp.is-modal .hhelp-topic {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Keyword popover. */
+.hpop {
+  position: fixed;
+  z-index: 80;
+  box-sizing: border-box;
+  padding: 10px 12px 12px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hpop-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hpop-head b {
+  flex: 1 1 auto;
+}
+
+.hpop-head .gi {
+  width: 24px;
+  height: 24px;
+}
+
+.hpop p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hpop .gbtn-primary {
+  align-self: flex-end;
+}
+
+/* Icons that explain themselves on a tap. */
+.gdetail .gi,
+.gfig .gi,
+.gmodal-box .gi {
+  cursor: help;
+}
+
+@media (max-width: 600px) {
+  .hhelp-grid {
+    grid-template-columns: 1fr;
+  }
+  .hhelp-search {
+    max-width: none;
+  }
+}
+
+/* Main menu: tutorial and reference side by side. */
+.mmenu-pair {
+  display: flex;
+  gap: 1.6vh;
+}
+
+.mmenu-pair .ubtn {
+  flex: 1 1 0;
+  min-width: 0;
+}

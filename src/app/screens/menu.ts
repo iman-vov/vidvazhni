@@ -17,6 +17,9 @@ export interface MenuOptions {
   onContinue: () => void;
   onNewGame: () => void;
   onSettings: () => void;
+  /** Rules reference and tutorial (src/app/help, src/app/tutorial): one row of two buttons. */
+  onHelp?: () => void;
+  onTutorial?: () => void;
 }
 
 export const VERSION = pkg.version.replace(/\.0$/, '');
@@ -56,6 +59,9 @@ export function menuScreen(o: MenuOptions): HTMLElement {
         o.saved ? artButton('play', t('ui.continue'), o.onContinue, { note: savedSummary(o.saved, o.content) }) : null,
         artButton('compass', t('ui.newGame'), o.onNewGame),
         campaign,
+        o.onHelp || o.onTutorial
+          ? h('div', { class: 'mmenu-pair' }, o.onTutorial ? artButton('play', t('tutorial.menu'), o.onTutorial) : null, o.onHelp ? artButton('hint', t('help.menu'), o.onHelp) : null)
+          : null,
         artButton('gear', t('ui.settings'), o.onSettings),
         notice,
       ),

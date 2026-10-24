@@ -2,7 +2,7 @@
 // of hint level 1. Bookkeeping events (cards moving, decks shuffling) are left out.
 
 import type { GameEvent, GameState } from '../../rules/state';
-import { t } from '../i18n';
+import { has, t } from '../i18n';
 import { conditionName, elementName, figureName, modifierLabel } from './text';
 
 export function eventLine(e: GameEvent, s: GameState): string | null {
@@ -79,6 +79,9 @@ export function ruleHints(events: GameEvent[]): RuleHint[] {
   const add = (key: string, title: string, text: string) => {
     if (!out.some((x) => x.key === key)) out.push({ key, title, text });
   };
+  const topic = (key: string, id = key) => {
+    if (has(`help.${id}.title`)) add(key, t(`help.${id}.title`), t(`help.${id}.short`));
+  };
   for (const e of events) {
     if (e.type === 'conditionAdded') add(`condition.${e.condition}`, conditionName(e.condition), t(`condition.${e.condition}.text`));
     else if (e.type === 'elementChanged' && e.level === 'strong') add('elements', t('ui.elements'), t('game.explain.elements'));
@@ -91,6 +94,16 @@ export function ruleHints(events: GameEvent[]): RuleHint[] {
     else if (e.type === 'cardsRevealed') add('initiative', t('ui.initiative'), t('game.hint.initiative'));
     else if (e.type === 'shieldAdded') add('shield', t('stat.shield'), t('game.explain.shield'));
     else if (e.type === 'looted' && (e.coins > 0 || e.chest)) add('loot', t('game.hint.loot.title'), t('game.hint.loot'));
+    // Rules with a reference topic (src/app/help): its title and short text.
+    if (e.type === 'attacked' && e.followUp) topic('followUp');
+    else if (e.type === 'retaliated') topic('retaliate');
+    else if (e.type === 'pushed') topic('push');
+    else if (e.type === 'obstacleDamaged' || e.type === 'obstacleMoved') topic('doors');
+    else if (e.type === 'itemUsed' || e.type === 'itemReaction') topic('items');
+    else if (e.type === 'heroExhausted') topic('exhaustion');
+    if (e.type === 'momentumGained' && e.charges >= 3) topic('surge', 'momentum');
+    if (e.type === 'attacked' && e.modifiers.some((d) => d.startsWith('bless'))) topic('bless');
+    if (e.type === 'attacked' && e.modifiers.some((d) => d.startsWith('curse'))) topic('curse');
   }
   return out;
 }

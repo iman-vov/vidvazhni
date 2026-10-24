@@ -217,23 +217,23 @@ export function compactCard(o: CompactCardOptions): HTMLElement {
 }
 
 /** Explanations of the words on a card (conditions, elements, loss, active, momentum, XP). */
-export function cardKeywords(s: GameState, content: LoadedContent, hero: HeroState, cardId: string): { title: string; text: string }[] {
+export function cardKeywords(s: GameState, content: LoadedContent, hero: HeroState, cardId: string): { title: string; text: string; topic?: string }[] {
   const card = playedCard(content, hero.classId, cardId, s.variants);
   if (!card) return [];
-  const out = new Map<string, { title: string; text: string }>();
+  const out = new Map<string, { title: string; text: string; topic?: string }>();
   const orbs = s.variants.orbs;
   for (const half of [card.top, card.bottom]) {
-    if (half.loss) out.set('loss', { title: t('game.card.loss'), text: t('game.explain.loss') });
-    if (half.active) out.set('active', { title: t('game.card.active'), text: t('game.explain.active') });
+    if (half.loss) out.set('loss', { title: t('game.card.loss'), text: t('game.explain.loss'), topic: 'loss' });
+    if (half.active) out.set('active', { title: t('game.card.active'), text: t('game.explain.active'), topic: 'active' });
     for (const st of half.steps) {
       const conds = [...(st.type === 'attack' ? (st.conditions ?? []) : []), ...(st.type === 'condition' ? [st.condition] : []), ...(st.consume?.conditions ?? [])];
-      for (const c of conds) out.set(`c-${c}`, { title: t(`condition.${c}`), text: t(`condition.${c}.text`) });
-      if (st.type === 'infuse' || st.consume) out.set('el', { title: t(orbs ? 'ui.orbs' : 'ui.elements'), text: t(orbs ? 'game.explain.orbs' : 'game.explain.elements') });
-      if (st.type === 'shield') out.set('shield', { title: t('stat.shield'), text: t('game.explain.shield') });
-      if (st.type === 'retaliate') out.set('ret', { title: t('stat.retaliate'), text: t('game.explain.retaliate') });
-      if (st.xp) out.set('xp', { title: t('ui.xp'), text: t('game.explain.xp') });
+      for (const c of conds) out.set(`c-${c}`, { title: t(`condition.${c}`), text: t(`condition.${c}.text`), topic: c });
+      if (st.type === 'infuse' || st.consume) out.set('el', { title: t(orbs ? 'ui.orbs' : 'ui.elements'), text: t(orbs ? 'game.explain.orbs' : 'game.explain.elements'), topic: orbs ? 'orbs' : 'elements' });
+      if (st.type === 'shield') out.set('shield', { title: t('stat.shield'), text: t('game.explain.shield'), topic: 'shield' });
+      if (st.type === 'retaliate') out.set('ret', { title: t('stat.retaliate'), text: t('game.explain.retaliate'), topic: 'retaliate' });
+      if (st.xp) out.set('xp', { title: t('ui.xp'), text: t('game.explain.xp'), topic: 'xp' });
     }
   }
-  if (hasMomentumMark(content, hero.classId, cardId, s.variants)) out.set('mom', { title: t('variant.momentum'), text: t('variant.momentum.text') });
+  if (hasMomentumMark(content, hero.classId, cardId, s.variants)) out.set('mom', { title: t('variant.momentum'), text: t('variant.momentum.text'), topic: 'momentum' });
   return [...out.values()];
 }

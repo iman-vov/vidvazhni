@@ -34,6 +34,7 @@ import { INTENTS, toggleIntent, type GameController, type IntentId } from './gam
 import { settings } from './settings';
 import { artButton } from './screens/menu';
 import { settingsPanel } from './screens/settings';
+import { topicForHint } from './help/topics';
 
 export interface ScenarioScreenOptions {
   overlay: HTMLElement;
@@ -43,6 +44,8 @@ export interface ScenarioScreenOptions {
   onExit: () => void;
   /** The scenario is won or lost and every animation has played. */
   onEnd: () => void;
+  /** Opens the rules reference (src/app/help), on a topic if given. */
+  onHelp?: (topic?: string | null) => void;
 }
 
 interface Toast {
@@ -50,6 +53,8 @@ interface Toast {
   title: string;
   text: string;
   kind: 'hint' | 'turn' | 'info' | 'error';
+  /** Reference topic behind a rule hint («Детальніше»). */
+  topic?: string | null;
 }
 
 interface ModifierShow {
@@ -320,12 +325,12 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   function showHint(hint: RuleHint): void {
-    if (game.markHint(hint.key)) toast(hint.title, hint.text, 'hint');
+    if (game.markHint(hint.key)) toast(hint.title, hint.text, 'hint', topicForHint(hint.key));
   }
 
-  function toast(title: string, text: string, kind: Toast['kind']): void {
+  function toast(title: string, text: string, kind: Toast['kind'], topic: string | null = null): void {
     const id = ++toastId;
-    ui.toasts = [...ui.toasts.filter((x) => !(kind === 'turn' && x.kind === 'turn')), { id, title, text, kind }].slice(-3);
+    ui.toasts = [...ui.toasts.filter((x) => !(kind === 'turn' && x.kind === 'turn')), { id, title, text, kind, topic }].slice(-3);
     renderLayer();
     setTimeout(() => {
       ui.toasts = ui.toasts.filter((x) => x.id !== id);
@@ -1149,6 +1154,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
               { class: `gtoast is-${x.kind}`, onclick: () => ((ui.toasts = ui.toasts.filter((y) => y.id !== x.id)), renderLayer()) },
               x.kind === 'hint' ? icon('hint') : null,
               h('div', null, h('b', null, x.title), x.text ? h('p', null, x.text) : null),
+              x.topic && o.onHelp ? h('button', { class: 'gbtn gbtn-small', onclick: (e: Event) => (e.stopPropagation(), o.onHelp?.(x.topic)) }, t('help.more')) : null,
             ),
           ),
         ),
@@ -1191,7 +1197,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         h(
           'div',
           { class: 'gdetail-side' },
-          words.length ? h('div', { class: 'gdetail-words' }, words.map((w) => h('p', null, h('b', null, w.title), ' — ', w.text))) : null,
+          words.length
+            ? h('div', { class: 'gdetail-words' }, words.map((w) => h('p', null, h('b', null, w.title), ' — ', w.text, w.topic && o.onHelp ? [' ', h('button', { class: 'gbtn gbtn-small', onclick: () => o.onHelp?.(w.topic) }, t('help.more'))] : null)))
+            : null,
           h('div', { class: 'gcol' }, actions),
         ),
       ),
@@ -1253,7 +1261,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const s = game.state;
     const sc = content.scenarios[s.scenarioId];
     return modalBox(
-      `${sc?.number ?? ''}. ${t(`scenario.${s.scenarioId}`)}`,
+      `${sc?.number ? `${sc.number}. ` : ''}${t(`scenario.${s.scenarioId}`)}`,
       [
         h('p', { class: 'gintro' }, t(`scenario.${s.scenarioId}.intro`)),
         h('p', null, h('b', null, t('game.goal')), ' ', t(`scenario.${s.scenarioId}.goal`)),
@@ -1272,6 +1280,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         { class: 'gcol' },
         artButton('play', t('game.resume'), () => ((ui.modal = null), render())),
         artButton('gear', t('ui.settings'), () => ((ui.modal = 'settings'), render())),
+        o.onHelp ? artButton('hint', t('help.menu'), () => o.onHelp?.()) : null,
         artButton('map', t('ui.scenario'), () => ((ui.modal = 'intro'), render())),
         h('button', { class: 'gbtn', onclick: () => void copyLog() }, t('game.copyLog')),
         artButton(null, t('game.toMenu'), () => o.onExit()),

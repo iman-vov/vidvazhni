@@ -1,0 +1,186 @@
+/* Tutorial coach (bubble + ring over the scenario screen), the offer before a new game and the end page. */
+
+.tcoach {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.tcoach-ring {
+  position: fixed;
+  display: none;
+  box-sizing: border-box;
+  border: 3px solid var(--g-glow, #ffd36e);
+  border-radius: 14px;
+  box-shadow: 0 0 0 4px rgba(255, 211, 110, 0.25), 0 0 24px rgba(255, 211, 110, 0.6);
+  animation: tcoach-pulse 1.4s ease-in-out infinite;
+  transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s;
+}
+
+.tcoach-ring.is-round {
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 211, 110, 0.95);
+}
+
+@keyframes tcoach-pulse {
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 211, 110, 0.12), 0 0 34px rgba(255, 211, 110, 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcoach-ring {
+    animation: none;
+    transition: none;
+  }
+}
+
+.tcoach-bubble {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 10px 14px 12px;
+  border-radius: 16px;
+  background: #fbf3df;
+  color: #2a2016;
+  border: 2px solid #c99a3c;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  --icon-line: #6b4a12;
+}
+
+.tcoach-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tcoach-head small {
+  flex: 1 1 auto;
+  color: #7a6440;
+  font-weight: 600;
+}
+
+.tcoach-face {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #c99a3c;
+  color: #fff7e0;
+}
+
+.tcoach-face .gi {
+  width: 20px;
+  height: 20px;
+}
+
+.tcoach-title {
+  font-size: 1.12em;
+}
+
+.tcoach-text {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.tcoach-text .vi {
+  vertical-align: -0.25em;
+}
+
+.tcoach-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tcoach-ask {
+  flex: 1 1 100%;
+  margin: 0;
+  font-weight: 600;
+}
+
+.tcoach-bubble .gbtn {
+  color: #2a2016;
+  background: #efe2c0;
+  border-color: #c99a3c;
+}
+
+.tcoach-bubble .gbtn-primary {
+  background: #c99a3c;
+  color: #fff;
+}
+
+.tcoach-skip {
+  margin-right: auto;
+}
+
+.tcoach-pill {
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + var(--g-bottom, 0px));
+  display: none;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  background: #fbf3df;
+  color: #2a2016;
+  border: 2px solid #c99a3c;
+}
+
+/* Offer and end page. */
+.toffer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 100%;
+  text-align: center;
+}
+
+.toffer-box {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-sizing: border-box;
+}
+
+.toffer-box h1 {
+  margin: 0;
+  font-size: 1.6em;
+}
+
+.toffer-box p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.toffer-box .gtag {
+  align-self: center;
+}
+
+.toffer-never {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--quiet);
+  text-decoration: underline;
+  font: inherit;
+  min-height: var(--tap);
+  cursor: pointer;
+}
