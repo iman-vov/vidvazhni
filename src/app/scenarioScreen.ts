@@ -999,22 +999,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     return h('p', { class: 'gside-hint' }, halvesLeft === 2 ? t('game.turn.hint') : halvesLeft === 1 ? t('game.turn.hintOne') : t('game.turn.hintDone'));
   }
 
-  /** «Завершити хід», asking once more while halves are left unplayed. */
+  /** «Завершити хід», asking once more while halves are left unplayed: a message says what is left
+   *  and the button turns amber («Так, завершити»), so the first press visibly did something. */
   function endTurnButton(hero: HeroState): HTMLElement {
     const end = game.state.pending?.kind === 'heroTurn' ? game.legalOf('endTurn').find((a) => a.heroId === hero.id) : undefined;
     const halvesLeft = 2 - hero.playedThisTurn.length;
     const careful = halvesLeft > 0 && !ui.confirmEnd;
     return artButton(
-      'check',
+      ui.confirmEnd ? 'hint' : 'check',
       ui.confirmEnd ? t('game.endTurn.sure') : t('ui.endTurn'),
       () => {
         if (!end) return;
         if (careful) {
           ui.confirmEnd = true;
+          playUi('open');
+          toast(t('game.endTurn.ask'), t('game.endTurn.unplayed', { n: halvesLeft }), 'hint');
           renderBottom();
         } else act(end);
       },
-      { cls: `gb-right is-go${halvesLeft === 0 ? ' is-ready' : ''}`, disabled: !end },
+      { cls: `gb-right is-go${halvesLeft === 0 ? ' is-ready' : ''}${ui.confirmEnd ? ' is-warn' : ''}`, disabled: !end },
     );
   }
 

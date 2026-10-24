@@ -748,6 +748,32 @@ body.game.g-bottom-short {
   filter: drop-shadow(0 0 12px rgba(255, 210, 110, 0.75));
 }
 
+/* «Так, завершити»: the end-turn press asks once more; amber and pulsing so it reads as a question. */
+.ubtn.is-go.is-warn .ubtn-icon {
+  color: #ffb547;
+  --icon-halo: #3a2405;
+}
+
+.ubtn.is-go.is-warn {
+  animation: ubtn-warn 1s ease-in-out infinite alternate;
+}
+
+@keyframes ubtn-warn {
+  from {
+    filter: drop-shadow(0 0 4px rgba(255, 170, 60, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 0 16px rgba(255, 170, 60, 0.95));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ubtn.is-go.is-warn {
+    animation: none;
+    filter: drop-shadow(0 0 12px rgba(255, 170, 60, 0.9));
+  }
+}
+
 /* Card selection: the whole hand as a fan */
 
 .gpanel-select .gintent-row {
