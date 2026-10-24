@@ -127,6 +127,13 @@
     "bytes": 100426,
     "keyed": false
   },
+  "die-d12": {
+    "src": "art/ui-mockups/dice/assets/d12-blank.png",
+    "width": 128,
+    "height": 135,
+    "bytes": 7848,
+    "keyed": false
+  },
   "portraits": [
     "warden",
     "wind-archer",

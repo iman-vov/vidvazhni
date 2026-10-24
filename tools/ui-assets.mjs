@@ -32,6 +32,8 @@ const JOBS = [
   { id: 'camp-tab', src: 'art/ui-mockups/camp/assets/tab.png', kind: 'cutout', width: 520 },
   { id: 'camp-slot', src: 'art/ui-mockups/camp/assets/slot-frame.png', kind: 'cutout', width: 220 },
   ...['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'].map((id) => ({ id: `camp-hero-${id}`, src: `art/ui-mockups/camp/assets/heroes/${id}.png`, kind: 'cutout', width: 720 })),
+  // Dice (art/ui-mockups/dice/v1.png): the blank navy-and-copper d12 under a rolled number.
+  { id: 'die-d12', src: 'art/ui-mockups/dice/assets/d12-blank.png', kind: 'cutout', width: 128 },
 ];
 
 /** Round portraits (initiative ribbon, hero panel): heroes, summons and bosses from portrait.png,

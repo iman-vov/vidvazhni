@@ -889,11 +889,46 @@ body.game.g-bottom-short {
   color: var(--hud-gold-hi);
 }
 
-/* «Карти з X»: the X roll under the step, «X = 4». */
+/* «Карти з X»: the X roll under the step, «X = [d12 4]» (art/ui-mockups/dice/v1.png). */
 .gturn-box .gstep-die {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 2px 0 0;
   font-weight: 700;
   color: var(--hud-gold-hi);
+}
+
+.gdie {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 36px;
+  padding-bottom: 3px;
+  box-sizing: border-box;
+  background: url(./assets/die-d12.webp) center / contain no-repeat;
+  color: #f8e8c0;
+  font-size: 15px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px #000;
+  animation: gdie-spin 0.45s ease-out;
+}
+
+@keyframes gdie-spin {
+  from {
+    transform: rotate(-300deg) scale(0.6);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gdie {
+    animation: none;
+  }
 }
 
 .gturn-box .gbtn,

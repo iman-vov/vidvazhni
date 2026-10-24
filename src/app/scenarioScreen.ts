@@ -879,7 +879,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     out.push(h('div', { class: 'gstep-now' }, icon(stepIconOf(info.step)), h('b', null, stepLine(info.step, s.variants.orbs))));
     // «Карти з X»: the roll behind the value, «X = 4».
     if (info.step.xRoll !== undefined) {
-      out.push(h('p', { class: 'gstep-die', title: t('game.dieX', { roll: info.step.xRoll }) }, 'X =', h('span', { class: 'gdie', key: `die-${info.step.xRoll}` }, String(info.step.xRoll))));
+      out.push(h('p', { class: 'gstep-die', title: t('game.dieX', { roll: info.step.xRoll }) }, 'X =', h('span', { class: 'gdie' }, String(info.step.xRoll))));
     }
     const hint = { path: t('game.step.move'), targets: m.maxTargets > 1 ? t('game.step.targets', { n: m.maxTargets }) : t('game.step.target'), area: t('game.step.area'), hex: t('ui.chooseHex'), plain: '' }[m.mode];
     if (m.choices.length === 0) out.push(h('p', { class: 'gside-hint' }, t('ui.noTarget')));
