@@ -1,11 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { planHighlights } from '../../src/render/highlightPlan';
+import { planHighlights, rangeOutline } from '../../src/render/highlightPlan';
 import { Animator } from '../../src/render/animator';
 import { floatPose } from '../../src/render/boardOverlay';
 
 describe('planHighlights', () => {
   it('is empty for no highlights', () => {
-    expect(planHighlights({})).toEqual({ cells: [], targets: [], path: [] });
+    expect(planHighlights({})).toEqual({ cells: [], targets: [], path: [], range: [], tone: 'enemy' });
+  });
+
+  it('non-attack targets: the ally tone, a result preview and the range outline', () => {
+    const plan = planHighlights({ targets: ['hero:a'], targetTone: 'ally', preview: { 'hero:a': { text: '5 → 8', icon: 'heal' } }, range: { center: [0, 0], radius: 1 } });
+    expect(plan.tone).toBe('ally');
+    expect(plan.targets).toEqual([{ figureId: 'hero:a', preview: { text: '5 → 8', icon: 'heal' } }]);
+    // Seven hexes: the six outer ones show three outer edges each.
+    expect(plan.range).toHaveLength(18);
+  });
+
+  it('the range outline follows the board edge', () => {
+    expect(rangeOutline([0, 0], 0)).toEqual([]);
+    // Only the centre is on the board: its six edges.
+    expect(rangeOutline([0, 0], 2, (h) => h[0] === 0 && h[1] === 0)).toHaveLength(6);
   });
 
   it('one tint per hex: area over path end over path over reachable, costs kept', () => {

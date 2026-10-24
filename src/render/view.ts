@@ -7,6 +7,7 @@ import type { Content } from '../rules/content';
 import type { Hex } from '../rules/hex';
 import type { FigureId, GameEvent, GameState } from '../rules/state';
 import type { GraphicsQuality } from './quality';
+import type { IconName } from '../ui/icons/names';
 
 export interface BoardHighlights {
   /** Hexes the active figure can move to (with the cost, for the label). */
@@ -19,6 +20,13 @@ export interface BoardHighlights {
   path?: Hex[];
   /** Expected damage before the modifier, shown over each target. */
   expectedDamage?: Record<FigureId, number>;
+  /** Colour of the target marks: 'enemy' (red, attacks; the default) or 'ally' (green: heals,
+   *  shields, buffs on allies or the hero). */
+  targetTone?: 'enemy' | 'ally';
+  /** The action's reach: a line around the hexes within `radius` of `center`. */
+  range?: { center: Hex; radius: number };
+  /** A result preview over a target instead of expected damage: «5 → 8» with the heal icon. */
+  preview?: Record<FigureId, { text: string; icon: IconName }>;
   /** The figure whose turn it is (glowing hex edge). Default: taken from the state
    *  (pending hero turn, else the current turn-order entry); null shows none. */
   active?: FigureId | null;

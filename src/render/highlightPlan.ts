@@ -2,7 +2,8 @@
 // one hex shows one tint (area over the path end over the path over reachable), and a reachable hex
 // keeps its cost label under a path dot.
 
-import { hexKey, type Hex, type HexKey } from '../rules/hex';
+import { DIRECTIONS, distance, hexKey, type Hex, type HexKey } from '../rules/hex';
+import type { IconName } from '../ui/icons/names';
 import type { FigureId, GameState } from '../rules/state';
 import type { BoardHighlights } from './view';
 
@@ -19,6 +20,14 @@ export interface FigureMark {
   figureId: FigureId;
   /** Expected damage label before the modifier, if given. */
   expectedDamage?: number;
+  /** Result preview label (heal, shield, push), if given. */
+  preview?: { text: string; icon: IconName };
+}
+
+/** One side of the range outline: the edge of `hex` toward its neighbour in direction `dir`. */
+export interface RangeEdge {
+  hex: Hex;
+  dir: number;
 }
 
 export interface HighlightPlan {
@@ -26,6 +35,9 @@ export interface HighlightPlan {
   targets: FigureMark[];
   /** Path hexes in order (for the dotted line), start excluded as given. */
   path: Hex[];
+  /** Outline of the action's range (edges between a hex in range and one outside it). */
+  range: RangeEdge[];
+  tone: 'enemy' | 'ally';
 }
 
 const PRIORITY: Record<CellKind, number> = { reach: 0, path: 1, pathEnd: 2, area: 3 };
@@ -37,7 +49,24 @@ export const CELL_COLORS: Record<CellKind, string> = {
   area: '#ff6a4d',
 };
 
-export function planHighlights(h: BoardHighlights): HighlightPlan {
+/** The outline of the hexes within `radius` of `center` that pass `onBoard` (all when absent). */
+export function rangeOutline(center: Hex, radius: number, onBoard?: (hex: Hex) => boolean): RangeEdge[] {
+  if (radius < 1) return [];
+  const inside = (h: Hex) => distance(h, center) <= radius && (!onBoard || onBoard(h));
+  const out: RangeEdge[] = [];
+  for (let q = -radius; q <= radius; q++) {
+    for (let r = Math.max(-radius, -q - radius); r <= Math.min(radius, -q + radius); r++) {
+      const hex: Hex = [center[0] + q, center[1] + r];
+      if (!inside(hex)) continue;
+      DIRECTIONS.forEach((d, dir) => {
+        if (!inside([hex[0] + d[0], hex[1] + d[1]])) out.push({ hex, dir });
+      });
+    }
+  }
+  return out;
+}
+
+export function planHighlights(h: BoardHighlights, onBoard?: (hex: Hex) => boolean): HighlightPlan {
   const cells = new Map<HexKey, HighlightCell>();
   const put = (hex: Hex, kind: CellKind, cost?: number) => {
     const key = hexKey(hex);
@@ -61,7 +90,18 @@ export function planHighlights(h: BoardHighlights): HighlightPlan {
     m.expectedDamage = dmg;
     marks.set(id, m);
   }
-  return { cells: [...cells.values()], targets: [...marks.values()], path: path.map((x) => [x[0], x[1]] as Hex) };
+  for (const [id, pv] of Object.entries(h.preview ?? {})) {
+    const m = marks.get(id) ?? { figureId: id };
+    m.preview = pv;
+    marks.set(id, m);
+  }
+  return {
+    cells: [...cells.values()],
+    targets: [...marks.values()],
+    path: path.map((x) => [x[0], x[1]] as Hex),
+    range: h.range ? rangeOutline(h.range.center, h.range.radius, onBoard) : [],
+    tone: h.targetTone ?? 'enemy',
+  };
 }
 
 /** The figure whose turn it is: the hero the engine waits for, else the current turn-order entry

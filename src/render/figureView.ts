@@ -50,11 +50,14 @@ function measureHeight(model: Model): number {
 export const SIDE_EDGE_COLORS: Record<'hero' | 'foe', string> = { hero: '#f0c470', foe: '#9a90c0' };
 /** Glowing ring around the feet: the active figure (warm gold), a selected one (soft white), a
  *  valid target (ember, pulsing). The ring turns slowly. */
-export type FigureGlow = 'active' | 'selected' | 'target';
-export const GLOW_COLORS: Record<FigureGlow, string> = { active: '#ffc040', selected: '#eef1ff', target: '#ff5422' };
-const GLOW_OPACITY: Record<FigureGlow, number> = { active: 0.95, selected: 0.7, target: 0.95 };
+/** `target`: a valid target of an attack (red); `ally`: of a heal, shield or buff (green). */
+export type FigureGlow = 'active' | 'selected' | 'target' | 'ally';
+export const GLOW_COLORS: Record<FigureGlow, string> = { active: '#ffc040', selected: '#eef1ff', target: '#ff5422', ally: '#54e07a' };
+const GLOW_OPACITY: Record<FigureGlow, number> = { active: 0.95, selected: 0.7, target: 0.95, ally: 0.95 };
+/** Outline colour of a targeted figure by the target tone. */
+const OUTLINE_COLORS = { enemy: '#ffb347', ally: '#8af0a0' } as const;
 /** Turns per second of the ring (active and selected turn one way, targets the other). */
-const RING_SPIN: Record<FigureGlow, number> = { active: 0.08, selected: 0.05, target: -0.12 };
+const RING_SPIN: Record<FigureGlow, number> = { active: 0.08, selected: 0.05, target: -0.12, ally: 0.1 };
 /** Ring radius around a figure's feet: a little wider than its contact shadow, inside the hex. */
 const RING_SCALE = 1.2;
 const RING_MAX = 0.8;
@@ -147,8 +150,9 @@ export function footRing(arcs = 3, gapDeg = 34): THREE.BufferGeometry {
 
 /** Board-wide glow animation at `time` seconds: targets pulse (shared material). */
 export function animateGlows(parts: FigureParts, time: number): void {
-  const target = parts.glowMaterials.target as THREE.MeshBasicMaterial;
-  target.opacity = GLOW_OPACITY.target * (0.7 + 0.3 * Math.sin(time * Math.PI * 1.4));
+  const pulse = 0.7 + 0.3 * Math.sin(time * Math.PI * 1.4);
+  (parts.glowMaterials.target as THREE.MeshBasicMaterial).opacity = GLOW_OPACITY.target * pulse;
+  (parts.glowMaterials.ally as THREE.MeshBasicMaterial).opacity = GLOW_OPACITY.ally * pulse;
 }
 
 export function createFigureParts(): FigureParts {
@@ -161,7 +165,7 @@ export function createFigureParts(): FigureParts {
     blobGeometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
     proxyGeometry: new THREE.CylinderGeometry(0.62, 0.62, 1, 10).translate(0, 0.5, 0),
     blobTexture: blobShadowTexture(),
-    glowMaterials: { active: glow('active'), selected: glow('selected'), target: glow('target') },
+    glowMaterials: { active: glow('active'), selected: glow('selected'), target: glow('target'), ally: glow('ally') },
     proxyMaterial,
   };
 }
@@ -204,6 +208,7 @@ export class FigureView {
   private readonly blobRadius: number;
   private readonly glowMesh: THREE.Mesh;
   private glow: FigureGlow | null = null;
+  private targetTone: 'enemy' | 'ally' = 'enemy';
   readonly proxy: THREE.Mesh;
   private outlines: THREE.Mesh[] = [];
   private materials: THREE.Material[] = [];
@@ -365,7 +370,7 @@ export class FigureView {
     this.body.add(object);
     this.outlines = [];
     this.applyOpacity();
-    if (this.targeted) this.setTargeted(true);
+    if (this.targeted) this.setTargeted(true, this.targetTone);
   }
 
   get hasModel(): boolean {
@@ -570,10 +575,14 @@ export class FigureView {
   }
 
   /** An outline around the figure (valid targets); the glowing ring comes from setGlow. */
-  setTargeted(on: boolean): void {
+  setTargeted(on: boolean, tone: 'enemy' | 'ally' = 'enemy'): void {
     this.targeted = on;
+    this.targetTone = tone;
     if (on && this.outlines.length === 0) this.buildOutline();
-    for (const o of this.outlines) o.visible = on;
+    for (const o of this.outlines) {
+      o.visible = on;
+      if (on) (o.material as THREE.MeshBasicMaterial).color.set(OUTLINE_COLORS[tone]);
+    }
   }
 
   /** Whether a ring is showing (it turns, so the board keeps drawing slowly). */

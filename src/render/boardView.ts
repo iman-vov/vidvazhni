@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ConditionId, Content, OrbId } from '../rules/content';
 import { eventWarnings } from '../rules/events';
-import { hexKey, parseHexKey, type Hex } from '../rules/hex';
+import { DIRECTIONS, hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
 import { planAnimation, TIMING, type AnimStep } from './animPlan';
@@ -145,12 +145,16 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   const fillMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.32, depthWrite: false });
   const frameMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
   const dotMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.95, depthWrite: false });
+  // The range outline: one thin strip along each outer hex edge.
+  const edgeGeo = new THREE.PlaneGeometry(HEX_SIZE * 1.02, 0.07).rotateX(-Math.PI / 2);
+  const edgeMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8, depthWrite: false });
+  let edges: THREE.InstancedMesh | null = null;
   let fills: THREE.InstancedMesh | null = null;
   let frames: THREE.InstancedMesh | null = null;
   let dots: THREE.InstancedMesh | null = null;
   let highlightLabels: OverlayItem[] = [];
   let highlights: BoardHighlights = {};
-  let highlightPlan: HighlightPlan = { cells: [], targets: [], path: [] };
+  let highlightPlan: HighlightPlan = { cells: [], targets: [], path: [], range: [], tone: 'enemy' };
 
   const figures = new Map<FigureId, FigureView>();
   let state: GameState | null = null;
@@ -1232,17 +1236,17 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   }
 
   function applyHighlights(): void {
-    highlightPlan = planHighlights(highlights);
-    for (const m of [fills, frames, dots]) {
+    // Only hexes of revealed rooms (a stale highlight must not float over the dark).
+    const onBoard = tiles.hexKeys();
+    highlightPlan = planHighlights(highlights, (h) => onBoard.has(hexKey(h)));
+    for (const m of [fills, frames, dots, edges]) {
       if (!m) continue;
       scene.remove(m);
       m.dispose();
     }
-    fills = frames = dots = null;
+    fills = frames = dots = edges = null;
     for (const item of highlightLabels) overlay.remove(item);
     highlightLabels = [];
-    // Only hexes of revealed rooms (a stale highlight must not float over the dark).
-    const onBoard = tiles.hexKeys();
     const cells = highlightPlan.cells.filter((c) => onBoard.has(hexKey(c.hex)));
     if (cells.length) {
       fills = new THREE.InstancedMesh(fillGeo, fillMat, cells.length);
@@ -1280,21 +1284,45 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       dots.renderOrder = 2;
       scene.add(dots);
     }
+    const tone = highlightPlan.tone;
+    if (highlightPlan.range.length) {
+      edges = new THREE.InstancedMesh(edgeGeo, edgeMat, highlightPlan.range.length);
+      const m = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const up = new THREE.Vector3(0, 1, 0);
+      highlightPlan.range.forEach(({ hex, dir }, i) => {
+        const c = hexToWorld(hex[0], hex[1]);
+        const d = DIRECTIONS[dir]!;
+        const n = hexToWorld(hex[0] + d[0], hex[1] + d[1]);
+        const dx = n.x - c.x;
+        const dz = n.z - c.z;
+        q.setFromAxisAngle(up, Math.atan2(-dx, -dz));
+        m.compose(new THREE.Vector3(c.x + dx * 0.47, PLATE_HEIGHT + 0.025, c.z + dz * 0.47), q, new THREE.Vector3(1, 1, 1));
+        edges!.setMatrixAt(i, m);
+      });
+      edgeMat.color.set(tone === 'ally' ? '#7ef0a0' : '#ffb08a');
+      edges.renderOrder = 2;
+      scene.add(edges);
+    }
     const targeted = new Set(highlights.targets ?? []);
     const active = highlights.active !== undefined ? highlights.active : state ? activeFigure(state) : null;
     const selected = highlights.selected ?? null;
     for (const fv of figures.values()) {
       const target = targeted.has(fv.id);
-      fv.setTargeted(target);
-      fv.setGlow(fv.gone ? null : target ? 'target' : fv.id === selected ? 'selected' : fv.id === active ? 'active' : null);
+      fv.setTargeted(target, tone);
+      fv.setGlow(fv.gone ? null : target ? (tone === 'ally' ? 'ally' : 'target') : fv.id === selected ? 'selected' : fv.id === active ? 'active' : null);
     }
     for (const mark of highlightPlan.targets) {
-      if (mark.expectedDamage === undefined) continue;
       const fv = figures.get(mark.figureId);
       if (!fv) continue;
       const el = document.createElement('div');
-      el.className = 'bv-exp';
-      el.innerHTML = `${iconSvg('attack')} ${mark.expectedDamage}`;
+      if (mark.preview) {
+        el.className = `bv-exp ${tone}`;
+        el.innerHTML = `${iconSvg(mark.preview.icon)}${mark.preview.text ? ` ${mark.preview.text}` : ''}`;
+      } else if (mark.expectedDamage !== undefined) {
+        el.className = 'bv-exp';
+        el.innerHTML = `${iconSvg('attack')} ${mark.expectedDamage}`;
+      } else continue;
       highlightLabels.push(overlay.add(el, () => (fv.root.visible ? fv.headPoint().add(new THREE.Vector3(0, 0.42, 0)) : null)));
     }
     requestRender();
@@ -1402,8 +1430,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     stopQuality();
     camera.dispose();
     for (const fv of [...figures.values()]) removeFigure(fv);
-    for (const m of [fills, frames, dots]) m?.dispose();
-    for (const x of [fillGeo, frameGeo, dotGeo, fillMat, frameMat, dotMat]) x.dispose();
+    for (const m of [fills, frames, dots, edges]) m?.dispose();
+    for (const x of [fillGeo, frameGeo, dotGeo, edgeGeo, fillMat, frameMat, dotMat, edgeMat]) x.dispose();
     tiles.dispose();
     environment.dispose();
     effects.dispose();

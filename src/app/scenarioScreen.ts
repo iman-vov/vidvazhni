@@ -30,6 +30,7 @@ import { elementsRow, eventChips, heroPanel, initiativeBar, intentIcon, intentIc
 import { figureCard, monsterPlan } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
+import { previewAction, type ActionPreview } from './actionPreview';
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
@@ -153,7 +154,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   let toastId = 0;
   let seenState: GameState | null = null;
   let skipModifiers = false;
-  let stepInfo: { model: StepModel; step: Step; heroId: FigureId } | null = null;
+  let stepInfo: { model: StepModel; step: Step; heroId: FigureId; preview: ActionPreview | null } | null = null;
+  // Non-attack steps: who the step reaches and what it does there (the engine plays each choice on
+  // a copy), kept until the state or the choices change.
+  let previewKey: { s: GameState; key: string; value: ActionPreview | null } | null = null;
+  function actionPreview(s: GameState, step: Step, heroId: FigureId, m: StepModel): ActionPreview | null {
+    const key = JSON.stringify(m.choices);
+    if (previewKey?.s !== s || previewKey.key !== key) previewKey = { s, key, value: previewAction(s, content, heroId, step, m.choices) };
+    return previewKey.value;
+  }
   let focusCache: { state: GameState; value: Record<string, FigureId[]> | null } | null = null;
   let disposed = false;
   let lastFigureTap: { id: FigureId; at: number } | null = null;
@@ -483,7 +492,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ui.sel = { ...ui.sel, direction: model.directions[0] ?? null };
         model = stepModel(s, s.pending.step, choices, ui.sel);
       }
-      stepInfo = { step: s.pending.step, heroId: s.pending.heroId, model };
+      stepInfo = { step: s.pending.step, heroId: s.pending.heroId, model, preview: model.mode === 'targets' || model.mode === 'plain' ? actionPreview(s, s.pending.step, s.pending.heroId, model) : null };
     }
     document.body.classList.toggle('g-left-closed', !ui.leftOpen);
     renderTop();
@@ -1033,6 +1042,17 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           t('ui.useConsume'),
         ),
       );
+    }
+    // The result on the chosen target (or the only one): «Травниця: 5 → 8».
+    const pv = info.preview;
+    if (pv) {
+      const picked = ui.chosen?.targets?.[0] ?? (pv.targets.length === 1 || m.mode === 'plain' ? undefined : null);
+      const ids = picked === null ? [] : picked ? [picked] : pv.targets;
+      for (const id of ids) {
+        const r = pv.results[id];
+        if (!r || !r.text) continue;
+        out.push(h('p', { class: 'gside-hint gstep-preview' }, h('b', null, `${figureName(id, s)}: ${r.text} `), icon(r.icon === 'heal' ? 'hp' : r.icon)));
+      }
     }
     if (m.elementKeys.length > 0 && m.mode !== 'plain') {
       out.push(
@@ -1660,6 +1680,17 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   board.sync(game.state, content);
   // Music: the location's track, the battle track while a boss is up; sounds follow the board.
+    } else if (stepInfo.preview && (m.mode === 'targets' || m.mode === 'plain')) {
+      // Heal, shield, buffs, push and pull: the targets in green (allies) or red, the reach around
+      // the hero and the result over each target; the chosen one first.
+      const pv = stepInfo.preview;
+      const chosen = ui.chosen?.targets ?? ui.sel.targets;
+      hl.targets = [...chosen.filter((x) => pv.targets.includes(x)), ...pv.targets.filter((x) => !chosen.includes(x))];
+      hl.targetTone = pv.tone;
+      const hero = s.figures[stepInfo.heroId];
+      if (hero && pv.range > 0) hl.range = { center: hero.hex, radius: pv.range };
+      hl.preview = {};
+      for (const [id, r] of Object.entries(pv.results)) hl.preview[id] = { text: r.text, icon: r.icon };
   function music(): void {
     const awake = Object.values(game.state.figures).filter((f): f is MonsterState => f.kind === 'monster' && f.hp > 0);
     if (!game.over) boardMusic(environmentFor(game.state.scenarioId).id, awake.some((f) => f.rank === 'boss'), Math.min(1, awake.length / 6));

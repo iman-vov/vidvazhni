@@ -53,7 +53,8 @@ const CSS = `
 .bv-float.x2>span{color:#ffd23f;font-size:20px}.bv-float.shield>span{color:#a9c6ff;font-size:17px}.bv-float.coin>span{color:#ffd54a;font-size:18px}
 .bv-float.info>span{color:#f4f1e8;font-size:15px}
 .bv-cost{transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#3a2a08;background:rgba(255,226,140,.92);border-radius:8px;padding:0 5px;line-height:16px}
-.bv-exp{transform:translate(-50%,-100%);font-size:14px;font-weight:800;color:#fff;background:rgba(196,60,40,.92);border-radius:9px;padding:1px 7px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.bv-exp{transform:translate(-50%,-100%);display:flex;align-items:center;gap:2px;white-space:nowrap;font-size:14px;font-weight:800;color:#fff;background:rgba(196,60,40,.92);border-radius:9px;padding:1px 7px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.bv-exp.ally{background:rgba(36,128,64,.94);box-shadow:0 0 0 1.5px rgba(160,255,180,.7),0 1px 3px rgba(0,0,0,.5)}
 .bv-reset{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(240,196,112,.7);background:rgba(28,24,22,.78);color:#f4e2bc;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.45);transition:opacity .2s;z-index:1;touch-action:manipulation}
 .bv-reset[hidden]{display:none}
 .bv-reset:active{transform:translateY(-50%) scale(.94)}
