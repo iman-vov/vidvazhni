@@ -903,5 +903,22 @@
   "menu.campaign": "Kampagne",
   "menu.campaign.soon": "Die Kampagne kommt in der nächsten Phase: Stadt, Laden, Heldenstufen.",
   "menu.version": "Version {version}",
-  "game.undo": "Rückgängig"
+  "game.undo": "Rückgängig",
+  "game.select.hint2": "Wähle noch {n}: Karte antippen zum Ansehen, Knopf in der Ecke zum Wählen.",
+  "game.card.pick": "Wählen",
+  "game.card.unpick": "Abwählen",
+  "game.close": "Schließen",
+  "game.explain.loss": "Nach dieser Aktion ist die Karte bis zum Ende des Szenarios verloren. Starke Aktionen kosten Karten.",
+  "game.explain.active": "Die Karte bleibt aktiv vor dir liegen, solange ihr Effekt wirkt (eine Runde oder einige Auslösungen).",
+  "game.explain.xp": "Führe diesen Teil aus und du bekommst Erfahrung.",
+  "game.item.ownTurn": "Gegenstände benutzt du in deinem Zug.",
+  "game.item.notNow": "Gerade hilft dieser Gegenstand nicht.",
+  "game.item.slot": "Platz",
+  "game.item.state": "Zustand:",
+  "game.item.use.spent": "kommt nach einer langen Rast zurück",
+  "game.item.use.lost": "einmal pro Szenario",
+  "game.item.use.passive": "wirkt immer, nicht antippen nötig",
+  "game.avoid.shield": "Schild {shield} ist schon eingerechnet",
+  "game.ev.shieldBlocked": "{name}: Schild −{shield}",
+  "game.ev.shieldShort": "Schild −{shield}"
 }

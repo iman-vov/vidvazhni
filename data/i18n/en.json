@@ -903,5 +903,22 @@
   "menu.campaign": "Campaign",
   "menu.campaign.soon": "The campaign comes in the next phase: town, shop, hero levels.",
   "menu.version": "version {version}",
-  "game.undo": "Undo"
+  "game.undo": "Undo",
+  "game.select.hint2": "Pick {n} more: tap a card to look at it, or the corner button to pick it.",
+  "game.card.pick": "Pick",
+  "game.card.unpick": "Unpick",
+  "game.close": "Close",
+  "game.explain.loss": "After this action the card is lost for the rest of the scenario. Strong actions cost cards.",
+  "game.explain.active": "The card stays active in front of you while its effect lasts (a round or a number of uses).",
+  "game.explain.xp": "Perform this part to gain experience.",
+  "game.item.ownTurn": "Items are used on your own turn.",
+  "game.item.notNow": "This item does not help right now.",
+  "game.item.slot": "Slot",
+  "game.item.state": "State:",
+  "game.item.use.spent": "comes back after a long rest",
+  "game.item.use.lost": "once per scenario",
+  "game.item.use.passive": "always on, no need to tap",
+  "game.avoid.shield": "Shield {shield} already counted",
+  "game.ev.shieldBlocked": "{name}: shield −{shield}",
+  "game.ev.shieldShort": "shield −{shield}"
 }

@@ -903,5 +903,22 @@
   "menu.campaign": "Кампанія",
   "menu.campaign.soon": "Кампанія з'явиться в наступній фазі: місто, крамниця, рівні героїв.",
   "menu.version": "версія {version}",
-  "game.undo": "Скасувати"
+  "game.undo": "Скасувати",
+  "game.select.hint2": "Обери ще {n}: торкнись карти, щоб роздивитися, або кнопки в куті, щоб обрати.",
+  "game.card.pick": "Обрати",
+  "game.card.unpick": "Прибрати",
+  "game.close": "Закрити",
+  "game.explain.loss": "Після цієї дії карта втрачається до кінця сценарію. Сильні дії коштують карт.",
+  "game.explain.active": "Карта лишається активною перед тобою, доки діє її ефект (раунд або кілька спрацювань).",
+  "game.explain.xp": "Виконай цю частину — отримаєш досвід.",
+  "game.item.ownTurn": "Предмети застосовуються у свій хід.",
+  "game.item.notNow": "Зараз цей предмет не допоможе.",
+  "game.item.slot": "Слот",
+  "game.item.state": "Стан:",
+  "game.item.use.spent": "повертається після довгого відпочинку",
+  "game.item.use.lost": "одноразовий на сценарій",
+  "game.item.use.passive": "діє завжди, натискати не треба",
+  "game.avoid.shield": "Щит {shield} уже враховано",
+  "game.ev.shieldBlocked": "{name}: щит −{shield}",
+  "game.ev.shieldShort": "щит −{shield}"
 }

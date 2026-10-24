@@ -13,7 +13,7 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
     case 'turnStarted':
       return t('log.turnStarted', { name: n(e.figureId) });
     case 'attacked':
-      return t('game.ev.attacked', { attacker: n(e.attackerId), target: n(e.targetId), mod: modifierLabel(e.chosen), damage: e.damage }) + (e.followUp ? ` (${t('variant.followUp')})` : '');
+      return t('game.ev.attacked', { attacker: n(e.attackerId), target: n(e.targetId), mod: modifierLabel(e.chosen), damage: e.damage }) + (e.followUp ? ` (${t('variant.followUp')})` : '') + (e.shield > 0 ? ` (${t('game.ev.shieldShort', { shield: e.shield })})` : '');
     case 'damaged':
       return e.source.includes(':') || e.amount === 0 ? null : t('game.ev.damaged', { name: n(e.figureId), amount: e.amount });
     case 'healed':

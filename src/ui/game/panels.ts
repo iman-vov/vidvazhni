@@ -190,8 +190,8 @@ export interface HeroPanelOptions {
   colorOf: (heroId: FigureId) => string;
   playerName: (heroId: FigureId) => string;
   intentsOf: (heroId: FigureId) => IntentId[];
-  /** Item slots: usable now (glow) and the click handler when legal. */
-  items: (heroId: FigureId) => { id: string; state: string; usable: boolean; onUse: (() => void) | null }[];
+  /** Item slots: usable now (glow); a tap opens the item's description. */
+  items: (heroId: FigureId) => { id: string; state: string; usable: boolean; onOpen: () => void }[];
   explain: Explain;
   onToggle: () => void;
   onFocus: (heroId: FigureId) => void;
@@ -275,10 +275,9 @@ function heroBlock(o: HeroPanelOptions, hero: HeroState): HTMLElement {
             'button',
             {
               class: `gslot is-${it.state}${it.usable ? ' is-glow' : ''}`,
-              disabled: !it.onUse,
               title: `${t(`item.${it.id}`)} · ${t(`game.itemState.${it.state}`)}`,
               'aria-label': `${t(`item.${it.id}`)}, ${t(`game.itemState.${it.state}`)}`,
-              onclick: () => it.onUse?.(),
+              onclick: () => it.onOpen(),
             },
             icon('item'),
             h('small', null, t(`item.${it.id}`)),
