@@ -1,0 +1,55 @@
+{
+  "id": "mine-tunnel",
+  "scenarios": ["s6"],
+  "edge": "mine",
+  "surface": "rock",
+  "boundary": "walls",
+  "ground": { "texture": "cave-rock", "tint": "#4a3c30", "scale": 2.6 },
+  "walls": { "height": 1.7, "low": 0.32, "alt": 3, "inner": "#5a4a3c", "sconce": { "piece": "mine-lamp", "every": 3 } },
+  "palette": { "rock": "#5e5248", "rockDark": "#3a322c", "stone": "#6a5e54", "stoneDark": "#463e38", "wood": "#7a5434", "woodDark": "#4a3220", "iron": "#4a4a50", "ore": "#c07a3a" },
+  "light": {
+    "sky": "#5a6078",
+    "ground": "#14100c",
+    "hemi": 0.42,
+    "sun": "#8a90b0",
+    "sunIntensity": 0.7,
+    "env": 0.25,
+    "point": { "color": "#ffa04a", "intensity": 8, "distance": 6.5 }
+  },
+  "fog": { "color": "#0e0b09", "glow": "#1c140e", "start": 1.8, "end": 6, "morok": "#9a96a0", "morokOpacity": 0.35 },
+  "weather": { "kind": "dust", "count": 500, "color": "#b89a78", "wind": [0.12, 0.04] },
+  "entrance": "mine-lantern",
+  "propModels": {
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "cage": { "model": "prisoner-cage", "height": 1.1 },
+    "totem": { "model": "tribal-totem", "height": 1.5 },
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
+    "barrel": { "model": "barrel", "height": 0.85 },
+    "crate": { "model": "crate", "height": 0.6 },
+    "crate-stack": { "model": "crate-stack", "height": 1.05 },
+    "crate-broken": { "model": "crate-broken", "height": 0.55 },
+    "sacks": { "model": "sacks-pile", "height": 0.6 },
+    "sack": { "model": "flour-sack", "height": 0.5 },
+    "mine-cart": { "model": "mine-cart", "height": 0.75 },
+    "mine-support": { "model": "mine-support", "height": 1.45 },
+    "ore-pile": { "model": "ore-pile", "height": 0.45 },
+    "mine-lantern": { "model": "mine-lantern", "height": 1.5 }
+  },
+  "obstacles": { "mine-support": ["mine-support"], "rubble": ["rubble-heap", "ore-pile", "rubble-heap"] },
+  "dressing": {
+    "anchors": [["mine-lantern", 2]],
+    "sets": [
+      { "weight": 2, "items": [{ "piece": "rails", "x": -0.45, "z": 0.05, "align": true }, { "piece": "mine-cart", "x": 0.1, "z": 0.05, "align": true }, { "piece": "ore-pile", "x": 0.85, "z": 0.2 }] },
+      { "weight": 2, "items": [{ "piece": "timber-stack", "x": 0, "z": 0, "align": true }, { "piece": "crate", "x": 0.7, "z": 0.15 }, { "piece": "rubble", "x": -0.6, "z": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "ore-pile", "x": 0, "z": 0.05 }, { "piece": "barrel", "x": 0.6, "z": 0.1 }, { "piece": "sack", "x": -0.5, "z": 0.3, "tilt": 0.3 }] },
+      { "weight": 1, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "crate", "x": 0.02, "z": 0.02, "on": 0 }, { "piece": "crate-broken", "x": 0.62, "z": 0.18 }] },
+      { "weight": 1, "items": [{ "piece": "rubble-heap", "x": 0, "z": 0.05 }, { "piece": "timber-stack", "x": 0.75, "z": 0.1, "align": true }] }
+    ],
+    "ring": [["ore-pile", 3], ["rubble-heap", 2], ["timber-stack", 2], ["crate", 2], ["barrel", 2], ["rubble", 2], ["sacks", 1], ["mine-cart", 1], ["crate-broken", 1]],
+    "density": 0.6
+  }
+}
