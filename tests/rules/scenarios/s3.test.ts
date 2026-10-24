@@ -41,13 +41,13 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
   });
 
   it('«Кидок мішка» is a range 3 attack on 2 targets', () => {
-    const s = hall([9, -3], [9, -2]);
+    const s = hall([13, -5], [13, -4]);
     s.behaviourDecks['bog-miller']!.current = 'boss.miller.45';
     expect(figureSteps(ctxOf(s), miller(s))).toEqual([{ type: 'attack', value: 3, range: 3, targets: 2 }]);
   });
 
   it('card 22 summons 2 bog slimes next to the Miller and heals him by 3', () => {
-    let s = hall([9, -3], [9, -2]);
+    let s = hall([13, -5], [13, -4]);
     miller(s).hp = 10;
     stackBehaviour(s, 'bog-miller', ['boss.miller.22']);
     s = finishRound(selectEarly(s), content);
@@ -55,15 +55,15 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
     expect(slimes).toHaveLength(2);
     for (const sl of slimes) {
       expect(sl.summonerId).toBe(miller(s).id);
-      expect(Math.max(Math.abs(sl.hex[0] - 11), Math.abs(sl.hex[1] + 3), Math.abs(sl.hex[0] + sl.hex[1] - 8))).toBe(1);
+      expect(Math.max(Math.abs(sl.hex[0] - 15), Math.abs(sl.hex[1] + 5), Math.abs(sl.hex[0] + sl.hex[1] - 10))).toBe(1);
     }
     expect(miller(s).hp).toBe(13);
   });
 
   it('«Потоп»: heroes on water take 2 damage and are immobilized; others are spared', () => {
-    let s = hall([10, -4], [9, -3]);
-    expect(tile(s, [10, -4]).terrain).toBe('water');
-    expect(tile(s, [9, -3]).terrain).toBe('normal');
+    let s = hall([14, -5], [13, -5]);
+    expect(tile(s, [14, -5]).terrain).toBe('water');
+    expect(tile(s, [13, -5]).terrain).toBe('normal');
     stackBehaviour(s, 'bog-miller', ['boss.miller.72']);
     s = selectEarly(s);
     const before = { warden: hero(s, 'warden').hp, herbalist: hero(s, 'herbalist').hp };
@@ -75,8 +75,8 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
 
   it('the sluice lever: a hero next to it spends a top action to lower it', () => {
     let s = clearMonsters(reveal(game('s3'), 's3.sluice'));
-    expect(tile(s, [6, -3])).toMatchObject({ obstacle: true, object: { id: 's3.sluice-lever', kind: 'lever', state: 'up' } });
-    place(s, 'hero:warden', [7, -3]);
+    expect(tile(s, [6, -1])).toMatchObject({ obstacle: true, object: { id: 's3.sluice-lever', kind: 'lever', state: 'up' } });
+    place(s, 'hero:warden', [6, 0]);
     s = untilTurn(selectEarly(s), 'warden');
     const [a, b] = selected(s, 'warden');
     const offered = legalActions(s, content).filter((x) => x.type === 'interact');
@@ -88,26 +88,26 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
       /top action/,
     );
     const r = act(s, content, { type: 'interact', heroId: 'hero:warden', cardId: a, half: 'top', objectId: 's3.sluice-lever' });
-    expect(tile(r, [6, -3]).object?.state).toBe('down');
-    expect(eventsOf(r.log, 'objectChanged')).toEqual([{ type: 'objectChanged', objectId: 's3.sluice-lever', hex: [6, -3], state: 'down', byId: 'hero:warden' }]);
+    expect(tile(r, [6, -1]).object?.state).toBe('down');
+    expect(eventsOf(r.log, 'objectChanged')).toEqual([{ type: 'objectChanged', objectId: 's3.sluice-lever', hex: [6, -1], state: 'down', byId: 'hero:warden' }]);
     expect([...hero(r, 'warden').discard, ...hero(r, 'warden').lost]).toContain(a);
     expect(r.pending).toEqual({ kind: 'heroTurn', heroId: 'hero:warden' });
     // The other card's bottom half can still be played; the lever is done.
     expect(rejects(r, content, { type: 'interact', heroId: 'hero:warden', cardId: b, half: 'top', objectId: 's3.sluice-lever' })).toMatch(/top action already/);
-    expect(act(r, content, { type: 'undo' }).board.tiles['6,-3']?.object?.state).toBe('up');
+    expect(act(r, content, { type: 'undo' }).board.tiles['6,-1']?.object?.state).toBe('up');
   });
 
   it('the lever must be adjacent', () => {
     let s = clearMonsters(reveal(game('s3'), 's3.sluice'));
-    place(s, 'hero:warden', [8, -3]);
+    place(s, 'hero:warden', [9, -2]);
     s = untilTurn(selectEarly(s), 'warden');
     const [a] = selected(s, 'warden');
     expect(rejects(s, content, { type: 'interact', heroId: 'hero:warden', cardId: a, half: 'top', objectId: 's3.sluice-lever' })).toMatch(/adjacent/);
   });
 
   it('with the sluice lowered «Потоп» does nothing', () => {
-    let s = hall([10, -4], [10, -3]);
-    tile(s, [6, -3]).object!.state = 'down';
+    let s = hall([14, -5], [14, -4]);
+    tile(s, [6, -1]).object!.state = 'down';
     stackBehaviour(s, 'bog-miller', ['boss.miller.72']);
     s = selectEarly(s);
     const before = hero(s, 'warden').hp + hero(s, 'herbalist').hp;
@@ -118,8 +118,8 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
 
   it('water is difficult terrain: entering it costs 2 movement', () => {
     const s = clearMonsters(reveal(game('s3'), 's3.sluice'));
-    place(s, 'hero:warden', [5, -1]);
-    expect(findPath(s, [6, -1], { figureId: 'hero:warden' })?.cost).toBe(2);
+    place(s, 'hero:warden', [6, 0]);
+    expect(findPath(s, [7, 0], { figureId: 'hero:warden' })?.cost).toBe(2);
     expect(findPath(s, [5, 0], { figureId: 'hero:warden' })?.cost).toBe(1);
   });
 
@@ -132,8 +132,8 @@ describe('s3 Затоплений млин: Мірошник-Болотяник'
     // The Miller stays (killing him would end the scenario); he is far from the heroes in the yard.
     clearMonsters(s, 'bog-slime');
     s = finishRound(selectEarly(s), content);
-    expect(s.orbs.earth).toEqual({ ownerId: 's3.millstones', hex: [13, -5], age: 0 });
-    expect(tile(s, [13, -5]).obstacle).toBe(true);
+    expect(s.orbs.earth).toEqual({ ownerId: 's3.millstones', hex: [17, -8], age: 0 });
+    expect(tile(s, [17, -8]).obstacle).toBe(true);
   });
 
   it('base rules: the millstones give nothing', () => {

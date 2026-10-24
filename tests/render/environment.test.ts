@@ -127,7 +127,10 @@ describe('straight walls', () => {
           const c = hexToWorld(q, rr);
           const along = ((c.x - r.ax) * (r.bx - r.ax) + (c.z - r.az) * (r.bz - r.az)) / ((r.bx - r.ax) ** 2 + (r.bz - r.az) ** 2);
           if (along < 0 || along > 1) continue;
-          expect((c.x - r.ax) * r.nx + (c.z - r.az) * r.nz, `${k}`).toBeLessThan(0.05);
+          const out = (c.x - r.ax) * r.nx + (c.z - r.az) * r.nz;
+          // Far beyond the line is the other side of a concave notch (a hall past a narrow room), not a cut.
+          if (out > 3) continue;
+          expect(out, `${k}`).toBeLessThan(0.05);
         }
       }
     });

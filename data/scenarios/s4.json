@@ -26,46 +26,48 @@
     {
       "id": "s4.barracks",
       "hexes": [
-        [4, -2], [4, -1], [4, 0], [4, 1], [4, 2], [5, -2], [5, -1], [5, 0],
-        [5, 1], [5, 2], [6, -3], [6, -2], [6, -1], [6, 0], [6, 1], [7, 0]
+        [4, -1], [4, 0], [4, 1], [5, -1], [5, 0], [5, 1], [6, -2], [6, -1],
+        [6, 0], [7, -2], [7, -1], [7, 0], [8, -3], [8, -2], [8, -1], [9, -3],
+        [9, -2], [9, -1], [10, -3]
       ],
-      "obstacles": [{ "hex": [4, -2], "model": "bed" }, { "hex": [4, 2], "model": "bed" }],
-      "doors": [{ "hex": [7, 0], "to": "s4.upper-tier", "key": "tower-key" }],
+      "obstacles": [{ "hex": [4, -1], "model": "bed" }, { "hex": [8, -1], "model": "bed" }],
+      "doors": [{ "hex": [10, -3], "to": "s4.upper-tier", "key": "tower-key" }],
       "spawns": [
-        { "monster": "gloom-cultist", "hex": [6, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [6, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [6, 0], "by": { "3": "elite", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [6, 1], "by": { "4": "elite" } }
+        { "monster": "gloom-cultist", "hex": [8, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [7, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [9, -2], "by": { "3": "elite", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [9, -1], "by": { "4": "elite" } }
       ],
       "drops": [{ "monster": "gloom-cultist", "questItem": "tower-key" }],
-      "coins": [[5, 2]],
+      "coins": [[5, 1]],
       "objects": [
-        { "hex": [5, -1], "id": "s4.rune-1", "kind": "rune" },
-        { "hex": [6, -2], "id": "s4.rune-2", "kind": "rune" },
-        { "hex": [5, 1], "id": "s4.rune-3", "kind": "rune" }
+        { "hex": [6, -2], "id": "s4.rune-1", "kind": "rune" },
+        { "hex": [6, 0], "id": "s4.rune-2", "kind": "rune" },
+        { "hex": [8, -2], "id": "s4.rune-3", "kind": "rune" }
       ]
     },
     {
       "id": "s4.upper-tier",
       "hexes": [
-        [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [9, -4], [9, -3], [9, -2],
-        [9, -1], [9, 0], [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [11, -5],
-        [11, -4], [11, -3], [11, -2], [11, -1]
+        [11, -6], [11, -5], [11, -4], [11, -3], [11, -2], [11, -1], [12, -7], [12, -6],
+        [12, -5], [12, -4], [12, -3], [12, -2], [13, -7], [13, -6], [13, -5], [13, -4],
+        [13, -3], [13, -2], [14, -8], [14, -7], [14, -6], [14, -5], [14, -4], [14, -3],
+        [15, -8], [15, -7], [15, -6], [15, -5], [15, -4], [15, -3]
       ],
       "obstacles": [
-        { "hex": [8, -4], "model": "pillar" },
-        { "hex": [11, -3], "model": "pillar" },
-        { "hex": [11, -1], "model": "pillar" }
+        { "hex": [11, -6], "model": "pillar" },
+        { "hex": [15, -3], "model": "pillar" },
+        { "hex": [13, -3], "model": "pillar" }
       ],
       "spawns": [
-        { "monster": "shadow-wraith", "hex": [10, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "shadow-wraith", "hex": [9, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "stone-sentinel", "hex": [10, -3], "by": { "3": "normal", "4": "elite" } },
-        { "monster": "shadow-wraith", "hex": [9, -1], "by": { "3": "elite", "4": "normal" } },
-        { "monster": "shadow-wraith", "hex": [10, -1], "by": { "4": "elite" } }
+        { "monster": "shadow-wraith", "hex": [14, -8], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [13, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "stone-sentinel", "hex": [14, -6], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "shadow-wraith", "hex": [12, -3], "by": { "3": "elite", "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [15, -5], "by": { "4": "elite" } }
       ],
-      "coins": [[11, -2]],
-      "chests": [{ "hex": [11, -5], "id": "s4.lantern-shard", "loot": { "questItem": "lantern-shard-2" } }]
+      "coins": [[11, -1]],
+      "chests": [{ "hex": [13, -6], "id": "s4.lantern-shard", "loot": { "questItem": "lantern-shard-2" } }]
     }
   ],
   "reward": { "goldEach": 15, "unlock": ["s5"] }

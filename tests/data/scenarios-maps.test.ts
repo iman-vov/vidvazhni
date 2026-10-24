@@ -92,11 +92,14 @@ describe('drafts s2–s5 follow the design doc', () => {
     });
 
   for (const id of ['s2', 's3', 's4', 's5'])
-    it(`${id}: is a draft of 30–90 hexes`, () => {
+    it(`${id}: is a draft of 30–90 hexes whose rooms differ in size`, () => {
       const s = scenarios[id]!;
       expect(s.draft).toBe(true);
       expect(hexCount(s)).toBeGreaterThanOrEqual(30);
       expect(hexCount(s)).toBeLessThanOrEqual(90);
+      // A hall next to a closet or a corridor: the biggest room at least twice the smallest.
+      const sizes = s.rooms.map((r) => r.hexes.length);
+      expect(Math.max(...sizes)).toBeGreaterThanOrEqual(2 * Math.min(...sizes));
       expect(s.startHexes).toHaveLength(4);
     });
 

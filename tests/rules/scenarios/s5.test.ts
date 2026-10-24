@@ -12,9 +12,9 @@ import type { GameState } from '../../../src/rules/state';
 import { clearMonsters, content, ctxOf, game, hero, monstersOf, place, reveal, selected, selectEarly, tile, untilTurn } from './helpers';
 
 const BRAZIERS: [number, number][] = [
-  [8, -3],
-  [11, -4],
-  [10, -1],
+  [11, -5],
+  [13, -5],
+  [11, -3],
 ];
 
 function boss(s: GameState) {
@@ -43,13 +43,13 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
 
   it('a hero next to a brazier spends a bottom action to light it and infuse Light', () => {
     let s = heart();
-    place(s, 'hero:warden', [8, -2]);
+    place(s, 'hero:warden', [10, -5]);
     s = untilTurn(selectEarly(s), 'warden');
     const [a, b] = selected(s, 'warden');
     expect(rejects(s, content, { type: 'interact', heroId: 'hero:warden', cardId: a, half: 'top', objectId: 's5.brazier-1' })).toMatch(/bottom action/);
     expect(rejects(s, content, { type: 'interact', heroId: 'hero:warden', cardId: a, half: 'bottom', objectId: 's5.brazier-2' })).toMatch(/adjacent/);
     s = act(s, content, { type: 'interact', heroId: 'hero:warden', cardId: b, half: 'bottom', objectId: 's5.brazier-1' });
-    expect(tile(s, [8, -3]).object?.state).toBe('lit');
+    expect(tile(s, [11, -5]).object?.state).toBe('lit');
     expect(s.pendingInfusions).toEqual(['light']);
     s = endTurn(s, content, 'warden');
     expect(s.elements.light).toBe('strong');
@@ -57,7 +57,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
 
   it('fork: lighting a brazier gives a Fire orb above the hero (there is no Light orb)', () => {
     let s = heart({ orbs: true });
-    place(s, 'hero:warden', [8, -2]);
+    place(s, 'hero:warden', [10, -5]);
     s = untilTurn(selectEarly(s), 'warden');
     const [, b] = selected(s, 'warden');
     s = act(s, content, { type: 'interact', heroId: 'hero:warden', cardId: b, half: 'bottom', objectId: 's5.brazier-1' });
@@ -74,10 +74,10 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     const s = heart();
     const ctx = ctxOf(s);
     expect(adjustDamage(ctx, boss(s), 5)).toBe(2);
-    tile(s, [8, -3]).object!.state = 'lit';
-    tile(s, [11, -4]).object!.state = 'lit';
+    tile(s, [11, -5]).object!.state = 'lit';
+    tile(s, [13, -5]).object!.state = 'lit';
     expect(adjustDamage(ctx, boss(s), 5)).toBe(2);
-    tile(s, [10, -1]).object!.state = 'lit';
+    tile(s, [11, -3]).object!.state = 'lit';
     expect(adjustDamage(ctx, boss(s), 5)).toBe(5);
     // Other monsters always take full damage.
     const t = reveal(game('s5'), 's5.heart');
@@ -91,7 +91,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     ] as const) {
       let s = heart();
       if (lit) lightAll(s);
-      place(s, 'hero:warden', [9, -3]);
+      place(s, 'hero:warden', [11, -4]);
       s = untilTurn(selectEarly(s), 'warden');
       stackModifiers(s, 'warden', ['+0']);
       const [a] = selected(s, 'warden');
@@ -104,18 +104,18 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     let s = reveal(game('s5'), 's5.heart');
     const [w, ...rest] = monstersOf(s, 'shadow-wraith');
     for (const m of [...rest, ...monstersOf(s, 'gloom-cultist'), boss(s)]) delete s.figures[m.id];
-    tile(s, [8, -3]).object!.state = 'lit';
-    place(s, w!.id, [8, -2]);
+    tile(s, [11, -5]).object!.state = 'lit';
+    place(s, w!.id, [10, -5]);
     w!.conditions.immobilize = { expiresAfterTurn: 99 };
     s = finishRound(selectEarly(s), content);
-    expect(tile(s, [8, -3]).object?.state).toBe('unlit');
-    expect(eventsOf(s.log, 'objectChanged')).toEqual([{ type: 'objectChanged', objectId: 's5.brazier-1', hex: [8, -3], state: 'unlit', byId: w!.id }]);
+    expect(tile(s, [11, -5]).object?.state).toBe('unlit');
+    expect(eventsOf(s.log, 'objectChanged')).toEqual([{ type: 'objectChanged', objectId: 's5.brazier-1', hex: [11, -5], state: 'unlit', byId: w!.id }]);
   });
 
   it('teleport: Тінерук jumps up to 5 hexes to a free hex away from heroes but within his range, and infuses Darkness', () => {
     let s = heart();
-    place(s, 'hero:warden', [9, -3]);
-    place(s, 'hero:herbalist', [9, -2]);
+    place(s, 'hero:warden', [11, -4]);
+    place(s, 'hero:herbalist', [10, -4]);
     stackBehaviour(s, 'shadowhand', ['boss.shadowhand.08']);
     const from = boss(s).hex;
     s = finishRound(selectEarly(s), content);

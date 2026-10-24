@@ -7,7 +7,7 @@ import { figureSteps } from '../../../src/rules/turn';
 import type { GameState } from '../../../src/rules/state';
 import { clearMonsters, content, ctxOf, game, hero, monstersOf, place, reveal, selected, selectEarly, tile, untilTurn } from './helpers';
 
-const DOOR: [number, number] = [7, 0];
+const DOOR: [number, number] = [10, -3];
 const ATTACK3 = { type: 'attack', value: 3 } as const;
 
 describe('s4 Стара сторожова вежа', () => {
@@ -15,12 +15,12 @@ describe('s4 Стара сторожова вежа', () => {
     let s = clearMonsters(reveal(game('s4'), 's4.barracks'));
     expect(tile(s, DOOR).door).toEqual({ to: 's4.upper-tier', open: false, key: 'tower-key' });
     expect(isDoorLocked(s, DOOR)).toBe(true);
-    place(s, 'hero:warden', [6, 0]);
+    place(s, 'hero:warden', [9, -3]);
     s = untilTurn(selectEarly(s), 'warden');
     const [, b] = selected(s, 'warden');
     s = act(s, content, { type: 'startHalf', heroId: 'hero:warden', cardId: b, half: 'bottom', basic: true });
     expect(rejects(s, content, { type: 'resolveStep', choice: { path: [DOOR] } })).toBe('the door is locked');
-    const moves = legalActions(s, content).filter((a) => a.type === 'resolveStep' && a.choice.path?.some((h) => h[0] === 7 && h[1] === 0));
+    const moves = legalActions(s, content).filter((a) => a.type === 'resolveStep' && a.choice.path?.some((h) => h[0] === 10 && h[1] === -3));
     expect(moves).toEqual([]);
 
     // The key held by any hero of the party opens it.
@@ -54,23 +54,23 @@ describe('s4 Стара сторожова вежа', () => {
   it('a cultist on a rune has Shield 1; off the rune, or another monster on it, has none', () => {
     const s = clearMonsters(reveal(game('s4'), 's4.barracks'), 'stone-sentinel');
     const [c] = monstersOf(s, 'gloom-cultist');
-    place(s, c!.id, [5, -1]);
-    expect(tile(s, [5, -1]).object?.kind).toBe('rune');
-    place(s, 'hero:warden', [4, -1]);
+    place(s, c!.id, [6, -2]);
+    expect(tile(s, [6, -2]).object?.kind).toBe('rune');
+    place(s, 'hero:warden', [5, -1]);
     expect(previewAttack(s, 'hero:warden', c!.id, content, ATTACK3)).toMatchObject({ shield: 1, damage: 2 });
     place(s, c!.id, [5, 0]);
     expect(previewAttack(s, 'hero:warden', c!.id, content, ATTACK3)).toMatchObject({ shield: 0, damage: 3 });
     const sentinelGame = reveal(game('s4'), 's4.barracks');
     const sentinel = monstersOf(sentinelGame, 'stone-sentinel')[0]!;
     const plain = previewAttack(sentinelGame, 'hero:warden', sentinel.id, content, ATTACK3)!.shield;
-    place(sentinelGame, sentinel.id, [5, -1]);
-    place(sentinelGame, 'hero:warden', [4, -1]);
+    place(sentinelGame, sentinel.id, [6, -2]);
+    place(sentinelGame, 'hero:warden', [5, -1]);
     expect(previewAttack(sentinelGame, 'hero:warden', sentinel.id, content, ATTACK3)!.shield).toBe(plain);
   });
 
   it('the chest on the upper tier gives the Lantern piece; carried back to the entrance it wins', () => {
     let s = clearMonsters(reveal(game('s4'), 's4.barracks', 's4.upper-tier'));
-    place(s, 'hero:warden', [11, -5]);
+    place(s, 'hero:warden', [13, -6]);
     s = finishRound(selectEarly(s), content);
     expect(hero(s, 'warden').questItems).toEqual(['lantern-shard-2']);
     expect(hero(s, 'warden').chests).toEqual(['s4.lantern-shard']);
