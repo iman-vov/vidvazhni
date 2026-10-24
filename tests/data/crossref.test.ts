@@ -19,6 +19,15 @@ describe('content cross references', () => {
     expect(checkContent(broken).join('\n')).toMatch(/deck nope missing/);
   });
 
+  it('flags a drop table naming a missing item', () => {
+    const broken: Content = clone(content);
+    broken.monsters['grey-wolf']!.drops = { elite: { items: ['sword-of-doom'] } };
+    broken.bosses['bog-miller']!.drops = { items: ['crown'] };
+    const errors = checkContent(broken).join('\n');
+    expect(errors).toMatch(/grey-wolf: elite drop item sword-of-doom missing/);
+    expect(errors).toMatch(/bog-miller: drop item crown missing/);
+  });
+
   it('flags a summon of an unknown monster', () => {
     const broken: Content = clone(content);
     const step = broken.decks['caster']?.cards[1]?.steps[0];
@@ -62,6 +71,16 @@ describe('scenario cross references', () => {
     const s = s1();
     if (s.rooms[0]) s.rooms[0].walls = [];
     expect(checkScenario(s, content).join('\n')).toMatch(/open to each other/);
+  });
+
+  it('flags a named enemy or a chest with a missing item', () => {
+    const s = s1();
+    const room = s.rooms[0]!;
+    room.spawns![0]!.drops = { items: ['crown'] };
+    room.chests = [{ hex: room.hexes[0]!, id: 'c', loot: { item: 'sword-of-doom' } }];
+    const errors = checkScenario(s, content).join('\n');
+    expect(errors).toMatch(/drop item crown missing/);
+    expect(errors).toMatch(/chest c: item sword-of-doom missing/);
   });
 
   it('flags a spawn of an unknown monster', () => {

@@ -2,6 +2,19 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Boss type",
   "definitions": {
+    "drop": {
+      "description": "What a killed figure may leave (docs/design/camp.md «Звідки здобич»).",
+      "type": "object",
+      "properties": {
+        "coins": { "type": "integer", "minimum": 1 },
+        "coinChance": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "items": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "itemChance": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "dependencies": { "coinChance": ["coins"], "itemChance": ["items"] }
+    },
     "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
     "condition": { "enum": ["poison", "wound", "immobilize", "disarm", "stun", "muddle", "invisible", "strengthen"] },
     "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark"] },
@@ -395,7 +408,8 @@
     "shield": { "type": "integer", "minimum": 1 },
     "deck": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*$" },
     "immune": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
-    "special": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+    "special": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "drops": { "$ref": "#/definitions/drop" }
   },
   "required": ["id", "hpPerHero", "hpPerHeroPerLevel", "move", "attack", "deck", "immune"],
   "additionalProperties": false

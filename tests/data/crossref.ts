@@ -2,7 +2,7 @@
 // inside their room, doors that must lead somewhere. Used by crossref.test.ts, which also feeds it
 // deliberately broken content.
 
-import type { Content, RoomDef, ScenarioDef, Step } from '../../src/rules/content';
+import type { Content, DropDef, RoomDef, ScenarioDef, Step } from '../../src/rules/content';
 import { areAdjacent, hexKey } from '../../src/rules/hex';
 import type { Hex } from '../../src/rules/hex';
 
@@ -48,6 +48,11 @@ export function allSteps(content: Content): Step[] {
   return out;
 }
 
+/** Items a drop table names that are not in `content.items`. */
+function missingDropItems(content: Content, drop: DropDef | undefined): string[] {
+  return (drop?.items ?? []).filter((id) => !content.items?.[id]);
+}
+
 export function checkContent(content: Content): string[] {
   const errors: string[] = [];
   const err = (msg: string) => errors.push(msg);
@@ -62,8 +67,13 @@ export function checkContent(content: Content): string[] {
       seen.add(card.id);
     }
   }
-  for (const boss of Object.values(content.bosses))
+  for (const monster of Object.values(content.monsters))
+    for (const rank of ['normal', 'elite'] as const)
+      for (const id of missingDropItems(content, monster.drops?.[rank])) err(`monster ${monster.id}: ${rank} drop item ${id} missing`);
+  for (const boss of Object.values(content.bosses)) {
     if (!content.decks[boss.deck]) err(`boss ${boss.id}: deck ${boss.deck} missing`);
+    for (const id of missingDropItems(content, boss.drops)) err(`boss ${boss.id}: drop item ${id} missing`);
+  }
   for (const deck of Object.values(content.decks)) {
     const seen = new Set<string>();
     for (const card of deck.cards) {
@@ -127,8 +137,12 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     for (const sp of room.spawns ?? []) {
       claim(sp.hex, `spawn ${sp.monster}`);
       if (!content.monsters[sp.monster] && !content.bosses[sp.monster]) err(`spawn of unknown ${sp.monster}`);
+      for (const id of missingDropItems(content, sp.drops)) err(`spawn ${sp.monster} in ${room.id}: drop item ${id} missing`);
     }
-    for (const c of room.chests ?? []) claim(c.hex, `chest ${c.id}`);
+    for (const c of room.chests ?? []) {
+      claim(c.hex, `chest ${c.id}`);
+      if (c.loot?.item && !content.items?.[c.loot.item]) err(`chest ${c.id}: item ${c.loot.item} missing`);
+    }
     for (const o of room.objects ?? []) claim(o.hex, `object ${o.id}`);
     for (const t of room.traps ?? []) claim(t.hex, 'trap');
     for (const c of room.coins ?? []) inside(c, 'coins');

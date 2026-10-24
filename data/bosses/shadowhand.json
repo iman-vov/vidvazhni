@@ -7,5 +7,6 @@
   "range": 3,
   "deck": "boss.shadowhand",
   "immune": ["stun", "immobilize", "muddle"],
-  "special": ["secondPhase"]
+  "special": ["secondPhase"],
+  "drops": { "coins": 3, "items": ["heavy-armor", "light-amulet"] }
 }

@@ -2,6 +2,19 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Monster type",
   "definitions": {
+    "drop": {
+      "description": "What a killed figure may leave (docs/design/camp.md «Звідки здобич»).",
+      "type": "object",
+      "properties": {
+        "coins": { "type": "integer", "minimum": 1 },
+        "coinChance": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "items": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "itemChance": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "dependencies": { "coinChance": ["coins"], "itemChance": ["items"] }
+    },
     "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
     "condition": { "enum": ["poison", "wound", "immobilize", "disarm", "stun", "muddle", "invisible", "strengthen"] },
     "element": { "enum": ["fire", "ice", "air", "earth", "light", "dark"] },
@@ -426,7 +439,13 @@
       }
     },
     "forkCards": { "type": "array", "items": { "$ref": "#/definitions/monsterCard" }, "maxItems": 2 },
-    "model": { "type": "string", "minLength": 1 }
+    "model": { "type": "string", "minLength": 1 },
+    "drops": {
+      "type": "object",
+      "properties": { "normal": { "$ref": "#/definitions/drop" }, "elite": { "$ref": "#/definitions/drop" } },
+      "required": [],
+      "additionalProperties": false
+    }
   },
   "required": ["id", "deck", "initiativeOffset", "normal", "elite"],
   "additionalProperties": false

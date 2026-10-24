@@ -206,6 +206,19 @@ export type MonsterTrait =
   | { trait: 'maxSummonsPerFigure'; value: number } // культист
   | { trait: 'immune'; conditions: ConditionId[] }; // боси
 
+/** What a killed (not summoned) figure may leave behind, rolled with the game's RNG
+ *  (docs/design/camp.md «Звідки здобич»). */
+export interface DropDef {
+  /** Coins put on the figure's hex, picked up like map coins. */
+  coins?: number;
+  /** Chance 0–1 of the coins; none = always. */
+  coinChance?: number;
+  /** One item from this table goes straight to the party chest (elites, bosses, named enemies). */
+  items?: string[];
+  /** Chance 0–1 of an item; none = always. */
+  itemChance?: number;
+}
+
 export interface MonsterType {
   id: string;
   deck: string; // behaviour deck id (template), e.g. `melee`
@@ -216,6 +229,7 @@ export interface MonsterType {
   /** Fork «Три можливі наміри»: up to 2 own conditional cards added to the template deck. */
   forkCards?: MonsterCard[];
   model?: string;
+  drops?: { normal?: DropDef; elite?: DropDef };
 }
 
 /** A condition that selects which branch of a conditional monster card is used. */
@@ -250,6 +264,7 @@ export interface BossType {
   immune: ConditionId[];
   /** Named phases implemented in src/rules/special/ (Тінерук: друга фаза ≤ 50%). */
   special?: string[];
+  drops?: DropDef;
 }
 
 export type Terrain = 'normal' | 'difficult' | 'hazardous' | 'water';
@@ -284,8 +299,9 @@ export interface RoomDef {
    *  cave) or push it aside (a barricade outdoors); then it opens and reveals the room behind. */
   doors?: { hex: Hex; to: string; key?: string; kind?: DoorKind; breakable?: { hp: number }; movable?: true }[];
 
-  /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear. */
-  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>> }[];
+  /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear.
+   *  `drops`: a named enemy's own loot, replacing its type's. */
+  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>; drops?: DropDef }[];
   coins?: Hex[];
   /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
   chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
