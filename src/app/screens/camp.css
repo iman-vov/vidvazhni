@@ -806,3 +806,33 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Phones: the heroes share the row and wrap instead of scrolling sideways off screen; «Нова
+   кампанія» gets its own line under them; the bust fades out at its cut-off bottom edge. */
+@media (max-width: 820px), (max-aspect-ratio: 1/1) {
+  .gcamp-heroes {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .gcamp-hero {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  .gcamp-heroes .gcamp-portrait {
+    width: 44px;
+    height: 44px;
+  }
+
+  .gcamp-new {
+    flex: 1 0 100%;
+    align-self: auto;
+    margin-top: 0;
+  }
+
+  .gcamp-bust {
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  }
+}
