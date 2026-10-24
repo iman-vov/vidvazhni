@@ -976,7 +976,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           h('button', { class: 'gbtn gbtn-small', disabled: !basicBottom, onclick: () => basicBottom && act(basicBottom) }, icon('move'), t('game.basicMove')),
         ),
       });
-      if (usedCard && playable.length === 0 && !basicTop && !basicBottom) el.classList.add('is-used');
+      // Dimmed once used; not while its half is being played (the step's buttons sit on it).
+      if (usedCard && inProgress.length === 0 && playable.length === 0 && !basicTop && !basicBottom) el.classList.add('is-used');
       onPress(el, {
         hold: () => {
           ui.enlarged = { heroId: hero.id, cardId };
@@ -985,8 +986,16 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       });
       return el;
     });
+    // The step's confirm, rotate and skip over the other half of the card being played.
+    const actions = p?.kind === 'stepChoice' ? stepActions() : [];
+    const playing = s.half?.heroId === hero.id ? s.half : null;
+    const playingEl = playing ? cardEls.find((el) => el.dataset.card === playing.cardId) : undefined;
+    if (playing && playingEl && actions.length) {
+      const over = playing.half === 'top' ? 'bottom' : 'top';
+      (playingEl.querySelector('.gcard-face') ?? playingEl).append(h('div', { class: `gcard-confirm is-${over}` }, actions));
+    }
     const leftBox = h('div', { class: 'gturn-box gturn-left' }, h('div', { class: 'gside-who' }, h('b', null, figureName(hero.id)), h('small', null, playerName(hero.id))));
-    if (p?.kind === 'stepChoice') leftBox.append(...stepControls(hero));
+    if (p?.kind === 'stepChoice') leftBox.append(...stepControls(hero), ...(playingEl ? [] : [h('div', { class: 'gstep-actions' }, actions)]));
     else leftBox.append(turnHint(hero));
     const extras = extraControls(hero);
     const undo = artButton('undo', t('game.undo'), () => act({ type: 'undo' }), { cls: 'gb-left is-stop', disabled: !game.canUndo() });
@@ -1120,17 +1129,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ),
       );
     }
-    // Rotate, confirm and skip stay pinned at the bottom of the box while a long step text scrolls.
-    const actions: HTMLElement[] = [];
-    if (m.mode === 'area' && m.directions.length > 1) {
-      const cur = ui.sel.direction ?? m.directions[0] ?? 0;
-      const next = m.directions[(m.directions.indexOf(cur) + 1) % m.directions.length] ?? cur;
-      actions.push(h('button', { class: 'gbtn', onclick: () => ((ui.sel = { ...ui.sel, direction: next }), render()) }, icon('rotate'), t('game.rotate')));
-    }
-    if (m.mode === 'plain') {
-      for (const c of m.choices) actions.push(h('button', { class: 'gbtn gbtn-primary', onclick: () => resolve(c) }, plainChoiceLabel(c)));
-    } else {
-      // Breakable and movable obstacles: hit or push one aside instead of a figure or a path.
+    // Breakable and movable obstacles: hit or push one aside instead of a figure or a path.
+    if (m.mode !== 'plain') {
       for (const c of m.choices) {
         if (c.targets?.length || c.path?.length || !(c.obstacles?.length || c.moveObstacle)) continue;
         const hex = c.obstacles?.[0];
@@ -1139,6 +1139,26 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         out.push(h('button', { class: 'gbtn', onclick: () => resolve(c) }, plainChoiceLabel(c), hp ? ` ${hp.hp}/${hp.maxHp}` : null));
       }
     }
+    return out;
+  }
+
+  /** Rotate, confirm and skip for the current step: they sit on the card being played (over its
+   *  other half, which cannot be played this turn), see turnPanel. Breakable obstacles stay in the
+   *  step box. */
+  function stepActions(): HTMLElement[] {
+    const s = game.state;
+    const info = stepInfo;
+    if (!info) return [];
+    const m = info.model;
+    const actions: HTMLElement[] = [];
+    if (m.mode === 'area' && m.directions.length > 1) {
+      const cur = ui.sel.direction ?? m.directions[0] ?? 0;
+      const next = m.directions[(m.directions.indexOf(cur) + 1) % m.directions.length] ?? cur;
+      actions.push(h('button', { class: 'gbtn', onclick: () => ((ui.sel = { ...ui.sel, direction: next }), render()) }, icon('rotate'), t('game.rotate')));
+    }
+    if (m.mode === 'plain') {
+      for (const c of m.choices) actions.push(h('button', { class: 'gbtn gbtn-primary', onclick: () => resolve(c) }, plainChoiceLabel(c)));
+    }
     const ready = m.mode === 'targets' && m.maxTargets > 1 ? m.ready : m.mode === 'area' ? m.ready : ui.chosen;
     if (m.mode !== 'plain') {
       const label = info.step.type === 'attack' ? t('game.confirm.attack') : info.step.type === 'move' ? t('game.confirm.move') : t('ui.confirm');
@@ -1146,8 +1166,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     }
     const skip = game.legalOf('skipStep')[0];
     if (skip) actions.push(h('button', { class: 'gbtn', onclick: () => act(skip) }, icon('skip'), t('ui.skip')));
-    if (actions.length) out.push(h('div', { class: 'gstep-actions' }, actions));
-    return out;
+    return actions;
   }
 
   function plainChoiceLabel(c: StepChoice): (Element | string)[] {

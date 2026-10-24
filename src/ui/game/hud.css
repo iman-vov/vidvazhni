@@ -1796,6 +1796,57 @@ body.game.g-bottom-short {
   background: rgba(176, 120, 30, 0.24);
 }
 
+/* The step's confirm, rotate and skip on the card being played, over its other half. */
+.gcard-confirm {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(14, 31, 54, 0.94);
+  border: 2px solid var(--hud-gold);
+  border-radius: 8px;
+  overflow-y: auto;
+  font-size: 15px;
+}
+
+.gcard-confirm .gbtn {
+  min-height: 40px;
+  background: #173356;
+  border-color: var(--hud-gold);
+  color: var(--hud-ink);
+}
+
+.gcard-confirm .gbtn-primary {
+  flex: 1 1 100%;
+  background: linear-gradient(180deg, #f6d98a, #d9ad4f);
+  border-color: #8a6420;
+  color: #1d2433;
+  font-weight: 700;
+}
+
+.gcard-confirm .gbtn:not(.gbtn-primary) {
+  flex: 1 1 auto;
+}
+
+.gcard-confirm.is-top {
+  left: var(--top-x);
+  top: var(--top-y);
+  width: var(--top-w);
+  height: var(--top-h);
+}
+
+.gcard-confirm.is-bottom {
+  left: var(--bottom-x);
+  top: var(--bottom-y);
+  width: var(--bottom-w);
+  height: var(--bottom-h);
+}
+
 .gcard.has-frame .gcard-face ~ * {
   margin-top: 6px;
 }
@@ -1938,6 +1989,11 @@ body.game.g-bottom-short {
 /* Turn tray: the basic-action row keeps its place while it offers nothing (no shift after the first half). */
 .gcard-basic.is-idle {
   visibility: hidden;
+}
+
+/* «Атака 2 / Рух 2» under the turn cards: readable at 1024×768. */
+.gturn-cards .gcard-basic .gbtn {
+  font-size: 14px;
 }
 
 /* Initiative ribbon: the number badge takes its own width (a long «35+5=40» or «5–85» no longer
