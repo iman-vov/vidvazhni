@@ -1,0 +1,524 @@
+/* The camp (src/app/screens/camp.ts) after art/ui-mockups/camp/v1.png: the tavern behind, blue-slate
+   panels with thin gold borders like the New Game screen, each hero in their own colour. Tablet in
+   landscape first; narrow screens stack everything in one column. */
+
+.gcamp {
+  --cp-gold: #e9c46a;
+  --cp-gold-hi: #f7d46f;
+  --cp-ink: #f8e8c0;
+  --cp-panel: linear-gradient(180deg, rgba(27, 52, 86, 0.88), rgba(13, 27, 48, 0.92));
+  --cp-line: rgba(214, 170, 80, 0.6);
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(170px, 230px) minmax(0, 1fr) minmax(150px, 230px);
+  grid-template-rows: auto minmax(150px, 1fr) auto auto;
+  grid-template-areas:
+    'head   top   top'
+    'heroes stage marta'
+    'heroes gear  marta'
+    'heroes gear  go';
+  gap: 10px 14px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) 16px calc(16px + env(safe-area-inset-left, 0px));
+  color: var(--cp-ink);
+  background: #1d1a17;
+}
+
+.gcamp > :not(.gcamp-bg, .gcamp-dialog) {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.gcamp-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(10, 16, 28, 0.35), rgba(10, 16, 28, 0.15) 40%, rgba(10, 16, 28, 0.55)),
+    url(../../ui/game/assets/camp-bg.webp) center / cover no-repeat;
+}
+
+.gcamp-panel {
+  background: var(--cp-panel);
+  border: 1px solid var(--cp-line);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.gcamp h2,
+.gcamp h3 {
+  margin: 0;
+  color: var(--cp-gold-hi);
+}
+
+/* ─── Head, tabs, gold ─── */
+
+.gcamp-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gcamp-head h1 {
+  margin: 0;
+  font-size: clamp(1.3em, 2.6vw, 1.8em);
+  color: var(--cp-gold-hi);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.gcamp-new {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 0.85em;
+}
+
+.gcamp-new.is-warn {
+  border-color: #e0705a;
+  color: #ffd2c4;
+}
+
+.gcamp-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gcamp-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gcamp-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap, 48px);
+  padding: 6px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-panel);
+  color: var(--cp-ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.05em;
+  cursor: pointer;
+}
+
+.gcamp-tab .gi {
+  color: var(--cp-gold);
+}
+
+.gcamp-tab[aria-selected='true'] {
+  border: 2px solid var(--cp-gold-hi);
+  background: linear-gradient(180deg, #24508a, #142f55);
+  box-shadow: 0 0 14px rgba(247, 212, 111, 0.4);
+}
+
+.gcamp-tab:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.gcamp-gold {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-panel);
+}
+
+.gcamp-gold b {
+  font-size: 1.3em;
+  color: var(--cp-gold-hi);
+}
+
+/* ─── Hero column ─── */
+
+.gcamp-heroes {
+  grid-area: heroes;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: start;
+}
+
+.gcamp-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--hero) 70%, #000);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--hero) 55%, #0d1b30), color-mix(in srgb, var(--hero) 18%, #0d1b30));
+  color: var(--cp-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gcamp-hero[aria-pressed='true'] {
+  border: 2px solid var(--cp-gold-hi);
+  box-shadow: 0 0 16px rgba(247, 212, 111, 0.5);
+}
+
+.gcamp-hero-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gcamp-hero-text b {
+  font-size: 1.05em;
+}
+
+.gcamp-hero-text small {
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gcamp-portrait {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--hero) 40%, #0d1b30);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.gcamp-portrait.is-small {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.gcamp-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gcamp-levelup {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  color: var(--cp-gold-hi);
+  filter: drop-shadow(0 0 6px rgba(247, 212, 111, 0.8));
+}
+
+/* ─── Stage: the hero's bust ─── */
+
+.gcamp-stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 150px;
+}
+
+.gcamp-bust {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.55));
+  position: absolute;
+  bottom: 0;
+  height: 100%;
+}
+
+.gcamp-plate {
+  position: relative;
+  margin-bottom: 6px;
+  padding: 4px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--cp-line);
+  border-bottom: 3px solid var(--hero);
+  background: rgba(13, 27, 48, 0.85);
+  text-align: center;
+}
+
+.gcamp-plate h2 {
+  font-size: 1.15em;
+}
+
+.gcamp-plate span {
+  font-size: 0.9em;
+}
+
+.gcamp-marta {
+  grid-area: marta;
+  align-self: end;
+  aspect-ratio: 443 / 420;
+  background: url(../../ui/game/assets/camp-marta.webp) bottom / contain no-repeat;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.gcamp-marta span {
+  padding: 2px 12px;
+  border-radius: 8px;
+  background: rgba(60, 38, 20, 0.85);
+  border: 1px solid var(--cp-line);
+  font-size: 0.85em;
+}
+
+/* ─── Slots and chests ─── */
+
+.gcamp-gear {
+  grid-area: gear;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcamp-slots {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.gcamp-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 86px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-panel);
+  color: var(--cp-ink);
+  font: inherit;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.gcamp-slot > .gi {
+  font-size: 1.6em;
+  color: var(--cp-gold);
+  opacity: 0.35;
+}
+
+.gcamp-slot b {
+  font-size: 0.82em;
+  line-height: 1.15;
+}
+
+.gcamp-slot small {
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
+.gcamp-slot.is-full {
+  cursor: pointer;
+  border: 2px solid var(--cp-gold);
+  background: linear-gradient(180deg, #24508a, #142f55);
+}
+
+.gcamp-slot.is-full > .gi {
+  opacity: 1;
+}
+
+.is-plus {
+  box-shadow: inset 0 0 0 2px rgba(247, 212, 111, 0.35), 0 0 12px rgba(247, 212, 111, 0.45);
+}
+
+.gcamp-hint,
+.gcamp-msg {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: rgba(13, 27, 48, 0.7);
+  font-size: 0.85em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.gcamp-msg {
+  color: #ffd2c4;
+}
+
+.gcamp-chests {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gcamp-chests h3 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1em;
+  margin-bottom: 6px;
+}
+
+.gcamp-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gcamp-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: var(--tap, 48px);
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--cp-line);
+  background: rgba(36, 80, 138, 0.6);
+  color: var(--cp-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gcamp-item b {
+  font-size: 0.9em;
+}
+
+.gcamp-item small {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.gcamp-item:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.gcamp-empty {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.gcamp-go {
+  grid-area: go;
+  align-self: end;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.gcamp-go .ubtn {
+  width: 100%;
+}
+
+/* ─── Mission summary ─── */
+
+.gcamp-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(5, 10, 20, 0.6);
+}
+
+.gcamp-summary {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gcamp-summary ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gcamp-summary li {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 10px;
+  border-left: 4px solid var(--hero);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gcamp-mission {
+  margin: 0;
+}
+
+.gcamp-summary-gold {
+  color: var(--cp-gold-hi);
+  font-weight: 700;
+}
+
+.gcamp-summary-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gcamp-summary-foot .ubtn {
+  width: auto;
+  min-width: 220px;
+}
+
+/* ─── Narrow screens: one column ─── */
+
+@media (max-width: 820px), (max-aspect-ratio: 1/1) {
+  .gcamp {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: 'head' 'top' 'heroes' 'stage' 'gear' 'go';
+  }
+
+  .gcamp-heroes {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .gcamp-hero {
+    flex: none;
+  }
+
+  .gcamp-stage {
+    height: 32vh;
+  }
+
+  .gcamp-marta {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .gcamp-slots {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .gcamp-chests {
+    grid-template-columns: 1fr;
+  }
+}
