@@ -1,0 +1,10 @@
+Use case: stylized-concept. Asset: Braves board-game 3D-model source image. The attached grey wolf is a STYLE REFERENCE ONLY.
+
+Too detailed and glossy, looks AI-generated. Redo THIS exact creature as clean game art: bigger simpler shapes, flat matte colors with one shade tone, nothing glowing, whole body with empty margin on all sides, plain light grey background, no shadow.
+
+ONE stocky grey mountain ram only. Square 1:1. Full body centered in a strict safe area: at least 12% EMPTY background margin on every edge, including horn tips; creature about 70% image height. Three-quarter FRONT view, body turned 30 degrees left. Calm all-four-leg stance, legs apart, heavy head slightly lowered, closed mouth, stubborn grumpy-friendly face. Barrel body length 1.6x its height, short thick legs around one third total height. Exactly two huge, chunky horns, each curls ONCE around an ear in one simple thick spiral and is about head-width. 6–8 large rounded fleece clumps only (not strands; no small tuft details), short stub tail. Exactly 3 or 4 large simple flat fog-curl motifs in wool. No harness, bell, rope, prop, second creature.
+
+STRICT GRAPHIC STYLE: premium hand-painted tabletop miniature concept, chunky silhouette. Flat matte fill color only and at most one darker shade per base color; NO smooth shading or gradients. Very clean even dark outline #2B2A33 approximately 2px at 1000px. No feature smaller than 1/40 image width.
+BACKGROUND: solid uniform #D9D9D9, filling entire square. No ground plane/line, no cast/contact shadow, no environment.
+PALETTE ONLY: fleece #C9C4BA plus shade #9A958C; limited snow clumps #EEF0F2; horns #8C7A5E plus shade #6A5B45; face & legs #6F6A63; hooves #3E3A36; flat eyes #B9B3C4 (not glowing); fog curls #B9B3C4; outline #2B2A33.
+Avoid: white or cream color outside limited snow clumps; glow, shine, highlights, gloss, 3D render, excessive texture, hyper-detailed fur, other colors, fog outside the wool, scenery, floor, shadow, text, watermark, signature, crop.
