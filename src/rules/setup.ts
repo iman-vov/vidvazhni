@@ -1,13 +1,13 @@
 // Building a new game: scenario level, heroes, the start room, monsters, decks.
 
-import type { Content, HeroClass, ScenarioDef } from './content';
+import type { Content, HeroClass, PerkOp, ScenarioDef } from './content';
 import { emit, isPresent, monsters, scaleMonsterStats, trapDamage, type Ctx } from './effects/context';
 import { initialElements, scenarioOrbs } from './elements';
 import { setupItems } from './items';
 import { drawIntents } from './round';
 import { MONSTER_HP_BONUS_WITH_INTENTS } from './variants';
 import { hexKey, type Hex } from './hex';
-import { createModifierDeck } from './modifiers';
+import { createModifierDeck, perkedCards } from './modifiers';
 import { shuffle } from './rng';
 import type { GameSetup, GameState, HeroState, MonsterState, Tile } from './state';
 
@@ -26,9 +26,24 @@ export function spawnKey(heroCount: number): '2' | '3' | '4' {
   return heroCount <= 2 ? '2' : heroCount === 3 ? '3' : '4';
 }
 
-/** Cards a hero may take into the scenario (starting cards up to the hero's level). */
-export function availableCards(cls: HeroClass, level: number): string[] {
-  return cls.cards.filter((c) => c.level <= Math.max(1, level)).map((c) => c.id);
+/** Cards a hero may take into the scenario: class cards up to the hero's level; with `owned`
+ *  (campaign) the level-1 cards plus the owned level cards. */
+export function availableCards(cls: HeroClass, level: number, owned?: string[]): string[] {
+  return cls.cards.filter((c) => c.level <= Math.max(1, level) && (!owned || c.level <= 1 || owned.includes(c.id))).map((c) => c.id);
+}
+
+/** The deck edits of the hero's perks (campaign level-ups). */
+function perkOps(content: Content, perks: string[] = []): PerkOp[] {
+  return perks.flatMap((id) => {
+    const perk = content.perks?.[id];
+    if (!perk) throw new Error(`unknown perk ${id}`);
+    return perk.ops;
+  });
+}
+
+/** A hand picked in the camp is used when it has `handSize` different cards from the pool. */
+function validHand(cls: HeroClass, pool: string[], hand: string[] | undefined): hand is string[] {
+  return !!hand && hand.length === cls.handSize && new Set(hand).size === hand.length && hand.every((c) => pool.includes(c));
 }
 
 export function heroHp(cls: HeroClass, level: number): number {
@@ -85,7 +100,9 @@ export function createGame(setup: GameSetup, content: Content): GameState {
     const id = `hero:${cls.id}`;
     if (s.figures[id]) throw new Error(`duplicate hero ${cls.id}`);
     const hp = heroHp(cls, h.level);
-    const cards = availableCards(cls, h.level);
+    const cards = availableCards(cls, h.level, h.cards);
+    const picked = cards.length > cls.handSize && validHand(cls, cards, h.hand);
+    const choose = cards.length > cls.handSize && !picked;
     const hero: HeroState = {
       id,
       kind: 'hero',
@@ -99,7 +116,7 @@ export function createGame(setup: GameSetup, content: Content): GameState {
       shields: [],
       retaliates: [],
       turnCount: 0,
-      hand: cards.length > cls.handSize ? [] : cards,
+      hand: picked ? [...(h.hand as string[])] : choose ? [] : cards,
       discard: [],
       lost: [],
       active: [],
@@ -107,7 +124,7 @@ export function createGame(setup: GameSetup, content: Content): GameState {
       initiative: null,
       xp: 0,
       coins: 0,
-      modifierDeck: createModifierDeck(rng),
+      modifierDeck: createModifierDeck(rng, [], perkedCards(perkOps(content, h.perks))),
       exhausted: false,
       downed: false,
       revived: false,
@@ -117,9 +134,10 @@ export function createGame(setup: GameSetup, content: Content): GameState {
       provokeRadius: null,
       chests: [],
     };
+    if (h.cards) hero.cardPool = cards;
     s.figures[id] = hero;
     setupItems(ctx, hero, h.items ?? []);
-    if (cards.length > cls.handSize) needsChoice.push(id);
+    if (choose) needsChoice.push(id);
   });
 
   revealRoom(ctx, scenario, scenario.startRoom);

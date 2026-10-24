@@ -1,5 +1,6 @@
 // Attack modifier decks: one per hero, one shared by all monsters.
 
+import type { PerkOp } from './content';
 import { shuffle, type RngState } from './rng';
 import type { ModifierDeck } from './state';
 
@@ -16,8 +17,26 @@ export const BASE_MODIFIER_CARDS: readonly string[] = [
 
 export const MAX_BLESS_OR_CURSE = 10;
 
-export function createModifierDeck(rng: RngState, extra: string[] = []): ModifierDeck {
-  return { draw: shuffle(rng, [...BASE_MODIFIER_CARDS, ...extra]), discard: [], needsShuffle: false };
+export function createModifierDeck(rng: RngState, extra: string[] = [], cards: readonly string[] = BASE_MODIFIER_CARDS): ModifierDeck {
+  return { draw: shuffle(rng, [...cards, ...extra]), discard: [], needsShuffle: false };
+}
+
+/** The base cards after perk ops (`perks.json`), in order; a card that is not there is skipped. */
+export function perkedCards(ops: PerkOp[], base: readonly string[] = BASE_MODIFIER_CARDS): string[] {
+  const cards = [...base];
+  const take = (card: string) => {
+    const at = cards.indexOf(card);
+    if (at >= 0) cards.splice(at, 1);
+    return at >= 0;
+  };
+  for (const op of ops) {
+    for (let i = 0; i < op.count; i++) {
+      if (op.op === 'add') cards.push(op.card);
+      else if (op.op === 'remove') take(op.card);
+      else if (take(op.from)) cards.push(op.to);
+    }
+  }
+  return cards;
 }
 
 /** Numeric part of a card id: `+1:infuse` → 1. */

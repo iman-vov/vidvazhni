@@ -54,7 +54,7 @@ export function chooseHand(ctx: Ctx, heroId: string, cards: CardId[]): string | 
   const cls = ctx.c.heroes[h.classId];
   if (!cls) return 'unknown class';
   if (new Set(cards).size !== cards.length || cards.length !== cls.handSize) return `choose ${cls.handSize} cards`;
-  if (cards.some((c) => !cls.cards.some((card) => card.id === c && card.level <= Math.max(1, h.level)))) {
+  if (cards.some((c) => !cls.cards.some((card) => card.id === c && card.level <= Math.max(1, h.level)) || (h.cardPool && !h.cardPool.includes(c)))) {
     return 'card not available';
   }
   h.hand = [...cards];

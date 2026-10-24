@@ -33,7 +33,7 @@ function candidateActions(state: GameState, content: Content): Action[] {
       for (const id of p.heroIds) {
         const h = hero(id);
         const cls = content.heroes[h.classId];
-        if (cls) out.push({ type: 'chooseHand', heroId: id, cards: availableCards(cls, h.level).slice(0, cls.handSize) });
+        if (cls) out.push({ type: 'chooseHand', heroId: id, cards: availableCards(cls, h.level, h.cardPool).slice(0, cls.handSize) });
       }
       break;
     case 'selectCards':

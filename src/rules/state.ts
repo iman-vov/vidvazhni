@@ -87,6 +87,9 @@ export interface HeroState extends FigureBase {
   questItems?: string[];
   /** Items the hero carries into the scenario (absent = none). */
   items?: HeroItemState[];
+  /** Campaign: the cards the hero may pick the hand from (level-1 cards + chosen level cards);
+   *  absent = every class card up to the hero's level. */
+  cardPool?: CardId[];
   /** Fork «Наснага»: ongoing bonuses granted by the class Порив (its `active` steps), until used
    *  up or the end of the round. */
   surgeGrants?: SurgeGrant[];
@@ -467,8 +470,10 @@ export type GameEvent =
 export interface GameSetup {
   scenarioId: string;
   seed: number;
-  /** `items`: ids from `content.items` the hero carries (scenario data gives none yet). */
-  heroes: { classId: string; playerId: string; level: number; perks?: string[]; items?: string[] }[];
+  /** `items`: ids from `content.items` the hero carries (scenario data gives none yet).
+   *  `cards`: campaign level cards the hero owns (level 2+, one per level); absent = all up to the level.
+   *  `hand`: the hand picked in the camp; used when it is valid, else the hero picks before the scenario. */
+  heroes: { classId: string; playerId: string; level: number; perks?: string[]; items?: string[]; cards?: string[]; hand?: string[] }[];
   difficulty: 'easy' | 'normal' | 'hard';
   variants: Variants;
 }

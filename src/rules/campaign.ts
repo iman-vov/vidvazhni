@@ -6,9 +6,10 @@
 // on a mission what fits the slots (`equipped`, base ids). Found items (scenario rewards, chests,
 // drops) wait in the shared `partyChest`, any hero takes one for free.
 
-import type { CampaignRules, ItemDef, ItemSlot, ScenarioDef } from './content';
+import type { CampaignRules, HeroClass, ItemDef, ItemSlot, PerkDef, ScenarioDef } from './content';
 import { UPGRADED } from './items';
 import type { GameSetup } from './state';
+import type { Variants } from './variants';
 
 export const CAMPAIGN_VERSION = 1;
 
@@ -53,6 +54,8 @@ export interface CampaignContent {
   items: Record<string, ItemDef>;
   scenarios: Record<string, ScenarioDef>;
   campaign: CampaignRules;
+  heroes: Record<string, HeroClass>;
+  perks?: Record<string, PerkDef>;
 }
 
 export type CampaignResult = { ok: true; state: CampaignState } | { ok: false; error: string };
@@ -274,4 +277,93 @@ export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: Sce
   }
   next.lastResultId = r.id;
   return { ok: true, state: next };
+}
+
+// ─── Level-up ──────────────────────────────────────────────────────────────
+
+/** XP reached the next threshold of `xpByLevel` (level-up happens only in the camp). */
+export function canLevelUp(c: CampaignContent, h: CampaignHero): boolean {
+  const need = c.campaign.xpByLevel[h.level];
+  return need !== undefined && h.xp >= need;
+}
+
+/** The new cards of the next level (the hero takes 1); empty = no card choice. */
+export function levelUpCards(c: CampaignContent, h: CampaignHero): string[] {
+  return (c.heroes[h.classId]?.cards ?? []).filter((card) => card.level === h.level + 1).map((card) => card.id);
+}
+
+/** Perks the hero can still take (each at most `max` times). */
+export function availablePerks(c: CampaignContent, h: CampaignHero): string[] {
+  return Object.values(c.perks ?? {})
+    .filter((p) => h.perks.filter((id) => id === p.id).length < p.max)
+    .map((p) => p.id);
+}
+
+/** New level (wizard: +health → 1 of the new cards → a perk). Health comes from `hpByLevel` in setup. */
+export function levelUp(c: CampaignContent, s: CampaignState, classId: string, choice: { card?: string; perk?: string }): CampaignResult {
+  return withHero(s, classId, (h) => {
+    if (!canLevelUp(c, h)) return 'not enough XP';
+    const offered = levelUpCards(c, h);
+    if (offered.length > 0 ? !choice.card || !offered.includes(choice.card) : choice.card) return 'choose one of the new cards';
+    const perks = availablePerks(c, h);
+    if (perks.length > 0 ? !choice.perk || !perks.includes(choice.perk) : choice.perk) return 'choose an available perk';
+    h.level += 1;
+    if (choice.card) h.cardPool = [...(h.cardPool ?? []), choice.card];
+    if (choice.perk) h.perks.push(choice.perk);
+    return null;
+  });
+}
+
+// ─── Hand and scenario setup ───────────────────────────────────────────────
+
+/** Cards the hero picks the mission hand from: the level-1 cards plus the chosen level cards. */
+export function cardPool(c: CampaignContent, h: CampaignHero): string[] {
+  const owned = h.cardPool ?? [];
+  return (c.heroes[h.classId]?.cards ?? []).filter((card) => card.level <= 1 || owned.includes(card.id)).map((card) => card.id);
+}
+
+/** «Карти на місію»: the hand when the pool is larger than the hand size. */
+export function pickHand(c: CampaignContent, s: CampaignState, classId: string, cards: string[]): CampaignResult {
+  const cls = c.heroes[classId];
+  if (!cls) return fail(`unknown hero class ${classId}`);
+  return withHero(s, classId, (h) => {
+    const pool = cardPool(c, h);
+    if (new Set(cards).size !== cards.length || cards.length !== cls.handSize) return `choose ${cls.handSize} cards`;
+    if (cards.some((id) => !pool.includes(id))) return 'card not in the pool';
+    h.handPick = [...cards];
+    return null;
+  });
+}
+
+/** Scenarios the party can start: unlocked ones (a lost one stays there) and won ones to replay. */
+export function playableScenarios(s: CampaignState): string[] {
+  return [...s.unlocked, ...s.completed.filter((id) => !s.unlocked.includes(id))];
+}
+
+/** Campaign → `GameSetup`: level, perks, equipped items (`<id>+` for ★), owned level cards and the
+ *  camp hand (without a valid one the hero picks the hand before the scenario). */
+export function setupFromCampaign(
+  s: CampaignState,
+  scenarioId: string,
+  o: { seed: number; variants: Variants },
+): { ok: true; setup: GameSetup } | { ok: false; error: string } {
+  if (!playableScenarios(s).includes(scenarioId)) return { ok: false, error: `${scenarioId} is not unlocked` };
+  return {
+    ok: true,
+    setup: {
+      scenarioId,
+      seed: o.seed,
+      difficulty: s.difficulty,
+      variants: { ...o.variants },
+      heroes: s.heroes.map((h) => ({
+        classId: h.classId,
+        playerId: h.playerId,
+        level: h.level,
+        perks: [...h.perks],
+        items: equippedIds(h),
+        cards: [...(h.cardPool ?? [])],
+        ...(h.handPick ? { hand: [...h.handPick] } : {}),
+      })),
+    },
+  };
 }
