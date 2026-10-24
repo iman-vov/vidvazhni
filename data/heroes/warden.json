@@ -14,14 +14,11 @@
       "id": "warden.shield-bash",
       "level": 1,
       "initiative": 15,
-      "top": { "steps": [{ "type": "attack", "value": 3, "push": 1 }] },
+      "top": {
+        "steps": [{ "type": "attack", "value": 3, "push": 1, "consume": { "element": "air", "add": { "push": 2 } } }]
+      },
       "bottom": { "steps": [{ "type": "move", "value": 3 }] },
-      "fork": {
-        "momentum": true,
-        "top": {
-          "steps": [{ "type": "attack", "value": 3, "push": 1, "consume": { "element": "air", "add": { "push": 2 } } }]
-        }
-      }
+      "fork": { "momentum": true }
     },
     {
       "id": "warden.iron-wall",
@@ -40,7 +37,7 @@
       "level": 1,
       "initiative": 20,
       "top": { "steps": [{ "type": "provoke", "radius": 3, "xp": 1 }] },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "bottom": { "steps": [{ "type": "attack", "value": 2 }] },
       "fork": { "momentum": true }
     },
     {
@@ -65,56 +62,56 @@
       "id": "warden.stay-behind",
       "level": 1,
       "initiative": 12,
-      "top": { "steps": [{ "type": "shield", "value": 1, "target": "adjacentAllies", "duration": "round" }] },
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round",
+            "consume": { "element": "earth", "add": { "value": 1 } }
+          }
+        ]
+      },
       "bottom": {
         "steps": [{ "type": "move", "value": 3 }, { "type": "pull", "value": 1, "target": "ally", "range": 2 }]
       },
-      "fork": {
-        "momentum": true,
-        "top": {
-          "steps": [
-            {
-              "type": "shield",
-              "value": 1,
-              "target": "adjacentAllies",
-              "duration": "round",
-              "consume": { "element": "earth", "add": { "value": 1 } }
-            }
-          ]
-        }
-      }
+      "fork": { "momentum": true }
     },
     {
       "id": "warden.ram",
       "level": 1,
       "initiative": 40,
-      "top": { "steps": [{ "type": "attack", "value": 3, "pierce": 2 }] },
-      "bottom": { "steps": [{ "type": "move", "value": 4 }] },
-      "fork": {
-        "momentum": true,
-        "top": {
-          "steps": [
-            { "type": "move", "value": 2, "straightLine": true },
-            { "type": "attack", "value": 3, "consume": { "element": "fire", "add": { "value": 2 } } }
-          ]
-        }
-      }
+      "top": {
+        "steps": [
+          { "type": "move", "value": 2, "straightLine": true },
+          { "type": "attack", "value": 3, "consume": { "element": "fire", "add": { "value": 2 } } }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "attack", "value": 2, "pierce": 2 }] },
+      "fork": { "momentum": true }
     },
     {
       "id": "warden.unyielding",
       "level": 1,
       "initiative": 8,
       "top": {
-        "steps": [{ "type": "shield", "value": 3, "target": "self", "duration": "round", "xp": 2 }],
-        "loss": true
+        "steps": [{ "type": "shield", "value": 2, "target": "self", "duration": { "uses": 3 }, "xp": 2 }],
+        "loss": true,
+        "active": true
       },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] }
+      "bottom": {
+        "steps": [
+          { "type": "shield", "value": 1, "target": "self", "duration": "round" },
+          { "type": "provoke", "radius": 2 }
+        ]
+      }
     },
     {
       "id": "warden.earth-strike",
       "level": 1,
       "initiative": 55,
-      "top": { "steps": [{ "type": "attack", "value": 4, "xp": 1 }, { "type": "infuse", "element": "earth" }] },
+      "top": { "steps": [{ "type": "attack", "value": 3, "xp": 1 }, { "type": "infuse", "element": "earth" }] },
       "bottom": {
         "steps": [
           {
@@ -122,34 +119,18 @@
             "value": 3,
             "consume": {
               "element": "earth",
-              "add": { "move": 1 },
-              "then": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+              "then": [{ "type": "shield", "value": 1, "target": "ally", "duration": "round", "range": 1 }]
             }
           }
         ]
       },
-      "fork": {
-        "momentum": true,
-        "top": { "steps": [{ "type": "attack", "value": 3, "xp": 1 }, { "type": "infuse", "element": "earth" }] },
-        "bottom": {
-          "steps": [
-            {
-              "type": "move",
-              "value": 3,
-              "consume": {
-                "element": "earth",
-                "then": [{ "type": "shield", "value": 1, "target": "ally", "duration": "round", "range": 1 }]
-              }
-            }
-          ]
-        }
-      }
+      "fork": { "momentum": true }
     },
     {
       "id": "warden.last-stand",
       "level": 1,
       "initiative": 30,
-      "top": { "steps": [{ "type": "attack", "value": 5, "conditions": ["stun"], "xp": 2 }], "loss": true },
+      "top": { "steps": [{ "type": "attack", "value": 4, "conditions": ["stun"], "xp": 2 }], "loss": true },
       "bottom": { "steps": [{ "type": "move", "value": 3 }] }
     }
   ]

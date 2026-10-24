@@ -48,7 +48,7 @@ describe('schemas reject broken content', () => {
   it('unknown step type nested in a consume bonus', () => {
     const hero = read('data/heroes/warden.json');
     const card = hero.cards.find((c: { id: string }) => c.id === 'warden.earth-strike');
-    card.fork.bottom.steps[0].consume.then = [{ type: 'nope' }];
+    card.bottom.steps[0].consume.then = [{ type: 'nope' }];
     expect(validator('heroes')(hero)).toBe(false);
   });
 

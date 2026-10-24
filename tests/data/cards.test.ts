@@ -107,22 +107,22 @@ describe('fork data on hero cards', () => {
     ])
       expect(card(id).fork?.momentum, id).toBe(true);
     // Таран: Рух 2 по прямій, потім Атака 3; поглинути Вогонь: +2 Атака
-    expect(card('warden.ram').fork?.top?.steps).toEqual([
+    expect(effectiveHalves(card('warden.ram'))[0]?.steps).toEqual([
       { type: 'move', value: 2, straightLine: true },
       { type: 'attack', value: 3, consume: { element: 'fire', add: { value: 2 } } },
     ]);
     // Удар щитом: Штовхання 1; поглинути Вітер: Штовхання 3
-    expect(card('warden.shield-bash').fork?.top?.steps[0]).toMatchObject({
+    expect(effectiveHalves(card('warden.shield-bash'))[0]?.steps[0]).toMatchObject({
       push: 1,
       consume: { element: 'air', add: { push: 2 } },
     });
     // Кам'яний град: Атака 2 по лінії з 3 гексів; наситити Землю
-    expect(card('elementalist.ice-breath').fork?.top?.steps).toEqual([
+    expect(effectiveHalves(card('elementalist.ice-breath'))[0]?.steps).toEqual([
       { type: 'attack', value: 2, area: { shape: 'line', length: 3, fromSelf: true } },
       { type: 'infuse', element: 'earth' },
     ]);
     // Вихор: Штовхання 2 усім сусіднім; наситити Вітер | Рух 3; Стрибок
-    expect(card('elementalist.gusts').fork?.bottom?.steps).toEqual([{ type: 'move', value: 3, jump: true }]);
+    expect(effectiveHalves(card('elementalist.gusts'))[1]?.steps).toEqual([{ type: 'move', value: 3, jump: true }]);
   });
 
   it('every class has a surge', () => {

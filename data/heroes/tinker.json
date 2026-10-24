@@ -13,45 +13,39 @@
       "level": 1,
       "initiative": 50,
       "top": { "steps": [{ "type": "summon", "summon": "tinker.button", "xp": 1 }], "loss": true, "active": true },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] }
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
     },
     {
       "id": "tinker.wrench",
       "level": 1,
       "initiative": 20,
-      "top": { "steps": [{ "type": "attack", "value": 3 }] },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
-      "fork": {
-        "momentum": true,
-        "top": { "steps": [{ "type": "attack", "value": 3, "consume": { "element": "air", "add": { "push": 1 } } }] }
-      }
+      "top": { "steps": [{ "type": "attack", "value": 3, "consume": { "element": "air", "add": { "push": 1 } } }] },
+      "bottom": { "steps": [{ "type": "attack", "value": 2 }] },
+      "fork": { "momentum": true }
     },
     {
       "id": "tinker.repair",
       "level": 1,
       "initiative": 15,
-      "top": { "steps": [{ "type": "heal", "value": 3, "target": "allyOrSelf", "range": 2 }] },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
-      "fork": {
-        "top": {
-          "steps": [
-            {
-              "type": "heal",
-              "value": 3,
-              "target": "allyOrSelf",
-              "range": 2,
-              "consume": { "element": "earth", "add": { "value": 1 } }
-            }
-          ]
-        }
-      }
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "allyOrSelf",
+            "range": 2,
+            "consume": { "element": "earth", "add": { "value": 1 } }
+          }
+        ]
+      },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
     },
     {
       "id": "tinker.trap",
       "level": 1,
       "initiative": 35,
-      "top": { "steps": [{ "type": "trap", "damage": 3, "conditions": ["immobilize"] }] },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+      "top": { "steps": [{ "type": "trap", "damage": 3, "conditions": ["immobilize"], "xp": 1 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "trap", "damage": 2 }] }
     },
     {
       "id": "tinker.explosive-jar",
@@ -64,7 +58,7 @@
         ],
         "loss": true
       },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
       "fork": { "momentum": true }
     },
     {
@@ -72,37 +66,27 @@
       "level": 1,
       "initiative": 25,
       "top": {
-        "steps": [{ "type": "special", "name": "buttonUpgrade", "params": { "attack": 1, "move": 1 } }],
+        "steps": [{ "type": "special", "name": "buttonUpgrade", "params": { "attack": 1, "move": 1 }, "xp": 1 }],
         "loss": true
       },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+      "bottom": { "steps": [{ "type": "heal", "value": 2, "target": "summon" }] }
     },
     {
       "id": "tinker.spring-boots",
       "level": 1,
       "initiative": 10,
-      "top": { "steps": [{ "type": "attack", "value": 2 }] },
-      "bottom": { "steps": [{ "type": "move", "value": 4, "jump": true }] },
-      "fork": {
-        "momentum": true,
-        "bottom": {
-          "steps": [
-            {
-              "type": "move",
-              "value": 4,
-              "jump": true,
-              "consume": { "element": "air", "add": { "move": 2 } }
-            }
-          ]
-        }
-      }
+      "top": { "steps": [{ "type": "move", "value": 2, "jump": true }, { "type": "attack", "value": 2 }] },
+      "bottom": {
+        "steps": [{ "type": "move", "value": 4, "jump": true, "consume": { "element": "air", "add": { "move": 2 } } }]
+      },
+      "fork": { "momentum": true }
     },
     {
       "id": "tinker.whistle",
       "level": 1,
       "initiative": 30,
       "top": { "steps": [{ "type": "special", "name": "summonAct", "params": { "move": 3, "attack": 3 } }] },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
+      "bottom": { "steps": [{ "type": "special", "name": "summonAct", "params": { "move": 2, "attack": 2 } }] },
       "fork": { "momentum": true }
     },
     {

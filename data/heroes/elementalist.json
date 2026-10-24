@@ -12,7 +12,11 @@
       "level": 1,
       "initiative": 25,
       "top": { "steps": [{ "type": "attack", "value": 3, "range": 3 }, { "type": "infuse", "element": "fire" }] },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
+      "bottom": {
+        "steps": [
+          { "type": "attack", "value": 1, "range": 3, "consume": { "element": "fire", "add": { "value": 2 } } }
+        ]
+      },
       "fork": { "momentum": true }
     },
     {
@@ -22,19 +26,11 @@
       "top": {
         "steps": [
           { "type": "attack", "value": 2, "area": { "shape": "line", "length": 3, "fromSelf": true } },
-          { "type": "infuse", "element": "ice" }
+          { "type": "infuse", "element": "earth" }
         ]
       },
       "bottom": { "steps": [{ "type": "move", "value": 2 }] },
-      "fork": {
-        "momentum": true,
-        "top": {
-          "steps": [
-            { "type": "attack", "value": 2, "area": { "shape": "line", "length": 3, "fromSelf": true } },
-            { "type": "infuse", "element": "earth" }
-          ]
-        }
-      }
+      "fork": { "momentum": true }
     },
     {
       "id": "elementalist.gusts",
@@ -43,22 +39,22 @@
       "top": {
         "steps": [{ "type": "push", "value": 2, "target": "adjacentEnemies" }, { "type": "infuse", "element": "air" }]
       },
-      "bottom": { "steps": [{ "type": "move", "value": 3 }] },
-      "fork": { "momentum": true, "bottom": { "steps": [{ "type": "move", "value": 3, "jump": true }] } }
+      "bottom": { "steps": [{ "type": "move", "value": 3, "jump": true }] },
+      "fork": { "momentum": true }
     },
     {
       "id": "elementalist.stone-skin",
       "level": 1,
       "initiative": 15,
-      "top": {
+      "top": { "steps": [{ "type": "move", "value": 3 }] },
+      "bottom": {
         "steps": [
-          { "type": "active", "uses": 4, "on": "attacked", "grant": { "shield": 1 } },
+          { "type": "active", "uses": 4, "on": "attacked", "grant": { "shield": 1 }, "xp": 1 },
           { "type": "infuse", "element": "earth" }
         ],
         "loss": true,
         "active": true
-      },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] }
+      }
     },
     {
       "id": "elementalist.fireball",
@@ -90,38 +86,20 @@
             "value": 2,
             "range": 3,
             "conditions": ["immobilize"],
-            "consume": { "element": "ice", "replaceConditions": ["stun"] }
+            "consume": { "element": "earth", "replaceConditions": ["stun"] }
           }
         ]
       },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] },
-      "fork": {
-        "top": {
-          "steps": [
-            {
-              "type": "attack",
-              "value": 2,
-              "range": 3,
-              "conditions": ["immobilize"],
-              "consume": { "element": "earth", "replaceConditions": ["stun"] }
-            }
-          ]
-        }
-      }
+      "bottom": { "steps": [{ "type": "attack", "value": 1, "range": 3, "conditions": ["immobilize"] }] }
     },
     {
       "id": "elementalist.light-flash",
       "level": 1,
       "initiative": 35,
       "top": {
-        "steps": [{ "type": "attack", "value": 2, "range": 3, "targets": 2 }, { "type": "infuse", "element": "light" }]
+        "steps": [{ "type": "attack", "value": 2, "range": 3, "targets": 2 }, { "type": "infuse", "element": "air" }]
       },
-      "bottom": { "steps": [{ "type": "heal", "value": 2, "target": "self" }] },
-      "fork": {
-        "top": {
-          "steps": [{ "type": "attack", "value": 2, "range": 3, "targets": 2 }, { "type": "infuse", "element": "air" }]
-        }
-      }
+      "bottom": { "steps": [{ "type": "heal", "value": 2, "target": "self" }] }
     },
     {
       "id": "elementalist.elemental-sphere",
@@ -143,7 +121,7 @@
         "steps": [
           {
             "type": "attack",
-            "value": 5,
+            "value": 4,
             "range": 3,
             "xp": 2,
             "consume": { "element": "any", "count": 2, "area": { "shape": "triangle", "size": 3 } }
@@ -151,7 +129,7 @@
         ],
         "loss": true
       },
-      "bottom": { "steps": [{ "type": "move", "value": 2 }] }
+      "bottom": { "steps": [{ "type": "infuse", "element": "any" }] }
     },
     {
       "id": "elementalist.earth-breath",
@@ -163,6 +141,7 @@
             "type": "attack",
             "value": 3,
             "range": 2,
+            "xp": 1,
             "consume": { "element": "earth", "conditions": ["immobilize"] }
           }
         ]
