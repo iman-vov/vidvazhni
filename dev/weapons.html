@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Зброя героїв (dev)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1d2433; color: #e8ecf4; font: 14px system-ui, sans-serif; overflow: hidden; }
+      #view { position: absolute; inset: 0; }
+      #info { position: absolute; left: 12px; bottom: 12px; white-space: pre; font: 12px ui-monospace, monospace; opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only weapon check: /vidvazhni/dev/weapons.html?clip=idle. Not part of the production build. -->
+    <div id="view"></div>
+    <div id="info"></div>
+    <script type="module" src="/src/render/weaponGallery.ts"></script>
+  </body>
+</html>

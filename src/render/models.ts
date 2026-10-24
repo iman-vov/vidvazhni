@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { placeWeapon } from './weaponGrip';
 import { castsShadow, getGraphicsQuality, GRAPHICS_QUALITIES, rendererPreset, type GraphicsQuality } from './quality';
 
 /** The game's clip names; `npm run models` renames Meshy's clips to these. */
@@ -223,7 +224,7 @@ export async function loadModel(id: string, opts: LoadOptions = {}): Promise<Mod
 export interface AttachOptions {
   /** Bone names to attach to, overriding the weapon's manifest `attachTo.bones`. */
   bones?: string[];
-  /** Placement of the weapon in the bone's space (Meshy weapons need per-weapon tuning). */
+  /** Placement of the weapon in the bone's space; by default its grip (render/weaponGrip.ts). */
   position?: THREE.Vector3Tuple;
   rotation?: THREE.Vector3Tuple;
   scale?: number;
@@ -231,7 +232,7 @@ export interface AttachOptions {
 
 /**
  * Loads a weapon or shield and parents it to the model's hand bone (one copy per bone for
- * two-handed sets like the rogue's daggers). Bone names come from the manifest's `attachTo.bones`
+ * two-handed sets like the rogue's daggers), sized to the hero and turned as its grip says. Bone names come from the manifest's `attachTo.bones`
  * in their GLB spelling (`mixamorig:RightHand`); three.js drops the `:` (`mixamorigRightHand`),
  * so both spellings are accepted. Returns the attached objects.
  */
@@ -241,6 +242,7 @@ export async function attachWeapon(model: Model, weaponId: string, opts: AttachO
   if (!bones.length) throw new Error(`Weapon "${weaponId}" has no attachTo bones`);
   return bones.map((boneName, i) => {
     const object = i === 0 ? weapon.scene : cloneSkinned(weapon.scene);
+    if (!opts.position && !opts.rotation && opts.scale === undefined) placeWeapon(model.scene, model.clips['idle'], object, weaponId, boneName);
     attachToBone(model, object, boneName, opts);
     return object;
   });
