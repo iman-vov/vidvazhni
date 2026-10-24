@@ -1825,3 +1825,23 @@ body.game.g-bottom-short {
 .gcard.has-frame .gmark-active {
   color: #1f5e9c;
 }
+
+/* Step box: rotate / confirm / skip stay visible at the bottom while a long step text scrolls. */
+.gturn-box .gstep-actions {
+  position: sticky;
+  bottom: -8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 -10px -8px;
+  padding: 6px 10px 8px;
+  background: #0e1f36;
+  border-top: 1px solid rgba(217, 173, 79, 0.45);
+}
+
+/* Tablets: the box may grow up to the hero panel, so a long step still shows its text. */
+@media (min-height: 521px) and (min-width: 861px) {
+  .gturn-box {
+    max-height: max(calc(100% - 96px), calc(100vh - 494px));
+  }
+}

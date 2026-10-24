@@ -1033,13 +1033,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ),
       );
     }
+    // Rotate, confirm and skip stay pinned at the bottom of the box while a long step text scrolls.
+    const actions: HTMLElement[] = [];
     if (m.mode === 'area' && m.directions.length > 1) {
       const cur = ui.sel.direction ?? m.directions[0] ?? 0;
       const next = m.directions[(m.directions.indexOf(cur) + 1) % m.directions.length] ?? cur;
-      out.push(h('button', { class: 'gbtn', onclick: () => ((ui.sel = { ...ui.sel, direction: next }), render()) }, icon('rotate'), t('game.rotate')));
+      actions.push(h('button', { class: 'gbtn', onclick: () => ((ui.sel = { ...ui.sel, direction: next }), render()) }, icon('rotate'), t('game.rotate')));
     }
     if (m.mode === 'plain') {
-      for (const c of m.choices) out.push(h('button', { class: 'gbtn gbtn-primary', onclick: () => resolve(c) }, plainChoiceLabel(c)));
+      for (const c of m.choices) actions.push(h('button', { class: 'gbtn gbtn-primary', onclick: () => resolve(c) }, plainChoiceLabel(c)));
     } else {
       // Breakable and movable obstacles: hit or push one aside instead of a figure or a path.
       for (const c of m.choices) {
@@ -1053,10 +1055,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const ready = m.mode === 'targets' && m.maxTargets > 1 ? m.ready : m.mode === 'area' ? m.ready : ui.chosen;
     if (m.mode !== 'plain') {
       const label = info.step.type === 'attack' ? t('game.confirm.attack') : info.step.type === 'move' ? t('game.confirm.move') : t('ui.confirm');
-      out.push(h('button', { class: 'gbtn gbtn-primary', disabled: !ready, onclick: () => ready && resolve(ready) }, icon('check'), label));
+      actions.push(h('button', { class: 'gbtn gbtn-primary', disabled: !ready, onclick: () => ready && resolve(ready) }, icon('check'), label));
     }
     const skip = game.legalOf('skipStep')[0];
-    if (skip) out.push(h('button', { class: 'gbtn', onclick: () => act(skip) }, icon('skip'), t('ui.skip')));
+    if (skip) actions.push(h('button', { class: 'gbtn', onclick: () => act(skip) }, icon('skip'), t('ui.skip')));
+    if (actions.length) out.push(h('div', { class: 'gstep-actions' }, actions));
     return out;
   }
 
