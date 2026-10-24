@@ -1,6 +1,6 @@
 // What a non-attack step would do, for the board's target marks and the step box: the engine plays
 // each legal choice on a copy of the state and the events up to the end of the turn tell who is
-// healed, shielded, buffed or pushed and by how much («Травниця: 5 → 8»). Attacks keep their own
+// healed, shielded, buffed or pushed and by how much («Травниця: 5 » 8»). Attacks keep their own
 // preview (expected damage); moves have paths.
 
 import type { ConditionId, Content, Step } from '../rules/content';
@@ -11,7 +11,7 @@ import type { IconName } from '../ui/icons/names';
 export type PreviewTone = 'ally' | 'enemy';
 
 export interface FigurePreview {
-  /** Short label over the figure: «5 → 8», «+2», «» (icons only). */
+  /** Short label over the figure: «5 » 8», «+2», «» (icons only). */
   text: string;
   icon: IconName;
   hpBefore: number;
@@ -103,7 +103,7 @@ function collect(state: GameState, events: GameEvent[], out: Map<FigureId, Figur
 
 function label(p: FigurePreview, step: Step): void {
   if (p.hpAfter !== p.hpBefore) {
-    p.text = `${p.hpBefore} → ${p.hpAfter}`;
+    p.text = `${p.hpBefore} » ${p.hpAfter}`;
     p.icon = 'heal';
   } else if (p.shield) {
     p.text = `+${p.shield}`;
@@ -112,8 +112,8 @@ function label(p: FigurePreview, step: Step): void {
     p.text = String(p.pushed);
     p.icon = step.type === 'pull' ? 'pull' : 'push';
   } else if (p.removed.length) {
-    p.text = '✓';
-    p.icon = 'heal';
+    p.text = '';
+    p.icon = 'check';
   } else {
     p.text = '';
     p.icon = step.type === 'bless' ? 'bless' : step.type === 'heal' ? 'heal' : step.type === 'shield' ? 'shield' : (p.conditions[0] as IconName | undefined) ?? 'special';
