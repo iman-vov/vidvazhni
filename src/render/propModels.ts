@@ -30,9 +30,9 @@ export function propModelFor(def: Pick<EnvironmentDef, 'propModels'> | null, key
     if (!entry) continue;
     const spec = typeof entry === 'string' ? { model: entry } : entry;
     if (!available.has(spec.model)) continue;
-    return { model: spec.model, height: spec.height ?? defaultHeight, rotY: spec.rotY ?? 0 };
+    return { model: spec.model, height: spec.height ?? defaultHeight, rotY: spec.rotY ?? 0, stack: spec.stack ?? 1 };
   }
-  for (const key of keys) if (available.has(key)) return { model: key, height: defaultHeight, rotY: 0 };
+  for (const key of keys) if (available.has(key)) return { model: key, height: defaultHeight, rotY: 0, stack: 1 };
   return null;
 }
 
@@ -52,7 +52,7 @@ const cache = new Map<string, Promise<PropPrototype | null>>();
 
 /** Loads and normalises a prop model (cached per model, height, turn and quality); null if it fails. */
 export function loadPropPrototype(spec: Required<PropModelSpec>, quality: GraphicsQuality): Promise<PropPrototype | null> {
-  const key = `${spec.model}@${quality}:${spec.height.toFixed(3)}:${spec.rotY}`;
+  const key = `${spec.model}@${quality}:${spec.height.toFixed(3)}:${spec.rotY}:${spec.stack}`;
   let p = cache.get(key);
   if (!p) {
     p = loadModel(spec.model, { quality })
@@ -61,13 +61,23 @@ export function loadPropPrototype(spec: Required<PropModelSpec>, quality: Graphi
         inner.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(inner);
         if (box.isEmpty()) return null;
-        const fit = fitToHeight(box, spec.height);
+        const count = Math.max(1, spec.stack);
+        const fit = fitToHeight(box, spec.height / count);
         inner.scale.multiplyScalar(fit.scale);
         inner.position.multiplyScalar(fit.scale).add(fit.offset);
         const object = new THREE.Group();
         object.name = `prop:${spec.model}`;
         object.rotation.y = THREE.MathUtils.degToRad(spec.rotY);
         object.add(inner);
+        // A pile: each copy on the one below, a little turned and shifted, a touch smaller.
+        for (let i = 1; i < count; i++) {
+          const copy = new THREE.Group();
+          copy.add(inner.clone());
+          copy.position.set(Math.sin(i * 2.3) * 0.04, (spec.height / count) * i * 0.97, Math.cos(i * 1.7) * 0.03);
+          copy.rotation.y = 0.35 * (i % 2 ? 1 : -1.4);
+          copy.scale.setScalar(1 - 0.06 * i);
+          object.add(copy);
+        }
         object.updateMatrixWorld(true);
         return { spec, object, radius: fit.radius };
       })

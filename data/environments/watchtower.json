@@ -21,6 +21,8 @@
   "propModels": {
     "barrel": { "model": "barrel", "height": 0.92 },
     "crate": { "model": "crate", "height": 0.62 },
+    "crate-stack": { "model": "crate", "height": 1.1, "stack": 2 },
+    "sacks": { "model": "flour-sack", "height": 0.62, "stack": 2 },
     "table": { "model": "tavern-table", "height": 0.8 },
     "rune": { "model": "rune-stone", "height": 0.7 },
     "chest": { "model": "chest", "height": 0.6 },

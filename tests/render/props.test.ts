@@ -18,13 +18,13 @@ describe('prop models', () => {
 
   it('uses the table entry only when its model exists', () => {
     expect(propModelFor(def, ['barrel'], new Set(), 0.9)).toBeNull();
-    expect(propModelFor(def, ['barrel'], new Set(['barrel']), 0.9)).toEqual({ model: 'barrel', height: 0.92, rotY: 0 });
-    expect(propModelFor(def, ['rune'], new Set(['rune-stone']), 0.7)).toEqual({ model: 'rune-stone', height: 0.7, rotY: 0 });
+    expect(propModelFor(def, ['barrel'], new Set(['barrel']), 0.9)).toEqual({ model: 'barrel', height: 0.92, rotY: 0, stack: 1 });
+    expect(propModelFor(def, ['rune'], new Set(['rune-stone']), 0.7)).toEqual({ model: 'rune-stone', height: 0.7, rotY: 0, stack: 1 });
   });
 
   it('tries the keys in order, then a model named like a key', () => {
-    expect(propModelFor(def, ['lever:down', 'lever-down', 'lever'], new Set(['floor-lever']), 1)).toEqual({ model: 'floor-lever', height: 1, rotY: 180 });
-    expect(propModelFor(null, ['crate'], new Set(['crate']), 0.8)).toEqual({ model: 'crate', height: 0.8, rotY: 0 });
+    expect(propModelFor(def, ['lever:down', 'lever-down', 'lever'], new Set(['floor-lever']), 1)).toEqual({ model: 'floor-lever', height: 1, rotY: 180, stack: 1 });
+    expect(propModelFor(null, ['crate'], new Set(['crate']), 0.8)).toEqual({ model: 'crate', height: 0.8, rotY: 0, stack: 1 });
     expect(propModelFor(null, ['crate'], new Set(['barrel']), 0.8)).toBeNull();
   });
 

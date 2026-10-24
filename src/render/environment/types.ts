@@ -135,4 +135,6 @@ export interface PropModelSpec {
   model: string;
   height?: number;
   rotY?: number;
+  /** Copies piled on one another (a stack of crates from one crate model); `height` is the pile's. */
+  stack?: number;
 }

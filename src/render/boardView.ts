@@ -1121,7 +1121,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const chest = chestId ? Object.values(content.scenarios).flatMap((s) => s.rooms.flatMap((r) => r.chests ?? [])).find((c) => c.id === chestId) : undefined;
     const id = chest?.loot?.questItem?.replace(/-\d+$/, '') ?? chest?.loot?.item;
     if (!id || !available.has(id)) return Promise.resolve(null);
-    return loadPropPrototype({ model: id, height: 0.42, rotY: 0 }, quality).then((proto) => proto?.object.clone() ?? null);
+    return loadPropPrototype({ model: id, height: 0.42, rotY: 0, stack: 1 }, quality).then((proto) => proto?.object.clone() ?? null);
   }
 
   /** A golden four-pointed glint for loot without a model. */

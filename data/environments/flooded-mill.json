@@ -24,6 +24,7 @@
   "propModels": {
     "mill-wheel": { "model": "mill-wheel", "height": 2.2 },
     "sack": { "model": "flour-sack", "height": 0.5 },
+    "sacks": { "model": "flour-sack", "height": 0.62, "stack": 2 },
     "crate": { "model": "crate", "height": 0.62 },
     "lever": "floor-lever",
     "lever-down": { "model": "floor-lever", "rotY": 180 },

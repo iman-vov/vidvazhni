@@ -22,6 +22,8 @@
     "barrel": { "model": "barrel", "height": 0.8 },
     "crate": { "model": "crate", "height": 0.55 },
     "sack": { "model": "flour-sack", "height": 0.5 },
+    "sacks": { "model": "flour-sack", "height": 0.62, "stack": 2 },
+    "crate-stack": { "model": "crate", "height": 1.0, "stack": 2 },
     "brazier": { "model": "brazier", "height": 0.68 },
     "brazier-lit": { "model": "brazier", "height": 0.72 },
     "table": { "model": "tavern-table", "height": 0.62 },
