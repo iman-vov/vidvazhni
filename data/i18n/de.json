@@ -920,5 +920,16 @@
   "game.item.use.passive": "wirkt immer, nicht antippen nötig",
   "game.avoid.shield": "Schild {shield} ist schon eingerechnet",
   "game.ev.shieldBlocked": "{name}: Schild −{shield}",
-  "game.ev.shieldShort": "Schild −{shield}"
+  "game.ev.shieldShort": "Schild −{shield}",
+  "game.select.back": "Zu den Karten",
+  "game.select.peek": "Spielfeld",
+  "game.select.hint3": "Wähle noch {n}: Karte antippen. Lang drücken erklärt sie.",
+  "game.figure.more": "Mehr",
+  "game.figure.cards": "Karten der Runde",
+  "game.figure.items": "Gegenstände",
+  "game.react.title": "{attacker} greift an: {name}",
+  "game.react.text": "Noch vor der Modifikatorkarte kannst du einen Gegenstand benutzen.",
+  "game.react.pass": "Ohne Gegenstand",
+  "game.react.shield": "{item}: Schild {shield}, Schaden {damage} {icon:arrow} {reduced}",
+  "game.react.disadvantage": "{item}: Angriff mit Nachteil"
 }

@@ -5,10 +5,12 @@
 // engine action through the GameController; the board plays the events and the UI waits for it.
 
 import { planTurn } from '../rules/ai/index';
+import { loadContent } from '../rules/load';
 import type { Step } from '../rules/content';
 import type { Ctx } from '../rules/effects/context';
 import { withConsumeBonus } from '../rules/effects/index';
 import { hexKey, type Hex } from '../rules/hex';
+import * as queries from '../rules/queries';
 import { attackPrompts, forecastInitiative, orbBonusPreview, previewAttack, usableItems } from '../rules/queries';
 import { behaviourCard, monsterInitiative } from '../rules/round';
 import type { Action, CardId, FigureId, GameEvent, GameState, HeroState, MonsterState, StepChoice } from '../rules/state';
@@ -18,12 +20,13 @@ import { stepText } from '../ui/debug/format';
 import { emptySelection, stepModel, tapStep, type StepModel, type StepSelection } from '../ui/debug/stepPicker';
 import { h } from '../ui/dom';
 import { onLangChange, t } from '../ui/i18n';
-import { cardKeywords, cardView, compactCard, type Half } from '../ui/game/card';
+import { cardKeywords, cardView, type Half } from '../ui/game/card';
 import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
 import { isIconName } from '../ui/icons/names';
-import { elementsRow, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow } from '../ui/game/panels';
+import { elementsRow, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow, type RibbonTarget } from '../ui/game/panels';
+import { figureCard } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
 import { heroColor } from './boardViewStub';
@@ -80,7 +83,12 @@ interface Ui {
   /** The event log drawer under the elements row. */
   rightOpen: boolean;
   focusHero: FigureId | null;
-  modal: 'menu' | 'settings' | 'intro' | 'monster' | 'revive' | 'item' | null;
+  modal: 'menu' | 'settings' | 'intro' | 'monster' | 'revive' | 'item' | 'hero' | null;
+  /** The small stat card (ribbon portrait or board figure); `pinned` = opened by a tap, not hover. */
+  figInfo: (RibbonTarget & { pinned: boolean }) | null;
+  heroInfo: FigureId | null;
+  /** Card choice: the board is shown for a moment instead of the hand. */
+  peek: boolean;
   itemInfo: { heroId: FigureId; itemId: string } | null;
   monsterInfo: string | null;
   busy: boolean;
@@ -118,6 +126,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     modal: game.actions.length === 0 ? 'intro' : null,
     monsterInfo: null,
     itemInfo: null,
+    figInfo: null,
+    heroInfo: null,
+    peek: false,
     busy: false,
     modifier: null,
     toasts: [],
@@ -189,11 +200,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const m = stepInfo?.model;
     if (!m || m.mode !== 'targets') {
       const f = game.state.figures[id];
-      if (f?.kind === 'hero') {
-        ui.focusHero = id;
-        ui.leftOpen = true;
-        render();
-      }
+      if (f?.kind === 'hero') ui.focusHero = id;
+      openFigure({ figureId: id }, true);
       return;
     }
     if (!m.targetIds.includes(id)) return;
@@ -214,15 +222,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   unsubs.push(
-    board.onFigureHold((id) => {
-      const f = game.state.figures[id];
-      if (f?.kind === 'monster') openMonster(f.typeId);
-      else if (f?.kind === 'hero') {
-        ui.focusHero = id;
-        ui.leftOpen = true;
-        render();
-      }
-    }),
+    board.onFigureHold((id) => moreAbout({ figureId: id })),
   );
   unsubs.push(onLangChange(render));
 
@@ -396,6 +396,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       }
     }
     if (s.pending?.kind !== 'avoidDamage') ui.avoidPick = [];
+    if (s.pending?.kind !== 'selectCards' && s.pending?.kind !== 'chooseHandBeforeScenario') ui.peek = false;
     const th = turnHero();
     if (th) ui.focusHero = th.id;
   }
@@ -466,7 +467,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           intentsOf: (id) => game.intentsOf(id),
           forecast,
           monsterFocus: monsterFocus(),
-          onMonster: openMonster,
+          onPick: (tg) => openFigure(tg, true),
+          onHover: (tg) => (tg ? openFigure(tg, false) : closeHoverFigure()),
         }),
       ),
       h('div', { class: 'gplate gtop-round' }, h('b', null, t('ui.round', { round: s.round })), h('small', null, t(`game.phase.${phaseKey(s)}`))),
@@ -538,12 +540,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       // Same height as before, so the board does not refit in the middle of an animation.
       body = h('div', { class: 'gbar is-busy' }, h('span', null, t('game.playing')), h('button', { class: 'gbtn', onclick: skipAnimations }, icon('skip'), t('game.skip')));
       size = ['tall', 'short', 'none'].find((k) => document.body.classList.contains(`g-bottom-${k}`)) ?? 'short';
-    } else if (p?.kind === 'chooseHandBeforeScenario' && ui.revealed) {
-      body = chooseHandPanel(ui.revealed);
-      size = 'tall';
-    } else if (p?.kind === 'selectCards' && ui.revealed) {
-      body = selectPanel(ui.revealed);
-      size = 'tall';
+    } else if ((p?.kind === 'chooseHandBeforeScenario' || p?.kind === 'selectCards') && ui.revealed) {
+      body = ui.peek ? h('div', { class: 'gbar gpeek-bar' }, artButton('hand', t('game.select.back'), () => ((ui.peek = false), render()), { cls: 'is-small' })) : null;
+      size = ui.peek ? 'short' : 'none';
     } else if (p?.kind === 'heroTurn' || p?.kind === 'stepChoice') {
       body = turnPanel(s.figures[p.heroId] as HeroState);
       size = 'tall';
@@ -555,6 +554,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       size = 'short';
     } else if (p?.kind === 'shortRestReroll') {
       body = rerollPanel();
+      size = 'short';
+    } else if ((p as { kind: string } | null)?.kind === 'beforeAttacked') {
+      body = reactionPanel();
       size = 'short';
     } else if (p?.kind === 'longRestLoss') {
       body = longRestPanel();
@@ -570,37 +572,53 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   /** Card selection for one hero: the hand strip, intent tokens, long rest, confirm. */
-  /** Card selection for one hero: the hand as a grid of compact cards (name, initiative, both
-   *  halves as icons); a tap opens the full card, the corner button selects; the intent tokens on
-   *  top; who chooses, long rest and «Готово» on the right. */
-  function selectPanel(heroId: FigureId): HTMLElement {
+  /** Choosing the round's cards over the dimmed board (as in Gloomhaven digital): the hand large
+   *  and readable in the middle, tap to pick two, choose the leading one, confirm; long press shows
+   *  the card with its explanations. Intents fold into one button; «Поле» peeks at the board. */
+  function selectionOverlay(heroId: FigureId): HTMLElement {
     const s = game.state;
     const hero = s.figures[heroId] as HeroState;
-    const bonuses = orbBonusPreview(s, content, heroId);
-    const grid = h(
+    const choosingHand = s.pending?.kind === 'chooseHandBeforeScenario';
+    const cls = content.heroes[hero.classId];
+    const need = cls?.handSize ?? 0;
+    const cards = choosingHand && cls ? cls.cards.filter((c) => c.level <= Math.max(1, hero.level)).map((c) => c.id) : hero.hand;
+    const bonuses = choosingHand ? [] : orbBonusPreview(s, content, heroId);
+    const hand = h(
       'div',
-      { class: 'gcc-grid', role: 'list' },
-      hero.hand.map((cardId) => {
-        const picked = ui.pick.includes(cardId) && !ui.longRest;
-        const el = compactCard({
+      { class: 'gsel-hand', role: 'list' },
+      cards.map((cardId) => {
+        const picked = choosingHand ? ui.handPick.includes(cardId) : ui.pick.includes(cardId) && !ui.longRest;
+        const leading = !choosingHand && picked && ui.leading === cardId;
+        const order = choosingHand ? -1 : ui.pick.indexOf(cardId);
+        const el = cardView({
           s,
           content,
           hero,
           cardId,
+          full: true,
           accent: colorOf(heroId),
+          bonuses: bonuses.filter((b) => b.cardId === cardId),
           picked,
-          leading: picked && ui.leading === cardId,
-          bonus: bonuses.some((b) => b.cardId === cardId && b.available && b.value !== b.boosted),
-          onToggle: () => togglePick(cardId),
+          leading,
+          footer:
+            !choosingHand && picked
+              ? leading
+                ? h('div', { class: 'gsel-lead is-on' }, icon('initiative'), t('game.leading'))
+                : h('button', { class: 'gbtn gbtn-small gsel-lead', onclick: (e: Event) => (e.stopPropagation(), (ui.leading = cardId), render()) }, icon('initiative'), t('game.makeLeading'))
+              : null,
         });
         el.setAttribute('role', 'listitem');
+        if (picked && order >= 0) el.append(h('span', { class: 'gsel-badge' }, order + 1));
+        if (picked && choosingHand) el.append(h('span', { class: 'gsel-badge' }, icon('check')));
         onPress(el, {
-          tap: () => openCard(heroId, cardId),
+          tap: () => (choosingHand ? toggleHandPick(cardId, need) : togglePick(cardId)),
           down: () => {
+            if (choosingHand) return;
             ui.pressCard = cardId;
             renderTop();
           },
           up: () => {
+            if (choosingHand) return;
             ui.pressCard = null;
             renderTop();
           },
@@ -610,48 +628,70 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       }),
     );
     const [a, b] = ui.pick;
-    const ready = ui.longRest || (a && b && ui.leading);
     const leadCard = ui.leading ? playedCard(content, hero.classId, ui.leading, s.variants) : undefined;
-    const canRest = hero.discard.length >= 2;
-    const info = h(
+    const hint = choosingHand
+      ? t('game.chooseHand', { n: need, picked: ui.handPick.length })
+      : ui.longRest
+        ? t('game.longRest.text')
+        : ui.pick.length < 2
+          ? t('game.select.hint3', { n: 2 - ui.pick.length })
+          : t('game.select.leading', { card: cardName(ui.leading ?? ''), initiative: leadCard?.initiative ?? '' });
+    const head = h(
       'div',
-      { class: 'gselect-info' },
-      h('b', null, figureName(heroId)),
-      h('small', null, playerName(heroId)),
-      h('span', { class: 'gside-hint' }, ui.longRest ? t('game.longRest.text') : ui.pick.length < 2 ? t('game.select.hint2', { n: 2 - ui.pick.length }) : t('game.select.leading', { card: cardName(ui.leading ?? ''), initiative: leadCard?.initiative ?? '' })),
-      // Phones: the intent tokens open from a button instead of taking a row.
-      h(
-        'button',
-        { class: 'gbtn gintent-toggle', 'aria-expanded': String(ui.intentsOpen), onclick: () => ((ui.intentsOpen = !ui.intentsOpen), renderBottom()) },
-        ui.intents.length ? ui.intents.map((i) => icon(intentIcon(i))) : icon('approach'),
-        t('game.intents.short'),
-      ),
+      { class: 'gsel-head gpanel' },
+      portrait(heroId, colorOf(heroId), 'md'),
+      h('div', { class: 'gsel-who' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId))),
+      h('p', { class: 'gsel-hint' }, hint),
+      choosingHand
+        ? null
+        : h(
+            'button',
+            { class: `gbtn gsel-intents${ui.intentsOpen ? ' is-open' : ''}`, 'aria-expanded': String(ui.intentsOpen), onclick: () => ((ui.intentsOpen = !ui.intentsOpen), renderLayer()) },
+            ui.intents.length ? ui.intents.map((i) => icon(intentIcon(i))) : icon('approach'),
+            t('game.intents.short'),
+            icon(ui.intentsOpen ? 'up' : 'down'),
+          ),
+      h('button', { class: 'gbtn', title: t('game.select.peek'), onclick: () => ((ui.peek = true), render()) }, icon('hint'), t('game.select.peek')),
     );
-    const rest = artButton('rest', t('ui.longRest'), () => ((ui.longRest = !ui.longRest), render()), { cls: `gb-right gb-upper${ui.longRest ? ' is-on' : ''}`, disabled: !canRest });
-    rest.setAttribute('aria-pressed', String(ui.longRest));
-    if (!canRest) rest.title = t('game.longRest.no');
-    return h('div', { class: 'gpanel-select is-grid' }, intentsRow(), grid, info, rest, artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'gb-right is-go', disabled: !ready }));
+    const intents =
+      !choosingHand && ui.intentsOpen
+        ? h(
+            'div',
+            { class: 'gsel-chips gpanel', role: 'group', 'aria-label': t('game.intents') },
+            INTENTS.map((id) =>
+              h(
+                'button',
+                { class: 'gbtn gbtn-chip', 'aria-pressed': String(ui.intents.includes(id)), onclick: () => ((ui.intents = toggleIntent(ui.intents, id)), renderLayer()) },
+                icon(intentIcon(id)),
+                t(`game.intent.${id}`),
+              ),
+            ),
+          )
+        : null;
+    const foot = h('div', { class: 'gsel-foot' });
+    if (choosingHand) {
+      foot.append(
+        h('span', { class: 'gsel-sum' }, t('game.chooseHand', { n: need, picked: ui.handPick.length })),
+        artButton('check', t('game.ready'), () => actPrivate(heroId, { type: 'chooseHand', heroId, cards: [...ui.handPick] }), { cls: 'is-go', disabled: ui.handPick.length !== need }),
+      );
+    } else {
+      const canRest = hero.discard.length >= 2;
+      const rest = artButton('rest', t('ui.longRest'), () => ((ui.longRest = !ui.longRest), render()), { cls: ui.longRest ? 'is-on' : '', disabled: !canRest });
+      rest.setAttribute('aria-pressed', String(ui.longRest));
+      if (!canRest) rest.title = t('game.longRest.no');
+      const ready = ui.longRest || (a && b && ui.leading);
+      foot.append(
+        rest,
+        h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : a && b ? `${cardName(a)} + ${cardName(b)}` : t('game.select.hint3', { n: 2 - ui.pick.length })),
+        artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go', disabled: !ready }),
+      );
+    }
+    return h('div', { class: 'gsel', role: 'dialog', 'aria-label': hint }, head, intents, hand, foot);
   }
 
   function openCard(heroId: FigureId, cardId: CardId): void {
     ui.enlarged = { heroId, cardId };
     renderLayer();
-  }
-
-  function intentsRow(): HTMLElement {
-    return h(
-      'div',
-      { class: `gintent-row${ui.intentsOpen ? ' is-open' : ''}`, role: 'group', 'aria-label': t('game.intents') },
-      h('small', null, t('game.intents')),
-      INTENTS.map((id) =>
-        h(
-          'button',
-          { class: 'gbtn gbtn-chip', 'aria-pressed': String(ui.intents.includes(id)), onclick: () => ((ui.intents = toggleIntent(ui.intents, id)), renderBottom()) },
-          icon(intentIcon(id)),
-          t(`game.intent.${id}`),
-        ),
-      ),
-    );
   }
 
   function togglePick(cardId: CardId): void {
@@ -683,31 +723,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const before = ui.lastPlayer;
     ui.lastPlayer = game.playerOf(heroId)?.id ?? null;
     if (!act(action)) ui.lastPlayer = before;
-  }
-
-  function chooseHandPanel(heroId: FigureId): HTMLElement {
-    const s = game.state;
-    const hero = s.figures[heroId] as HeroState;
-    const cls = content.heroes[hero.classId];
-    const all = cls ? cls.cards.filter((c) => c.level <= Math.max(1, hero.level)).map((c) => c.id) : [];
-    const need = cls?.handSize ?? 0;
-    const grid = h(
-      'div',
-      { class: 'gcc-grid', role: 'list' },
-      all.map((cardId) => {
-        const el = compactCard({ s, content, hero, cardId, accent: colorOf(heroId), picked: ui.handPick.includes(cardId), onToggle: () => toggleHandPick(cardId, need) });
-        onPress(el, { tap: () => openCard(heroId, cardId), hold: () => openCard(heroId, cardId) });
-        return el;
-      }),
-    );
-    const info = h('div', { class: 'gselect-info' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId)), h('span', { class: 'gside-hint' }, t('game.chooseHand', { n: need, picked: ui.handPick.length })));
-    return h(
-      'div',
-      { class: 'gpanel-select is-grid is-hand' },
-      grid,
-      info,
-      artButton('check', t('game.ready'), () => actPrivate(heroId, { type: 'chooseHand', heroId, cards: [...ui.handPick] }), { cls: 'gb-right is-go', disabled: ui.handPick.length !== need }),
-    );
   }
 
   function toggleHandPick(cardId: CardId, need: number): void {
@@ -913,6 +928,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       h('p', { class: 'gsheet-title' }, icon('hp'), t('game.avoid.title', { name: figureName(hero.id), amount: p.amount, source })),
       h('p', { class: 'gside-hint' }, t('game.avoid.text', { hp: hero.hp })),
       defenceLine(hero),
+      reactionButtons(hero.id),
       h('div', { class: 'grow' }, h('button', { class: 'gbtn gbtn-primary', onclick: () => act(take) }, t('ui.takeDamage'))),
       hero.hand.length
         ? h('div', { class: 'grow' }, h('small', null, t('game.avoid.hand')), hero.hand.map((c) => h('button', { class: 'gbtn gbtn-small', onclick: () => act({ type: 'avoidDamage', heroId: hero.id, choice: { kind: 'loseHand', cardId: c } }) }, icon('loss'), cardName(c))))
@@ -939,11 +955,53 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     );
   }
 
-  /** In the damage prompt: the hero's shield already counted, and defensive items (the engine lets
-   *  items be used on the hero's own turn only, so they are shown, not offered). */
+  /** Items the engine accepts as a reaction right now (a shield while attack damage comes, a
+   *  disadvantage item before a monster's attack), labelled with what they change. Uses the engine's
+   *  `reactionPrompts` when it has one. */
+  function reactionButtons(heroId: FigureId): HTMLElement | null {
+    const s = game.state;
+    const uses = game.legalOf('useItem').filter((a) => a.heroId === heroId);
+    if (uses.length === 0) return null;
+    const prompts = reactionPromptsOf(s);
+    return h(
+      'div',
+      { class: 'grow greact' },
+      uses.map((a) => {
+        const pr = prompts.find((x) => x.itemId === a.itemId);
+        const item = t(`item.${a.itemId}`);
+        const label =
+          pr?.shield !== undefined && pr.damage !== undefined && pr.reduced !== undefined
+            ? t('game.react.shield', { item, shield: pr.shield, damage: pr.damage, reduced: pr.reduced })
+            : pr?.disadvantage
+              ? t('game.react.disadvantage', { item })
+              : t('game.itemUse', { item });
+        return h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a) }, icon('item'), rich(label));
+      }),
+    );
+  }
+
+  /** «Пацюк атакує Вартового»: before the modifier is drawn, an item can still help, or pass. */
+  function reactionPanel(): HTMLElement {
+    const s = game.state;
+    const p = s.pending as unknown as { heroId: FigureId; attackerId: FigureId };
+    const pass = game.legal().map((o) => o.action).find((a) => (a as { type: string }).type === 'passReaction');
+    return h(
+      'div',
+      { class: 'gsheet' },
+      h('p', { class: 'gsheet-title' }, icon('shield'), t('game.react.title', { attacker: figureName(p.attackerId, s), name: figureName(p.heroId, s) })),
+      h('p', { class: 'gside-hint' }, t('game.react.text')),
+      reactionButtons(p.heroId),
+      h('div', { class: 'grow' }, pass ? h('button', { class: 'gbtn gbtn-primary', onclick: () => act(pass) }, t('game.react.pass')) : null),
+    );
+  }
+
+  /** In the damage prompt: the hero's shield already counted, and defensive items that cannot be
+   *  used right now (on the hero's own turn only, unless the engine offers them as a reaction). */
   function defenceLine(hero: HeroState): HTMLElement | null {
     const shield = hero.shields.reduce((n, x) => n + x.value, 0);
+    const offered = new Set(game.legalOf('useItem').filter((a) => a.heroId === hero.id).map((a) => a.itemId));
     const defensive = (hero.items ?? []).filter((it) => {
+      if (offered.has(it.id)) return false;
       const def = content.items[it.id];
       return it.state === 'ready' && def && def.use !== 'passive' && def.effect.some((st) => st.type === 'shield' || st.type === 'heal' || (st.type === 'special' && st.name === 'nextAttackAgainstSelfDisadvantage'));
     });
@@ -1034,7 +1092,22 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (ui.modal === 'intro') parts.push(introModal());
     if (ui.modal === 'menu') parts.push(menuModal());
     if (ui.modal === 'settings') parts.push(modalBox(t('ui.settings'), settingsPanel({ heroes: game.heroes().map((x) => x.classId), onQuality: (q) => board.setQuality(q), onSpeed: (n) => board.setSpeed?.(n) }), () => ((ui.modal = 'menu'), render())));
+    if (next && ui.revealed && !ui.busy && !ui.peek && ui.modal !== 'intro') parts.push(selectionOverlay(ui.revealed));
     if (ui.modal === 'monster' && ui.monsterInfo) parts.push(monsterModal(ui.monsterInfo));
+    if (ui.modal === 'hero' && ui.heroInfo) parts.push(heroModal(ui.heroInfo));
+    if (ui.figInfo && !ui.modal) {
+      const card = figureCard({
+        s,
+        content,
+        ...(ui.figInfo.figureId ? { figureId: ui.figInfo.figureId } : {}),
+        ...(ui.figInfo.typeId ? { typeId: ui.figInfo.typeId } : {}),
+        colorOf,
+        explain,
+        onMore: () => ui.figInfo && moreAbout(ui.figInfo),
+        onClose: () => ((ui.figInfo = null), renderLayer()),
+      });
+      if (card) parts.push(card);
+    }
     if (ui.modal === 'revive') parts.push(reviveModal());
     if (ui.enlarged) {
       const hero = s.figures[ui.enlarged.heroId] as HeroState | undefined;
@@ -1205,6 +1278,55 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     }
   }
 
+  /** The small stat card; a second tap on the same portrait opens the full details. */
+  function openFigure(tg: RibbonTarget, pinned: boolean): void {
+    const same = ui.figInfo && ui.figInfo.figureId === tg.figureId && ui.figInfo.typeId === tg.typeId;
+    if (pinned && same && ui.figInfo?.pinned) return moreAbout(tg);
+    if (!pinned && ui.figInfo?.pinned) return;
+    ui.figInfo = { ...tg, pinned };
+    renderLayer();
+  }
+
+  function closeHoverFigure(): void {
+    if (ui.figInfo && !ui.figInfo.pinned) {
+      ui.figInfo = null;
+      renderLayer();
+    }
+  }
+
+  /** Full details: the monster type (stats, behaviour cards, figures) or the hero (cards, items). */
+  function moreAbout(tg: RibbonTarget): void {
+    ui.figInfo = null;
+    const f = tg.figureId ? game.state.figures[tg.figureId] : undefined;
+    if (tg.typeId || f?.kind === 'monster') return openMonster(tg.typeId ?? (f as MonsterState).typeId);
+    if (f?.kind === 'hero') {
+      ui.heroInfo = f.id;
+      ui.modal = 'hero';
+      render();
+    }
+  }
+
+  function heroModal(heroId: FigureId): HTMLElement {
+    const s = game.state;
+    const hero = s.figures[heroId] as HeroState;
+    const close = () => ((ui.modal = null), (ui.heroInfo = null), render());
+    const cardButtons = (ids: CardId[]) => h('div', { class: 'grow' }, ids.map((c) => h('button', { class: 'gbtn gbtn-small', onclick: () => openCard(heroId, c) }, cardName(c))));
+    const revealed = s.phase !== 'selectCards' && hero.selection?.kind === 'cards' ? hero.selection.cards : [];
+    return modalBox(
+      figureName(heroId),
+      [
+        h('div', { class: 'grow' }, portrait(heroId, colorOf(heroId), 'lg'), h('div', { class: 'gcol' }, h('b', null, `${t('ui.hp')}: ${hero.hp}/${hero.maxHp}`), h('small', null, playerName(heroId)), statusRow(s, hero, explain))),
+        revealed.length ? h('div', null, h('small', null, t('game.figure.cards')), cardButtons(revealed)) : null,
+        hero.active.length ? h('div', null, h('small', null, t('ui.activeCards')), cardButtons(hero.active.map((a) => a.cardId))) : null,
+        (hero.items ?? []).length
+          ? h('div', null, h('small', null, t('game.figure.items')), h('div', { class: 'grow' }, (hero.items ?? []).map((it) => h('button', { class: `gbtn gbtn-small${it.state !== 'ready' ? ' is-spent' : ''}`, onclick: () => openItem(heroId, it.id) }, icon('item'), t(`item.${it.id}`)))))
+          : null,
+        h('p', { class: 'gside-hint' }, `${t('ui.hand')} ${hero.hand.length} · ${t('ui.discard')} ${hero.discard.length} · ${t('ui.lost')} ${hero.lost.length} · ${t('ui.xp')} ${hero.xp} · ${t('ui.coins')} ${hero.coins}`),
+      ],
+      close,
+    );
+  }
+
   function openMonster(typeId: string): void {
     ui.monsterInfo = typeId;
     ui.modal = 'monster';
@@ -1330,6 +1452,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
+
+interface ReactionPromptView {
+  itemId: string;
+  shield?: number;
+  damage?: number;
+  reduced?: number;
+  disadvantage?: true;
+}
+
+/** The engine's reaction prompts, looked up at run time so the screen builds with or without them. */
+function reactionPromptsOf(s: GameState): ReactionPromptView[] {
+  const fn = (queries as unknown as { reactionPrompts?: (state: GameState, content: unknown) => ReactionPromptView[] }).reactionPrompts;
+  if (!fn) return [];
+  try {
+    return fn(s, loadContent());
+  } catch {
+    return [];
+  }
+}
 
 function sleep(ms: number, cancelled: () => boolean): Promise<void> {
   return new Promise((resolve) => {

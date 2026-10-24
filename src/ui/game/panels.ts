@@ -75,7 +75,22 @@ export interface InitiativeBarOptions {
   forecast: InitiativeForecast | null;
   /** Hint level 2: who each monster type is going for this round. */
   monsterFocus: Record<string, FigureId[]> | null;
-  onMonster: (typeId: string) => void;
+  /** Tap on a portrait: a hero (`figureId`) or a monster type (`typeId`). */
+  onPick: (target: RibbonTarget) => void;
+  /** Mouse over a portrait (PC); null when it leaves. */
+  onHover?: (target: RibbonTarget | null) => void;
+}
+
+export interface RibbonTarget {
+  figureId?: FigureId;
+  typeId?: string;
+}
+
+function pickable(el: HTMLElement, o: InitiativeBarOptions, target: RibbonTarget): HTMLElement {
+  el.addEventListener('click', () => o.onPick(target));
+  el.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && o.onHover?.(target));
+  el.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && o.onHover?.(null));
+  return el;
 }
 
 export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
@@ -133,14 +148,15 @@ function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | null
   if (st.done) cls.push('is-done');
   if (f?.downed || f?.exhausted) cls.push('is-out');
   const iniText = ini === null ? (st.chosen ? icon('check', '', t('game.ready')) : icon('initiative', '', t('ui.initiative'))) : f?.selection?.kind === 'longRest' ? '99' : String(ini);
-  return h(
-    'span',
+  const el = h(
+    'button',
     { class: cls.join(' '), 'aria-label': figureName(heroId) },
     portrait(heroId, o.colorOf(heroId), st.current || st.self ? 'md' : 'sm'),
     h('b', { class: 'gini-ini' }, iniText),
     st.self ? h('span', { class: 'gini-you' }, t('game.you')) : null,
     intentIcons(o.intentsOf(heroId)),
   );
+  return pickable(el, o, { figureId: heroId });
 }
 
 function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string | HTMLElement, st: { current?: boolean; done?: boolean; intent?: boolean }): HTMLElement {
@@ -163,8 +179,7 @@ function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string | HTM
         )
       : null,
   );
-  el.addEventListener('click', () => o.onMonster(typeId));
-  return el;
+  return pickable(el, o, { typeId });
 }
 
 function typesShown(s: GameState): string[] {
