@@ -5,6 +5,7 @@
 
 import type { ScenarioDef, Terrain } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type Hex, type HexKey } from '../../rules/hex';
+import { goalZone } from '../../rules/objectives';
 import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
 
 /** Camera pitch of the board (boardCamera.ts): how far behind something its silhouette reaches. */
@@ -167,7 +168,7 @@ export function buildLayout(scenario: ScenarioDef): EnvLayout {
   const entrance = pickDoorEdge(layout, scenario.startHexes);
   if (entrance !== null) layout.edges[entrance]!.door = 'entrance';
   if (scenario.goal.type === 'reachExit') {
-    const exit = pickDoorEdge(layout, scenario.goal.hexes, entrance);
+    const exit = pickDoorEdge(layout, goalZone(scenario), entrance);
     if (exit !== null) layout.edges[exit]!.door = 'exit';
   }
   for (const e of layout.edges) if (e.door) layout.clear.add(hexKey(e.inner));

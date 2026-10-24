@@ -3,8 +3,28 @@
 
 import type { Content, ScenarioDef, SecondaryGoalDef } from './content';
 import { activeHeroes, heroes, isPresent, monsters, type Ctx } from './effects/context';
-import { hexEquals } from './hex';
+import { hexEquals, type Hex } from './hex';
 import type { GameState } from './state';
+
+// ─── Zones ─────────────────────────────────────────────────────────────────
+
+/** Hexes of the zone `id`; empty when the scenario has no such zone. */
+export function zoneHexes(scenario: ScenarioDef, id: string): Hex[] {
+  return scenario.zones?.find((z) => z.id === id)?.hexes ?? [];
+}
+
+/** The goal's place: its `zone`, else its inline hexes (`hexes` / `to`); empty without a place. */
+export function goalZone(scenario: ScenarioDef): Hex[] {
+  const g = scenario.goal;
+  if ('zone' in g && g.zone) return zoneHexes(scenario, g.zone);
+  if (g.type === 'reachExit') return g.hexes ?? [];
+  if (g.type === 'carryItem') return g.to ?? [];
+  return [];
+}
+
+export function inZone(zone: Hex[], hex: Hex): boolean {
+  return zone.some((x) => hexEquals(x, hex));
+}
 
 // ─── Main goal ─────────────────────────────────────────────────────────────
 
@@ -15,6 +35,7 @@ export function goalReached(ctx: Ctx): boolean {
   if (!scenario) return false;
   const goal = scenario.goal;
   const living = activeHeroes(s);
+  const zone = goalZone(scenario);
   switch (goal.type) {
     case 'killAll':
       return s.board.revealedRooms.length === scenario.rooms.length && !monsters(s).some(isPresent);
@@ -24,11 +45,9 @@ export function goalReached(ctx: Ctx): boolean {
         !monsters(s).some((m) => m.typeId === goal.boss && isPresent(m))
       );
     case 'reachExit':
-      return living.length > 0 && living.every((h) => goal.hexes.some((x) => hexEquals(x, h.hex)));
+      return living.length > 0 && living.every((h) => inZone(zone, h.hex));
     case 'carryItem':
-      return living.some(
-        (h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && goal.to.some((x) => hexEquals(x, h.hex)),
-      );
+      return living.some((h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && inZone(zone, h.hex));
   }
 }
 
@@ -80,7 +99,8 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
     secondary: (scenario.secondary ?? []).map((g) => ({ id: g.id, check: g.check, params: g.params, met: secondaryMet(s, g) })),
   };
   if (goal.type === 'reachExit') {
-    status.done = living.filter((h) => goal.hexes.some((x) => hexEquals(x, h.hex))).length;
+    const zone = goalZone(scenario);
+    status.done = living.filter((h) => inZone(zone, h.hex)).length;
     status.of = living.length;
   }
   if (goal.type === 'killAll') status.done = monsters(s).filter(isPresent).length;

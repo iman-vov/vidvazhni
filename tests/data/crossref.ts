@@ -5,6 +5,7 @@
 import type { Content, DropDef, RoomDef, ScenarioDef, Step } from '../../src/rules/content';
 import { areAdjacent, hexKey } from '../../src/rules/hex';
 import type { Hex } from '../../src/rules/hex';
+import { goalZone } from '../../src/rules/objectives';
 
 /** Calls `fn` for the step and every step nested in its consume bonus. */
 export function walkStep(step: Step, fn: (s: Step) => void): void {
@@ -213,10 +214,15 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
 
   const g = s.goal;
   if (g.type === 'killBoss' && !content.bosses[g.boss]) err(`goal boss ${g.boss} missing`);
-  if (g.type === 'reachExit')
-    for (const h of g.hexes) if (!owner.has(hexKey(h))) err(`exit hex ${hexKey(h)} is outside every room`);
-  if (g.type === 'carryItem')
-    for (const h of g.to) if (!owner.has(hexKey(h))) err(`delivery hex ${hexKey(h)} is outside every room`);
+  const zones = new Set<string>();
+  for (const z of s.zones ?? []) {
+    if (zones.has(z.id)) err(`zone ${z.id} twice`);
+    zones.add(z.id);
+    for (const h of z.hexes) if (!owner.has(hexKey(h))) err(`zone ${z.id} hex ${hexKey(h)} is outside every room`);
+  }
+  if ('zone' in g && g.zone && !zones.has(g.zone)) err(`goal zone ${g.zone} missing`);
+  if ((g.type === 'reachExit' || g.type === 'carryItem') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
+  for (const h of goalZone(s)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
   return errors;
 }

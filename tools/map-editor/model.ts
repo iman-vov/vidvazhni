@@ -3,6 +3,7 @@
 
 import type { RoomDef, ScenarioDef } from '../../src/rules/content';
 import { DIRECTIONS, add, areAdjacent, hexEquals, hexKey, parseHexKey, type Hex } from '../../src/rules/hex';
+import { goalZone } from '../../src/rules/objectives';
 
 export type HeroKey = '2' | '3' | '4';
 export const HERO_KEYS: readonly HeroKey[] = ['2', '3', '4'];
@@ -135,8 +136,9 @@ export function eraseHex(s: ScenarioDef, hex: Hex): boolean {
   }
   s.startHexes = s.startHexes.filter((h) => !hexEquals(h, hex));
   const g = s.goal;
-  if (g.type === 'reachExit') g.hexes = g.hexes.filter((h) => !hexEquals(h, hex));
-  if (g.type === 'carryItem') g.to = g.to.filter((h) => !hexEquals(h, hex));
+  if (g.type === 'reachExit' && g.hexes) g.hexes = g.hexes.filter((h) => !hexEquals(h, hex));
+  if (g.type === 'carryItem' && g.to) g.to = g.to.filter((h) => !hexEquals(h, hex));
+  for (const z of s.zones ?? []) z.hexes = z.hexes.filter((h) => !hexEquals(h, hex));
   for (const o of s.forkOrbs?.atStart ?? []) if (o.hex && hexEquals(o.hex, hex)) delete o.hex;
   return true;
 }
@@ -222,10 +224,12 @@ export function toggleStart(s: ScenarioDef, hex: Hex): void {
   else s.startHexes.push([hex[0], hex[1]]);
 }
 
-/** Exit hexes (reachExit) or delivery hexes (carryItem); false when the goal has none. */
+/** Exit hexes (reachExit) or delivery hexes (carryItem), in the goal's zone when it names one;
+ *  false when the goal has none. */
 export function toggleGoalHex(s: ScenarioDef, hex: Hex): boolean {
   const g = s.goal;
-  const list = g.type === 'reachExit' ? g.hexes : g.type === 'carryItem' ? g.to : undefined;
+  const zone = 'zone' in g && g.zone ? s.zones?.find((z) => z.id === g.zone)?.hexes : undefined;
+  const list = zone ?? (g.type === 'reachExit' ? (g.hexes ??= []) : g.type === 'carryItem' ? (g.to ??= []) : undefined);
   if (!list) return false;
   const i = list.findIndex((h) => hexEquals(h, hex));
   if (i >= 0) list.splice(i, 1);
@@ -234,8 +238,7 @@ export function toggleGoalHex(s: ScenarioDef, hex: Hex): boolean {
 }
 
 export function goalHexes(s: ScenarioDef): Hex[] {
-  const g = s.goal;
-  return g.type === 'reachExit' ? g.hexes : g.type === 'carryItem' ? g.to : [];
+  return goalZone(s);
 }
 
 /** Renames a room and every reference to it (doors, start room, ids prefix kept by the caller). */

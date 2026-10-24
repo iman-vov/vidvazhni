@@ -421,9 +421,11 @@
           "type": "object",
           "properties": {
             "type": { "const": "reachExit" },
-            "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
+            "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 }
           },
-          "required": ["type", "hexes"],
+          "required": ["type"],
+          "oneOf": [{ "required": ["hexes"] }, { "required": ["zone"] }],
           "additionalProperties": false
         },
         {
@@ -437,12 +439,26 @@
           "properties": {
             "type": { "const": "carryItem" },
             "item": { "type": "string", "minLength": 1 },
-            "to": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
+            "to": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 }
           },
-          "required": ["type", "item", "to"],
+          "required": ["type", "item"],
+          "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
           "additionalProperties": false
         }
       ]
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
+        },
+        "required": ["id", "hexes"],
+        "additionalProperties": false
+      }
     },
     "secondary": {
       "type": "array",

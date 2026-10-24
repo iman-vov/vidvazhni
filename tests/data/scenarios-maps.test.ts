@@ -8,6 +8,7 @@ import type { Content, ScenarioDef } from '../../src/rules/content';
 import { createGame } from '../../src/rules/engine';
 import { hexKey } from '../../src/rules/hex';
 import { LANGS, loadContent, loadTranslations } from '../../src/rules/load';
+import { goalZone } from '../../src/rules/objectives';
 import { revealRoom } from '../../src/rules/setup';
 import type { MonsterState } from '../../src/rules/state';
 import { BASE_RULES, FULL_FORK } from '../../src/rules/variants';
@@ -102,10 +103,8 @@ describe('drafts s2–s5 follow the design doc', () => {
   it('s2 Тернова стежка: exit hexes for all four heroes, thorns, 2 ravine traps, potion reward', () => {
     const s = scenarios['s2']!;
     expect(s.goal.type).toBe('reachExit');
-    if (s.goal.type === 'reachExit') {
-      expect(s.goal.hexes.length).toBeGreaterThanOrEqual(4);
-      for (const h of s.goal.hexes) expect(s.rooms[2]!.hexes.map(hexKey)).toContain(hexKey(h));
-    }
+    expect(goalZone(s).length).toBeGreaterThanOrEqual(4);
+    for (const h of goalZone(s)) expect(s.rooms[2]!.hexes.map(hexKey)).toContain(hexKey(h));
     expect(s.rooms.flatMap((r) => r.terrain ?? []).filter((t) => t.terrain === 'hazardous').length).toBeGreaterThanOrEqual(4);
     expect(s.rooms.flatMap((r) => r.terrain ?? []).some((t) => t.terrain === 'difficult')).toBe(true);
     expect(s.rooms.find((r) => r.id === 's2.ravine')?.traps).toHaveLength(2);
@@ -134,7 +133,7 @@ describe('drafts s2–s5 follow the design doc', () => {
     expect(barracks?.objects?.filter((o) => o.kind === 'rune').length).toBeGreaterThanOrEqual(2);
     expect(tier?.chests?.[0]?.loot?.questItem).toBe('lantern-shard-2');
     expect(s.goal).toMatchObject({ type: 'carryItem', item: 'lantern-shard-2' });
-    if (s.goal.type === 'carryItem') for (const h of s.goal.to) expect(gate?.hexes.map(hexKey)).toContain(hexKey(h));
+    for (const h of goalZone(s)) expect(gate?.hexes.map(hexKey)).toContain(hexKey(h));
     expect(s.reward).toEqual({ goldEach: 15, unlock: ['s5'] });
   });
 

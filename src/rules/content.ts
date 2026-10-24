@@ -312,11 +312,19 @@ export interface RoomDef {
   drops?: { monster: string; questItem: string }[];
 }
 
+/** A named group of hexes the goals point at (exit, delivery spot, a point to defend). */
+export interface ZoneDef {
+  id: string;
+  hexes: Hex[];
+}
+
+/** Goals with a place name it by `zone` (an id in `ScenarioDef.zones`) or list its hexes inline
+ *  (`hexes` / `to`, the map editor's form); `goalZone` resolves either. */
 export type ScenarioGoal =
   | { type: 'killAll' }
-  | { type: 'reachExit'; hexes: Hex[] }
+  | { type: 'reachExit'; hexes?: Hex[]; zone?: string }
   | { type: 'killBoss'; boss: string }
-  | { type: 'carryItem'; item: string; to: Hex[] };
+  | { type: 'carryItem'; item: string; to?: Hex[]; zone?: string };
 
 /** Optional goal on top of the main one (docs/design/missions.md): a named check from the
  *  engine's registry (`objectives.ts`), like a battle goal, paid when the scenario is won. */
@@ -333,6 +341,7 @@ export interface ScenarioDef {
   number: number;
   goal: ScenarioGoal;
   secondary?: SecondaryGoalDef[];
+  zones?: ZoneDef[];
   startRoom: string;
   startHexes: Hex[];
   rooms: RoomDef[];

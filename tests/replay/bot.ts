@@ -6,6 +6,7 @@
 import type { Content } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
+import { goalZone } from '../../src/rules/objectives';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
 
@@ -35,14 +36,14 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
     case 'reachExit': {
       // Clear the way first, then run for the exit (or the next door).
       if (monsters.length > 0) return null;
-      const exits = goal.hexes.filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
+      const exits = goalZone(content.scenarios[s.scenarioId]!).filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
       return exits.length > 0 ? exits : closedDoors(s);
     }
     case 'carryItem': {
       const carriers = Object.values(s.figures).filter(
         (f): f is HeroState => f.kind === 'hero' && !f.exhausted && !!f.questItems?.includes(goal.item),
       );
-      if (carriers.some((c) => c.id === me.id)) return goal.to;
+      if (carriers.some((c) => c.id === me.id)) return goalZone(content.scenarios[s.scenarioId]!);
       if (carriers.length > 0 || monsters.length > 0) return null;
       const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
       return items.length > 0 ? items : null;
@@ -73,7 +74,7 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   }
   if (goal?.type === 'reachExit') {
     for (const f of Object.values(s.figures)) {
-      if (f.kind === 'hero' && !f.exhausted && goal.hexes.some((x) => distance(x, f.hex) === 0)) v += 25;
+      if (f.kind === 'hero' && !f.exhausted && goalZone(content!.scenarios[s.scenarioId]!).some((x) => distance(x, f.hex) === 0)) v += 25;
     }
   }
   const me = heroId ? hero(s, heroId) : undefined;
