@@ -11,6 +11,29 @@ import { t } from '../i18n';
 import { icon, type IconName } from './icons';
 import { rich } from '../icons';
 import { bonusText, cardName, hasMomentumMark, playedCard, stepParts } from './text';
+import frames from './cardFrames.json';
+
+type Rect = { x: number; y: number; w: number; h: number };
+interface Frame {
+  size: number[];
+  plate: Rect;
+  top: Rect;
+  bottom: Rect;
+  initiative: Rect;
+  compact: { size: number[]; slice: number[] };
+}
+
+/** The class's painted card frame (tools/card-frames.mjs): zones as fractions of the frame. */
+function frameOf(classId: string): Frame | undefined {
+  return (frames as Record<string, Frame>)[classId];
+}
+
+const frameUrl = (classId: string, compact = false) => `${import.meta.env.BASE_URL}ui/cards/frame-${classId}${compact ? '-compact' : ''}.webp`;
+
+/** Puts a zone of the frame on an element as --<name>-x/y/w/h percentages. */
+function setZone(el: HTMLElement, name: string, r: Rect): void {
+  for (const k of ['x', 'y', 'w', 'h'] as const) el.style.setProperty(`--${name}-${k}`, `${+(r[k] * 100).toFixed(2)}%`);
+}
 
 export type Half = 'top' | 'bottom';
 
@@ -98,6 +121,21 @@ export function cardView(o: CardOptions): HTMLElement {
     }
     return h('div', { class: cls }, lines, marks);
   };
+  const frame = frameOf(o.hero.classId);
+  if (frame) {
+    // The painted frame: name on the plate, initiative in the ring, the halves in the two parchment blocks.
+    classes.push('has-frame');
+    const face = h('div', { class: 'gcard-face' }, head, half('top', card.top), half('bottom', card.bottom));
+    face.style.backgroundImage = `url(${frameUrl(o.hero.classId)})`;
+    face.style.aspectRatio = `${frame.size[0]} / ${frame.size[1]}`;
+    setZone(face, 'plate', frame.plate);
+    setZone(face, 'top', frame.top);
+    setZone(face, 'bottom', frame.bottom);
+    setZone(face, 'ini', frame.initiative);
+    const el = h('div', { class: classes.join(' '), 'data-card': o.cardId }, face, o.footer ?? null);
+    if (o.accent) el.style.setProperty('--accent', o.accent);
+    return el;
+  }
   const el = h(
     'div',
     { class: classes.join(' '), 'data-card': o.cardId },
@@ -182,6 +220,8 @@ export function compactCard(o: CompactCardOptions): HTMLElement {
   if (o.picked) cls.push('is-picked');
   if (o.leading) cls.push('is-leading');
   if (o.bonus) cls.push('has-bonus');
+  const frame = frameOf(o.hero.classId);
+  if (frame) cls.push('has-frame');
   const el = h(
     'div',
     { class: cls.join(' '), 'data-card': o.cardId, role: 'button', tabindex: '0', 'aria-label': cardName(o.cardId) },
@@ -212,6 +252,16 @@ export function compactCard(o: CompactCardOptions): HTMLElement {
         )
       : null,
   );
+  if (frame) {
+    // The short frame (plate, one parchment block, bottom rim) as a 9-slice; slices in its pixels.
+    const [t0, r0, b0, l0] = frame.compact.slice;
+    el.style.borderImageSource = `url(${frameUrl(o.hero.classId, true)})`;
+    el.style.borderImageSlice = `${t0} ${r0} ${b0} ${l0} fill`;
+    el.style.setProperty('--gcc-t', String(t0));
+    el.style.setProperty('--gcc-r', String(r0));
+    el.style.setProperty('--gcc-b', String(b0));
+    el.style.setProperty('--gcc-l', String(l0));
+  }
   if (o.accent) el.style.setProperty('--accent', o.accent);
   return el;
 }

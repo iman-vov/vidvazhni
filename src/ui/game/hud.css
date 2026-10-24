@@ -1475,3 +1475,213 @@ body.game.g-bottom-short {
   border-style: double;
   border-width: 4px;
 }
+
+/* Painted card frames (public/ui/cards, tools/card-frames.mjs): the name on the plate, initiative in
+   the ring, the halves in the parchment blocks; zones come from cardFrames.json as --<zone>-x/y/w/h. */
+
+.gcard.has-frame {
+  container-type: inline-size;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  box-shadow: none;
+  min-height: 0;
+  overflow: visible;
+  color: #2b1d0e;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+}
+
+.gcard.has-frame.is-picked,
+.gcard.has-frame.is-leading {
+  box-shadow: none;
+  filter: drop-shadow(0 0 2px var(--hud-gold-hi, #f6d98a)) drop-shadow(0 0 12px rgba(246, 217, 138, 0.8));
+}
+
+.gcard-face {
+  position: relative;
+  width: 100%;
+  background-size: 100% 100%;
+  font-size: clamp(9px, 4.4cqw, 17px);
+  line-height: 1.2;
+}
+
+.gcard.has-frame .gcard-head {
+  display: contents;
+}
+
+.gcard.has-frame .gcard-name {
+  position: absolute;
+  left: var(--plate-x);
+  top: var(--plate-y);
+  width: var(--plate-w);
+  height: var(--plate-h);
+  padding: 0 3%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.15em;
+  line-height: 1.05;
+  white-space: normal;
+  color: #fff4d6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.gcard.has-frame .gcard-ini {
+  position: absolute;
+  left: var(--ini-x);
+  top: var(--ini-y);
+  width: var(--ini-w);
+  height: var(--ini-h);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #2b1d0e;
+  font-size: 1.55em;
+  font-weight: 900;
+}
+
+.gcard.has-frame .gcard-momentum {
+  position: absolute;
+  right: calc(100% - var(--top-x) - var(--top-w) + 1%);
+  top: calc(var(--top-y) + 1%);
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.gcard.has-frame .gcard-leadtag {
+  position: absolute;
+  left: calc(var(--ini-x) - 1.5em);
+  top: calc(var(--ini-y) + var(--ini-h) / 2 - 0.6em);
+  color: #8a5a10;
+}
+
+.gcard.has-frame .gcard-half {
+  position: absolute;
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none;
+  border-radius: 6px;
+  min-height: 0;
+  padding: 3% 4%;
+  justify-content: center;
+}
+
+.gcard.has-frame .gcard-top {
+  left: var(--top-x);
+  top: var(--top-y);
+  width: var(--top-w);
+  height: var(--top-h);
+  padding-bottom: 6%;
+}
+
+.gcard.has-frame .gcard-bottom {
+  left: var(--bottom-x);
+  top: var(--bottom-y);
+  width: var(--bottom-w);
+  height: var(--bottom-h);
+  padding-top: 6%;
+}
+
+.gcard.has-frame .gcard-half.is-button:not(:disabled) {
+  background: rgba(176, 120, 30, 0.1);
+}
+
+.gcard.has-frame .gcard-half.is-button:not(:disabled):hover,
+.gcard.has-frame .gcard-half.is-button:not(:disabled):active {
+  background: rgba(176, 120, 30, 0.24);
+}
+
+.gcard.has-frame .gcard-face ~ * {
+  margin-top: 6px;
+}
+
+/* Compact: the short frame as a 9-slice, drawn at half its pixel size. */
+.gcc.has-frame {
+  border: 0;
+  border-image-width: calc(var(--gcc-t) * 0.5px) calc(var(--gcc-r) * 0.5px) calc(var(--gcc-b) * 0.5px) calc(var(--gcc-l) * 0.5px);
+  border-image-repeat: stretch;
+  border-radius: 8px;
+  background: none;
+  color: #2b1d0e;
+  padding: 7px calc(var(--gcc-r) * 0.5px + 3px) calc(var(--gcc-b) * 0.5px - 2px) calc(var(--gcc-l) * 0.5px + 3px);
+  min-height: 0;
+  gap: 4px;
+  box-shadow: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+
+.gcc.has-frame.is-picked {
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 0 2px var(--hud-gold-hi)) drop-shadow(0 0 10px rgba(246, 217, 138, 0.85));
+}
+
+.gcc.has-frame .gcc-head {
+  min-height: calc(var(--gcc-t) * 0.5px - 9px);
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.gcc.has-frame .gcc-name {
+  flex: 0 1 auto;
+  text-align: center;
+  color: #fff4d6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  font-size: 0.95em;
+}
+
+.gcc.has-frame .gcard-ini {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 30px;
+  height: 30px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.gcc.has-frame .gcard-momentum {
+  width: 1em;
+  height: 1em;
+}
+
+.gcc.has-frame .gcard-divider {
+  height: 1px;
+  margin: 0;
+  background: linear-gradient(90deg, transparent, rgba(110, 70, 20, 0.6), transparent);
+}
+
+/* Framed cards keep the frame's proportions: on short screens the turn tray takes at most half the height. */
+@media (max-height: 520px), (max-width: 860px) {
+  .gturn-cards .gcard.is-full.has-frame {
+    --hcard-w: min(168px, 48vh * 0.727);
+  }
+
+  .gturn-cards .gcard.has-frame .gcard-face {
+    font-size: clamp(8px, 4.4cqw, 17px);
+  }
+
+  .gturn-cards .gcard.has-frame .gcard-name {
+    font-size: 0.95em;
+    padding: 0 1%;
+  }
+
+  .gturn-cards .gcard.has-frame .gcard-half {
+    padding: 2% 3%;
+  }
+
+  .gturn-cards .gcard.has-frame .gcard-top {
+    padding-bottom: 5%;
+  }
+
+  .gturn-cards .gcard.has-frame .gcard-bottom {
+    padding-top: 5%;
+  }
+}
