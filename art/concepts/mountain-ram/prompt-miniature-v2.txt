@@ -1,0 +1,14 @@
+Use case: stylized-concept. Asset: Braves family board-game creature concept for Meshy image-to-3D.
+INPUT IMAGES: Image 1 grey-wolf and Image 2 bog-miller are mandatory STYLE REFERENCES. Match their rendering exactly: a hand-sculpted, hand-painted premium fantasy board-game miniature photographed on a light grey studio background. Image 3 is a DESIGN REFERENCE ONLY: preserve its mountain ram silhouette, compact proportions, standing three-quarter-front pose, huge once-curled horns, fleece clumps, fog curl placement and palette. Do not copy Image 3's flat graphic/cartoon rendering.
+
+Create exactly ONE stocky grey mountain ram. Square 1:1, 1254px or larger. It is a rendered fantasy MINIATURE: true rounded 3D sculptural volume, soft form shading, gentle ambient occlusion only in creases, matte hand-painted surface with subtle large-area hand-painted color variation. Chunky, cute-friendly premium miniature proportions. Absolutely NO black/dark outline, NO flat cel shading, NO 2D cartoon/sticker, NO vector-art appearance. Use big readable sculpted fleece clumps and horn facets only, no fine fur strands and no noisy texture.
+
+Exact character/pose: barrel body roughly 1.6 times as long as tall; short thick legs around one third of its height; legs comfortably apart, standing calmly on all four legs; heavy head held a little low; mouth closed; stubborn gently grumpy expression, not scary. Body turned 30 degrees to the viewer's left in three-quarter FRONT view. Two huge thick simple horns, each curling exactly ONCE around its ear in a single spiral, each approximately head-width. Fleece has only 6–8 large rounded clumps, short stub tail, 3–4 large flat painted fog curls in the wool. No harness, bell, rope, clothing, prop, floor, second creature.
+
+COMPOSITION: full body centered, approximately 70% of image height, every part including horn tips at least 12% inside every image edge. Background is a perfectly plain flat solid light grey #D9D9D9 filling whole image. No floor plane, horizon, cast shadow, contact shadow, or scene.
+
+LIGHT/MATERIAL: soft even studio light from front-left; matte painted resin/clay miniature surface with genuine gentle volume but no shine, no rim light, no specular glare. Fog curls and eyes are fully matte paint, never glowing.
+
+PALETTE: fleece #C9C4BA with shade #9A958C; sparse sculpted snow clumps #EEF0F2; horns #8C7A5E with shade #6A5B45; face and legs #6F6A63; hooves #3E3A36; misty eyes #B9B3C4; 3–4 wool fog curls #B9B3C4. Keep colors muted and limited.
+
+Avoid: outlines, cartoon linework, flat fills, cel-shading, graphic sticker look, glow, magical light, bloom, particles, shine, gloss, plastic, metallic, high saturation, hyper-detailed fur, scenes, mountain/grass/ground/rocks, shadow, cropped parts, text, labels, watermark, signature.
