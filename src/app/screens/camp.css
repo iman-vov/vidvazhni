@@ -509,7 +509,7 @@
 }
 
 .gcamp-buy {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 48px;
   display: inline-flex;
   align-items: center;
