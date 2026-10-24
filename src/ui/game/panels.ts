@@ -79,6 +79,10 @@ export interface InitiativeBarOptions {
   onPick: (target: RibbonTarget) => void;
   /** Mouse over a portrait (PC); null when it leaves. */
   onHover?: (target: RibbonTarget | null) => void;
+  /** The initiative roll being shown (art/ui-mockups/dice/v1.png): «tumble» keeps the card order
+   *  with a d12 spinning by each card number, «sum» shows «45+7=52» in the order by total.
+   *  `at` = ms since the phase began, so a re-render resumes the CSS animation instead of restarting it. */
+  rolling?: { phase: 'tumble' | 'sum'; at: number } | null;
 }
 
 export interface RibbonTarget {
@@ -121,19 +125,26 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
     }
   } else {
     const current = s.phase === 'turns' ? s.turnIndex : s.turnOrder.length;
-    s.turnOrder.forEach((e: TurnEntry, i) => {
-      const state = { current: i === current && s.phase === 'turns', done: i < current };
+    const phase = o.rolling?.phase;
+    const order = s.turnOrder.map((e, i) => ({ e, i, card: rolledParts(s, e)?.card ?? e.initiative }));
+    // While the dice tumble the ribbon is still in card order; it sorts by total once the sums show.
+    if (phase === 'tumble') order.sort((a, b) => a.card - b.card || a.i - b.i);
+    for (const { e, i } of order) {
+      const state = phase === 'tumble' ? {} : { current: i === current && s.phase === 'turns', done: i < current };
+      const text = rolledText(s, e, phase);
+      let el: HTMLElement;
       if (e.kind === 'monsterGroup') {
-        if (!Object.values(s.figures).some((f) => f.kind === 'monster' && f.typeId === e.typeId) && i > current) return;
-        entries.push(monsterEntry(o, e.typeId, rolledText(s, e), state));
-      } else if (e.kind === 'hero') entries.push(heroEntry(o, e.figureId, rolledText(s, e), state));
-      else
-        entries.push(
-          h('span', { class: `gini is-summon${state.done ? ' is-done' : ''}`, 'aria-label': figureName(e.figureId, s) }, portrait(e.figureId, SUMMON_RING, 'sm'), h('b', { class: 'gini-ini' }, rolledText(s, e))),
-        );
-    });
+        if (!Object.values(s.figures).some((f) => f.kind === 'monster' && f.typeId === e.typeId) && i > current) continue;
+        el = monsterEntry(o, e.typeId, text, state);
+      } else if (e.kind === 'hero') el = heroEntry(o, e.figureId, text, state);
+      else el = h('span', { class: `gini is-summon${state.done ? ' is-done' : ''}`, 'aria-label': figureName(e.figureId, s) }, portrait(e.figureId, SUMMON_RING, 'sm'), h('b', { class: 'gini-ini' }, text));
+      el.dataset.ini = e.kind === 'monsterGroup' ? e.typeId : e.figureId;
+      entries.push(el);
+    }
   }
-  return h('div', { class: 'ginibar', 'aria-label': t('ui.initiative') }, joined(entries));
+  const bar = h('div', { class: `ginibar${o.rolling ? ` is-rolling is-${o.rolling.phase}` : ''}`, 'aria-label': t('ui.initiative') }, joined(entries));
+  if (o.rolling) bar.style.setProperty('--roll-at', `${-o.rolling.at}ms`);
+  return bar;
 }
 
 /** Scenario events due soon (a wave, a call for help, a runner), as warning tags. */
@@ -146,23 +157,28 @@ export function eventChips(s: GameState, warnings: EventWarning[]): HTMLElement 
   );
 }
 
-/** «Кубик ініціативи»: «25+7=32» for a rolled entry (the card's number from this round's roll
- *  event), else the plain initiative. */
-function rolledText(s: GameState, e: TurnEntry): string | HTMLElement {
-  if (e.roll === undefined) return String(e.initiative);
+/** «Кубик ініціативи»: the card's number and the die for a rolled entry (from this round's roll event). */
+function rolledParts(s: GameState, e: TurnEntry): { card: number; roll: number } | null {
+  if (e.roll === undefined) return null;
   const f = e.kind === 'monsterGroup' ? undefined : s.figures[e.figureId];
   const id = e.kind === 'monsterGroup' ? e.typeId : f?.kind === 'summon' ? f.ownerId : e.figureId;
-  let card = e.initiative - e.roll;
   for (let i = s.log.length - 1; i >= 0; i--) {
     const ev = s.log[i]!;
     if (ev.type === 'roundStarted') break;
     const r = ev.type === 'initiativeRolled' ? ev.rolls.find((x) => x.id === id) : undefined;
-    if (r) {
-      card = r.card;
-      break;
-    }
+    if (r) return { card: r.card, roll: e.roll };
   }
-  return h('span', { class: 'gini-roll', title: `${card} + ${e.roll} = ${e.initiative}` }, h('small', null, `${card}+${e.roll}=`), String(e.initiative));
+  return { card: e.initiative - e.roll, roll: e.roll };
+}
+
+/** «25+7=32» for a rolled entry, else the plain initiative; while the roll is shown, «25+[d12]»
+ *  with the die tumbling, then the sum with the total popping in. */
+function rolledText(s: GameState, e: TurnEntry, phase?: 'tumble' | 'sum'): string | HTMLElement {
+  const p = rolledParts(s, e);
+  if (!p) return String(e.initiative);
+  const title = `${p.card} + ${p.roll} = ${e.initiative}`;
+  if (phase === 'tumble') return h('span', { class: 'gini-roll is-tumble', title }, h('small', null, `${p.card}+`), h('span', { class: 'gdie is-tumble' }, String(p.roll)));
+  return h('span', { class: `gini-roll${phase === 'sum' ? ' is-sum' : ''}`, title }, h('small', null, `${p.card}+${p.roll}=`), h('span', { class: 'gini-total' }, String(e.initiative)));
 }
 
 /** Entries with the small gold diamonds between them, as on the mockup ribbon. */

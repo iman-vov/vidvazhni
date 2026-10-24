@@ -942,9 +942,104 @@ body.game.g-bottom-short {
   }
 }
 
+/* Initiative reveal: a d12 tumbles by each card number («45+[d12]»), then «45+7=52» with the total
+   popping in while the ribbon sorts by total. --roll-at (negative) resumes the animation on re-render. */
+.ginibar.is-rolling {
+  overflow: visible;
+}
+
+.gini-roll.is-tumble {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.gini-roll.is-tumble small {
+  opacity: 1;
+}
+
+.gdie.is-tumble {
+  width: 26px;
+  height: 28px;
+  margin: -6px -6px -6px 0;
+  font-size: 12px;
+  color: transparent;
+  animation:
+    gdie-tumble 0.6s cubic-bezier(0.25, 0.7, 0.35, 1) var(--roll-at, 0ms) both,
+    gdie-face 0.6s steps(1) var(--roll-at, 0ms) both;
+}
+
+@keyframes gdie-tumble {
+  0% {
+    transform: translate(-14px, -18px) rotate(-420deg) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  55% {
+    transform: translate(2px, 2px) rotate(-60deg) scale(1.15);
+  }
+  75% {
+    transform: translate(-1px, 0) rotate(12deg) scale(1.05);
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The rolled number shows only once the die settles. */
+@keyframes gdie-face {
+  0% {
+    color: transparent;
+  }
+  80%,
+  100% {
+    color: #f8e8c0;
+  }
+}
+
+.gini-roll.is-sum small {
+  animation: gini-sum-in 0.25s ease-out var(--roll-at, 0ms) both;
+}
+
+.gini-roll.is-sum .gini-total {
+  display: inline-block;
+  color: #8a5a00;
+  animation: gini-total-pop 0.4s ease-out var(--roll-at, 0ms) both;
+}
+
+@keyframes gini-sum-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes gini-total-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .gdie {
+  .gdie,
+  .gdie.is-tumble,
+  .gini-roll.is-sum small,
+  .gini-roll.is-sum .gini-total {
     animation: none;
+  }
+
+  .gdie.is-tumble {
+    color: #f8e8c0;
   }
 }
 

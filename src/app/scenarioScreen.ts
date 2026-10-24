@@ -33,6 +33,7 @@ import { cardName, elementName, figureName, modifierLabel, monsterTypeName, play
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
+import { getGraphicsQuality } from '../render/quality';
 import { artButton } from './screens/menu';
 import { settingsPanel } from './screens/settings';
 import { topicForHint } from './help/topics';
@@ -457,8 +458,76 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     updateBoard();
   }
 
+  // Initiative roll (art/ui-mockups/dice/v1.png): the d12s tumble by the card numbers, then the sums
+  // show and the ribbon slides into the order by total. Under 1.2 s, any tap skips it; none on the
+  // low graphics tier or with reduced motion. A game resumed from a save does not replay its roll.
+  const ROLL_TUMBLE_MS = 650;
+  const ROLL_SUM_MS = 450;
+  let rollKey: string | null = null;
+  let rollStart = 0;
+  let rollShown: 'tumble' | 'sum' | null = null;
+  let rollTimers: number[] = [];
+
+  function stopRoll(): void {
+    rollStart = 0;
+    for (const id of rollTimers) clearTimeout(id);
+    rollTimers = [];
+  }
+
+  function skipRoll(): void {
+    if (!rollStart) return;
+    stopRoll();
+    renderTop();
+  }
+
+  function rollMotion(): boolean {
+    return getGraphicsQuality() !== 'low' && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function rollingNow(s: GameState): { phase: 'tumble' | 'sum'; at: number } | null {
+    let idx = -1;
+    for (let i = s.log.length - 1; i >= 0; i--) {
+      const ev = s.log[i]!;
+      if (ev.type === 'roundStarted') break;
+      if (ev.type === 'initiativeRolled') {
+        idx = i;
+        break;
+      }
+    }
+    const key = idx < 0 ? '' : `${s.round}:${idx}`;
+    if (key !== rollKey) {
+      const first = rollKey === null;
+      rollKey = key;
+      stopRoll();
+      if (key && !first && rollMotion()) {
+        const speed = settings.get().speed || 1;
+        rollStart = performance.now();
+        rollTimers = [ROLL_TUMBLE_MS, ROLL_TUMBLE_MS + ROLL_SUM_MS].map((ms) => window.setTimeout(() => !disposed && renderTop(), ms / speed + 20));
+      }
+    }
+    if (!rollStart) return null;
+    const at = (performance.now() - rollStart) * (settings.get().speed || 1);
+    if (at < ROLL_TUMBLE_MS) return { phase: 'tumble', at };
+    if (at < ROLL_TUMBLE_MS + ROLL_SUM_MS) return { phase: 'sum', at: at - ROLL_TUMBLE_MS };
+    stopRoll();
+    return null;
+  }
+
+  /** Card order → order by total: each portrait slides from where it stood (FLIP). */
+  function slideRibbon(before: Map<string, number>): void {
+    for (const el of top.querySelectorAll<HTMLElement>('.ginibar [data-ini]')) {
+      const x = before.get(el.dataset.ini ?? '');
+      const dx = x === undefined ? 0 : x - el.getBoundingClientRect().left;
+      if (Math.abs(dx) > 1) el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    }
+  }
+
   function renderTop(): void {
     const s = game.state;
+    const rolling = rollingNow(s);
+    const before = new Map<string, number>();
+    if (rollShown === 'tumble' && rolling?.phase === 'sum') for (const el of top.querySelectorAll<HTMLElement>('.ginibar [data-ini]')) before.set(el.dataset.ini ?? '', el.getBoundingClientRect().left);
+    rollShown = rolling?.phase ?? null;
     const hero = ui.revealed;
     const fcCard = ui.pressCard ?? ui.leading;
     const forecast = hero && fcCard && s.pending?.kind === 'selectCards' && !ui.longRest ? forecastInitiative(s, content, hero, fcCard) : null;
@@ -473,6 +542,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           colorOf,
           intentsOf: (id) => game.intentsOf(id),
           forecast,
+          rolling: forecast ? null : rolling,
           monsterFocus: monsterFocus(),
           onPick: (tg) => openFigure(tg, true),
           onHover: (tg) => (tg ? openFigure(tg, false) : closeHoverFigure()),
@@ -487,7 +557,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('ui.log'), 'aria-expanded': String(ui.rightOpen), title: t('ui.log'), onclick: () => ((ui.rightOpen = !ui.rightOpen), renderRight()) }, icon('discard')),
         h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('game.menu'), onclick: () => ((ui.modal = 'menu'), render()) }, icon('menu')),
       ),
-    );
+    );    if (before.size) slideRibbon(before);
   }
 
   function renderLeft(): void {
@@ -1550,10 +1620,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   board.sync(game.state, content);
   if (game.restoreError) toast(t('game.restoreFailed'), game.restoreError, 'error');
+  document.addEventListener('pointerdown', skipRoll, true);
   render();
 
   return () => {
     disposed = true;
+    stopRoll();
+    document.removeEventListener('pointerdown', skipRoll, true);
     for (const u of unsubs) u();
     document.body.classList.remove('game', 'g-left-closed', 'g-right-closed', 'g-bottom-tall', 'g-bottom-short', 'g-bottom-none');
     overlay.replaceChildren();
