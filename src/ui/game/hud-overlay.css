@@ -80,8 +80,8 @@ body.game {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 10px calc(16px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  gap: 6px;
+  padding: 6px calc(16px + env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   background: radial-gradient(ellipse at 50% 40%, rgba(8, 14, 26, 0.6), rgba(6, 10, 18, 0.86));
   box-sizing: border-box;
 }
@@ -89,8 +89,8 @@ body.game {
 .gsel-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 4px 10px;
   border-radius: 16px;
   width: min(1040px, 100%);
   box-sizing: border-box;
@@ -142,7 +142,7 @@ body.game {
   align-content: center;
   gap: 10px;
   overflow: hidden;
-  padding: 10px 12px;
+  padding: 4px 12px;
   box-sizing: border-box;
 }
 
@@ -173,20 +173,23 @@ body.game {
 .gsel-slots {
   flex: 0 1 auto;
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  gap: 8px;
+  align-items: center;
 }
 
+/* One compact card high, the label sits above it: the foot keeps its height when cards are picked,
+   so the hand does not shrink. */
 .gsel-slot {
+  position: relative;
   width: 190px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
+  margin-top: 14px;
 }
 
 .gsel-slot.is-empty {
-  min-height: 92px;
+  min-height: 103px; /* as tall as a compact card */
   justify-content: center;
   align-items: center;
   border: 2px dashed rgba(246, 217, 138, 0.55);
@@ -195,6 +198,12 @@ body.game {
 }
 
 .gsel-slot-label {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  white-space: nowrap;
+  font-size: 0.9em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -213,9 +222,8 @@ body.game {
   min-height: 0;
 }
 
-.gsel-slot .gsel-lead {
-  margin: 0;
-  align-self: center;
+.gsel-slots .gsel-lead {
+  margin: 14px 0 0;
 }
 
 .gsel-badge {
@@ -267,7 +275,7 @@ body.game {
 
 .gsel-foot .ubtn {
   width: min(280px, 30vw);
-  --ubtn-h: 64px;
+  --ubtn-h: 56px;
   font-size: calc(var(--ubtn-h) * 0.3);
 }
 
@@ -509,8 +517,10 @@ body.game {
     min-height: 44px;
   }
 
-  .gsel-slot .gsel-lead {
+  .gsel-slots .gsel-lead {
     min-height: 0;
-    padding: 2px 8px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
   }
 }

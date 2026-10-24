@@ -782,7 +782,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const head = h(
       'div',
       { class: 'gsel-head gpanel' },
-      portrait(heroId, colorOf(heroId), 'md'),
+      portrait(heroId, colorOf(heroId), 'sm'),
       h('div', { class: 'gsel-who' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId))),
       h('p', { class: 'gsel-hint' }, hint),
       choosingHand
@@ -834,19 +834,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         const card = compactCard({ s, content, hero, cardId, accent, leading: which === 'lead', picked: true });
         card.addEventListener('click', () => togglePick(cardId));
         card.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), togglePick(cardId)));
-        return h(
-          'div',
-          { class: `gsel-slot is-${which}` },
-          label,
-          card,
-          which === 'second'
-            ? h('button', { class: 'gbtn gbtn-small gsel-lead', 'data-card': cardId, onclick: () => ((ui.leading = cardId), (ui.pick = [cardId, ...ui.pick.filter((c) => c !== cardId)]), render()) }, icon('initiative'), t('game.makeLeading'))
-            : null,
-        );
+        return h('div', { class: `gsel-slot is-${which}` }, label, card);
       };
+      // Between the slots: swap, the second card becomes the leading one. Keeps the foot one card high.
+      const swap = second
+        ? h(
+            'button',
+            {
+              class: 'gbtn gbtn-icon gsel-lead',
+              'data-card': second,
+              title: t('game.makeLeading'),
+              'aria-label': t('game.makeLeading'),
+              onclick: () => ((ui.leading = second), (ui.pick = [second, ...ui.pick.filter((c) => c !== second)]), render()),
+            },
+            icon('initiative'),
+          )
+        : null;
       foot.append(
         rest,
-        h('div', { class: 'gsel-slots' }, slot(lead, 'lead'), slot(second, 'second')),
+        h('div', { class: 'gsel-slots' }, slot(lead, 'lead'), swap, slot(second, 'second')),
         ready ? artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go' }) : h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : t('game.select.hint2', { n: 2 - ui.pick.length })),
       );
     }
