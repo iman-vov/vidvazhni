@@ -46,7 +46,7 @@
       ],
       "outro": {
         "victory": [
-          { "id": "s1.win.1", "speaker": "narrator", "text": "In der Truhe, unter einem Haufen gestohlener Löffel, beginnt etwas warm zu leuchten." },
+          { "id": "s1.win.1", "speaker": "narrator", "text": "In der Ecke, unter einem Haufen gestohlener Löffel, beginnt etwas warm zu leuchten." },
           {
             "id": "s1.win.2", "speaker": "hero", "pick": "random",
             "text": "Es leuchtet!",

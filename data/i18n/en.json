@@ -177,7 +177,7 @@
   "scenario.s1": "The Cellar of the Plump Goose",
   "scenario.s1.goal": "Defeat all monsters",
   "scenario.s1.intro": "Mistress Marta sighs: \"Someone in the Plump Goose is carrying off everything that shines. Go down to the cellar and put things right. Mind the barrels!\"",
-  "scenario.s1.outro": "Among the smashed barrels lay a shard of the Lantern, dim but warm. Mistress Marta wraps it carefully in a cloth: \"This is only the beginning.\"",
+  "scenario.s1.outro": "Among the stolen spoons and bowls lay a shard of the Lantern, dim but warm. Mistress Marta wraps it carefully in a cloth: \"This is only the beginning.\"",
   "room.s1.pantry": "A. Pantry",
   "room.s1.wine-cellar": "B. Wine Cellar",
   "questItem.lantern-shard-1": "Lantern Shard",

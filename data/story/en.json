@@ -46,7 +46,7 @@
       ],
       "outro": {
         "victory": [
-          { "id": "s1.win.1", "speaker": "narrator", "text": "Inside the chest, under a heap of stolen spoons, something began to glow warmly." },
+          { "id": "s1.win.1", "speaker": "narrator", "text": "In the corner, under a heap of stolen spoons, something began to glow warmly." },
           {
             "id": "s1.win.2", "speaker": "hero", "pick": "random",
             "text": "It's glowing!",
