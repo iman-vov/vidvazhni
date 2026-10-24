@@ -24,6 +24,7 @@ import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from '.
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
+import { setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
@@ -283,6 +284,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const animDt = dt * anim.speed;
     overlay.time += animDt;
     environment.update(now / 1000);
+    waterRipples();
     const t = now / 1000;
     animateGlows(parts, t);
     for (const fv of figures.values()) {
@@ -293,6 +295,19 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     post.render();
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
     if (resetButton) resetButton.hidden = camera.atHome;
+  }
+
+  /** Rings on the water around figures standing in it. */
+  function waterRipples(): void {
+    const board = state?.board.tiles;
+    const points: THREE.Vector3[] = [];
+    if (board) {
+      for (const fv of figures.values()) {
+        const p = fv.root.position;
+        if (fv.root.visible && !fv.gone && board[hexKey(worldToHex(p.x, p.z))]?.terrain === 'water') points.push(p);
+      }
+    }
+    setWaterRipples(points);
   }
 
   function renderFrame(now: number): void {
@@ -482,6 +497,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null, environment.defaultBoundary);
     }
     tiles.syncRooms(s, c);
+    setBoardWater(s.board.tiles);
     for (const id of tiles.revealed) tiles.setRoomRise(id, 1, null);
     tiles.syncProps(s);
     const seen = new Set<FigureId>();
@@ -1026,6 +1042,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const c = ctx.job.content;
     tiles.syncRooms(after, c, roomId);
     tiles.syncProps(after, roomId);
+    setBoardWater(after.board.tiles);
     tiles.setRoomRise(roomId, 0, null);
     updateBounds(true);
     // Doors into the new room swing open first; the room rises from where the door is.

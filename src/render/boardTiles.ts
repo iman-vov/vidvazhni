@@ -19,6 +19,7 @@ import type { GraphicsQuality } from './quality';
 import type { PropModelSpec } from './environment/types';
 import type { Partition } from './environment/walls';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
+import { patchWater } from './environment/life';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const WALL_HEIGHT = 0.62;
@@ -402,6 +403,7 @@ export class TileLayer {
             this.onChange();
           });
         }
+        patchWater(water, 'hex', this.quality !== 'low');
         m = water;
       } else {
         const tex = terrainOverlayTexture(terrain, this.quality);

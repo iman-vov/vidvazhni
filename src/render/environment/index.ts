@@ -27,6 +27,7 @@ import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam,
 import { atmosphereFor } from './atmosphere';
 import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
+import { patchWater, setWaterLook, tickLife } from './life';
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
@@ -371,6 +372,7 @@ export class BoardEnvironment {
 
   /** Flickers flames and drifts the fog; `time` in seconds. */
   update(time: number): void {
+    tickLife(time);
     if (this.morok) this.morok.uniforms.uTime.value = time;
     this.ambient?.update(time);
     this.atmosphere?.update(time);
@@ -447,6 +449,7 @@ export class BoardEnvironment {
     outputColor(mixHex(def.fog.color, def.fog.morok, 0.35), u.uEnvVeilColor.value);
     u.uEnvCentreZ.value = layout.centre.z;
     u.uEnvTexScale.value = 1 / (def.surface ? TEXTURE_WORLD_SIZE : (def.ground.scale ?? 2.6));
+    setWaterLook(outputColor(def.light.sky), waterFlow(layout));
 
     this.buildGround(def);
     this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
@@ -519,6 +522,7 @@ export class BoardEnvironment {
       const water = { color: def.ground.waterColor ?? '#5e8f9a', transparent: true, opacity: 0.82, depthWrite: false };
       const wMat = this.quality === 'low' ? new THREE.MeshLambertMaterial(water) : new THREE.MeshStandardMaterial({ ...water, roughness: 0.12, metalness: 0.15 });
       patchMaterial(wMat, this.uniforms, 'water');
+      patchWater(wMat, 'env', this.quality !== 'low');
       this.disposables.push(wGeo, wMat);
       const surface = new THREE.Mesh(wGeo, wMat);
       surface.name = 'env:water';
@@ -931,4 +935,11 @@ export function assignObstacleLooks(scenario: ScenarioDef, def: Pick<Environment
 
 function mixHex(a: string, b: string, t: number): string {
   return `#${new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString()}`;
+}
+
+/** The water's slow drift: from the entrance into the location (down the mill race), 0.12 units/s. */
+function waterFlow(layout: EnvLayout): THREE.Vector2 {
+  const e = layout.edges.find((x) => x.door === 'entrance');
+  const v = e ? new THREE.Vector2(layout.centre.x - (e.ax + e.bx) / 2, layout.centre.z - (e.az + e.bz) / 2) : new THREE.Vector2(0.8, 0.4);
+  return v.lengthSq() > 1e-6 ? v.normalize().multiplyScalar(0.12) : v.set(0.1, 0.05);
 }
