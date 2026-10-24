@@ -137,6 +137,273 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "herbalist.living-balm",
+      "level": 2,
+      "initiative": 18,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "allyOrSelf",
+            "range": 3,
+            "removeNegative": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "self"
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.thorn-vines",
+      "level": 2,
+      "initiative": 46,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "conditions": [
+              "immobilize"
+            ],
+            "consume": {
+              "element": "earth",
+              "conditions": [
+                "wound"
+              ]
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.forest-ward",
+      "level": 3,
+      "initiative": 55,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "alliesInRadius",
+            "radius": 2,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.rage-draught",
+      "level": 3,
+      "initiative": 24,
+      "top": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "strengthen",
+            "target": "ally",
+            "range": 3
+          },
+          {
+            "type": "bless",
+            "target": "ally",
+            "range": 3,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "consume": {
+              "element": "fire",
+              "conditions": [
+                "wound"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.poison-mist",
+      "level": 4,
+      "initiative": 62,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "conditions": [
+              "poison"
+            ],
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.second-wind",
+      "level": 4,
+      "initiative": 60,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 4,
+            "target": "allyOrSelf",
+            "range": 3,
+            "removeNegative": 2,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.forest-heart",
+      "level": 5,
+      "initiative": 70,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "alliesInRadius",
+            "radius": 3,
+            "removeNegative": 1,
+            "bless": true,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.creeping-roots",
+      "level": 5,
+      "initiative": 52,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "targets": 2,
+            "conditions": [
+              "immobilize"
+            ],
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "conditions": [
+              "poison"
+            ]
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
     }
   ]
 }
