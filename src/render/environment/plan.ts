@@ -9,6 +9,7 @@ import { hexToWorld } from '../hexLayout';
 import type { GraphicsQuality } from '../quality';
 import { distanceToFootprint, hidesBoard, seededRandom, type EnvLayout, type OutlineEdge } from './layout';
 import { pieceMeta } from './pieces';
+import { straightRuns } from './walls';
 import type { EdgeStyle, EnvironmentDef, Weighted } from './types';
 
 export type Band = 'edge' | 'corner' | 'door' | 'feature' | 'ring' | 'outside' | 'far';
@@ -20,6 +21,8 @@ export interface Placement {
   /** Yaw: the piece's +Z turns to (sin rot, cos rot). */
   rot: number;
   scale: number;
+  /** Extra stretch along the piece's X (a wall segment fitted to a straight run). Default 1. */
+  sx?: number;
   /** Build height for walls, corners and doorways. */
   height: number;
   /** Room whose fog veil covers this piece until it is revealed (null: always clear). */
@@ -93,7 +96,75 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
   const altCount = new Map<EdgeStyle, number>();
   const sconce = def.walls?.sconce;
   let plain = 0;
+  const wallPiece = (style: EdgeStyle, front: boolean): string => {
+    const s = STYLE_PIECES[style];
+    if (front) return s.low;
+    if (altEvery > 0) {
+      const n = (altCount.get(style) ?? 0) + 1;
+      altCount.set(style, n);
+      if (n % altEvery === Math.floor(altEvery / 2)) return s.alt;
+    }
+    return s.wall;
+  };
+  const hangSconce = (piece: string, style: EdgeStyle, x: number, z: number, rot: number, room: string) => {
+    if (!sconce || piece !== STYLE_PIECES[style].wall || sconce.every <= 0 || ++plain % sconce.every !== 1) return;
+    const meta = pieceMeta(sconce.piece);
+    if (meta && meta.height < wallH) put({ piece: sconce.piece, x, z, rot, scale: 1, height: meta.height, room, band: 'edge' }, 0.05);
+  };
+  // Walled edges run straight: segments fitted along each run, pillars where runs turn.
+  const straight = new Set<number>();
+  const runs = straightRuns(layout).filter((r) => {
+    if (r.door) return false;
+    const style = styleOf(def, layout.edges[r.edges[0]!]!.room);
+    return STYLE_PIECES[style].walled && r.edges.every((i) => styleOf(def, layout.edges[i]!.room) === style);
+  });
+  for (const r of runs) {
+    for (const i of r.edges) straight.add(i);
+    const len = Math.hypot(r.bx - r.ax, r.bz - r.az);
+    const count = Math.max(1, Math.round(len));
+    const piece = len / count;
+    const dx = (r.bx - r.ax) / len;
+    const dz = (r.bz - r.az) / len;
+    const rot = inward(r.nx, r.nz);
+    for (let k = 0; k < count; k++) {
+      const x = r.ax + dx * piece * (k + 0.5);
+      const z = r.az + dz * piece * (k + 0.5);
+      // Room and cut-away from the nearest hex edge this run replaces.
+      let near = layout.edges[r.edges[0]!]!;
+      let nearD = Infinity;
+      for (const i of r.edges) {
+        const e = layout.edges[i]!;
+        const d = (e.x - x) ** 2 + (e.z - z) ** 2;
+        if (d < nearD) {
+          nearD = d;
+          near = e;
+        }
+      }
+      const style = styleOf(def, near.room);
+      const id = wallPiece(style, near.front);
+      put({ piece: id, x, z, rot, scale: 1, sx: piece, height: near.front ? lowH : wallH, room: near.room, band: 'edge' }, 0.05);
+      hangSconce(id, style, x, z, rot, near.room);
+    }
+  }
+  // Pillars where two straight runs meet at an angle.
+  for (const r of runs) {
+    const next = runs.find((o) => Math.hypot(o.ax - r.bx, o.az - r.bz) < 0.05);
+    if (!next || r.nx * next.nx + r.nz * next.nz > 0.94) continue;
+    const style = styleOf(def, layout.edges[r.edges[r.edges.length - 1]!]!.room);
+    const s = STYLE_PIECES[style];
+    const lowA = layout.edges[r.edges[r.edges.length - 1]!]!.front;
+    const lowB = layout.edges[next.edges[0]!]!.front;
+    const piece = lowA && lowB ? s.cornerLow : s.corner;
+    if (!piece) continue;
+    let nx = r.nx + next.nx;
+    let nz = r.nz + next.nz;
+    const nl = Math.hypot(nx, nz) || 1;
+    nx /= nl;
+    nz /= nl;
+    put({ piece, x: r.bx + nx * 0.12, z: r.bz + nz * 0.12, rot: inward(nx, nz), scale: 1, height: lowA && lowB ? lowH : wallH, room: layout.edges[r.edges[0]!]!.room, band: 'corner' }, 0.2);
+  }
   layout.edges.forEach((e, i) => {
+    if (straight.has(i)) return;
     const style = styleOf(def, e.room);
     const s = STYLE_PIECES[style];
     if (e.door) {
@@ -103,18 +174,10 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
       return;
     }
     if (s.walled) {
-      let piece = e.front ? s.low : s.wall;
-      if (!e.front && altEvery > 0) {
-        const n = (altCount.get(style) ?? 0) + 1;
-        altCount.set(style, n);
-        if (n % altEvery === Math.floor(altEvery / 2)) piece = s.alt;
-      }
+      const piece = wallPiece(style, e.front);
       // Walls take no room from the strip: props stand right against their inner face.
       put({ piece, x: e.x, z: e.z, rot: inward(e.nx, e.nz), scale: 1, height: e.front ? lowH : wallH, room: e.room, band: 'edge' }, 0.05);
-      if (sconce && piece === s.wall && sconce.every > 0 && ++plain % sconce.every === 1) {
-        const meta = pieceMeta(sconce.piece);
-        if (meta && meta.height < wallH) put({ piece: sconce.piece, x: e.x, z: e.z, rot: inward(e.nx, e.nz), scale: 1, height: meta.height, room: e.room, band: 'edge' }, 0.05);
-      }
+      hangSconce(piece, style, e.x, e.z, inward(e.nx, e.nz), e.room);
       return;
     }
     // Loose clumps a little outside the edge, varied in size; low in front of the board.
@@ -134,6 +197,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     }
   });
   for (const c of layout.corners) {
+    if (c.edges.every((i) => straight.has(i))) continue;
     const edges = c.edges.map((i) => layout.edges[i]!);
     const s = STYLE_PIECES[styleOf(def, edges[0]!.room)];
     if (!s.corner) continue;

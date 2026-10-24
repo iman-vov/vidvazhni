@@ -2,7 +2,7 @@
 //   R  fade into the location's fog with distance from the playable hexes (the board never fades),
 //   G  how much a texel belongs to a room that is not revealed yet (it lies under the Морок veil),
 //   B  shallow water (flooded mill: puddles beyond the edge and by the water hexes),
-//   A  painted occlusion: dark grooves between and around the hex plates and along wall feet.
+//   A  painted occlusion along the feet of the walls.
 // Baking is plain arithmetic (testable); the veil is re-baked cheaply when a room is revealed.
 
 import * as THREE from 'three';
@@ -69,10 +69,9 @@ export function bakeField(layout: EnvLayout, def: EnvironmentDef, n = 160): Fiel
       const nearHex = layout.centres[near.index]!;
       if (d > 0.02 && d < 2.3 && layout.terrain.get(hexKey(worldToHex(nearHex.x, nearHex.z))) === 'water') wet = Math.max(wet, 1 - smoothstep(1.4, 2.3, d));
       if (wet > 0.01) hasWater = true;
-      // Grooves: the ground under and between the plates is dark, fading out just past their rim.
-      const contact = 1 - smoothstep(-0.05, 0.55, d);
-      const wallFoot = 1 - smoothstep(0, walled ? 0.75 : 0.5, outline);
-      const occl = Math.max(contact * 0.85, wallFoot * (walled ? 0.7 : 0.35));
+      // The floor runs on under the grid unbroken: only the feet of the walls are darker.
+      const wallFoot = 1 - smoothstep(0, walled ? 0.55 : 0.4, outline);
+      const occl = wallFoot * (walled ? 0.6 : 0.3);
       data[o * 4] = Math.round(fog * 255);
       data[o * 4 + 2] = Math.round(wet * 255);
       data[o * 4 + 3] = Math.round(occl * 255);

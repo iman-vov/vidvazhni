@@ -9,6 +9,7 @@ import { buildLayout, hidesBoard } from '../../src/render/environment/layout';
 import { pieceIds, pieceMeta } from '../../src/render/environment/pieces';
 import { planEnvironment, STYLE_PIECES } from '../../src/render/environment/plan';
 import { hexToWorld } from '../../src/render/hexLayout';
+import { straightRuns } from '../../src/render/environment/walls';
 
 const content = loadContent();
 const SCENARIOS = ['s1', 's2', 's3', 's4', 's5'];
@@ -108,6 +109,28 @@ describe('placements', () => {
     const high = planEnvironment(layout, env, 'high').filter((p) => p.band === 'outside' || p.band === 'ring').length;
     expect(low).toBeLessThan(high);
   });
+});
+
+describe('straight walls', () => {
+  for (const id of SCENARIOS) {
+    it(`${id}: runs are fewer than hex edges, keep the doorways and never cut into the ring`, () => {
+      const layout = buildLayout(content.scenarios[id]!);
+      const runs = straightRuns(layout);
+      expect(runs.length).toBeLessThan(layout.edges.length);
+      expect(runs.filter((r) => r.door).length).toBe(layout.edges.filter((e) => e.door).length);
+      for (const r of runs) {
+        if (r.door) continue;
+        // Every ring and playable hex centre stays on the inner side of the run's line.
+        for (const k of [...layout.ring.keys(), ...layout.footprint.keys()]) {
+          const [q, rr] = k.split(',').map(Number) as [number, number];
+          const c = hexToWorld(q, rr);
+          const along = ((c.x - r.ax) * (r.bx - r.ax) + (c.z - r.az) * (r.bz - r.az)) / ((r.bx - r.ax) ** 2 + (r.bz - r.az) ** 2);
+          if (along < 0 || along > 1) continue;
+          expect((c.x - r.ax) * r.nx + (c.z - r.az) * r.nz, `${k}`).toBeLessThan(0.05);
+        }
+      }
+    });
+  }
 });
 
 describe('showcase cellar (s1)', () => {

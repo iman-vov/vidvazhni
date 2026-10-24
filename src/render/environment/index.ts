@@ -11,9 +11,10 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { BoundaryKind, ScenarioDef } from '../../rules/content';
 import { parseHexKey, type HexKey } from '../../rules/hex';
-import { noiseTexture, textureUrl } from '../boardTiles';
+import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
 import { hexToWorld } from '../hexLayout';
+import { surfaceTexture } from '../surfaces';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
 import type { GraphicsQuality } from '../quality';
@@ -117,6 +118,8 @@ export class BoardEnvironment {
   constructor(quality: GraphicsQuality) {
     this.quality = quality;
     this.root.name = 'environment';
+    // The location's floor is the board's floor: everything stands on the hexes' level.
+    this.root.position.y = PLATE_HEIGHT;
   }
 
   /** Builds the location for a scenario (all its rooms); rooms in `revealed` are clear of the veil.
@@ -409,7 +412,7 @@ export class BoardEnvironment {
     outputColor(def.fog.glow ?? def.fog.color, u.uEnvGlow.value);
     outputColor(mixHex(def.fog.color, def.fog.morok, 0.35), u.uEnvVeilColor.value);
     u.uEnvCentreZ.value = layout.centre.z;
-    u.uEnvTexScale.value = 1 / (def.ground.scale ?? 2.6);
+    u.uEnvTexScale.value = 1 / (def.surface ? TEXTURE_WORLD_SIZE : (def.ground.scale ?? 2.6));
 
     this.buildGround(def);
     this.placements = planEnvironment(layout, def, this.quality);
@@ -429,12 +432,15 @@ export class BoardEnvironment {
     const field = this.field!;
     const size = field.size + GROUND_EXTRA;
     const geo = new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2).translate(field.minX + field.size / 2, 0, field.minZ + field.size / 2);
-    const fallback = noiseTexture(def.ground.tint);
+    // One continuous floor: the location's hex surface (seamless, world UVs) runs from under the
+    // grid to the walls; locations without one keep their own ground texture, tinted.
+    const floor = def.surface ? surfaceTexture(def.surface, this.quality, textureUrl, () => this.onChange()) : null;
+    const fallback = floor ?? noiseTexture(def.ground.tint);
     // Low quality: Lambert shading for everything around the board (the ground covers the screen).
     const mat = this.quality === 'low' ? new THREE.MeshLambertMaterial({ map: fallback, color: '#ffffff' }) : new THREE.MeshStandardMaterial({ map: fallback, color: '#ffffff', roughness: 0.95, metalness: 0 });
     patchMaterial(mat, this.uniforms, 'ground');
     this.disposables.push(geo, mat, fallback);
-    const url = def.ground.texture ? textureUrl(def.ground.texture, this.quality) : undefined;
+    const url = !floor && def.ground.texture ? textureUrl(def.ground.texture, this.quality) : undefined;
     if (url) {
       const token = this.buildToken;
       new THREE.TextureLoader().load(url, (tex) => {
@@ -520,7 +526,7 @@ export class BoardEnvironment {
     for (const p of this.placements) {
       const proto = this.propProtos.get(p.piece);
       const meta = pieceMeta(p.piece);
-      place.compose(new THREE.Vector3(p.x, 0, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(p.scale, p.scale, p.scale));
+      place.compose(new THREE.Vector3(p.x, 0, p.z), q.setFromAxisAngle(up, p.rot), new THREE.Vector3(p.scale * (p.sx ?? 1), p.scale, p.scale));
       // Props stand on a soft contact shadow (the far silhouettes in the fog do not need one).
       if (meta?.kind === 'prop' && p.band !== 'far') {
         const r = (proto?.radius ?? meta.radius) * p.scale * 2.5;
