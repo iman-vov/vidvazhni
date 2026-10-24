@@ -1850,3 +1850,25 @@ body.game.g-bottom-short {
 .gcard-basic.is-idle {
   visibility: hidden;
 }
+
+/* Initiative ribbon: the number badge takes its own width (a long «35+5=40» or «5–85» no longer
+   runs into the next portrait); the expanded forecast takes the scenario name's place. */
+.gini-ini {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  margin-top: -12px;
+}
+
+.gini:has(.gini-roll) {
+  margin-inline: 0;
+}
+
+.ginibar {
+  padding-bottom: 3px;
+}
+
+.gtop:has(.ginibar.is-forecast) .gtop-name {
+  display: none;
+}

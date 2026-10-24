@@ -120,8 +120,10 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
     }
     for (const typeId of typesShown(s)) {
       const deck = s.behaviourDecks[typeId];
-      const inis = s.variants.threeIntents && deck?.intents.length ? deck.intents.map((c) => String(monsterIni(o.content, typeId, c))) : [];
-      entries.push(monsterEntry(o, typeId, inis.length ? inis.join(' · ') : icon('initiative', '', t('ui.initiative')), {}));
+      // «Три наміри»: the type's possible initiatives as a short range («5–85»), all of them on hover.
+      const inis = s.variants.threeIntents && deck?.intents.length ? deck.intents.map((c) => monsterIni(o.content, typeId, c)).sort((a, b) => a - b) : [];
+      const range = inis.length ? h('span', { title: `${t('ui.initiative')}: ${inis.join(', ')}` }, inis[0] === inis[inis.length - 1] ? String(inis[0]) : `${inis[0]}–${inis[inis.length - 1]}`) : null;
+      entries.push(monsterEntry(o, typeId, range ?? icon('initiative', '', t('ui.initiative')), {}));
     }
   } else {
     const current = s.phase === 'turns' ? s.turnIndex : s.turnOrder.length;
