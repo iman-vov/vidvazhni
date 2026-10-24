@@ -38,10 +38,10 @@ const RING_FPS = 24;
 const AMBIENT_FPS: Record<GraphicsQuality, number> = { low: 15, medium: 24, high: 30 };
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
-const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string }> = {
-  uk: { miss: 'Промах', shield: 'Щит', resetView: 'Повернути огляд' },
-  de: { miss: 'Daneben', shield: 'Schild', resetView: 'Ansicht zurücksetzen' },
-  en: { miss: 'Miss', shield: 'Shield', resetView: 'Reset view' },
+const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string; overview: string }> = {
+  uk: { miss: 'Промах', shield: 'Щит', resetView: 'Повернути огляд', overview: 'Уся мапа' },
+  de: { miss: 'Daneben', shield: 'Schild', resetView: 'Ansicht zurücksetzen', overview: 'Ganze Karte' },
+  en: { miss: 'Miss', shield: 'Shield', resetView: 'Reset view', overview: 'Whole map' },
 };
 
 /** Extra handles for the dev page and tests; not part of the BoardView contract. */
@@ -165,8 +165,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   // Ambient occlusion, colour grade and vignette (medium and high); low renders straight through.
   const post = new BoardPost(renderer, scene, camera.camera);
 
-  // «Reset view»: shown only while the camera is away from home.
+  // «Reset view»: shown while the camera is away from home. On a board too big for a comfortable
+  // home view it also offers «Уся мапа» (the overview) while at home.
   let resetButton: HTMLButtonElement | null = null;
+  let resetShows: 'home' | 'overview' | null = null;
   if (opts.resetButton !== false) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -176,7 +178,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     b.hidden = true;
     // Keep the press away from the board's gestures (no pan, no tap through to a hex).
     b.addEventListener('pointerdown', (e) => e.stopPropagation());
-    b.addEventListener('click', () => resetCamera());
+    b.addEventListener('click', () => (camera.atHome && camera.hasOverview ? camera.overview() : resetCamera()));
     root.appendChild(b);
     resetButton = b;
   }
@@ -294,7 +296,15 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     post.render();
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
-    if (resetButton) resetButton.hidden = camera.atHome;
+    if (resetButton) {
+      const shows = !camera.atHome ? 'home' : camera.hasOverview ? 'overview' : null;
+      resetButton.hidden = shows === null;
+      if (shows && shows !== resetShows) {
+        resetButton.title = resetButton.ariaLabel = shows === 'home' ? LABELS[lang].resetView : LABELS[lang].overview;
+        resetButton.innerHTML = iconSvg(shows === 'home' ? 'compass' : 'map', { size: 24 });
+      }
+      resetShows = shows;
+    }
   }
 
   /** Rings on the water around figures standing in it. */
@@ -384,10 +394,17 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
 
   const stopQuality = onGraphicsQualityChange((q) => setQuality(q));
 
-  function updateBounds(animate = false): void {
+  function updateBounds(animate = false, s: GameState | null = state): void {
     const b = tiles.bounds();
     if (!b) return;
-    camera.setBounds(b, animate);
+    // The active area: every figure in play (after a room opens, its monsters and the heroes at the door).
+    const focus = new THREE.Box2();
+    for (const f of Object.values(s?.figures ?? {})) {
+      if (f.hp <= 0) continue;
+      const { x, z } = hexToWorld(f.hex[0], f.hex[1]);
+      focus.expandByPoint(new THREE.Vector2(x, z));
+    }
+    camera.setBounds(b, animate, focus.isEmpty() ? null : focus);
     const c = b.getCenter(new THREE.Vector2());
     // Walls stand a hex ring outside the board: keep their shadows inside the shadow camera.
     const half = Math.max(b.max.x - b.min.x, b.max.y - b.min.y) / 2 + 3 * HEX_SIZE;
@@ -1045,7 +1062,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     tiles.syncProps(after, roomId);
     setBoardWater(after.board.tiles);
     tiles.setRoomRise(roomId, 0, null);
-    updateBounds(true);
+    updateBounds(true, after);
     // Doors into the new room swing open first; the room rises from where the door is.
     let origin: THREE.Vector3 | null = null;
     const doors: ReturnType<typeof tiles.prop>[] = [];

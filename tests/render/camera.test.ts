@@ -170,4 +170,29 @@ describe('BoardCamera gestures', () => {
     expect(cam.state.yaw).toBeCloseTo(2 * Math.PI);
     expect(cam.state.pitch).toBeCloseTo(PITCH_HOME);
   });
+
+  it('a big board: home stays in a comfortable zoom on the active area, the overview on demand', () => {
+    const { el } = fakeElement(1024, 768);
+    const cam = new BoardCamera(el, { tap() {}, doubleTap() {}, hold() {}, changed() {} });
+    cam.resize(1024, 768);
+    const small = new THREE.Box2(new THREE.Vector2(-6, -5), new THREE.Vector2(6, 5));
+    cam.setBounds(small);
+    const smallHome = cam.state.distance;
+    expect(cam.hasOverview).toBe(false);
+    // A second room far to the right opens; the figures stand by the door and in the new room.
+    const focus = new THREE.Box2(new THREE.Vector2(10, -3), new THREE.Vector2(20, 3));
+    cam.setBounds(new THREE.Box2(new THREE.Vector2(-6, -5), new THREE.Vector2(34, 8)), true, focus);
+    expect(cam.hasOverview).toBe(true);
+    expect(cam.atHome).toBe(true);
+    const home = cam.state;
+    expect(home.target.x).toBeGreaterThan(10);
+    expect(home.target.x).toBeLessThan(20);
+    expect(home.distance).toBeLessThan(smallHome * 1.6);
+    cam.overview();
+    expect(cam.atOverview).toBe(true);
+    expect(cam.atHome).toBe(false);
+    expect(cam.state.distance).toBeGreaterThan(home.distance * 1.3);
+    cam.recentre();
+    expect(cam.atHome).toBe(true);
+  });
 });

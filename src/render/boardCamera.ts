@@ -36,6 +36,10 @@ const HOLD_MS = 500;
 const DOUBLE_TAP_MS = 300;
 const DOUBLE_TAP_SLOP_PX = 40;
 const FIGURE_TOP = 1.8;
+/** The farthest home view still comfortable to tap on a tablet: about 12 hex columns by 7 rows.
+ *  A bigger board gets a home view on its active area; the whole board is the overview. */
+const COMFORT_COLS = 12;
+const COMFORT_ROWS = 7;
 
 export interface CameraHandlers {
   tap(x: number, y: number): void;
@@ -81,6 +85,11 @@ export class BoardCamera {
   private readonly goal: CameraPose = { target: new THREE.Vector3(), distance: 20, yaw: 0, pitch: PITCH_HOME };
   private readonly homeTarget = new THREE.Vector3();
   private fitDistance = 20;
+  /** The whole board (the overview), when it is farther than the comfortable home view. */
+  private readonly overviewTarget = new THREE.Vector3();
+  private overviewDistance = 20;
+  /** The active area (figures in play); the home view centres on it when the board is too big. */
+  private focusBox: THREE.Box2 | null = null;
   private maxDistance = 40;
   private userMoved = false;
   private lastStep = 0;
@@ -140,11 +149,25 @@ export class BoardCamera {
     );
   }
 
-  /** Sets the board extent (XZ). Refits the home view unless the player moved the camera. */
-  setBounds(b: THREE.Box2, animate = false): void {
+  /** Whether the whole board is bigger than the home view, so an overview is worth offering. */
+  get hasOverview(): boolean {
+    return this.overviewDistance > this.fitDistance * 1.08;
+  }
+
+  /** Whether the view is (or is heading to) the overview of the whole board. */
+  get atOverview(): boolean {
+    const g = this.goal;
+    return this.hasOverview && Math.abs(wrapAngle(g.yaw)) < 0.02 && Math.abs(g.distance / this.overviewDistance - 1) < 0.08 && g.target.distanceTo(this.overviewTarget) < 0.6 * HEX_SIZE;
+  }
+
+  /** Sets the board extent (XZ) and the active area (figures in play) the home view keeps in a
+   *  comfortable zoom. Refits the home view unless the player moved the camera. */
+  setBounds(b: THREE.Box2, animate = false, focus: THREE.Box2 | null = null): void {
     const next = b.clone().expandByScalar(HEX_SIZE);
+    // The active area is taken with the board (a room opened), not on every move.
     if (next.equals(this.bounds)) return;
     this.bounds = next;
+    this.focusBox = focus && !focus.isEmpty() ? focus.clone().expandByScalar(HEX_SIZE) : null;
     if (animate && !this.userMoved) {
       // A room opened: glide out to the new home view instead of jumping.
       this.fitHome();
@@ -187,9 +210,8 @@ export class BoardCamera {
     return THREE.MathUtils.clamp(d, MIN_DISTANCE, this.maxDistance);
   }
 
-  /** Screen extent of the board in NDC for a camera: [maxAbsX, minY, maxY]. */
-  private projectedExtent(camera: THREE.Camera): [number, number, number] {
-    const b = this.bounds;
+  /** Screen extent of a box (default the board) in NDC for a camera: [maxAbsX, minY, maxY]. */
+  private projectedExtent(camera: THREE.Camera, b: THREE.Box2 = this.bounds): [number, number, number] {
     let maxX = 0;
     let minY = Infinity;
     let maxY = -Infinity;
@@ -211,10 +233,35 @@ export class BoardCamera {
     return [maxX, minY, maxY];
   }
 
-  /** Finds the home view (yaw 0, pitch 55°) that shows the whole board centred on screen. */
+  /** Finds the home view (yaw 0, pitch 55°): the whole board centred on screen, or, when that is
+   *  farther than the comfortable distance, the active area at no more than that distance. */
   private fitHome(): void {
-    const cam = new THREE.PerspectiveCamera(FOV, this.width / this.height, 0.1, 500);
+    const all = this.fitBox(this.bounds);
     const c = this.bounds.getCenter(new THREE.Vector2());
+    const hex = HEX_SIZE;
+    const comfortBox = new THREE.Box2(new THREE.Vector2(c.x - (COMFORT_COLS * 0.75 * hex), c.y - (COMFORT_ROWS * 0.866 * hex)), new THREE.Vector2(c.x + COMFORT_COLS * 0.75 * hex, c.y + COMFORT_ROWS * 0.866 * hex));
+    const comfort = this.fitBox(comfortBox).distance;
+    this.overviewTarget.copy(all.target);
+    this.overviewDistance = all.distance;
+    let home = all;
+    if (all.distance > comfort * 1.02) {
+      home = this.focusBox ? this.fitBox(this.focusBox) : all;
+      if (home.distance > comfort) {
+        home.distance = comfort;
+        // Keep the view centre over the board.
+        home.target.x = THREE.MathUtils.clamp(home.target.x, this.bounds.min.x, this.bounds.max.x);
+        home.target.z = THREE.MathUtils.clamp(home.target.z, this.bounds.min.y, this.bounds.max.y);
+      }
+    }
+    this.homeTarget.copy(home.target);
+    this.fitDistance = home.distance;
+    this.maxDistance = Math.max(this.fitDistance * 1.6, this.overviewDistance * 1.1, MIN_DISTANCE);
+  }
+
+  /** The yaw-0 home-tilt pose that shows a box centred on screen. */
+  private fitBox(box: THREE.Box2): CameraPose {
+    const cam = new THREE.PerspectiveCamera(FOV, this.width / this.height, 0.1, 500);
+    const c = box.getCenter(new THREE.Vector2());
     const pose: CameraPose = { target: new THREE.Vector3(c.x, 0, c.y), distance: 20, yaw: 0, pitch: PITCH_HOME };
     for (let pass = 0; pass < 3; pass++) {
       let lo = 0.5;
@@ -222,19 +269,17 @@ export class BoardCamera {
       for (let i = 0; i < 30; i++) {
         pose.distance = (lo + hi) / 2;
         placeCamera(cam, pose);
-        const [x, minY, maxY] = this.projectedExtent(cam);
+        const [x, minY, maxY] = this.projectedExtent(cam, box);
         if (x <= FIT_MARGIN && minY >= -FIT_MARGIN && maxY <= FIT_MARGIN_TOP) hi = pose.distance;
         else lo = pose.distance;
       }
       pose.distance = hi;
       placeCamera(cam, pose);
-      const [, minY, maxY] = this.projectedExtent(cam);
+      const [, minY, maxY] = this.projectedExtent(cam, box);
       this.raycaster.setFromCamera(this.ndc.set(0, (minY + maxY) / 2), cam);
       if (this.raycaster.ray.intersectPlane(this.ground, this.scratch)) pose.target.z = this.scratch.z;
     }
-    this.homeTarget.copy(pose.target);
-    this.fitDistance = pose.distance;
-    this.maxDistance = Math.max(this.fitDistance * 1.6, MIN_DISTANCE);
+    return pose;
   }
 
   private setGoalHome(): void {
@@ -271,7 +316,19 @@ export class BoardCamera {
     this.on.changed();
   }
 
-  /** Back to the home view: the whole board, unturned, at the home tilt. */
+  /** The whole board at once (on demand, when the home view shows only the active area). */
+  overview(): void {
+    this.goal.target.copy(this.overviewTarget);
+    this.goal.distance = this.overviewDistance;
+    this.goal.yaw = this.shown.yaw - wrapAngle(this.shown.yaw);
+    this.goal.pitch = PITCH_HOME;
+    placeCamera(this.goalCamera, this.goal);
+    this.userMoved = true;
+    this.lastStep = 0;
+    this.on.changed();
+  }
+
+  /** Back to the home view: the whole board (or its active area), unturned, at the home tilt. */
   recentre(): void {
     this.goHome();
     this.userMoved = false;
