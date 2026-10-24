@@ -355,7 +355,10 @@ export type ScenarioGoal =
   | { type: 'defend'; zone: string; rounds: number }
   /** Every hero on its feet stands in the exit zone by the end of round `rounds`; later loses
    *  (the cave-in). Monsters need not be beaten. */
-  | { type: 'escape'; hexes?: Hex[]; zone?: string; rounds: number };
+  | { type: 'escape'; hexes?: Hex[]; zone?: string; rounds: number }
+  /** Pick up `count` objects of `kind` (an adjacent hero spends a bottom action) and carry them into
+   *  the zone: a hero ending its turn there hands over what it carries. */
+  | { type: 'collect'; kind: string; count: number; to?: Hex[]; zone?: string };
 
 /** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
  *  reached by the end of round `rounds` (the escape's timer). */

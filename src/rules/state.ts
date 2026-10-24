@@ -294,6 +294,8 @@ export interface GameState {
   /** Scenario events: the round each one last fired; `0` = prevented (its tagged monster died
    *  first). Absent = none yet. */
   firedEvents?: Record<string, number>;
+  /** `collect` goal: objects carried into the goal zone so far. */
+  delivered?: number;
 }
 
 /** Resolved numbers of one attack against one target (after card, item and consume bonuses). */
@@ -485,6 +487,8 @@ export type GameEvent =
   | { type: 'objectChanged'; objectId: string; hex: Hex; state: string; byId?: FigureId }
   /** A story item fell on a hex: dropped by the last monster of a room, or by an exhausted carrier. */
   | { type: 'questItemDropped'; item: string; hex: Hex; byId: FigureId }
+  /** `collect` goal: a hero ended its turn in the goal zone and handed over `count` objects. */
+  | { type: 'itemsDelivered'; heroId: FigureId; item: string; count: number; total: number }
   | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }

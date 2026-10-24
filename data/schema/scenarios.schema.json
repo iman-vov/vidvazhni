@@ -517,6 +517,19 @@
           "required": ["type", "rounds"],
           "oneOf": [{ "required": ["hexes"] }, { "required": ["zone"] }],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "collect" },
+            "kind": { "type": "string", "minLength": 1 },
+            "count": { "type": "integer", "minimum": 1 },
+            "to": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "kind", "count"],
+          "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
+          "additionalProperties": false
         }
       ]
     },

@@ -16,6 +16,7 @@ import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } fr
 import { openDoor } from './effects/move';
 import { infuse } from './elements';
 import { onTaggedMonsterDied } from './events';
+import { goalZone, inZone } from './objectives';
 import { hasLineOfSight } from './geometry';
 import { areAdjacent, distance, hexKey, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
@@ -85,6 +86,8 @@ interface ObjectRule {
   from: string;
   to: string;
   opens?: Hex[];
+  /** The hero takes the object along (`collect`): it leaves the board as a carried story item. */
+  pickup?: true;
 }
 
 const INTERACTIONS: readonly ObjectRule[] = [
@@ -101,6 +104,13 @@ function dataRule(ctx: Pick<Ctx, 's' | 'c'>, objectId: string): ObjectRule | und
     return { special: '', kind: o.kind, half, from: from ?? o.state ?? '', to, ...(opens ? { opens } : {}) };
   }
   return undefined;
+}
+
+/** `collect` goal: the objects of its kind are picked up with a bottom action. */
+function pickupRule(ctx: Pick<Ctx, 's' | 'c'>, kind: string): ObjectRule | undefined {
+  const goal = scenarioOf(ctx)?.goal;
+  if (goal?.type !== 'collect' || goal.kind !== kind) return undefined;
+  return { special: '', kind, half: 'bottom', from: '', to: 'taken', pickup: true };
 }
 
 /** Under the orbs fork there is no Light: a lit brazier gives a Fire orb instead. */
@@ -125,7 +135,7 @@ export function interactionFor(
 ): { rule: ObjectRule; hex: Hex; tile: Tile & { object: NonNullable<Tile['object']> } } | string {
   const found = boardObjects(ctx.s).find((o) => o.tile.object.id === objectId);
   if (!found) return 'no such object';
-  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special)) ?? dataRule(ctx, objectId);
+  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special)) ?? dataRule(ctx, objectId) ?? pickupRule(ctx, found.tile.object.kind);
   if (!rule) return 'nothing to do with this object';
   if (rule.half !== half) return `this needs a ${rule.half} action`;
   if ((found.tile.object.state ?? '') !== rule.from) return 'already done';
@@ -136,6 +146,11 @@ export function interactionFor(
 export function applyInteraction(ctx: Ctx, h: HeroState, found: Exclude<ReturnType<typeof interactionFor>, string>): void {
   found.tile.object.state = found.rule.to;
   emit(ctx, { type: 'objectChanged', objectId: found.tile.object.id, hex: [found.hex[0], found.hex[1]], state: found.rule.to, byId: h.id });
+  if (found.rule.pickup) {
+    (h.questItems ??= []).push(found.rule.kind);
+    delete (found.tile as Tile).object;
+    delete found.tile.obstacle;
+  }
   if (found.rule.kind === 'brazier') infuse(ctx, ctx.s.variants.orbs ? BRAZIER_ORB : BRAZIER_ELEMENT, h.id);
   for (const hex of found.rule.opens ?? []) openDoor(ctx, hex);
 }
@@ -175,8 +190,10 @@ export function scenarioShield(ctx: Pick<Ctx, 's' | 'c'>, f: Figure): number {
 
 const BRAZIER_SNUFFER = 'shadow-wraith';
 
-/** End of a figure's turn: s5, a wraith next to a lit brazier puts it out. */
+/** End of a figure's turn: a hero in the `collect` zone hands over what it carries; s5, a wraith
+ *  next to a lit brazier puts it out. */
 export function onFigureTurnEnd(ctx: Ctx, f: Figure): void {
+  if (f.kind === 'hero') deliver(ctx, f);
   if (f.kind !== 'monster' || f.typeId !== BRAZIER_SNUFFER || !hasSpecial(ctx, 'braziers')) return;
   for (const o of boardObjects(ctx.s)) {
     if (o.tile.object.kind !== 'brazier' || o.tile.object.state !== 'lit') continue;
@@ -184,6 +201,17 @@ export function onFigureTurnEnd(ctx: Ctx, f: Figure): void {
     o.tile.object.state = 'unlit';
     emit(ctx, { type: 'objectChanged', objectId: o.tile.object.id, hex: [o.hex[0], o.hex[1]], state: 'unlit', byId: f.id });
   }
+}
+
+function deliver(ctx: Ctx, h: HeroState): void {
+  const scenario = scenarioOf(ctx);
+  const goal = scenario?.goal;
+  if (goal?.type !== 'collect' || !inZone(goalZone(scenario!), h.hex)) return;
+  const count = (h.questItems ?? []).filter((x) => x === goal.kind).length;
+  if (count === 0) return;
+  h.questItems = (h.questItems ?? []).filter((x) => x !== goal.kind);
+  ctx.s.delivered = (ctx.s.delivered ?? 0) + count;
+  emit(ctx, { type: 'itemsDelivered', heroId: h.id, item: goal.kind, count, total: ctx.s.delivered });
 }
 
 // ─── Story items ───────────────────────────────────────────────────────────
@@ -266,8 +294,15 @@ export function onMonsterDied(ctx: Ctx, m: MonsterState): void {
   }
 }
 
-/** s4: an exhausted hero drops the carried goal item on its hex. */
+/** s4: an exhausted hero drops the carried goal item on its hex; under `collect` it always drops
+ *  the objects it carries. */
 export function onHeroExhausted(ctx: Ctx, h: HeroState): void {
+  const collect = scenarioOf(ctx)?.goal;
+  if (collect?.type === 'collect') {
+    const carried = (h.questItems ?? []).filter((x) => x === collect.kind);
+    h.questItems = (h.questItems ?? []).filter((x) => x !== collect.kind);
+    for (const item of carried) dropQuestItem(ctx, item, h.hex, h.id);
+  }
   if (!hasSpecial(ctx, 'carriedItemDrops')) return;
   const goal = scenarioOf(ctx)?.goal;
   if (goal?.type !== 'carryItem' || !h.questItems?.includes(goal.item)) return;

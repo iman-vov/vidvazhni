@@ -18,7 +18,7 @@ export function goalZone(scenario: ScenarioDef): Hex[] {
   const g = scenario.goal;
   if ('zone' in g && g.zone) return zoneHexes(scenario, g.zone);
   if (g.type === 'reachExit' || g.type === 'escape') return g.hexes ?? [];
-  if (g.type === 'carryItem') return g.to ?? [];
+  if (g.type === 'carryItem' || g.type === 'collect') return g.to ?? [];
   return [];
 }
 
@@ -49,6 +49,8 @@ export function goalReached(ctx: Ctx): boolean {
       return living.length > 0 && living.every((h) => inZone(zone, h.hex));
     case 'carryItem':
       return living.some((h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && inZone(zone, h.hex));
+    case 'collect':
+      return (s.delivered ?? 0) >= goal.count;
     case 'survive':
       return living.length > 0 && s.round >= goal.rounds;
     case 'defend':
@@ -128,6 +130,10 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
     const zone = goalZone(scenario);
     status.done = living.filter((h) => inZone(zone, h.hex)).length;
     status.of = living.length;
+  }
+  if (goal.type === 'collect') {
+    status.done = s.delivered ?? 0;
+    status.of = goal.count;
   }
   if (goal.type === 'killAll') status.done = monsters(s).filter(isPresent).length;
   if (goal.type === 'survive' || goal.type === 'defend') {
