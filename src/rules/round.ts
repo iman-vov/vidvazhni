@@ -9,6 +9,7 @@ import { goalReached, lostByRules, secondaryMet } from './objectives';
 import { nextInt, shuffle } from './rng';
 import type { BehaviourDeckState, CardId, HeroState, InitiativeRoll, TurnEntry } from './state';
 import { INITIATIVE_DIE_MAX, INITIATIVE_DIE_SIDES } from './variants';
+import { openInitiativeWindow } from './diceItems';
 
 // ─── Card selection ────────────────────────────────────────────────────────
 
@@ -83,6 +84,14 @@ export function revealIfReady(ctx: Ctx): void {
   ctx.s.turnIndex = -1;
   ctx.s.phase = 'turns';
   ctx.s.pending = null;
+  // «Предмети кубика»: dice items may still change the initiative before the first turn.
+  if (openInitiativeWindow(ctx)) return;
+  startTurns(ctx);
+}
+
+/** The order is final: reveal it and start the first turn. */
+export function startTurns(ctx: Ctx): void {
+  ctx.s.turnOrder = buildTurnOrder(ctx);
   emit(ctx, { type: 'cardsRevealed', order: ctx.s.turnOrder });
   schedule(ctx, { t: 'nextTurn' });
 }
@@ -125,6 +134,7 @@ function rollInitiative(ctx: Ctx, heroList: HeroState[], typeIds: string[]): voi
   for (const h of heroList) {
     if (h.selection?.kind !== 'cards' || h.initiative === null) continue;
     const card = h.initiative;
+    h.initiativeCard = card;
     h.initiativeRoll = d();
     h.initiative = rolledInitiative(card, h.initiativeRoll);
     rolls.push({ kind: 'hero', id: h.id, card, roll: h.initiativeRoll, initiative: h.initiative });
@@ -378,6 +388,8 @@ export function startRound(ctx: Ctx): void {
     f.selection = null;
     f.initiative = null;
     delete f.initiativeRoll;
+    delete f.initiativeCard;
+    delete f.initiativeRerolls;
     f.playedThisTurn = [];
     f.wantsShortRest = false;
   }

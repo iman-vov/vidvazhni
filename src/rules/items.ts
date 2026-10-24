@@ -5,7 +5,8 @@
 //   damage window (`avoidDamage` pending of attack damage) — items with a self shield step
 //     (Кольчуга, Баклер): the shield goes on and lowers the incoming damage before it resolves;
 //   `beforeAttacked` window (a monster attacks the hero, before the modifier) — Шолом: this
-//     attack has disadvantage. Action `passReaction` closes it unused.
+//     attack has disadvantage. Action `passReaction` closes it unused;
+//   `initiativeItems` window (after the initiative roll) — the dice items of diceItems.ts.
 // Bonuses to «your attack / your move» apply to the pending attack or move step:
 //   meleeAttackBonus{value}  — Кинджал: +value to a pending melee attack
 //   moveBonus{value}         — Чоботи: +value to a pending move
@@ -19,6 +20,16 @@ import { addCondition } from './conditions';
 import { emit, hero, type Ctx } from './effects/context';
 import { performStep } from './effects/index';
 import type { EngineTask, HeroState } from './state';
+import {
+  applyInitiativeItem,
+  applyXItem,
+  DICE_ITEM_SPECIALS,
+  initiativeItemError,
+  isDiceItem,
+  leaveInitiativeWindow,
+  xItemError,
+  type DiceItemOptions,
+} from './diceItems';
 
 type SpecialStep = Extract<Step, { type: 'special' }>;
 
@@ -116,12 +127,13 @@ function attackTask(ctx: Ctx, heroId: string): AttackTask | undefined {
 }
 
 /** Why the item cannot be used now, or null. */
-export function itemUseError(ctx: Ctx, heroId: string, itemId: string): string | null {
+export function itemUseError(ctx: Ctx, heroId: string, itemId: string, opts: DiceItemOptions = {}): string | null {
   const p = ctx.s.pending;
   const own = (p?.kind === 'heroTurn' && p.heroId === heroId) || (p?.kind === 'stepChoice' && p.heroId === heroId);
   const damageWindow = p?.kind === 'avoidDamage' && p.heroId === heroId;
   const attackedWindow = p?.kind === 'beforeAttacked' && p.heroId === heroId;
-  if (!own && !damageWindow && !attackedWindow) return 'items are used on your own turn';
+  const initiativeWindow = p?.kind === 'initiativeItems' && p.heroIds.includes(heroId);
+  if (!own && !damageWindow && !attackedWindow && !initiativeWindow) return 'items are used on your own turn';
   const h = hero(ctx.s, heroId);
   if (h.conditions.stun) return 'stunned';
   const it = h.items?.find((x) => x.id === itemId);
@@ -130,6 +142,11 @@ export function itemUseError(ctx: Ctx, heroId: string, itemId: string): string |
   const def = itemDef(ctx, itemId);
   if (!def) return 'unknown item';
   if (def.use === 'passive') return 'passive items always apply';
+  const dice = isDiceItem(ctx, def);
+  if (dice && !ctx.s.variants.diceGear) return 'dice items are off';
+  if (initiativeWindow) return dice ? initiativeItemError(ctx, h, def, opts) : 'only dice items right after the roll';
+  if (dice && (damageWindow || attackedWindow)) return 'this item does not help against the attack';
+  if (dice) return xItemError(ctx, heroId, def);
   if (damageWindow) {
     if (!isShieldItem(ctx, def)) return 'only a shield item helps against this damage';
     return attackDamageTask(ctx, heroId) ? null : 'a shield only helps against attack damage';
@@ -166,12 +183,13 @@ function changePendingStep(ctx: Ctx, st: SpecialStep): void {
   p.step = step;
 }
 
-export function useItem(ctx: Ctx, heroId: string, itemId: string): string | null {
-  const err = itemUseError(ctx, heroId, itemId);
+export function useItem(ctx: Ctx, heroId: string, itemId: string, opts: DiceItemOptions = {}): string | null {
+  const err = itemUseError(ctx, heroId, itemId, opts);
   if (err) return err;
   const h = hero(ctx.s, heroId);
   const def = itemDef(ctx, itemId) as ItemDef;
   const kind = ctx.s.pending?.kind;
+  if (isDiceItem(ctx, def)) return useDiceItem(ctx, h, def, itemId, opts);
   const shieldBefore = shieldTotal(h);
   for (const st of itemEffect(ctx, def)) {
     if (st.type === 'special' && STEP_ITEM_SPECIALS.includes(st.name)) changePendingStep(ctx, st);
@@ -187,6 +205,25 @@ export function useItem(ctx: Ctx, heroId: string, itemId: string): string | null
   emit(ctx, { type: 'itemUsed', heroId, itemId, to });
   if (kind === 'avoidDamage') shieldReaction(ctx, h, itemId, shieldTotal(h) - shieldBefore);
   if (kind === 'beforeAttacked') attackedReaction(ctx, h, itemId);
+  return null;
+}
+
+/** A dice item: in the initiative window it changes the initiative, on the own turn the pending X. */
+function useDiceItem(ctx: Ctx, h: HeroState, def: ItemDef, itemId: string, opts: DiceItemOptions): string | null {
+  const inWindow = ctx.s.pending?.kind === 'initiativeItems';
+  const keep = inWindow ? applyInitiativeItem(ctx, h, def, itemId, opts) : (applyXItem(ctx, h, def, itemId), false);
+  for (const st of itemEffect(ctx, def)) {
+    if (st.type === 'special' && DICE_ITEM_SPECIALS.includes(st.name)) continue;
+    const r = performStep(ctx, h, st, {});
+    if (r) return r;
+  }
+  const it = h.items?.find((x) => x.id === itemId);
+  if (!keep) {
+    const to = def.use === 'lost' ? 'lost' : 'spent';
+    if (it) it.state = to;
+    emit(ctx, { type: 'itemUsed', heroId: h.id, itemId, to });
+  }
+  if (inWindow) leaveInitiativeWindow(ctx, h.id, false);
   return null;
 }
 
@@ -224,6 +261,11 @@ function attackedReaction(ctx: Ctx, h: HeroState, itemId: string): void {
 /** Closes the before-attacked window without using an item. */
 export function passReaction(ctx: Ctx, heroId: string): string | null {
   const p = ctx.s.pending;
+  if (p?.kind === 'initiativeItems') {
+    if (!p.heroIds.includes(heroId)) return 'nothing to react to';
+    leaveInitiativeWindow(ctx, heroId, true);
+    return null;
+  }
   const task = attackTask(ctx, heroId);
   if (p?.kind !== 'beforeAttacked' || p.heroId !== heroId || !task) return 'nothing to react to';
   task.reacted = true;

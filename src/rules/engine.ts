@@ -77,7 +77,10 @@ function dispatch(ctx: Ctx, action: Exclude<Action, { type: 'undo' }>): string |
     case 'reviveAlly':
       return reviveAlly(ctx, action.heroId, action.cardId, action.half, action.targetId);
     case 'useItem':
-      return useItem(ctx, action.heroId, action.itemId);
+      return useItem(ctx, action.heroId, action.itemId, {
+        ...(action.targetId !== undefined ? { targetId: action.targetId } : {}),
+        ...(action.shift !== undefined ? { shift: action.shift } : {}),
+      });
     case 'passReaction':
       return passReaction(ctx, action.heroId);
     case 'interact':

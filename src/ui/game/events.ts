@@ -56,6 +56,8 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
       return null;
     case 'itemUsed':
       return t('game.ev.item', { name: n(e.heroId), item: t(`item.${e.itemId}`) });
+    case 'initiativeChanged':
+      return t('game.ev.initiativeChanged', { name: n(e.heroId), initiative: e.initiative });
     case 'dieRolled':
       return e.previous === undefined ? t('game.ev.dieRolled', { name: n(e.figureId), roll: e.roll }) : t('game.ev.dieRerolled', { name: n(e.figureId), previous: e.previous, roll: e.roll });
     case 'scenarioWon':

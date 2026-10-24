@@ -9,7 +9,7 @@ import { availableElements, canConsume, elementIds, ORBS } from './elements';
 import { apply } from './engine';
 import { reachableHexes } from './geometry';
 import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from './hex';
-import { itemDef, itemEffect } from './items';
+import { itemDef, itemEffect, itemNameKey } from './items';
 import { interactiveObstacles } from './obstacles';
 import { behaviourCard, groupInitiative, monsterInitiative, typesOnBoard } from './round';
 import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
@@ -101,6 +101,18 @@ function candidateActions(state: GameState, content: Content): Action[] {
       for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
       break;
     }
+    case 'initiativeItems':
+      for (const id of p.heroIds) {
+        const h = hero(id);
+        out.push({ type: 'passReaction', heroId: id });
+        for (const it of h.items ?? []) {
+          if (it.state !== 'ready') continue;
+          out.push({ type: 'useItem', heroId: id, itemId: it.id });
+          out.push({ type: 'useItem', heroId: id, itemId: it.id, shift: -1 }, { type: 'useItem', heroId: id, itemId: it.id, shift: 1 });
+          for (const a of Object.values(state.figures)) if (a.kind === 'hero' && a.id !== id) out.push({ type: 'useItem', heroId: id, itemId: it.id, targetId: a.id });
+        }
+      }
+      break;
     case 'endOfRound':
       for (const id of p.heroIds) {
         out.push({ type: 'shortRest', heroId: id, rest: true });
@@ -558,6 +570,69 @@ export function reactionPrompts(state: GameState, content: Content): ReactionPro
     }
     const ev = r.events.find((e): e is Extract<GameEvent, { type: 'itemReaction' }> => e.type === 'itemReaction');
     out.push({ ...base, window: 'damage', shield: ev?.shield ?? 0, damage: p.amount, reduced: ev?.damage ?? p.amount });
+  }
+  return out;
+}
+
+export interface InitiativePrompt {
+  heroId: FigureId;
+  itemId: string;
+  nameKey: string;
+  /** What the item does: `reroll` hides the new roll, the others show the new total. */
+  kind: 'reroll' | 'dieOne' | 'rerollBest' | 'swap' | 'shift';
+  action: Extract<Action, { type: 'useItem' }>;
+  /** The hero's initiative now and, unless `reroll`/`rerollBest`, after the item. */
+  initiative: number;
+  after?: number;
+  roll?: number;
+  allyId?: FigureId;
+  shift?: 1 | -1;
+}
+
+const INITIATIVE_KINDS: Record<string, InitiativePrompt['kind']> = {
+  initiativeReroll: 'reroll',
+  initiativeDieOne: 'dieOne',
+  dieRerollBest: 'rerollBest',
+  initiativeSwap: 'swap',
+  initiativeShift: 'shift',
+};
+
+/** «Предмети кубика»: the buttons of the window after the initiative roll («Пісочний годинник:
+ *  перекинути 11?», «Тихі черевики: 32 → 22»). A reroll never shows its result in advance. */
+export function initiativePrompts(state: GameState, content: Content): InitiativePrompt[] {
+  const p = state.pending;
+  if (p?.kind !== 'initiativeItems') return [];
+  const out: InitiativePrompt[] = [];
+  for (const heroId of p.heroIds) {
+    const h = state.figures[heroId];
+    if (h?.kind !== 'hero' || h.initiative === null) continue;
+    for (const it of h.items ?? []) {
+      const def = it.state === 'ready' ? itemDef({ c: content }, it.id) : undefined;
+      const st = def ? itemEffect({ s: state }, def).find((x) => x.type === 'special' && x.name in INITIATIVE_KINDS) : undefined;
+      if (!st || st.type !== 'special') continue;
+      const kind = INITIATIVE_KINDS[st.name] as InitiativePrompt['kind'];
+      const opts: { targetId?: FigureId; shift?: 1 | -1 }[] =
+        kind === 'swap' ? Object.values(state.figures).filter((a) => a.kind === 'hero' && a.id !== heroId).map((a) => ({ targetId: a.id })) : kind === 'shift' ? [{ shift: -1 }, { shift: 1 }] : [{}];
+      for (const o of opts) {
+        const action: Extract<Action, { type: 'useItem' }> = { type: 'useItem', heroId, itemId: it.id, ...o };
+        const r = apply(state, action, content);
+        if (!r.ok) continue;
+        const after = r.state.figures[heroId] as HeroState;
+        const hidden = kind === 'reroll' || kind === 'rerollBest';
+        out.push({
+          heroId,
+          itemId: it.id,
+          nameKey: itemNameKey(it.id),
+          kind,
+          action,
+          initiative: h.initiative,
+          ...(hidden ? {} : { after: after.initiative ?? h.initiative }),
+          ...(h.initiativeRoll !== undefined ? { roll: h.initiativeRoll } : {}),
+          ...(o.targetId ? { allyId: o.targetId } : {}),
+          ...(o.shift ? { shift: o.shift } : {}),
+        });
+      }
+    }
   }
   return out;
 }

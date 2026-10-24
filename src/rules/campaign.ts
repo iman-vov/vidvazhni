@@ -9,7 +9,8 @@
 import type { CampaignRules, HeroClass, ItemDef, ItemSlot, PerkDef, ScenarioDef } from './content';
 import { UPGRADED } from './items';
 import type { GameSetup } from './state';
-import type { Variants } from './variants';
+import { FULL_FORK, type Variants } from './variants';
+import { isDiceItemDef } from './diceItems';
 
 export const CAMPAIGN_VERSION = 1;
 
@@ -100,10 +101,11 @@ export function furthestScenario(c: CampaignContent, s: CampaignState): number {
   return Math.max(0, ...s.completed.map((id) => c.scenarios[id]?.number ?? 0));
 }
 
-/** Items on sale: unlocked by the story (`unlockedAfter` ≤ the furthest won scenario); copies are unlimited. */
-export function shopStock(c: CampaignContent, s: CampaignState): ItemDef[] {
+/** Items on sale: unlocked by the story (`unlockedAfter` ≤ the furthest won scenario); copies are unlimited.
+ *  Without «Предмети кубика» (`diceGear`) the dice items are not sold. */
+export function shopStock(c: CampaignContent, s: CampaignState, variants: Pick<Variants, 'diceGear'> = FULL_FORK): ItemDef[] {
   const furthest = furthestScenario(c, s);
-  return Object.values(c.items).filter((it) => it.unlockedAfter <= furthest);
+  return Object.values(c.items).filter((it) => it.unlockedAfter <= furthest && (variants.diceGear || !isDiceItemDef(it)));
 }
 
 /** Gold back for an item: `sellRate` of its price (plus the ★ price), rounded down. */

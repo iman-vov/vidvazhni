@@ -12,7 +12,7 @@ import { withConsumeBonus } from '../rules/effects/index';
 import { hexKey, type Hex } from '../rules/hex';
 import { objectiveStatus } from '../rules/objectives';
 import * as queries from '../rules/queries';
-import { attackPrompts, forecastInitiative, orbBonusPreview, previewAttack, usableItems } from '../rules/queries';
+import { attackPrompts, forecastInitiative, initiativePrompts, orbBonusPreview, previewAttack, usableItems, type InitiativePrompt } from '../rules/queries';
 import { behaviourCard, monsterInitiative } from '../rules/round';
 import type { Action, CardId, FigureId, GameEvent, GameState, HeroState, MonsterState, StepChoice } from '../rules/state';
 import { figureSteps } from '../rules/turn';
@@ -565,6 +565,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     } else if ((p as { kind: string } | null)?.kind === 'beforeAttacked') {
       body = reactionPanel();
       size = 'short';
+    } else if (p?.kind === 'initiativeItems') {
+      body = initiativeItemsPanel();
+      size = 'short';
     } else if (p?.kind === 'longRestLoss') {
       body = longRestPanel();
       size = 'tall';
@@ -848,7 +851,16 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), rich(t('game.itemPrompt', { item: t(pr.nameKey), value: pr.value, boosted: pr.boosted }))));
           }
         }
-      } else if (m.mode === 'path') {
+      }
+      // «Предмети кубика»: Щаслива кістка / Зілля удачі on the rolled X of this step.
+      if (info.step.xRoll !== undefined) {
+        for (const it of usableItems(s, content, hero.id)) {
+          if (!it.effect.some((st) => st.type === 'special' && (st.name === 'xRerollBest' || st.name === 'dieRerollBest'))) continue;
+          const a = legalUse.find((x) => x.itemId === it.itemId);
+          if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), t('game.dieReroll', { item: t(it.nameKey), roll: info.step.xRoll })));
+        }
+      }
+      if (m.mode === 'path') {
         for (const it of usableItems(s, content, hero.id, 'move')) {
           const a = legalUse.find((x) => x.itemId === it.itemId);
           if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), t('game.itemUse', { item: t(it.nameKey) })));
@@ -997,6 +1009,34 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
               : t('game.itemUse', { item });
         return h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a) }, icon('item'), rich(label));
       }),
+    );
+  }
+
+  /** «Предмети кубика»: right after the initiative roll each listed hero may use a dice item
+   *  («Пісочний годинник: перекинути 7?», «Тихі черевики: 32 → 22») or say ready. */
+  function initiativeItemsPanel(): HTMLElement {
+    const s = game.state;
+    const p = s.pending as Extract<GameState['pending'], { kind: 'initiativeItems' }>;
+    const prompts = initiativePrompts(s, content);
+    const label = (pr: InitiativePrompt): string => {
+      const item = t(pr.nameKey);
+      if (pr.kind === 'reroll' || pr.kind === 'rerollBest') return t(`game.initItems.${pr.kind}`, { item, roll: pr.roll ?? 0 });
+      if (pr.kind === 'swap') return t('game.initItems.swap', { item, ally: figureName(pr.allyId ?? '', s), from: pr.initiative, to: pr.after ?? pr.initiative });
+      return t('game.initItems.change', { item, from: pr.initiative, to: pr.after ?? pr.initiative });
+    };
+    return h(
+      'div',
+      { class: 'gsheet' },
+      h('p', { class: 'gsheet-title' }, icon('item'), t('game.initItems.title')),
+      ...p.heroIds.map((id) =>
+        h(
+          'div',
+          { class: 'grow greact' },
+          h('b', null, figureName(id, s)),
+          prompts.filter((pr) => pr.heroId === id).map((pr) => h('button', { class: 'gbtn gbtn-glow', onclick: () => act(pr.action) }, icon('item'), rich(label(pr)))),
+          h('button', { class: 'gbtn gbtn-primary', onclick: () => act({ type: 'passReaction', heroId: id }) }, t('game.initItems.done')),
+        ),
+      ),
     );
   }
 

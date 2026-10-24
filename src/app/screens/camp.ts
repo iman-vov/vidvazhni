@@ -240,7 +240,7 @@ export function campScreen(o: CampOptions): HTMLElement {
   function shop(): HTMLElement {
     const x = hero();
     const fits = (it: ItemDef) => !filter || groupOf(it.slot) === filter;
-    const stock = shopStock(c, state);
+    const stock = shopStock(c, state, settings.get().variants);
     // Owned items not on sale yet (taken from the party chest) can still be sold or upgraded here.
     const extra = x.owned.map((o) => c.items[o.id]).filter((it): it is ItemDef => !!it && !stock.includes(it));
     const wares = [...stock, ...extra].filter(fits);
