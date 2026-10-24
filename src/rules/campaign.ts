@@ -44,6 +44,8 @@ export interface CampaignState {
   /** Scenario ids that can be played next. */
   unlocked: string[];
   difficulty: GameSetup['difficulty'];
+  /** Id of the last scenario result applied (the game's start time): guards against counting it twice. */
+  lastResultId?: string;
 }
 
 /** The content the camp needs; `loadContent()` provides it. */
@@ -234,4 +236,42 @@ export function giftGold(c: CampaignContent, s: CampaignState, fromClassId: stri
     (next.heroes.find((h) => h.classId === toClassId) as CampaignHero).gold += amount;
     return null;
   });
+}
+
+/** What a finished (won or lost) scenario brings back to the camp; `GameController.rewards()` gives it. */
+export interface ScenarioResult {
+  /** Unique per game (its start time); a result with the same id is applied only once. */
+  id: string;
+  scenarioId: string;
+  won: boolean;
+  /** XP and gold per hero (gold = coins × coin value + `reward.goldEach` on a win). */
+  heroes: { classId: string; xp: number; gold: number }[];
+  /** Shop items found in chests and on enemies (`GameState.foundItems`). */
+  foundItems?: string[];
+}
+
+/** Scenario result → campaign. A loss keeps the gold, XP and found items («поразка м'яка»); a win also
+ *  puts `reward.items` in the party chest, marks the scenario completed and unlocks `reward.unlock`. */
+export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: ScenarioResult): CampaignResult {
+  if (s.lastResultId === r.id) return fail('result already applied');
+  const scenario = c.scenarios[r.scenarioId];
+  if (!scenario) return fail(`unknown scenario ${r.scenarioId}`);
+  const next = structuredClone(s);
+  for (const got of r.heroes) {
+    const h = next.heroes.find((x) => x.classId === got.classId);
+    if (!h) return fail(`no hero ${got.classId}`);
+    h.xp += Math.max(0, got.xp);
+    h.gold += Math.max(0, got.gold);
+  }
+  next.partyChest.push(...(r.foundItems ?? []));
+  if (r.won) {
+    next.partyChest.push(...(scenario.reward.items ?? []));
+    if (!next.completed.includes(r.scenarioId)) next.completed.push(r.scenarioId);
+    next.unlocked = next.unlocked.filter((id) => id !== r.scenarioId);
+    for (const id of scenario.reward.unlock ?? []) {
+      if (!next.completed.includes(id) && !next.unlocked.includes(id)) next.unlocked.push(id);
+    }
+  }
+  next.lastResultId = r.id;
+  return { ok: true, state: next };
 }
