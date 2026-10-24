@@ -25,6 +25,7 @@ import {
   type StepResult,
 } from './support';
 import { performForced } from './forced';
+import { rerollStepX } from '../dice';
 
 /** The step with a consume bonus folded in. */
 export function withConsumeBonus(step: Step, bonus: ConsumeBonus): { step: Step; extraTargets: number } {
@@ -68,8 +69,11 @@ export function performStep(ctx: Ctx, f: Figure, step: Step, choice: StepChoice,
     const els = elementsToConsume(ctx, bonus, choice);
     if (typeof els === 'string') return els;
     paid = els;
-    const folded = withConsumeBonus(step, bonus);
+    // «Карти з X»: a rolled X is rolled again (better kept) instead of the bonus's `add.value`.
+    const xBest = !!bonus.xBest && step.xRoll !== undefined;
+    const folded = withConsumeBonus(step, xBest ? { ...bonus, add: { ...bonus.add, value: 0 } } : bonus);
     actual = folded.step;
+    if (xBest) rerollStepX(ctx, f, actual);
     src = { ...src, extraTargets: (src.extraTargets ?? 0) + folded.extraTargets };
   }
   // Infusing with an `any` element uses `choice.element`; a consume of `any` must not reuse it.

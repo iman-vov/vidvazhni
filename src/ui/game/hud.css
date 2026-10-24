@@ -889,6 +889,13 @@ body.game.g-bottom-short {
   color: var(--hud-gold-hi);
 }
 
+/* «Карти з X»: the X roll under the step, «X = 4». */
+.gturn-box .gstep-die {
+  margin: 2px 0 0;
+  font-weight: 700;
+  color: var(--hud-gold-hi);
+}
+
 .gturn-box .gbtn,
 .gbottom .gsheet .gbtn {
   background: #173356;

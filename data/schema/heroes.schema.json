@@ -89,7 +89,8 @@
         "then": { "type": "array", "items": { "$ref": "#/definitions/step" } },
         "area": { "$ref": "#/definitions/area" },
         "extraTarget": { "type": "boolean" },
-        "curse": { "type": "boolean" }
+        "curse": { "type": "boolean" },
+        "xBest": { "type": "boolean" }
       },
       "required": ["element"],
       "additionalProperties": false
@@ -113,6 +114,8 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer" },
+            "x": { "type": "integer" },
+            "xOnOne": { "type": "object", "properties": { "selfDamage": { "type": "integer", "minimum": 1 } }, "required": ["selfDamage"], "additionalProperties": false },
             "jump": { "type": "boolean" },
             "fly": { "type": "boolean" },
             "straightLine": { "type": "boolean" }
@@ -127,6 +130,8 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer" },
+            "x": { "type": "integer" },
+            "xOnOne": { "type": "object", "properties": { "selfDamage": { "type": "integer", "minimum": 1 } }, "required": ["selfDamage"], "additionalProperties": false },
             "range": { "type": "integer" },
             "targets": { "type": "integer", "minimum": 1 },
             "area": { "$ref": "#/definitions/area" },
@@ -150,6 +155,8 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer", "minimum": 1 },
+            "x": { "type": "integer" },
+            "xOnOne": { "type": "object", "properties": { "selfDamage": { "type": "integer", "minimum": 1 } }, "required": ["selfDamage"], "additionalProperties": false },
             "target": { "$ref": "#/definitions/target" },
             "range": { "type": "integer", "minimum": 0 },
             "radius": { "type": "integer", "minimum": 0 },
@@ -166,6 +173,8 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer", "minimum": 1 },
+            "x": { "type": "integer" },
+            "xOnOne": { "type": "object", "properties": { "selfDamage": { "type": "integer", "minimum": 1 } }, "required": ["selfDamage"], "additionalProperties": false },
             "target": { "$ref": "#/definitions/target" },
             "duration": { "$ref": "#/definitions/duration" },
             "range": { "type": "integer", "minimum": 0 }

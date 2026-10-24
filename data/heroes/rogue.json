@@ -142,12 +142,14 @@
           {
             "type": "attack",
             "value": 3,
+            "x": 1,
             "xp": 1,
             "consume": {
               "element": "air",
               "add": {
                 "value": 1
-              }
+              },
+              "xBest": true
             }
           }
         ]
@@ -201,6 +203,7 @@
           {
             "type": "move",
             "value": 4,
+            "x": 2,
             "jump": true
           },
           {
@@ -273,6 +276,7 @@
           {
             "type": "attack",
             "value": 4,
+            "x": 2,
             "xp": 2,
             "bonuses": [
               {

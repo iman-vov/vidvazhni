@@ -121,6 +121,8 @@
           {
             "type": "attack",
             "value": 4,
+            "x": 2,
+            "xOnOne": { "selfDamage": 1 },
             "range": 2,
             "xp": 1
           },

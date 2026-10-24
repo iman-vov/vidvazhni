@@ -68,12 +68,23 @@ export interface ConsumeBonus {
   extraTarget?: boolean;
   /** The attack also curses its targets (Чаклун, Тінерук: «Прокляття цілі»). */
   curse?: boolean;
+  /** «Карти з X» (dice.md §3): when the step's X was rolled, consuming rolls X again and keeps the
+   *  better result instead of `add.value` (Ризикований удар: Вітер). */
+  xBest?: boolean;
 }
 
 interface StepCommon {
   /** XP gained when this step is performed. */
   xp?: number;
   consume?: ConsumeBonus;
+  /** «Карти з X» (dice.md §3): with `dieCards` (heroes) or `monsterDieAbilities` (monsters) the
+   *  value is `x` + a roll of the X die (1 1 2 2 3 4); otherwise `value`, the fixed average, is used.
+   *  Monster steps keep it relative to the base stat, like `value`. */
+  x?: number;
+  /** Rolled X, set by the engine on the step in play (never in data). */
+  xRoll?: number;
+  /** Саморобний заряд: when X shows 1 the performer takes this much damage. */
+  xOnOne?: { selfDamage: number };
 }
 
 export type Duration = 'round' | 'scenario' | { uses: number } | 'persistent';

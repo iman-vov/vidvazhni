@@ -28,6 +28,15 @@ export interface Variants {
    *  cards and every monster type adds a d12 to its card's initiative. A long rest (99) does not
    *  roll and stays last, so rolled totals stop at 98. */
   initiativeDie: boolean;
+  /** «Кубик X на картах» (dice.md §3): hero steps with `x` roll the X die when they come into play;
+   *  off = the fixed average in `value`. */
+  dieCards: boolean;
+  /** «Предмети кубика» (dice.md §2): the dice items are in the shop and work in play; off = they are
+   *  not sold and carried ones do nothing. */
+  diceGear: boolean;
+  /** «Монстри з X» (dice.md §4): monster card steps with `x` roll the X die when the intent is
+   *  revealed; off = the fixed average in `value`. */
+  monsterDieAbilities: boolean;
 }
 
 export type VariantId = keyof Variants;
@@ -41,6 +50,9 @@ export const BASE_RULES: Readonly<Variants> = {
   roundForecast: false,
   itemPrompts: false,
   initiativeDie: false,
+  dieCards: false,
+  diceGear: false,
+  monsterDieAbilities: false,
 };
 
 export const FULL_FORK: Readonly<Variants> = {
@@ -52,6 +64,9 @@ export const FULL_FORK: Readonly<Variants> = {
   roundForecast: true,
   itemPrompts: true,
   initiativeDie: true,
+  dieCards: true,
+  diceGear: true,
+  monsterDieAbilities: true,
 };
 
 /** Order of implementation, cheapest first (from the design doc). */
@@ -64,6 +79,9 @@ export const VARIANT_ORDER: readonly VariantId[] = [
   'roundForecast',
   'itemPrompts',
   'initiativeDie',
+  'dieCards',
+  'diceGear',
+  'monsterDieAbilities',
 ];
 
 export const MONSTER_HP_BONUS_WITH_INTENTS = 0.1;
@@ -73,3 +91,7 @@ export const FOLLOW_UP_BONUS = 1;
 export const INITIATIVE_DIE_SIDES = 12;
 /** Highest rolled initiative: a long rest (99) always acts last. */
 export const INITIATIVE_DIE_MAX = 98;
+/** Faces of the X die (dice.md §3): floor 1, ceiling 4, average 2.2. */
+export const X_DIE_FACES: readonly number[] = [1, 1, 2, 2, 3, 4];
+/** Тихі черевики: the leading card's initiative never goes below this. */
+export const INITIATIVE_MIN = 1;

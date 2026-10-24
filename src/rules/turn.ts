@@ -19,6 +19,7 @@ import { applyInteraction, interactionFor, onboardingSteps, onFigureTurnEnd } fr
 import { LOSS_SPECIALS } from './special';
 import { runFadeOut } from './special/fadeOut';
 import { distance } from './hex';
+import { rollStepX } from './dice';
 import type { CardId, EngineTask, Figure, GameState, HalfInProgress, HeroState, MonsterState, StepChoice } from './state';
 import { MOMENTUM_MAX, REVIVE_HP } from './variants';
 
@@ -245,8 +246,15 @@ export function interact(ctx: Ctx, heroId: string, cardId: CardId, half: 'top' |
 function enterStep(ctx: Ctx): void {
   const half = ctx.s.half;
   if (!half) return;
-  const step = half.steps[half.stepIndex];
+  let step = half.steps[half.stepIndex];
   if (!step) return finishHalf(ctx);
+  // «Карти з X»: the X die is rolled as the step comes into play; like a modifier draw it ends undo.
+  if (ctx.s.variants.dieCards && step.x !== undefined && step.xRoll === undefined) {
+    step = rollStepX(ctx, hero(ctx.s, half.heroId), step);
+    half.steps[half.stepIndex] = step;
+    half.committed = true;
+    ctx.s.undoPoint = null;
+  }
   ctx.s.pending = { kind: 'stepChoice', heroId: half.heroId, step, stepIndex: half.stepIndex };
 }
 
@@ -261,6 +269,10 @@ export function resolveStep(ctx: Ctx, choice: StepChoice): string | null {
   const src = isSurgeStep(half, half.stepIndex) ? { surge: true } : half.basic ? {} : { cardId: half.cardId };
   const err = performStep(ctx, h, step, choice, src);
   if (err) return err;
+  // Саморобний заряд: X showed 1 (after any reroll) → the hero takes the damage.
+  if (step.xOnOne && step.xRoll === 1) {
+    schedule(ctx, { t: 'damage', targetId: h.id, amount: step.xOnOne.selfDamage, source: h.id, avoidable: false });
+  }
   if (step.xp) {
     h.xp += step.xp;
     emit(ctx, { type: 'xpGained', heroId: h.id, amount: step.xp });

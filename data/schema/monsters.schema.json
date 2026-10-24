@@ -126,6 +126,7 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer" },
+            "x": { "type": "integer" },
             "jump": { "type": "boolean" },
             "fly": { "type": "boolean" },
             "straightLine": { "type": "boolean" }
@@ -140,6 +141,7 @@
             "xp": { "type": "integer", "minimum": 0 },
             "consume": { "$ref": "#/definitions/consume" },
             "value": { "type": "integer" },
+            "x": { "type": "integer" },
             "range": { "type": "integer" },
             "targets": { "type": "integer", "minimum": 1 },
             "area": { "$ref": "#/definitions/area" },

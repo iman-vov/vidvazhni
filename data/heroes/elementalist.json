@@ -158,6 +158,7 @@
           {
             "type": "attack",
             "value": 2,
+            "x": 0,
             "targetAll": "adjacentEnemies"
           },
           {
@@ -260,6 +261,7 @@
           {
             "type": "attack",
             "value": 3,
+            "x": 1,
             "range": 3,
             "xp": 1
           },

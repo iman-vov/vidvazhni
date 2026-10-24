@@ -65,6 +65,10 @@ export interface HeroState extends FigureBase {
   initiative: number | null;
   /** «Кубик ініціативи»: this round's d12, already added to `initiative`. */
   initiativeRoll?: number;
+  /** «Предмети кубика»: this round's card initiative (after Тихі черевики) under the die. */
+  initiativeCard?: number;
+  /** «Предмети кубика»: Пісочний годинник rerolls used this round (★: two). */
+  initiativeRerolls?: number;
   xp: number; // gained in this scenario
   coins: number; // picked up in this scenario
   modifierDeck: ModifierDeck;
@@ -178,6 +182,8 @@ export interface BehaviourDeckState {
   needsShuffle: boolean;
   /** «Кубик ініціативи»: this round's d12 for the type. */
   roll?: number;
+  /** «Монстри з X»: the X rolled for a card with `x` steps when it was revealed (intent or draw). */
+  xRolls?: Record<string, number>;
 }
 
 export type ElementLevel = 'inert' | 'waning' | 'strong';
@@ -226,7 +232,10 @@ export type Pending =
   | { kind: 'shortRestReroll'; heroId: FigureId; lostCard: CardId }
   | { kind: 'chooseHandBeforeScenario'; heroIds: FigureId[] }
   /** Тінерук «Згасання»: the hero loses 1 random discarded card or takes `damage`. */
-  | { kind: 'fadeOut'; heroId: FigureId; damage: number; sourceId: FigureId };
+  | { kind: 'fadeOut'; heroId: FigureId; damage: number; sourceId: FigureId }
+  /** «Предмети кубика»: after the initiative roll, before the first turn, the heroes listed may use
+   *  a dice item (`useItem`) or pass (`passReaction`); the order is rebuilt when all have passed. */
+  | { kind: 'initiativeItems'; heroIds: FigureId[] };
 
 export interface HalfInProgress {
   heroId: FigureId;
@@ -367,8 +376,10 @@ export type Action =
   /** Uses a carried item during the hero's own turn (an attack or move bonus applies to the pending
    *  step), or as a reaction: a shield item in the `avoidDamage` window of attack damage, a
    *  disadvantage item in the `beforeAttacked` window (see items.ts). */
-  | { type: 'useItem'; heroId: FigureId; itemId: string }
-  /** Closes the `beforeAttacked` window without using an item. */
+  | { type: 'useItem'; heroId: FigureId; itemId: string; targetId?: FigureId; shift?: 1 | -1 }
+  /** Closes the `beforeAttacked` window without using an item, or ends the hero's part of the
+   *  `initiativeItems` window; `useItem` options there: `targetId` = the ally of Свисток
+   *  напарника, `shift` = the direction of Тихі черевики (−1 earlier, +1 later). */
   | { type: 'passReaction'; heroId: FigureId }
   /** Spends the top or bottom action of a selected card on a scenario object next to the hero
    *  (s3: top action lowers the sluice lever; s5: bottom action lights a brazier). */
@@ -385,6 +396,13 @@ export type GameEvent =
   | { type: 'cardsRevealed'; order: TurnEntry[] }
   /** «Кубик ініціативи»: right before `cardsRevealed`, or for a type revealed mid-round. */
   | { type: 'initiativeRolled'; rolls: InitiativeRoll[] }
+  /** «Предмети кубика»: a dice item changed a hero's initiative this round. */
+  | { type: 'initiativeChanged'; heroId: FigureId; itemId: string; card: number; roll: number; initiative: number }
+  /** «Карти з X»: the X die rolled for the step in play; `previous` = the roll a reroll replaced
+   *  (the better one is kept). */
+  | { type: 'dieRolled'; figureId: FigureId; roll: number; value: number; previous?: number; itemId?: string }
+  /** «Монстри з X»: X rolled for a monster card when it was revealed. */
+  | { type: 'monsterDieRolled'; typeId: string; cardId: string; roll: number }
   | { type: 'turnStarted'; figureId: FigureId }
   | { type: 'turnEnded'; figureId: FigureId }
   | { type: 'moved'; figureId: FigureId; path: Hex[]; jump?: boolean; fly?: boolean }
