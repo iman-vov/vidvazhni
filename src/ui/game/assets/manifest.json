@@ -134,6 +134,71 @@
     "bytes": 7848,
     "keyed": false
   },
+  "end-bg": {
+    "src": "art/ui-mockups/scenario-end/assets/background.png",
+    "width": 1448,
+    "height": 1086,
+    "bytes": 240726
+  },
+  "end-loot": {
+    "src": "art/ui-mockups/scenario-end/assets/loot-panel.png",
+    "width": 1200,
+    "height": 229,
+    "bytes": 15550,
+    "keyed": false
+  },
+  "end-btn-go": {
+    "src": "art/ui-mockups/scenario-end/assets/victory-buttons.png",
+    "width": 640,
+    "height": 106,
+    "bytes": 10806,
+    "keyed": false,
+    "slice": {
+      "top": 53,
+      "bottom": 53,
+      "left": 37,
+      "right": 37
+    }
+  },
+  "end-btn-easy": {
+    "src": "art/ui-mockups/scenario-end/assets/victory-buttons.png",
+    "width": 320,
+    "height": 117,
+    "bytes": 8150,
+    "keyed": false,
+    "slice": {
+      "top": 58,
+      "bottom": 59,
+      "left": 42,
+      "right": 41
+    }
+  },
+  "end-btn-right": {
+    "src": "art/ui-mockups/scenario-end/assets/victory-buttons.png",
+    "width": 320,
+    "height": 113,
+    "bytes": 7546,
+    "keyed": false,
+    "slice": {
+      "top": 56,
+      "bottom": 57,
+      "left": 39,
+      "right": 38
+    }
+  },
+  "end-btn-hard": {
+    "src": "art/ui-mockups/scenario-end/assets/victory-buttons.png",
+    "width": 320,
+    "height": 116,
+    "bytes": 7960,
+    "keyed": false,
+    "slice": {
+      "top": 58,
+      "bottom": 58,
+      "left": 41,
+      "right": 40
+    }
+  },
   "portraits": [
     "warden",
     "wind-archer",

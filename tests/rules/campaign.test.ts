@@ -11,6 +11,7 @@ import {
   sell,
   sellFromChest,
   sellPrice,
+  setScenarioFeedback,
   shopStock,
   takeFromChest,
   unequip,
@@ -228,5 +229,16 @@ describe('giftGold', () => {
     expect(err(giftGold(c, fresh(), 'warden', 'warden'))).toBe('cannot gift to yourself');
     expect(err(giftGold(c, fresh(), 'warden', 'rogue'))).toBe('no hero rogue');
     expect(err(giftGold(c, fresh(), 'warden', 'wind-archer', 0))).toBe('bad amount');
+  });
+});
+
+describe('scenario feedback', () => {
+  it('keeps the latest «Як було?» per scenario without touching the input', () => {
+    const s = fresh();
+    const a = setScenarioFeedback(s, 's1', 'hard');
+    const b = setScenarioFeedback(setScenarioFeedback(a, 's2', 'easy'), 's1', 'right');
+    expect(s.feedback).toBeUndefined();
+    expect(a.feedback).toEqual({ s1: 'hard' });
+    expect(b.feedback).toEqual({ s1: 'right', s2: 'easy' });
   });
 });

@@ -34,6 +34,14 @@ const JOBS = [
   ...['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'].map((id) => ({ id: `camp-hero-${id}`, src: `art/ui-mockups/camp/assets/heroes/${id}.png`, kind: 'cutout', width: 720 })),
   // Dice (art/ui-mockups/dice/v1.png): the blank navy-and-copper d12 under a rolled number.
   { id: 'die-d12', src: 'art/ui-mockups/dice/assets/d12-blank.png', kind: 'cutout', width: 128 },
+  // Scenario end (art/ui-mockups/scenario-end/assets): victory cellar, the loot panel, and the buttons cut
+  // from the 2×2 sheet (`extract` = [left, top, width, height] in source px, before the trim).
+  { id: 'end-bg', src: 'art/ui-mockups/scenario-end/assets/background.png', kind: 'opaque', width: 1448, quality: 80 },
+  { id: 'end-loot', src: 'art/ui-mockups/scenario-end/assets/loot-panel.png', kind: 'cutout', width: 1200 },
+  { id: 'end-btn-go', src: 'art/ui-mockups/scenario-end/assets/victory-buttons.png', kind: 'cutout', width: 640, extract: [20, 70, 1945, 345], slice: true },
+  { id: 'end-btn-easy', src: 'art/ui-mockups/scenario-end/assets/victory-buttons.png', kind: 'cutout', width: 320, extract: [25, 455, 630, 250], slice: true },
+  { id: 'end-btn-right', src: 'art/ui-mockups/scenario-end/assets/victory-buttons.png', kind: 'cutout', width: 320, extract: [665, 455, 650, 250], slice: true },
+  { id: 'end-btn-hard', src: 'art/ui-mockups/scenario-end/assets/victory-buttons.png', kind: 'cutout', width: 320, extract: [1325, 455, 640, 250], slice: true },
 ];
 
 /** Round portraits (initiative ribbon, hero panel): heroes, summons and bosses from portrait.png,
@@ -119,6 +127,7 @@ async function run() {
   const manifest = {};
   for (const job of JOBS) {
     let img = sharp(join(ROOT, job.src)).ensureAlpha();
+    if (job.extract) img = img.extract({ left: job.extract[0], top: job.extract[1], width: job.extract[2], height: job.extract[3] });
     let entry;
     if (job.kind === 'opaque') {
       const out = await img.removeAlpha().resize({ width: job.width, withoutEnlargement: true }).webp({ quality: job.quality ?? 82 }).toBuffer({ resolveWithObject: true });

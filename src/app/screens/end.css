@@ -1,0 +1,461 @@
+/* Scenario end (src/app/screens/end.ts) after art/ui-mockups/scenario-end/v1.png: the victory cellar
+   behind, a gold title with the scenario name, one card per hero in their colour, the slate-and-gold
+   loot panel, the «Як було?» buttons and the green [До табору]. Tablet in landscape first; narrow
+   screens wrap the cards two by two and stack the footer. */
+
+.gpage.gend-screen {
+  --ge-gold: #f3cf73;
+  --ge-gold-hi: #ffe7a3;
+  --ge-ink: #f8e8c0;
+  --ge-slate: linear-gradient(180deg, rgba(25, 46, 78, 0.94), rgba(12, 24, 44, 0.96));
+  isolation: isolate;
+  align-items: center;
+  gap: 14px;
+  color: var(--ge-ink);
+  background: #1d1a17;
+}
+
+.gend-screen .gstory-outro,
+.gend-outro {
+  width: min(100%, 760px);
+}
+
+.gend-outro {
+  margin: 0;
+  text-align: center;
+  text-shadow: 0 1px 4px #000;
+}
+
+.gpage.is-art.gend-screen > .gend-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(10, 16, 30, 0.15), rgba(10, 16, 30, 0.6) 80%),
+    url(../../ui/game/assets/end-bg.webp) center / cover no-repeat;
+}
+
+.gend-screen.is-loss .gend-bg {
+  filter: saturate(0.55) brightness(0.75);
+}
+
+.gend-head {
+  text-align: center;
+}
+
+.gpage.is-art .gend-title {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.2em, 6vw, 3.6em);
+  line-height: 1.05;
+  color: var(--ge-gold);
+  background: linear-gradient(180deg, var(--ge-gold-hi), #d9a33c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.7));
+}
+
+.gpage.is-art.gend-screen.is-loss .gend-title {
+  background: linear-gradient(180deg, #f2b0a0, #b5523e);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.gend-name {
+  margin: 4px 0 0;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: var(--ge-ink);
+  text-shadow: 0 2px 6px #000;
+}
+
+.gend-name::before,
+.gend-name::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 12px;
+  vertical-align: middle;
+  background: var(--ge-gold);
+  transform: rotate(45deg);
+}
+
+.gend-sub {
+  margin: 2px 0 0;
+  font-size: 0.9em;
+  opacity: 0.85;
+  text-shadow: 0 1px 4px #000;
+}
+
+/* ─── Hero cards ─── */
+
+.gend-heroes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 980px);
+}
+
+.gend-hero {
+  flex: 0 1 210px;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 10px;
+  border: 3px solid var(--hero);
+  border-radius: 14px;
+  outline: 1px solid var(--ge-gold);
+  outline-offset: -7px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hero) 45%, #0c1830) 0%, #12233f 46%, #0e1c34 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 18px color-mix(in srgb, var(--hero) 55%, transparent), 0 8px 18px rgba(0, 0, 0, 0.55);
+  animation: gend-in 0.35s ease-out both;
+}
+
+.gend-hero:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.gend-hero:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.gend-hero:nth-child(n + 4) {
+  animation-delay: 0.18s;
+}
+
+@keyframes gend-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.gend-hero-art {
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  border-radius: 9px 9px 4px 4px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--hero) 50%, #1a2a48), #0a1426 80%);
+}
+
+.gend-hero-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 8%;
+  display: block;
+}
+
+.gend-hero h3 {
+  margin: 2px 0 2px;
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 1px solid rgba(214, 170, 80, 0.45);
+}
+
+.gend-stat,
+.gend-goal {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(8, 16, 32, 0.45);
+}
+
+.gend-stat .gi {
+  color: var(--ge-gold);
+}
+
+.gend-stat b {
+  margin-left: auto;
+  font-size: 1.15em;
+}
+
+.gend-goal {
+  font-size: 0.85em;
+  line-height: 1.2;
+  min-height: 2.6em;
+}
+
+.gend-goal .gi {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 2px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  box-sizing: border-box;
+  color: #e07a5f;
+}
+
+.gend-goal.is-met .gi {
+  color: #6fd08c;
+}
+
+.gend-goal.is-none {
+  justify-content: center;
+  opacity: 0.75;
+}
+
+/* ─── Loot ─── */
+
+.gend-loot {
+  position: relative;
+  width: min(100%, 900px);
+  box-sizing: border-box;
+  padding: 26px 3.2% 18px;
+  background: url(../../ui/game/assets/end-loot.webp) center / 100% 100% no-repeat;
+}
+
+.gend-loot h2 {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 1.05em;
+  color: var(--ge-gold);
+  white-space: nowrap;
+}
+
+.gend-loot-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.9fr;
+  gap: 2.2%;
+  align-items: stretch;
+}
+
+.gend-slot,
+.gend-dest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 74px;
+  padding: 4px;
+  text-align: center;
+}
+
+.gend-slot > .gi {
+  width: 1.8em;
+  height: 1.8em;
+  color: var(--ge-gold);
+}
+
+.gend-slot-big {
+  font-size: 1.4em;
+}
+
+.gend-slot-items {
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.gend-slot small {
+  opacity: 0.8;
+}
+
+.gend-slot.is-empty {
+  opacity: 0.55;
+}
+
+.gend-dest {
+  font-size: 0.9em;
+  gap: 6px;
+}
+
+.gend-dest span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gend-dest .gi {
+  color: var(--ge-gold);
+}
+
+/* ─── Feedback and the way out ─── */
+
+.gend-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px 28px;
+  width: min(100%, 980px);
+}
+
+.gend-rate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gend-rate h2 {
+  margin: 0;
+  font-size: 1.05em;
+  color: var(--ge-gold);
+  text-shadow: 0 1px 4px #000;
+}
+
+.gend-rate h2::before,
+.gend-rate h2::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 10px;
+  vertical-align: middle;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.gend-rate-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* The three compact bases from victory-buttons.png (cyan, slate, red), 3-sliced at the ends. */
+.gend-rate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 132px;
+  height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-style: solid;
+  border-width: 0 20px;
+  border-image: url(../../ui/game/assets/end-btn-right.webp) 0 40 fill / 0 20px stretch;
+  background: none;
+  color: var(--ge-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  filter: saturate(0.75) brightness(0.85);
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+
+.gend-rate-btn.is-easy {
+  border-image-source: url(../../ui/game/assets/end-btn-easy.webp);
+}
+
+.gend-rate-btn.is-hard {
+  border-image-source: url(../../ui/game/assets/end-btn-hard.webp);
+}
+
+.gend-rate-btn:hover,
+.gend-rate-btn[aria-pressed='true'] {
+  filter: none;
+}
+
+.gend-rate-btn[aria-pressed='true'] {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px var(--ge-gold-hi), 0 0 16px rgba(255, 220, 140, 0.55);
+  border-radius: 24px;
+}
+
+.gend-face svg {
+  display: block;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.gend-comment {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gend-go {
+  display: flex;
+  gap: 10px;
+}
+
+/* [До табору]: the wide emerald base. */
+.gend-camp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 300px;
+  height: 64px;
+  padding: 0 24px;
+  border-style: solid;
+  border-width: 0 30px;
+  border-image: url(../../ui/game/assets/end-btn-go.webp) 0 37 fill / 0 30px stretch;
+  background: none;
+  color: var(--ge-gold-hi);
+  font: inherit;
+  font-size: 1.5em;
+  font-weight: 800;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+}
+
+.gend-camp .gi {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.gend-camp:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 700px) {
+  .gend-hero {
+    flex-basis: 45%;
+  }
+
+  .gend-loot {
+    padding: 16px 12px 12px;
+    background: var(--ge-slate);
+    border: 2px solid var(--ge-gold);
+    border-radius: 14px;
+  }
+
+  .gend-loot h2 {
+    top: -14px;
+    padding: 0 10px;
+    background: #12233f;
+  }
+
+  .gend-loot-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .gend-dest {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  .gend-rate-btn {
+    min-width: 0;
+    padding: 0 4px;
+    font-size: 0.9em;
+  }
+
+  .gend-camp {
+    min-width: 260px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gend-hero {
+    animation: none;
+  }
+}

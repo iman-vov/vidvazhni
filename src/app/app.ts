@@ -2,7 +2,7 @@
 // menu → campaign map ⇄ camp → scenario. One board is created when the first scenario opens and
 // kept for later ones.
 
-import { applyScenarioResult, newCampaign } from '../rules/campaign';
+import { applyScenarioResult, newCampaign, setScenarioFeedback, type ScenarioFeedback } from '../rules/campaign';
 import { loadContent } from '../rules/load';
 import type { GameSetup } from '../rules/state';
 import type { BoardView } from '../render/view';
@@ -119,6 +119,11 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
     if (game) showEpilogue(game);
   }
 
+  /** «Як було?» on the end screen: kept in the campaign save per scenario. */
+  function rateScenario(rating: ScenarioFeedback): void {
+    const saved = campaigns.load();
+    if (game && saved) campaigns.save(setScenarioFeedback(saved.campaign, game.state.scenarioId, rating), saved.players);
+  }
 
   /** Resumes an unfinished tutorial unless `fresh`. */
   function startTutorial(fresh = false): void {
@@ -257,6 +262,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
               return lines.length ? h('section', { class: 'gstory-outro' }, lines.map(storyLineRow)) : null;
             },
             onCamp: game.meta.campaign && campaigns.load() ? backToCamp : undefined,
+            onRate: game.meta.campaign && campaigns.load() ? rateScenario : undefined,
             onMenu: () => go('menu'),
             onAgain: () => {
               const g = game as GameController;

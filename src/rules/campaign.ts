@@ -46,6 +46,8 @@ export interface CampaignState {
   /** Scenario ids that can be played next. */
   unlocked: string[];
   difficulty: GameSetup['difficulty'];
+  /** «Як було?» per scenario id, the latest answer (for adaptive difficulty later). */
+  feedback?: Record<string, ScenarioFeedback>;
   /** Id of the last scenario result applied (the game's start time): guards against counting it twice. */
   lastResultId?: string;
 }
@@ -253,6 +255,14 @@ export interface ScenarioResult {
   heroes: { classId: string; xp: number; gold: number }[];
   /** Shop items found in chests and on enemies (`GameState.foundItems`). */
   foundItems?: string[];
+}
+
+/** The end screen's «Як було? Легко / Саме те / Важко». */
+export type ScenarioFeedback = 'easy' | 'right' | 'hard';
+
+/** Stores the party's answer for the scenario; a later answer (a replay) replaces it. */
+export function setScenarioFeedback(s: CampaignState, scenarioId: string, rating: ScenarioFeedback): CampaignState {
+  return { ...s, feedback: { ...s.feedback, [scenarioId]: rating } };
 }
 
 /** Scenario result → campaign. A loss keeps the gold, XP and found items («поразка м'яка»); a win also
