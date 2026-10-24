@@ -1,0 +1,51 @@
+{
+  "id": "boss.hammerfist",
+  "cards": [
+    {
+      "id": "boss.hammerfist.09",
+      "initiative": 9,
+      "steps": [{ "type": "attack", "value": 0, "targetAll": "adjacentEnemies", "push": 1 }]
+    },
+    {
+      "id": "boss.hammerfist.17",
+      "initiative": 17,
+      "steps": [{ "type": "attack", "value": -1, "range": 3, "targets": 2, "conditions": ["wound"] }]
+    },
+    {
+      "id": "boss.hammerfist.26",
+      "initiative": 26,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 1 }]
+    },
+    {
+      "id": "boss.hammerfist.38",
+      "initiative": 38,
+      "steps": [
+        { "type": "shield", "value": 2, "target": "self", "duration": "round" },
+        { "type": "retaliate", "value": 1, "duration": "round" },
+        { "type": "heal", "value": 3, "target": "self" }
+      ]
+    },
+    {
+      "id": "boss.hammerfist.47",
+      "initiative": 47,
+      "steps": [{ "type": "attack", "value": 1, "range": 4, "conditions": ["immobilize"] }]
+    },
+    {
+      "id": "boss.hammerfist.55",
+      "initiative": 55,
+      "steps": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 1, "area": { "shape": "arc", "size": 3 } }]
+    },
+    {
+      "id": "boss.hammerfist.66",
+      "initiative": 66,
+      "shuffle": true,
+      "steps": [{ "type": "summon", "summon": "night-moth", "count": 2, "rank": "normal" }]
+    },
+    {
+      "id": "boss.hammerfist.78",
+      "initiative": 78,
+      "shuffle": true,
+      "steps": [{ "type": "special", "name": "hammerQuake", "params": { "damage": 2, "radius": 3, "cracks": 2 } }]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "id": "s10",
+  "number": 10,
+  "draft": true,
+  "goal": { "type": "killBoss", "boss": "hammerfist" },
+  "secondary": [
+    { "id": "s10.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } },
+    { "id": "s10.ten-rounds", "check": "withinRounds", "params": { "rounds": 10 }, "reward": { "gold": 5 } }
+  ],
+  "startRoom": "s10.foundry",
+  "startHexes": [[0, 0], [0, 1], [0, 2], [0, 3]],
+  "introduces": ["objectHealth"],
+  "specials": ["darkLanternShield", "caveIns"],
+  "forkOrbs": { "eachRound": [{ "orb": "fire", "source": "s10.forge-1" }] },
+  "rooms": [
+    {
+      "id": "s10.foundry",
+      "hexes": [
+        [0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1], [1, 2], [1, 3],
+        [2, -1], [2, 0], [2, 1], [2, 2], [3, -1], [3, 0], [3, 1], [3, 2],
+        [4, -2], [4, -1], [4, 0], [4, 1], [5, -2], [5, -1], [5, 0], [5, 1],
+        [6, -1]
+      ],
+      "terrain": [{ "hex": [3, -1], "terrain": "hazardous" }],
+      "obstacles": [{ "hex": [2, 2], "model": "crate-stack" }, { "hex": [4, -2], "model": "barrel" }],
+      "doors": [{ "hex": [6, -1], "to": "s10.forge-hall" }],
+      "spawns": [
+        { "monster": "night-moth", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [5, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [5, 1], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [5, 0], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "gloom-cultist", "hex": [4, 1], "by": { "4": "normal" } }
+      ],
+      "coins": [[1, 3]]
+    },
+    {
+      "id": "s10.forge-hall",
+      "hexes": [
+        [7, -5], [7, -4], [7, -3], [7, -2], [7, -1], [7, 0], [7, 1], [7, 2],
+        [8, -6], [8, -5], [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [8, 1],
+        [9, -6], [9, -5], [9, -4], [9, -3], [9, -2], [9, -1], [9, 0], [9, 1],
+        [10, -7], [10, -6], [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [10, 0],
+        [11, -7], [11, -6], [11, -5], [11, -4], [11, -3], [11, -2], [11, -1], [11, 0],
+        [12, -8], [12, -7], [12, -6], [12, -5], [12, -4], [12, -3], [12, -2], [12, -1],
+        [13, -8], [13, -7], [13, -6], [13, -5], [13, -4], [13, -3], [13, -2], [13, -1],
+        [14, -9], [14, -8], [14, -7], [14, -6], [14, -5], [14, -4], [14, -3], [14, -2]
+      ],
+      "terrain": [
+        { "hex": [9, -4], "terrain": "hazardous" },
+        { "hex": [10, -5], "terrain": "hazardous" },
+        { "hex": [9, -2], "terrain": "hazardous" },
+        { "hex": [13, -3], "terrain": "hazardous" },
+        { "hex": [12, -2], "terrain": "hazardous" },
+        { "hex": [13, -2], "terrain": "hazardous" }
+      ],
+      "obstacles": [
+        { "hex": [7, -5], "model": "rubble" },
+        { "hex": [14, -2], "model": "rubble" },
+        { "hex": [7, 2], "model": "pillar" },
+        { "hex": [14, -9], "model": "pillar" }
+      ],
+      "objects": [
+        { "hex": [12, -5], "id": "s10.dark-lantern", "kind": "dark-lantern", "hp": 8, "blocks": true },
+        {
+          "hex": [9, -3],
+          "id": "s10.forge-1",
+          "kind": "forge",
+          "hp": 6,
+          "blocks": true,
+          "spawn": { "monster": "night-moth", "by": { "2": "normal", "3": "normal", "4": "normal" } }
+        },
+        {
+          "hex": [13, -2],
+          "id": "s10.forge-2",
+          "kind": "forge",
+          "hp": 6,
+          "blocks": true,
+          "spawn": { "monster": "night-moth", "by": { "3": "normal", "4": "normal" } }
+        }
+      ],
+      "spawns": [{ "monster": "hammerfist", "hex": [11, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } }],
+      "chests": [{ "hex": [14, -7], "id": "s10.forge-chest", "loot": { "coins": 4 } }]
+    }
+  ],
+  "reward": { "goldEach": 30 }
+}

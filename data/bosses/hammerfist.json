@@ -1,0 +1,12 @@
+{
+  "id": "hammerfist",
+  "hpPerHero": 10,
+  "hpPerHeroPerLevel": 2,
+  "move": 2,
+  "attack": 4,
+  "shield": 1,
+  "deck": "boss.hammerfist",
+  "immune": ["stun", "immobilize", "muddle"],
+  "special": ["secondPhase"],
+  "drops": { "coins": 3, "items": ["heavy-armor"] }
+}

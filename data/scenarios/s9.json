@@ -1,0 +1,117 @@
+{
+  "id": "s9",
+  "number": 9,
+  "draft": true,
+  "goal": { "type": "carryItem", "item": "miner-lamp", "zone": "s9.seal" },
+  "zones": [{ "id": "s9.seal", "hexes": [[17, -7], [17, -6]] }],
+  "secondary": [
+    {
+      "id": "s9.gems",
+      "check": "chestOpened",
+      "params": { "chest": "s9.gem-chest" },
+      "reward": { "gold": 5 }
+    }
+  ],
+  "startRoom": "s9.slope",
+  "startHexes": [[0, 0], [0, 1], [0, 2], [1, 1]],
+  "introduces": ["darkness"],
+  "specials": ["darkness", "carriedItemDrops"],
+  "forkOrbs": { "atStart": [{ "orb": "fire" }] },
+  "rooms": [
+    {
+      "id": "s9.slope",
+      "hexes": [
+        [0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, -1], [2, 0],
+        [2, 1], [3, -1], [3, 0], [3, 1], [4, -2], [4, -1], [4, 0], [5, -2],
+        [5, -1], [5, 0], [6, -3], [6, -2], [6, -1], [7, -2]
+      ],
+      "obstacles": [{ "hex": [3, -1], "model": "mine-support" }, { "hex": [5, 0], "model": "mine-cart" }],
+      "traps": [{ "hex": [4, -1] }, { "hex": [6, -3] }],
+      "doors": [{ "hex": [7, -2], "to": "s9.lake" }],
+      "spawns": [
+        { "monster": "night-moth", "hex": [5, -1], "by": { "2": "elite", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [6, -2], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "night-moth", "hex": [4, -2], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [6, -1], "by": { "4": "normal" } },
+        { "monster": "cellar-rat", "hex": [3, 0], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "cellar-rat", "hex": [3, 1], "by": { "4": "normal" } }
+      ],
+      "chests": [{ "hex": [1, 2], "id": "s9.lamp", "loot": { "questItem": "miner-lamp" } }]
+    },
+    {
+      "id": "s9.lake",
+      "hexes": [
+        [8, -5], [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [9, -5], [9, -4],
+        [9, -3], [9, -2], [9, -1], [9, 0], [10, -6], [10, -5], [10, -4], [10, -3],
+        [10, -2], [10, -1], [11, -6], [11, -5], [11, -4], [11, -3], [11, -2], [11, -1],
+        [12, -7], [12, -6], [12, -5], [12, -4], [12, -3], [12, -2], [13, -4]
+      ],
+      "terrain": [
+        { "hex": [9, -2], "terrain": "water" },
+        { "hex": [9, -1], "terrain": "water" },
+        { "hex": [10, -3], "terrain": "water" },
+        { "hex": [10, -2], "terrain": "water" },
+        { "hex": [11, -2], "terrain": "water" },
+        { "hex": [10, -1], "terrain": "water" },
+        { "hex": [11, -1], "terrain": "water" }
+      ],
+      "obstacles": [{ "hex": [9, -5], "model": "rock" }, { "hex": [12, -2], "model": "rock" }],
+      "doors": [{ "hex": [13, -4], "to": "s9.gate" }],
+      "spawns": [
+        { "monster": "bog-slime", "hex": [10, -4], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "bog-slime", "hex": [12, -3], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "bog-slime", "hex": [9, 0], "by": { "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [12, -6], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "shadow-wraith", "hex": [11, -4], "by": { "4": "normal" } }
+      ],
+      "chests": [{ "hex": [12, -7], "id": "s9.gem-chest", "loot": { "coins": 2 } }],
+      "coins": [[8, 0]]
+    },
+    {
+      "id": "s9.gate",
+      "hexes": [
+        [14, -7], [14, -6], [14, -5], [14, -4], [15, -7], [15, -6], [15, -5], [15, -4],
+        [16, -8], [16, -7], [16, -6], [16, -5], [17, -8], [17, -7], [17, -6], [17, -5]
+      ],
+      "objects": [
+        {
+          "hex": [16, -8],
+          "id": "s9.brazier-1",
+          "kind": "brazier",
+          "state": "unlit",
+          "blocks": true,
+          "interact": { "half": "bottom", "from": "unlit", "to": "lit" }
+        },
+        {
+          "hex": [16, -5],
+          "id": "s9.brazier-2",
+          "kind": "brazier",
+          "state": "unlit",
+          "blocks": true,
+          "interact": { "half": "bottom", "from": "unlit", "to": "lit" }
+        }
+      ],
+      "spawns": [
+        { "monster": "gloom-cultist", "hex": [15, -6], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "gloom-cultist", "hex": [15, -5], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [14, -4], "by": { "4": "normal" } },
+        { "monster": "stone-sentinel", "hex": [16, -6], "by": { "3": "normal", "4": "normal" } }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "s9.moths-to-the-lamp",
+      "trigger": { "type": "round", "round": 4, "every": 3 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[8, -4], [9, -4]]
+        }
+      ]
+    }
+  ],
+  "reward": { "goldEach": 20, "unlock": ["s10"] }
+}

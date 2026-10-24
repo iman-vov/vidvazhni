@@ -2255,6 +2255,145 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "mountain-ram",
+      "nameUk": "Круторіг",
+      "kind": "monster",
+      "styleBlock": "B",
+      "promptFile": "art/prompts/monsters/mountain-ram.md",
+      "conceptDir": "art/concepts/mountain-ram/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 64,
+      "wave": 6,
+      "scenarios": [
+        7,
+        8
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/mountain-ram.glb",
+      "rig": "quadruped",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 5000,
+        "max": 10000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "night-moth",
+      "nameUk": "Нічний метелик",
+      "kind": "monster",
+      "styleBlock": "C",
+      "promptFile": "art/prompts/monsters/night-moth.md",
+      "conceptDir": "art/concepts/night-moth/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png",
+        "side.png",
+        "back.png"
+      ],
+      "order": 65,
+      "wave": 6,
+      "scenarios": [
+        6,
+        9,
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/night-moth.glb",
+      "rig": "none",
+      "animations": [],
+      "codeAnimations": [
+        "bob",
+        "squash-stretch",
+        "flicker"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": 3000,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "hammerfist",
+      "nameUk": "Молотобій",
+      "kind": "boss",
+      "styleBlock": "A",
+      "promptFile": "art/prompts/bosses/hammerfist.md",
+      "conceptDir": "art/concepts/hammerfist/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png",
+        "side.png",
+        "back.png",
+        "portrait.png"
+      ],
+      "order": 66,
+      "wave": 6,
+      "scenarios": [
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [
+          "side",
+          "back"
+        ],
+        "poseMode": "A-pose"
+      },
+      "modelFile": "assets/models/hammerfist.glb",
+      "rig": "humanoid",
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "hit",
+        "death",
+        "rage"
+      ],
+      "attackStyle": "melee",
+      "triangleBudget": {
+        "min": null,
+        "max": 25000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

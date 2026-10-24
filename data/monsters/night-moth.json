@@ -1,0 +1,25 @@
+{
+  "id": "night-moth",
+  "deck": "ghost",
+  "initiativeOffset": -10,
+  "normal": { "hp": 2, "move": 4, "attack": 1, "flying": true },
+  "elite": { "hp": 4, "move": 4, "attack": 2, "flying": true, "onAttack": ["muddle"] },
+  "forkCards": [
+    {
+      "id": "night-moth.to-the-flame",
+      "initiative": 15,
+      "steps": [{ "type": "move", "value": 2 }, { "type": "attack", "value": -1 }]
+    },
+    {
+      "id": "night-moth.dust-cloud",
+      "initiative": 33,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [
+        { "type": "condition", "condition": "muddle", "target": "adjacentEnemies" },
+        { "type": "special", "name": "retreat", "params": { "distance": 2 } }
+      ],
+      "otherwise": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 0 }]
+    }
+  ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.25 }, "elite": { "coins": 1, "coinChance": 0.5 } }
+}

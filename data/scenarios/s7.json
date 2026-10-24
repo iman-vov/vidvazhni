@@ -1,0 +1,99 @@
+{
+  "id": "s7",
+  "number": 7,
+  "draft": true,
+  "goal": { "type": "escort", "npc": "shepherd", "zone": "s7.gate" },
+  "zones": [{ "id": "s7.gate", "hexes": [[18, -8], [18, -7], [18, -6]] }],
+  "npcs": [{ "id": "shepherd", "hex": [1, 3], "hp": 8, "move": 2, "initiative": 50 }],
+  "secondary": [{ "id": "s7.none-exhausted", "check": "noneExhausted", "reward": { "xp": 2 } }],
+  "startRoom": "s7.foothills",
+  "startHexes": [[0, 1], [0, 2], [0, 3], [0, 4]],
+  "introduces": ["windGusts"],
+  "specials": ["windGusts"],
+  "forkOrbs": { "eachRound": [{ "orb": "air", "source": "s7.pennant-pole" }] },
+  "rooms": [
+    {
+      "id": "s7.foothills",
+      "hexes": [
+        [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 0], [1, 1],
+        [1, 2], [1, 3], [1, 4], [1, 5], [2, -1], [2, 0], [2, 1], [2, 2],
+        [2, 3], [2, 4], [3, -1], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4],
+        [4, -2], [4, -1], [4, 0], [4, 1], [4, 2], [4, 3], [5, -2], [5, -1],
+        [5, 0], [5, 1], [5, 2], [5, 3], [6, 0]
+      ],
+      "terrain": [{ "hex": [2, 3], "terrain": "difficult" }, { "hex": [3, 3], "terrain": "difficult" }],
+      "obstacles": [
+        { "hex": [2, 0], "model": "rock" },
+        { "hex": [4, 3], "model": "rock" },
+        { "hex": [0, 5], "model": "tree" }
+      ],
+      "doors": [{ "hex": [6, 0], "to": "s7.ledge" }],
+      "spawns": [
+        { "monster": "thornling", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "thornling", "hex": [5, 0], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "thornling", "hex": [4, 2], "by": { "4": "normal" } },
+        { "monster": "mountain-ram", "hex": [5, 1], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "mountain-ram", "hex": [3, -1], "by": { "4": "normal" } }
+      ],
+      "coins": [[1, 0]]
+    },
+    {
+      "id": "s7.ledge",
+      "hexes": [
+        [7, -1], [7, 0], [8, -2], [8, -1], [9, -2], [9, -1], [10, -3], [10, -2],
+        [11, -3], [11, -2], [12, -4], [12, -3], [13, -3]
+      ],
+      "traps": [{ "hex": [9, -1] }, { "hex": [11, -3] }],
+      "objects": [{ "hex": [12, -4], "id": "s7.pennant-pole", "kind": "pennant-pole", "blocks": true }],
+      "doors": [{ "hex": [13, -3], "to": "s7.outpost" }],
+      "spawns": [
+        { "monster": "grey-wolf", "hex": [10, -3], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "grey-wolf", "hex": [11, -2], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "grey-wolf", "hex": [12, -3], "by": { "4": "normal" } },
+        { "monster": "mountain-ram", "hex": [10, -2], "by": { "2": "elite", "3": "elite", "4": "elite" } },
+        { "monster": "mountain-ram", "hex": [8, -1], "by": { "4": "normal" } }
+      ],
+      "coins": [[8, -2]]
+    },
+    {
+      "id": "s7.outpost",
+      "hexes": [
+        [14, -7], [14, -6], [14, -5], [14, -4], [14, -3], [15, -7], [15, -6], [15, -5],
+        [15, -4], [15, -3], [16, -8], [16, -7], [16, -6], [16, -5], [16, -4], [17, -8],
+        [17, -7], [17, -6], [17, -5], [17, -4], [18, -9], [18, -8], [18, -7], [18, -6],
+        [18, -5]
+      ],
+      "obstacles": [{ "hex": [16, -8], "model": "crate" }, { "hex": [16, -4], "model": "barrel" }],
+      "spawns": [
+        {
+          "monster": "bandit-crossbow",
+          "hex": [17, -7],
+          "by": { "2": "normal", "3": "elite", "4": "elite" },
+          "tag": "s7.lookout"
+        },
+        { "monster": "bandit-crossbow", "hex": [17, -5], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "bandit-crossbow", "hex": [18, -9], "by": { "4": "normal" } },
+        { "monster": "bandit-brute", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "bandit-brute", "hex": [15, -4], "by": { "4": "normal" } }
+      ],
+      "chests": [{ "hex": [17, -4], "id": "s7.loot-sack", "loot": { "coins": 3 } }]
+    }
+  ],
+  "events": [
+    {
+      "id": "s7.lookout-horn",
+      "trigger": { "type": "monsterTurnsAlive", "tag": "s7.lookout", "turns": 2 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "grey-wolf",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[14, -6], [14, -5]],
+          "count": 2
+        }
+      ],
+      "prevented": [{ "type": "coins", "coins": 2 }]
+    }
+  ],
+  "reward": { "goldEach": 15, "unlock": ["s8"] }
+}

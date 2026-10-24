@@ -1,0 +1,25 @@
+{
+  "id": "mountain-ram",
+  "deck": "melee",
+  "initiativeOffset": 2,
+  "normal": { "hp": 6, "move": 3, "attack": 2 },
+  "elite": { "hp": 9, "move": 3, "attack": 3 },
+  "forkCards": [
+    {
+      "id": "mountain-ram.charge",
+      "initiative": 24,
+      "steps": [{ "type": "move", "value": 2, "straightLine": true }, { "type": "attack", "value": 1, "push": 2 }]
+    },
+    {
+      "id": "mountain-ram.stubborn-brow",
+      "initiative": 58,
+      "if": "selfHpAtMostHalf",
+      "steps": [
+        { "type": "shield", "value": 1, "target": "self", "duration": "round" },
+        { "type": "attack", "value": 1, "push": 1 }
+      ],
+      "otherwise": [{ "type": "move", "value": -1 }, { "type": "attack", "value": 1, "push": 1 }]
+    }
+  ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.5 }, "elite": { "coins": 1, "items": ["chainmail"], "itemChance": 0.15 } }
+}

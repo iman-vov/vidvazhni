@@ -1,0 +1,113 @@
+{
+  "id": "s6",
+  "number": 6,
+  "draft": true,
+  "goal": { "type": "escape", "zone": "s6.lift", "rounds": 11 },
+  "zones": [{ "id": "s6.lift", "hexes": [[19, -8], [19, -7], [19, -6], [18, -7]] }],
+  "secondary": [
+    {
+      "id": "s6.free-flip",
+      "check": "objectState",
+      "params": { "object": "s6.flip-cart", "state": "free" },
+      "reward": { "xp": 2 }
+    }
+  ],
+  "startRoom": "s6.adit",
+  "startHexes": [[0, 0], [0, 1], [0, 2], [0, 3]],
+  "introduces": ["caveIns"],
+  "specials": ["caveIns"],
+  "forkOrbs": { "atStart": [{ "orb": "earth" }] },
+  "rooms": [
+    {
+      "id": "s6.adit",
+      "hexes": [
+        [0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1], [1, 2], [1, 3],
+        [2, -1], [2, 0], [2, 1], [2, 2], [3, -1], [3, 0], [3, 1], [3, 2],
+        [4, -2], [4, -1], [4, 0], [4, 1], [5, 0]
+      ],
+      "obstacles": [{ "hex": [2, -1], "model": "mine-support" }, { "hex": [2, 2], "model": "mine-support" }],
+      "doors": [{ "hex": [5, 0], "to": "s6.gallery" }],
+      "spawns": [
+        { "monster": "cellar-rat", "hex": [3, 0], "by": { "2": "elite", "3": "elite", "4": "elite" } },
+        { "monster": "cellar-rat", "hex": [3, 1], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "cellar-rat", "hex": [4, -2], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "cellar-rat", "hex": [4, 1], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "cellar-rat", "hex": [4, -1], "by": { "4": "normal" } },
+        { "monster": "gremlin", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "gremlin", "hex": [3, -1], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "gremlin", "hex": [3, 2], "by": { "4": "normal" } }
+      ],
+      "coins": [[1, 3]]
+    },
+    {
+      "id": "s6.gallery",
+      "hexes": [
+        [6, -2], [6, -1], [6, 0], [7, -2], [7, -1], [7, 0], [8, -3], [8, -2],
+        [8, -1], [9, -3], [9, -2], [9, -1], [10, -4], [10, -3], [10, -2], [11, -4],
+        [11, -3], [11, -2], [12, -5], [12, -4], [12, -3], [13, -5], [13, -4], [13, -3],
+        [14, -6], [14, -5], [14, -4], [15, -5], [10, -1]
+      ],
+      "obstacles": [{ "hex": [8, -3], "model": "mine-cart" }, { "hex": [12, -3], "model": "mine-support" }],
+      "traps": [{ "hex": [11, -3] }],
+      "doors": [{ "hex": [15, -5], "to": "s6.lift" }, { "hex": [10, -1], "to": "s6.cart-niche" }],
+      "spawns": [
+        { "monster": "stone-sentinel", "hex": [13, -4], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "stone-sentinel", "hex": [14, -6], "by": { "4": "normal" } },
+        { "monster": "night-moth", "hex": [10, -4], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [12, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [9, -1], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [13, -3], "by": { "4": "normal" } }
+      ],
+      "coins": [[7, 0]]
+    },
+    {
+      "id": "s6.cart-niche",
+      "hexes": [[9, 1], [9, 2], [10, 0], [10, 1], [11, 0], [11, 1]],
+      "objects": [
+        {
+          "hex": [10, 1],
+          "id": "s6.flip-cart",
+          "kind": "mine-cart",
+          "state": "stuck",
+          "blocks": true,
+          "interact": { "half": "top", "from": "stuck", "to": "free" }
+        }
+      ],
+      "coins": [[9, 2]]
+    },
+    {
+      "id": "s6.lift",
+      "hexes": [
+        [16, -8], [16, -7], [16, -6], [16, -5], [16, -4], [17, -8], [17, -7], [17, -6],
+        [17, -5], [17, -4], [18, -9], [18, -8], [18, -7], [18, -6], [18, -5], [19, -9],
+        [19, -8], [19, -7], [19, -6], [19, -5]
+      ],
+      "obstacles": [{ "hex": [17, -8], "model": "rubble" }, { "hex": [17, -4], "model": "mine-cart" }],
+      "spawns": [
+        { "monster": "night-moth", "hex": [17, -7], "by": { "2": "elite", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [18, -6], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "night-moth", "hex": [17, -5], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [18, -9], "by": { "4": "normal" } },
+        { "monster": "gremlin", "hex": [18, -8], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "gremlin", "hex": [16, -4], "by": { "4": "normal" } }
+      ],
+      "chests": [{ "hex": [19, -5], "id": "s6.theo-helmet", "loot": { "questItem": "theo-helmet" } }]
+    }
+  ],
+  "events": [
+    {
+      "id": "s6.rats-from-the-drift",
+      "trigger": { "type": "round", "round": 4 },
+      "actions": [
+        {
+          "type": "spawn",
+          "monster": "cellar-rat",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[6, 0], [7, -1]],
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "reward": { "goldEach": 15, "unlock": ["s8"] }
+}
