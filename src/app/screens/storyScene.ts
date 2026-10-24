@@ -8,6 +8,8 @@ import { figureName } from '../../ui/game/text';
 import { campHeroUrl, portraitUrl } from '../../ui/game/uiArt';
 import { isHeroSpeaker, NPC_FIGURES, type StoryLine } from '../story';
 import martaUrl from '../../ui/game/assets/camp-marta.webp';
+import mapUrl from '../../ui/game/assets/campaign-map-lo.webp';
+import mapData from '../../../data/campaign-map.json';
 import './story.css';
 
 /** A neutral head-and-shoulders silhouette for NPCs without a portrait yet. */
@@ -48,8 +50,26 @@ export function storyLineRow(line: StoryLine): HTMLElement {
   );
 }
 
+/** Zoom of the campaign-map crop that stands in for a missing mission illustration. */
+const MAP_ZOOM = 3;
+
+/** The mission illustration behind the intro: `public/story/<scenarioId>.webp`; until it exists
+ *  (or while it loads) a crop of the campaign map around the mission's marker shows through. */
+export function missionArt(scenarioId: string): HTMLElement {
+  const m = mapData.markers.find((x) => x.id === scenarioId);
+  // background-position % so that the marker lands in the middle of the screen
+  const at = (v: number) => `${Math.min(100, Math.max(0, ((v * MAP_ZOOM - 0.5) / (MAP_ZOOM - 1)) * 100)).toFixed(1)}%`;
+  const crop = h('div', { class: 'gstory-art-map', style: m ? `background-image: url(${mapUrl}); background-position: ${at(m.x)} ${at(m.y)}` : `background-image: url(${mapUrl})` });
+  const img = h('img', { class: 'gstory-art-img', src: `${import.meta.env.BASE_URL}story/${scenarioId}.webp`, alt: '', draggable: 'false' }) as HTMLImageElement;
+  img.addEventListener('load', () => crop.remove());
+  img.addEventListener('error', () => img.remove());
+  return h('div', { class: 'gstory-art', 'aria-hidden': 'true' }, crop, img);
+}
+
 export interface StorySceneOptions {
   lines: StoryLine[];
+  /** The mission illustration behind the dialogue (missionArt); the scene is not dimmed then. */
+  art?: HTMLElement;
   /** Label of the last line's button (default «Далі»). */
   doneLabel?: string;
   onDone: () => void;
@@ -59,7 +79,7 @@ export interface StorySceneOptions {
 export function storyScene(o: StorySceneOptions): HTMLElement {
   let i = 0;
   let finished = false;
-  const root = h('div', { class: 'gstory', role: 'dialog', 'aria-modal': 'true' });
+  const root = h('div', { class: `gstory${o.art ? ' has-art' : ''}`, role: 'dialog', 'aria-modal': 'true' });
   const finish = () => {
     if (finished) return;
     finished = true;
@@ -78,6 +98,7 @@ export function storyScene(o: StorySceneOptions): HTMLElement {
     const last = i === o.lines.length - 1;
     const narrator = line.speaker === 'narrator';
     root.replaceChildren(
+      o.art ?? '',
       h(
         'button',
         { class: 'gbtn gstory-skip', onclick: (e: Event) => (e.stopPropagation(), finish()) },

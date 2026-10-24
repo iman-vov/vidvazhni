@@ -23,7 +23,7 @@ import { newGameScreen } from './screens/newGame';
 import { settingsPanel } from './screens/settings';
 import { settings } from './settings';
 import { epilogueLine, introLines, outroLines, scenarioStory, type StoryMode } from './story';
-import { storyLineRow, storyScene } from './screens/storyScene';
+import { missionArt, storyLineRow, storyScene } from './screens/storyScene';
 import { campaignStorage, gameStorage, type CampaignStorage, type GameStorage } from './storage';
 import { helpBrowser, openHelpModal, type HelpRules } from './help/helpView';
 import { installKeywordLinks } from './help/keywords';
@@ -263,7 +263,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
       }
       case 'storyIntro': {
         if (!game) return go('menu');
-        overlay.replaceChildren(h('div', { class: 'gpage is-art' }, menuBackdrop(true)), storyScene({ lines: storyOf(game, 'intro'), doneLabel: t('story.start'), onDone: () => go('scenario') }));
+        overlay.replaceChildren(storyScene({ lines: storyOf(game, 'intro'), art: missionArt(game.setup.scenarioId), doneLabel: t('story.start'), onDone: () => go('scenario') }));
         break;
       }
       case 'scenario':
