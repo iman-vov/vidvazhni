@@ -5,7 +5,7 @@ import { checkScenario } from '../../data/crossref';
 import { clearMonsters, content, game, place, reveal } from '../scenarios/helpers';
 import { select, withS2 } from './helpers';
 
-const EXIT: [number, number][] = [[13, -6], [13, -5], [13, -4], [13, -3]];
+const EXIT: [number, number][] = [[17, -7], [17, -6], [17, -5], [17, -4]];
 
 describe('zones', () => {
   it('the s1–s5 goals keep their inline hexes and resolve through goalZone', () => {
@@ -15,15 +15,15 @@ describe('zones', () => {
   });
 
   it('reachExit can name a zone instead of listing hexes', () => {
-    const c = withS2({ zones: [{ id: 'gate', hexes: [[13, -5], [12, -4]] }], goal: { type: 'reachExit', zone: 'gate' } });
+    const c = withS2({ zones: [{ id: 'gate', hexes: [[17, -6], [15, -4]] }], goal: { type: 'reachExit', zone: 'gate' } });
     expect(zoneHexes(c.scenarios['s2']!, 'gate')).toHaveLength(2);
     const start = clearMonsters(reveal(game('s2'), 's2.ravine', 's2.lodge'));
-    place(start, 'hero:warden', [13, -5]);
-    place(start, 'hero:herbalist', [12, -4]);
+    place(start, 'hero:warden', [17, -6]);
+    place(start, 'hero:herbalist', [15, -4]);
     expect(objectiveStatus(c, start)).toMatchObject({ goal: 'reachExit', done: 2, of: 2 });
     expect(finishRound(select(structuredClone(start), c), c).phase).toBe('won');
     // The old inline exit hex is not part of the zone.
-    place(start, 'hero:herbalist', [13, -4]);
+    place(start, 'hero:herbalist', [17, -5]);
     expect(finishRound(select(start, c), c).phase).toBe('selectCards');
   });
 

@@ -116,7 +116,7 @@ describe('GameController', () => {
     const g = GameController.start(setup(), players, null, content);
     g.setIntents('hero:warden', ['attack', 'early']);
     expect(g.intentsOf('hero:warden')).toEqual(['attack', 'early']);
-    for (const a of baseWin.actions.slice(0, 14) as Action[]) expect(g.act(a).ok).toBe(true);
+    for (const a of baseWin.actions.slice(0, 16) as Action[]) expect(g.act(a).ok).toBe(true);
     expect(g.state.round).toBe(2);
     expect(g.intentsOf('hero:warden')).toEqual([]);
   });

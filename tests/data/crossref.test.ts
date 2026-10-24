@@ -69,7 +69,8 @@ describe('scenario cross references', () => {
 
   it('flags rooms that are open to each other', () => {
     const s = s1();
-    if (s.rooms[0]) s.rooms[0].walls = [];
+    // Fill the left-out strip beside the door: the pantry now touches the cellar with no wall.
+    if (s.rooms[0]) s.rooms[0].hexes.push([3, 0]);
     expect(checkScenario(s, content).join('\n')).toMatch(/open to each other/);
   });
 

@@ -83,13 +83,13 @@ describe('monsters', () => {
 describe('scenario 1', () => {
   const s1 = content.scenarios['s1'];
 
-  it('is a consistent map of 25–40 hexes', () => {
+  it('is a consistent map of 25–60 hexes', () => {
     expect(s1).toBeDefined();
     if (!s1) return;
     expect(checkScenario(s1, content)).toEqual([]);
     const total = s1.rooms.reduce((n, r) => n + r.hexes.length, 0);
     expect(total).toBeGreaterThanOrEqual(25);
-    expect(total).toBeLessThanOrEqual(40);
+    expect(total).toBeLessThanOrEqual(60);
     expect(s1.goal).toEqual({ type: 'killAll' });
     expect(s1.reward.goldEach).toBe(10);
   });

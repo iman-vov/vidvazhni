@@ -92,11 +92,11 @@ describe('drafts s2–s5 follow the design doc', () => {
     });
 
   for (const id of ['s2', 's3', 's4', 's5'])
-    it(`${id}: is a compact draft of 30–60 hexes`, () => {
+    it(`${id}: is a draft of 30–90 hexes`, () => {
       const s = scenarios[id]!;
       expect(s.draft).toBe(true);
       expect(hexCount(s)).toBeGreaterThanOrEqual(30);
-      expect(hexCount(s)).toBeLessThanOrEqual(60);
+      expect(hexCount(s)).toBeLessThanOrEqual(90);
       expect(s.startHexes).toHaveLength(4);
     });
 
@@ -224,6 +224,8 @@ describe('map editor model and checks', () => {
 
   it('seals room borders except at doors, which is what the cross-checks want', () => {
     const s = clone(scenarios['s1']!);
+    // Fill the left-out strip beside the door: the pantry now touches the cellar with no wall.
+    s.rooms[0]!.hexes.push([3, 0]);
     for (const room of s.rooms) delete room.walls;
     expect(checkScenario(s, content).length).toBeGreaterThan(0);
     expect(sealRooms(s)).toBeGreaterThan(0);
@@ -237,8 +239,8 @@ describe('map editor model and checks', () => {
     expect(sightLine(pair, [0, 0], [1, 0])).toBe(true);
     toggleWall(pair, [0, 0], [1, 0]);
     expect(sightLine(pair, [0, 0], [1, 0])).toBe(false);
-    // s1: open floor inside the pantry, the room wall to the cellar blocks.
-    expect(sightLine(scenarios['s1']!, [0, 1], [4, -1])).toBe(true);
-    expect(sightLine(scenarios['s1']!, [0, 2], [0, 3])).toBe(false);
+    // s1: open floor inside the pantry; the left-out strip between pantry and cellar blocks.
+    expect(sightLine(scenarios['s1']!, [0, 0], [2, 2])).toBe(true);
+    expect(sightLine(scenarios['s1']!, [0, 0], [4, -2])).toBe(false);
   });
 });

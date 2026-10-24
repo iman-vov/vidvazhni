@@ -49,8 +49,8 @@ describe('round goals and limits', () => {
     expect(late.log.at(-1)).toEqual({ type: 'scenarioLost' });
 
     const early = clearMonsters(reveal(game('s2'), 's2.ravine', 's2.lodge'));
-    place(early, 'hero:warden', [13, -5]);
-    place(early, 'hero:herbalist', [13, -4]);
+    place(early, 'hero:warden', [17, -6]);
+    place(early, 'hero:herbalist', [17, -5]);
     expect(finishRound(select(early, c), c).phase).toBe('won');
   });
 

@@ -8,8 +8,8 @@ import { select, withS2 } from './helpers';
 /** s2 with both heroes on the exit and no monsters: won at the end of round 1. */
 function atExit(): GameState {
   const s = clearMonsters(reveal(game('s2'), 's2.ravine', 's2.lodge'));
-  place(s, 'hero:warden', [13, -5]);
-  place(s, 'hero:herbalist', [13, -4]);
+  place(s, 'hero:warden', [17, -6]);
+  place(s, 'hero:herbalist', [17, -5]);
   return s;
 }
 
@@ -43,7 +43,7 @@ describe('secondary goals', () => {
 
   it('the status counts heroes at the exit; scenarios without secondary goals pay nothing extra', () => {
     const s = atExit();
-    place(s, 'hero:herbalist', [12, -4]);
+    place(s, 'hero:herbalist', [15, -4]);
     expect(objectiveStatus(content, s)).toEqual({ goal: 'reachExit', done: 1, of: 2, secondary: [] });
     expect(secondaryGold(content, s)).toBe(0);
   });
