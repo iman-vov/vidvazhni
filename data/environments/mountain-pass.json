@@ -1,0 +1,50 @@
+{
+  "id": "mountain-pass",
+  "scenarios": ["s7"],
+  "edge": "cliff",
+  "surface": "rock",
+  "boundary": "rocks",
+  "ground": { "texture": "cave-rock", "tint": "#7a808c", "scale": 3.0 },
+  "walls": { "height": 1.9, "low": 0.4, "alt": 3, "inner": "#6a6e78" },
+  "palette": { "rock": "#7c808a", "rockDark": "#545862", "snow": "#e4eaf2", "leaf": "#3e5a4a", "leafDark": "#2a4036", "bark": "#4a3a2e", "banner": "#8a2e2a", "cloth": "#d8cfb8", "ore": "#d0a040", "wood": "#7a5a3c", "woodDark": "#4a3626", "moss": "#7a8478" },
+  "light": {
+    "sky": "#b8c8e8",
+    "ground": "#3a3e4a",
+    "hemi": 0.9,
+    "sun": "#e8f0ff",
+    "sunIntensity": 1.6,
+    "env": 0.5,
+    "point": { "color": "#ffb060", "intensity": 6, "distance": 6 }
+  },
+  "fog": { "color": "#6c7688", "glow": "#b4bed2", "start": 2.8, "end": 9, "morok": "#c8ccd8", "morokOpacity": 0.35 },
+  "weather": { "kind": "snow", "count": 1400, "color": "#f2f6ff", "wind": [1.4, 0.35] },
+  "entrance": "cairn",
+  "propModels": {
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "cage": { "model": "prisoner-cage", "height": 1.1 },
+    "totem": { "model": "tribal-totem", "height": 1.5 },
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "barrel": { "model": "barrel", "height": 0.85 },
+    "crate": { "model": "crate", "height": 0.6 },
+    "crate-stack": { "model": "crate-stack", "height": 1.05 },
+    "sacks": { "model": "sacks-pile", "height": 0.6 },
+    "campfire": { "model": "campfire", "height": 0.5 },
+    "pennant-pole": { "model": "pennant-pole", "height": 2.1 }
+  },
+  "obstacles": { "rock": ["snow-rock", "boulder", "snow-rock"] },
+  "dressing": {
+    "anchors": [["campfire", 1]],
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "snow-rock", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.6, "z": 0.18 }, { "piece": "cairn", "x": -0.6, "z": 0.25 }] },
+      { "weight": 2, "items": [{ "piece": "snow-rock", "x": 0, "z": 0.05 }, { "piece": "snow-rock", "x": 0.55, "z": 0.25 }] },
+      { "weight": 1, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "barrel", "x": 0.6, "z": 0.12 }, { "piece": "sacks", "x": -0.55, "z": 0.25 }] }
+    ],
+    "ring": [["snow-rock", 4], ["rock", 2], ["cairn", 1], ["rubble", 1], ["crate", 1]],
+    "outside": [["snow-pine", 4], ["snow-rock", 3], ["cairn", 1], ["pine", 1]],
+    "far": [["stalagmite-big", 3], ["snow-pine", 2]],
+    "density": 0.65
+  }
+}
