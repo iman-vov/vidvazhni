@@ -582,9 +582,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   /** Card selection for one hero: the hand strip, intent tokens, long rest, confirm. */
-  /** Choosing the round's cards over the dimmed board: the hand as a compact grid (name, initiative,
-   *  both halves as icons), the corner button picks two, «Ведуча» marks the leading one; a tap opens
-   *  the full card with its explanations. Intents fold into one button; «Поле» peeks at the board. */
+  /** Choosing the round's cards over the dimmed board, as in Gloomhaven digital: the whole hand as
+   *  small full cards, tap one for the big card with «Обрати»; picks go to two slots, the first is
+   *  the leading one (its initiative), tapping a slot card puts it back; «Готово» once both are set. Intents fold into one button; «Поле» peeks at the board. */
   function selectionOverlay(heroId: FigureId): HTMLElement {
     const s = game.state;
     const hero = s.figures[heroId] as HeroState;
@@ -593,32 +593,22 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const need = cls?.handSize ?? 0;
     const cards = choosingHand && cls ? cls.cards.filter((c) => c.level <= Math.max(1, hero.level)).map((c) => c.id) : hero.hand;
     const bonuses = choosingHand ? [] : orbBonusPreview(s, content, heroId);
+    const accent = colorOf(heroId);
+    const open = (cardId: CardId) => openCard(heroId, cardId);
+    // The whole hand as small full cards, sized to fit without scrolling (fitHand); a picked card
+    // leaves a ghost behind and sits in its slot. Tap or hold: the big card with «Обрати».
     const hand = h(
       'div',
       { class: 'gsel-hand', role: 'list' },
       cards.map((cardId) => {
         const picked = choosingHand ? ui.handPick.includes(cardId) : ui.pick.includes(cardId) && !ui.longRest;
-        const leading = !choosingHand && picked && ui.leading === cardId;
-        const order = choosingHand ? -1 : ui.pick.indexOf(cardId);
-        const toggle = () => (choosingHand ? toggleHandPick(cardId, need) : togglePick(cardId));
-        const el = compactCard({
-          s,
-          content,
-          hero,
-          cardId,
-          accent: colorOf(heroId),
-          bonus: bonuses.some((b) => b.cardId === cardId && b.available),
-          picked,
-          leading,
-          onToggle: toggle,
-        });
+        const el = cardView({ s, content, hero, cardId, full: true, accent, bonuses: bonuses.filter((b) => b.cardId === cardId), picked });
         el.setAttribute('role', 'listitem');
-        if (!choosingHand && picked && !leading)
-          el.append(h('button', { class: 'gbtn gbtn-small gsel-lead', onclick: (e: Event) => (e.stopPropagation(), (ui.leading = cardId), render()) }, icon('initiative'), t('game.makeLeading')));
-        if (picked && order >= 0) el.append(h('span', { class: 'gsel-badge' }, order + 1));
-        // Tap: the full card with its explanations (pick / leading there too); the corner button picks.
+        el.tabIndex = 0;
+        if (picked && !choosingHand) el.classList.add('is-lifted');
+        if (picked && choosingHand) el.append(h('span', { class: 'gsel-badge' }, icon('check')));
         onPress(el, {
-          tap: () => openCard(heroId, cardId),
+          tap: () => open(cardId),
           down: () => {
             if (choosingHand) return;
             ui.pressCard = cardId;
@@ -629,13 +619,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             ui.pressCard = null;
             renderTop();
           },
+          hold: () => open(cardId),
         });
-        // The buttons on the card act on their own, without opening it.
-        for (const b of el.querySelectorAll('button')) b.addEventListener('pointerdown', (e) => e.stopPropagation());
-        el.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && e.target === el && (e.preventDefault(), openCard(heroId, cardId)));
+        el.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open(cardId)));
         return el;
       }),
     );
+    fitHand(hand, cards.length);
     const [a, b] = ui.pick;
     const leadCard = ui.leading ? playedCard(content, hero.classId, ui.leading, s.variants) : undefined;
     const hint = choosingHand
@@ -689,13 +679,54 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       rest.setAttribute('aria-pressed', String(ui.longRest));
       if (!canRest) rest.title = t('game.longRest.no');
       const ready = ui.longRest || (a && b && ui.leading);
+      // Two slots: the leading card (its initiative counts) and the second one; tap a slot card to put it back.
+      const lead = ui.longRest ? null : (ui.leading ?? a ?? null);
+      const second = ui.longRest ? null : (ui.pick.find((c) => c !== lead) ?? null);
+      const slot = (cardId: CardId | null, which: 'lead' | 'second') => {
+        const label = h('small', { class: 'gsel-slot-label' }, which === 'lead' ? icon('initiative') : null, t(`game.select.slot.${which}`));
+        if (!cardId) return h('div', { class: `gsel-slot is-empty is-${which}` }, label);
+        const card = compactCard({ s, content, hero, cardId, accent, leading: which === 'lead', picked: true });
+        card.addEventListener('click', () => togglePick(cardId));
+        card.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), togglePick(cardId)));
+        return h(
+          'div',
+          { class: `gsel-slot is-${which}` },
+          label,
+          card,
+          which === 'second'
+            ? h('button', { class: 'gbtn gbtn-small gsel-lead', 'data-card': cardId, onclick: () => ((ui.leading = cardId), (ui.pick = [cardId, ...ui.pick.filter((c) => c !== cardId)]), render()) }, icon('initiative'), t('game.makeLeading'))
+            : null,
+        );
+      };
       foot.append(
         rest,
-        h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : a && b ? `${cardName(a)} + ${cardName(b)}` : t('game.select.hint2', { n: 2 - ui.pick.length })),
-        artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go', disabled: !ready }),
+        h('div', { class: 'gsel-slots' }, slot(lead, 'lead'), slot(second, 'second')),
+        ready ? artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go' }) : h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : t('game.select.hint2', { n: 2 - ui.pick.length })),
       );
     }
     return h('div', { class: 'gsel', role: 'dialog', 'aria-label': hint }, head, intents, hand, foot);
+  }
+
+  /** Sizes the hand's cards (--sel-w) to the biggest that fits all of them without scrolling: the
+   *  best number of rows for the space; on a phone one row that scrolls sideways. */
+  function fitHand(el: HTMLElement, n: number): void {
+    const ASPECT = 0.727; // card frame width / height (cardFrames.json)
+    const GAP = 10;
+    const fit = () => {
+      const cs = getComputedStyle(el);
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const hgt = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      if (w <= 0 || hgt <= 0 || n === 0) return;
+      let best = 0;
+      if (cs.flexWrap === 'nowrap') best = hgt * ASPECT;
+      else
+        for (let rows = 1; rows <= n; rows++) {
+          const cols = Math.ceil(n / rows);
+          best = Math.max(best, Math.min((w - (cols - 1) * GAP) / cols, ((hgt - (rows - 1) * GAP) / rows) * ASPECT));
+        }
+      el.style.setProperty('--sel-w', `${Math.floor(Math.min(best, 260))}px`);
+    };
+    new ResizeObserver(fit).observe(el);
   }
 
   function openCard(heroId: FigureId, cardId: CardId): void {

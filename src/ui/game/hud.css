@@ -1685,3 +1685,31 @@ body.game.g-bottom-short {
     padding-top: 5%;
   }
 }
+
+/* Ink for the light parchment: the colours made for the dark slate card turn darker. */
+.gcard.has-frame .gstep-consume {
+  color: #8a4b08;
+}
+
+.gcard.has-frame .gbonus {
+  color: #5d5246;
+  border-color: #8c7c66;
+}
+
+.gcard.has-frame .gbonus.is-on {
+  color: #7a4300;
+  border-color: #b9781c;
+  background: rgba(255, 211, 110, 0.35);
+}
+
+.gcard.has-frame .gmark-xp {
+  color: #8a5a00;
+}
+
+.gcard.has-frame .gmark-loss {
+  color: #b02a1c;
+}
+
+.gcard.has-frame .gmark-active {
+  color: #1f5e9c;
+}
