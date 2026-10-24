@@ -2,12 +2,16 @@
 // by playing it out greedily and scoring the result. With the fork variants it also weighs a
 // Порив («Наснага», played out the same way) and raising a downed ally («Підняти друга»).
 // Scenario goals steer where the acting hero heads: monsters, exits, keys, chests, braziers.
+// In the damage window it dodges (d12) or lets an ally cover by a fixed rule, never by peeking at
+// the roll; carried items are weighed like a half. Used by the replay tests and the balance
+// simulator (tests/balance/sim.test.ts).
 
 import type { Content } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { goalZone } from '../../src/rules/objectives';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
+import { availableCards, recommendedHand } from '../../src/rules/setup';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
 
 function hero(s: GameState, id: string): HeroState {
@@ -59,9 +63,12 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   if (s.phase === 'won') return 1e6;
   if (s.phase === 'lost') return -1e6;
   let v = 0;
-  v += 12 * s.log.filter((e) => e.type === 'figureDied' && e.figureId.startsWith('monster:')).length;
+  // A kill outweighs the jump of the distance pull from «nearest monster» to «nearest door or exit».
+  v += 40 * s.log.filter((e) => e.type === 'figureDied' && e.figureId.startsWith('monster:')).length;
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster');
   for (const m of monsters) v += 3 * (m.maxHp - m.hp);
+  // An opened door is progress: without this the monsters it reveals make the step look worse.
+  v += 30 * s.board.revealedRooms.length;
   for (const f of Object.values(s.figures)) {
     if (f.kind !== 'hero') continue;
     v += f.exhausted ? -200 : f.downed ? -120 : 2 * f.hp;
@@ -98,13 +105,53 @@ function after(s: GameState, a: Action, content: Content): GameState | null {
   return r.ok ? r.state : null;
 }
 
-function avoidOrTake(s: GameState): Action {
+function legal(s: GameState, a: Action, content?: Content): boolean {
+  return !!content && apply(s, a, content).ok;
+}
+
+/** The card a hero parts with most easily (weakest attack and move). */
+function spareCard(content: Content, h: HeroState, cards: string[]): string | undefined {
+  return [...cards].sort((a, b) => attackValue(content, h, a) + moveValue(content, h, a) - attackValue(content, h, b) - moveValue(content, h, b))[0];
+}
+
+/** «Прикрий друга» or «Ухилитися» by a fixed rule (no look at the roll); null = neither. */
+function defend(s: GameState, content: Content, h: HeroState, amount: number): Action | null {
+  const lethal = amount >= h.hp;
+  if (lethal || amount >= 3) {
+    for (const f of Object.values(s.figures)) {
+      if (f.kind !== 'hero' || f.id === h.id || f.exhausted || f.downed || f.hp <= amount + 2) continue;
+      const a: Action = { type: 'coverAlly', heroId: f.id, targetId: h.id };
+      if (legal(s, a, content)) return a;
+    }
+  }
+  if (!lethal && amount < 2) return null;
+  const tries: Action[] = [];
+  if (h.momentum > 0 && (lethal || amount >= 3)) tries.push({ type: 'dodge', heroId: h.id, pay: { kind: 'momentum' } });
+  const spare = spareCard(content, h, h.hand);
+  if (spare && (lethal ? h.hand.length > 2 : h.hand.length >= 5 && amount >= 3)) tries.push({ type: 'dodge', heroId: h.id, pay: { kind: 'card', cardId: spare } });
+  for (const it of h.items ?? []) {
+    if (it.state !== 'ready' || !tries[0]) continue;
+    const d = tries[0] as Extract<Action, { type: 'dodge' }>;
+    const withItem: Action = { ...d, itemId: it.id };
+    if (lethal && legal(s, withItem, content)) return withItem;
+  }
+  return tries.find((a) => legal(s, a, content)) ?? null;
+}
+
+function avoidOrTake(s: GameState, content?: Content): Action {
   const p = s.pending;
   if (p?.kind !== 'avoidDamage') throw new Error('no damage pending');
   const h = hero(s, p.heroId);
+  const shield = (h.items ?? []).find((it) => it.state === 'ready' && legal(s, { type: 'useItem', heroId: h.id, itemId: it.id }, content) && /buckler|chainmail/.test(it.id));
+  if (shield && p.amount >= 2) return { type: 'useItem', heroId: h.id, itemId: shield.id };
+  const d = content ? defend(s, content, h, p.amount) : null;
+  if (d) return d;
   if (p.amount >= h.hp) {
     const spare = h.hand[h.hand.length - 1];
     if (h.hand.length > 2 && spare) return { type: 'avoidDamage', heroId: h.id, choice: { kind: 'loseHand', cardId: spare } };
+    // «Підняти друга»: going down once is cheaper than two cards while an ally stands to raise us.
+    const raiser = Object.values(s.figures).some((f) => f.kind === 'hero' && f.id !== h.id && !f.exhausted && !f.downed);
+    if (s.variants.reviveAlly && !h.revived && raiser) return { type: 'avoidDamage', heroId: h.id, choice: { kind: 'take' } };
     const [a, b] = h.discard;
     if (a && b) return { type: 'avoidDamage', heroId: h.id, choice: { kind: 'loseDiscard', cardIds: [a, b] } };
   }
@@ -115,11 +162,14 @@ function avoidOrTake(s: GameState): Action {
 function bestStep(s: GameState, content: Content, heroId: string): Action {
   let best: Action = { type: 'skipStep' };
   let bestScore = -Infinity;
+  const fighting = Object.values(s.figures).some((f) => f.kind === 'monster');
   for (const { action: a, state } of legalActionResults(s, content)) {
     if (a.type !== 'resolveStep' && a.type !== 'skipStep') continue;
     let t: GameState | null = state;
-    while (t?.pending?.kind === 'avoidDamage') t = after(t, avoidOrTake(t), content);
+    while (t?.pending?.kind === 'avoidDamage') t = after(t, avoidOrTake(t, content), content);
     if (!t) continue;
+    // No new room while monsters are still up (the door pull would rush the party into a second fight).
+    if (fighting && t.board.revealedRooms.length > s.board.revealedRooms.length) continue;
     const v = score(t, heroId, content) + (a.type === 'skipStep' ? -0.5 : 0);
     if (v > bestScore) {
       bestScore = v;
@@ -133,7 +183,7 @@ function bestStep(s: GameState, content: Content, heroId: string): Action {
 function finishHalf(s: GameState, content: Content, heroId: string): GameState {
   let t = s;
   for (let i = 0; i < 20; i++) {
-    if (t.pending?.kind === 'avoidDamage') t = after(t, avoidOrTake(t), content) ?? t;
+    if (t.pending?.kind === 'avoidDamage') t = after(t, avoidOrTake(t, content), content) ?? t;
     else if (t.pending?.kind === 'stepChoice' && t.pending.heroId === heroId) t = after(t, bestStep(t, content, heroId), content) ?? t;
     else break;
   }
@@ -143,13 +193,33 @@ function finishHalf(s: GameState, content: Content, heroId: string): GameState {
 function attackValue(c: Content, h: HeroState, cardId: string): number {
   const card = c.heroes[h.classId]?.cards.find((x) => x.id === cardId);
   const att = card?.top.steps.find((st) => st.type === 'attack');
-  return (att && 'value' in att ? att.value + (att.targets ?? 1) - 1 + (att.area ? 1 : 0) : 1) - (card?.top.loss ? 1.5 : 0);
+  return (att && 'value' in att ? att.value + (att.targets ?? 1) - 1 + (att.area ? 1 : 0) : 1) - (card?.top.loss ? 3 : 0);
 }
 
 function moveValue(c: Content, h: HeroState, cardId: string): number {
   const card = c.heroes[h.classId]?.cards.find((x) => x.id === cardId);
   const mv = card?.bottom.steps.find((st) => st.type === 'move');
-  return (mv && 'value' in mv ? mv.value : 1) - (card?.bottom.loss ? 1.5 : 0);
+  return (mv && 'value' in mv ? mv.value : 1) - (card?.bottom.loss ? 3 : 0);
+}
+
+/** The best own-turn action; with `ahead` each is valued with the best follow-up of the same turn
+ *  (so a move that brings an attack into reach beats an attack that cannot land yet). */
+function bestTurnAction(s: GameState, content: Content, heroId: string, ahead: boolean): { action: Action; value: number } {
+  let best: Action = { type: 'endTurn', heroId };
+  let bestScore = score(s, heroId, content) - 0.25;
+  for (const { action: a, state: t } of legalActionResults(s, content)) {
+    if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly' && a.type !== 'interact' && a.type !== 'useItem') continue;
+    const instant = a.type === 'reviveAlly' || a.type === 'interact' || a.type === 'useItem';
+    const cost = a.type === 'useItem' ? 4 : a.type === 'startHalf' && a.basic ? 0.1 : 0;
+    const end = instant ? t : finishHalf(t, content, heroId);
+    const more = ahead && end.pending?.kind === 'heroTurn' && end.pending.heroId === heroId && a.type !== 'useItem';
+    const v = (more ? bestTurnAction(end, content, heroId, false).value : score(end, heroId, content)) - cost;
+    if (v > bestScore) {
+      bestScore = v;
+      best = a;
+    }
+  }
+  return { action: best, value: bestScore };
 }
 
 export function chooseAction(s: GameState, content: Content): Action {
@@ -157,7 +227,20 @@ export function chooseAction(s: GameState, content: Content): Action {
   if (!p) throw new Error('bot: nothing pending');
   switch (p.kind) {
     case 'avoidDamage':
-      return avoidOrTake(s);
+      return avoidOrTake(s, content);
+    case 'chooseHandBeforeScenario': {
+      // The recommended hand; a levelled hero takes its new cards in place of the last recommended ones.
+      const h = hero(s, p.heroIds[0] as string);
+      const cls = content.heroes[h.classId]!;
+      return { type: 'chooseHand', heroId: h.id, cards: recommendedHand(cls, availableCards(cls, h.level, h.cardPool)) };
+    }
+    case 'beforeAttacked': {
+      const h = hero(s, p.heroId);
+      const it = (h.items ?? []).find((x) => x.state === 'ready' && legal(s, { type: 'useItem', heroId: h.id, itemId: x.id }, content));
+      return it ? { type: 'useItem', heroId: h.id, itemId: it.id } : { type: 'passReaction', heroId: h.id };
+    }
+    case 'initiativeItems':
+      return { type: 'passReaction', heroId: p.heroIds[0] as string };
     case 'selectCards': {
       const h = hero(s, p.heroIds[0] as string);
       if (h.hand.length < 2) return { type: 'declareLongRest', heroId: h.id };
@@ -168,25 +251,13 @@ export function chooseAction(s: GameState, content: Content): Action {
       const ini = (id: string) => content.heroes[h.classId]?.cards.find((x) => x.id === id)?.initiative ?? 99;
       return { type: 'selectCards', heroId: h.id, cards: [a, b], leading: ini(a) <= ini(b) ? a : b };
     }
-    case 'heroTurn': {
-      let best: Action = { type: 'endTurn', heroId: p.heroId };
-      let bestScore = score(s, p.heroId, content) - 0.25;
-      for (const { action: a, state: t } of legalActionResults(s, content)) {
-        if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly' && a.type !== 'interact') continue;
-        const instant = a.type === 'reviveAlly' || a.type === 'interact';
-        const v = score(instant ? t : finishHalf(t, content, p.heroId), p.heroId, content) - (a.type === 'startHalf' && a.basic ? 0.1 : 0);
-        if (v > bestScore) {
-          bestScore = v;
-          best = a;
-        }
-      }
-      return best;
-    }
+    case 'heroTurn':
+      return bestTurnAction(s, content, p.heroId, true).action;
     case 'stepChoice':
       return bestStep(s, content, p.heroId);
     case 'endOfRound': {
       const h = hero(s, p.heroIds[0] as string);
-      return { type: 'shortRest', heroId: h.id, rest: h.hand.length <= 3 };
+      return { type: 'shortRest', heroId: h.id, rest: h.hand.length < 2 };
     }
     case 'shortRestReroll':
       return { type: 'shortRestReroll', heroId: p.heroId, reroll: false };
@@ -198,7 +269,7 @@ export function chooseAction(s: GameState, content: Content): Action {
     }
     default: {
       const first = legalActions(s, content)[0];
-      if (!first) throw new Error(`bot: no legal action for ${p.kind}`);
+      if (!first) throw new Error(`bot: no legal action for ${(p as { kind: string }).kind}`);
       return first;
     }
   }
