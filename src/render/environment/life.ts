@@ -1,7 +1,7 @@
 // Motion in the locations that is not fire or dust (ambient.ts): animated water on the water hexes
 // and the puddles beyond the edge (moving ripples, a soft fresnel toward the sky, darker depth toward
 // the middle, a broken light line along shores and walkways, rings around figures standing in water,
-// slow flow along the location).
+// slow flow along the location), and a turning mill wheel.
 // Everything runs in shaders from shared time uniforms; the CPU only sets a few numbers per frame.
 // Low quality keeps the water to a cheap UV scroll; with reduced motion the clock stops, so the
 // location stands still (fire keeps its flicker).
@@ -250,4 +250,45 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
   if (full) m.defines = { ...(m.defines ?? {}), WATER_FULL: '' };
   m.customProgramCacheKey = () => `${prevKey}-water-${mode}-${full ? 'full' : 'low'}`;
   m.needsUpdate = true;
+}
+
+// ─── Turning parts ─────────────────────────────────────────────────────────
+
+/** Models that turn, by model id: radians per second about their thinnest axis. */
+export const SPIN: Record<string, number> = { 'mill-wheel': -0.45 };
+
+/** An instanced model turning about the axle through its bounding box (the box's thinnest side). */
+export class Spinner {
+  private readonly pivot = new THREE.Matrix4();
+  private readonly back = new THREE.Matrix4();
+  private readonly axis = new THREE.Vector3();
+  private readonly rot = new THREE.Matrix4();
+  private readonly m = new THREE.Matrix4();
+
+  constructor(
+    private readonly mesh: THREE.InstancedMesh,
+    private readonly places: THREE.Matrix4[],
+    private readonly part: THREE.Matrix4,
+    private readonly speed: number,
+  ) {
+    const geo = mesh.geometry;
+    geo.computeBoundingBox();
+    const box = geo.boundingBox!.clone().applyMatrix4(part);
+    const size = box.getSize(new THREE.Vector3());
+    const c = box.getCenter(new THREE.Vector3());
+    if (size.x <= size.y && size.x <= size.z) this.axis.set(1, 0, 0);
+    else if (size.z <= size.y) this.axis.set(0, 0, 1);
+    else this.axis.set(0, 1, 0);
+    this.pivot.makeTranslation(c.x, c.y, c.z);
+    this.back.makeTranslation(-c.x, -c.y, -c.z);
+  }
+
+  update(time: number): void {
+    this.rot.makeRotationAxis(this.axis, time * this.speed);
+    this.places.forEach((place, i) => {
+      this.m.copy(place).multiply(this.pivot).multiply(this.rot).multiply(this.back).multiply(this.part);
+      this.mesh.setMatrixAt(i, this.m);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
 }

@@ -27,7 +27,7 @@ import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam,
 import { atmosphereFor } from './atmosphere';
 import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
-import { patchWater, setWaterLook, tickLife } from './life';
+import { patchWater, setWaterLook, SPIN, Spinner, tickLife } from './life';
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
@@ -113,6 +113,8 @@ export class BoardEnvironment {
   private ambient: Ambient | null = null;
   /** Grime, wall dressing and pools of light (decals.ts). */
   private atmosphere: AtmosphereBuild | null = null;
+  /** Modelled parts that turn (the mill wheel). */
+  private spinners: Spinner[] = [];
   /** Unlit flame and glow materials with their base colour (they flicker with the lights). */
   private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
@@ -372,7 +374,8 @@ export class BoardEnvironment {
 
   /** Flickers flames and drifts the fog; `time` in seconds. */
   update(time: number): void {
-    tickLife(time);
+    const life = tickLife(time);
+    for (const s of this.spinners) s.update(life);
     if (this.morok) this.morok.uniforms.uTime.value = time;
     this.ambient?.update(time);
     this.atmosphere?.update(time);
@@ -387,7 +390,7 @@ export class BoardEnvironment {
 
   /** Whether anything animates over time (the board may keep drawing slowly for it). */
   get animated(): boolean {
-    return !!this.morok || this.lights.length > 0 || !!this.ambient;
+    return !!this.morok || this.lights.length > 0 || !!this.ambient || this.spinners.length > 0;
   }
 
   stats(): EnvironmentStats {
@@ -425,6 +428,7 @@ export class BoardEnvironment {
     this.morok = null;
     this.ambient = null;
     this.atmosphere = null;
+    this.spinners = [];
     this.flicker = [];
     this.lights = [];
   }
@@ -644,6 +648,8 @@ export class BoardEnvironment {
         mesh.instanceMatrix.needsUpdate = true;
         mesh.computeBoundingSphere();
         mesh.name = `env:model:${proto.spec.model}`;
+        const spin = SPIN[proto.spec.model];
+        if (spin) this.spinners.push(new Spinner(mesh, places, part.matrix, spin));
         // Modelled props are few and instanced: they cast shadows wherever figures do.
         mesh.castShadow = shadows || this.quality !== 'low';
         mesh.receiveShadow = true;
