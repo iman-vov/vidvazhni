@@ -29,3 +29,37 @@
   height: 100%;
   object-fit: contain;
 }
+
+.gnew-deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.gnew-deck .gcc {
+  min-height: 84px;
+}
+
+.gnew-cardview,
+.gnew.gpage.is-art > .gnew-cardview {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(6, 10, 20, 0.72);
+  overflow: auto;
+}
+
+.gnew-cardview-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: min(420px, 100%);
+}
+
+.gnew-cardview .gcard {
+  width: var(--g-card-w);
+}

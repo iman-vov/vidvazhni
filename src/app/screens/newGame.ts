@@ -5,10 +5,11 @@
 // on each player's device without the hand-off.
 
 import type { LoadedContent } from '../../rules/load';
-import type { GameSetup } from '../../rules/state';
+import type { GameSetup, GameState, HeroState } from '../../rules/state';
 import { VARIANT_ORDER } from '../../rules/variants';
 import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
+import { cardKeywords, cardView, compactCard } from '../../ui/game/card';
 import { icon } from '../../ui/game/icons';
 import { heroBustUrl } from '../../ui/game/uiArt';
 import type { PlayerInfo } from '../game';
@@ -346,11 +347,55 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
           { class: 'gsection gnew-detail' },
           h('h2', null, t(`class.${chosen.id}`), ' ', h('small', { class: `gtag is-${chosen.complexity}` }, t(`complexity.${chosen.complexity}`))),
           h('p', null, t(`class.${chosen.id}.role`), ' · ', `${t('stat.hp')} ${chosen.hpByLevel[0] ?? ''} · ${t('menu.handSize', { n: chosen.handSize })}`),
-          h('h3', null, t('settings.hints')),
+          deck(c, chosen.id),
+          h('h3', null, t('newGame.hints')),
           hintRow(chosen.id, o.onChange),
         )
       : h('p', { class: 'gside-hint gnew-pickfirst' }, t('newGame.pickFirst')),
   );
+}
+
+/** The starting deck at a glance: compact cards by initiative; a tap opens the full card. */
+function deck(c: LoadedContent, classId: string): HTMLElement {
+  const cards = (c.heroes[classId]?.cards ?? []).filter((x) => x.level === 1).sort((a, b) => a.initiative - b.initiative);
+  // The card views read only the rule variants and the class.
+  const s = { variants: settings.get().variants } as GameState;
+  const hero = { classId } as HeroState;
+  const wrap = h('div', { class: 'gnew-deckwrap' });
+  // On the page itself: a section's backdrop-filter would trap a fixed overlay inside it.
+  const page = () => wrap.closest('.gnew') ?? document.body;
+  const close = () => page().querySelector(':scope > .gnew-cardview')?.remove();
+  const open = (cardId: string) => {
+    close();
+    const keywords = cardKeywords(s, c, hero, cardId);
+    page().append(
+      h(
+        'div',
+        { class: 'gnew-cardview', role: 'dialog', 'aria-modal': 'true', onclick: (e: Event) => e.target === e.currentTarget && close() },
+        h(
+          'div',
+          { class: 'gnew-cardview-body' },
+          cardView({ s, content: c, hero, cardId, big: true, full: true }),
+          keywords.length ? h('dl', { class: 'gnew-keywords' }, keywords.map((k) => [h('dt', null, k.title), h('dd', null, k.text)])) : null,
+          h('button', { class: 'gbtn', onclick: close }, icon('close'), ' ', t('game.close')),
+        ),
+      ),
+    );
+  };
+  wrap.append(
+    h('h3', null, t('newGame.deck', { n: cards.length }), ' ', h('small', { class: 'gside-hint' }, t('newGame.deck.tap'))),
+    h(
+      'div',
+      { class: 'gnew-deck' },
+      cards.map((card) => {
+        const el = compactCard({ s, content: c, hero, cardId: card.id });
+        el.addEventListener('click', () => open(card.id));
+        el.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open(card.id)));
+        return el;
+      }),
+    ),
+  );
+  return wrap;
 }
 
 function bust(classId: string): HTMLElement {
