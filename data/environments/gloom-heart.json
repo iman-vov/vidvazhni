@@ -22,8 +22,13 @@
     "brazier": { "model": "brazier", "height": 0.8 },
     "brazier-lit": { "model": "brazier", "height": 0.8 },
     "chest": { "model": "chest", "height": 0.6 },
-    "door": { "model": "dungeon-door", "height": 1.0 },
-    "trap": { "model": "bear-trap", "height": 0.18 }
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "crystals": { "model": "crystal-cluster", "height": 0.7 },
+    "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
+    "cage": { "model": "prisoner-cage", "height": 1.1 },
+    "totem": { "model": "tribal-totem", "height": 1.5 },
+    "crystal": { "model": "crystal-cluster", "height": 0.7 }
   },
   "dressing": {
     "ring": [["stalagmite", 3], ["rock", 3], ["crystals", 2], ["glow-mushrooms", 2]],

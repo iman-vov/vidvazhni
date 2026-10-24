@@ -629,6 +629,68 @@ const PIECES: Record<string, PieceDef> = {
       }
     },
   },
+  stool: {
+    kind: 'prop',
+    height: 0.45,
+    radius: 0.22,
+    build: (b) => {
+      b.cyl('wood', 0.17, 0.17, 0.05, 8, [0, 0.42, 0]);
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        b.cyl('woodDark', 0.025, 0.03, 0.42, 5, [Math.cos(a) * 0.11, 0.2, Math.sin(a) * 0.11], [Math.sin(a) * 0.12, 0, -Math.cos(a) * 0.12]);
+      }
+    },
+  },
+  'crate-broken': {
+    kind: 'prop',
+    height: 0.5,
+    radius: 0.42,
+    build: (b) => {
+      crate(b, 0.48, [0, 0, 0], 0.2);
+      b.box('wood', [0.5, 0.03, 0.09], [0.36, 0.02, 0.18], [0, 0.7, 0], true);
+      b.box('woodDark', [0.4, 0.03, 0.08], [-0.3, 0.02, 0.26], [0, -0.4, 0.1], true);
+    },
+  },
+
+  // Mission objects (objects[].kind in scenarios): a cage to open (`rescue`), a totem to break
+  // (`destroy`), a crystal to pick up (`collect`). Placeholders until the Meshy model loads.
+  cage: {
+    kind: 'prop',
+    height: 1.1,
+    radius: 0.42,
+    build: (b) => {
+      b.box('woodDark', [0.8, 0.08, 0.8], [0, 0.04, 0]);
+      b.box('woodDark', [0.8, 0.08, 0.8], [0, 1.06, 0]);
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+        if (i % 3 && j % 3) continue;
+        b.cyl('iron', 0.025, 0.025, 1.0, 5, [-0.36 + i * 0.24, 0.55, -0.36 + j * 0.24]);
+      }
+    },
+  },
+  totem: {
+    kind: 'prop',
+    height: 1.5,
+    radius: 0.3,
+    build: (b) => {
+      b.cyl('wood', 0.16, 0.2, 1.4, 7, [0, 0.7, 0]);
+      for (const y of [0.45, 0.85, 1.2]) b.box('woodDark', [0.36, 0.22, 0.3], [0, y, 0.06], [0, 0, 0], true);
+      b.box('woodDark', [0.7, 0.08, 0.12], [0, 1.32, 0]);
+      b.rock('stoneDark', 0.18, [0, 0.05, 0], [1.4, 0.4, 1.4]);
+    },
+  },
+  crystal: {
+    kind: 'prop',
+    height: 0.7,
+    radius: 0.3,
+    light: { x: 0, y: 0.4, z: 0, kind: 'crystal' },
+    build: (b) => {
+      b.rock('rockDark', 0.18, [0, 0.06, 0], [1.2, 0.45, 1.1]);
+      for (let i = 0; i < 3; i++) {
+        const a = i * 2.1;
+        b.add(new THREE.OctahedronGeometry(0.11, 0), 'crystal', [Math.cos(a) * 0.08, 0.3 + (i % 2) * 0.08, Math.sin(a) * 0.08], [Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3], [0.8, 2.6, 0.8]);
+      }
+    },
+  },
 
   // Forest.
   tree: { kind: 'prop', height: 3.0, radius: 0.9, build: (b) => tree(b, 3.0, true) },

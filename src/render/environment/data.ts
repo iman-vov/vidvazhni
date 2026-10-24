@@ -21,6 +21,9 @@ export const DEFAULT_ENVIRONMENT: EnvironmentDef = {
     chest: { model: 'chest', height: 0.6 },
     door: { model: 'dungeon-door', height: 1.0 },
     trap: { model: 'bear-trap', height: 0.18 },
+    cage: { model: 'prisoner-cage', height: 1.1 },
+    totem: { model: 'tribal-totem', height: 1.5 },
+    crystal: { model: 'crystal-cluster', height: 0.7 },
   },
   dressing: { ring: [['barrel', 2], ['crate', 2], ['sack', 1]], density: 0.5 },
 
