@@ -1935,3 +1935,20 @@ body.game.g-bottom-short {
 .gpick-who small {
   opacity: 0.75;
 }
+
+/* Bigger card text (playtest: «шрифти масіпусінькі»): scales with the card, about 14 px on a
+   250 px tray card as on the hand-choice screen. The round's hand of ten small cards gets what
+   still fits its parchment blocks (9 px at 150 px); a hold shows the big card. */
+.gcard-face {
+  font-size: clamp(10px, 5.8cqw, 18px);
+}
+
+.gsel .gsel-hand .gcard .gcard-face {
+  font-size: clamp(9px, 6cqw, 19px);
+}
+
+@media (max-height: 520px), (max-width: 860px) {
+  .gturn-cards .gcard.has-frame .gcard-face {
+    font-size: clamp(9px, 6cqw, 17px);
+  }
+}
