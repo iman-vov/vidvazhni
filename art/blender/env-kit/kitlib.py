@@ -126,6 +126,15 @@ def bake_material(name):
         sm = N('ShaderNodeMath', -500, -250); sm.operation = 'MULTIPLY'
         L.new(s, sm.inputs[0]); L.new(w, sm.inputs[1])
         s = sm.outputs[0]
+    if p['kind'] == 'leaf':
+        # Leaf clumps: scalloped Voronoi cells, each a little lighter in its middle.
+        vo = N('ShaderNodeTexVoronoi', -900, -650); vo.feature = 'DISTANCE_TO_EDGE'
+        vo.inputs['Scale'].default_value = 13.0
+        L.new(off.outputs[0], vo.inputs['Vector'])
+        cl = rng(vo.outputs['Distance'], 0.0, 0.1, 0.78, 1.05, -700, -650)
+        sm = N('ShaderNodeMath', -350, -400); sm.operation = 'MULTIPLY'
+        L.new(s, sm.inputs[0]); L.new(cl, sm.inputs[1])
+        s = sm.outputs[0]
     if p['kind'] == 'stone':
         # Sparse chips and cracks: thin dark Voronoi borders here and there.
         vo = N('ShaderNodeTexVoronoi', -900, -650); vo.feature = 'DISTANCE_TO_EDGE'
@@ -186,6 +195,7 @@ class Piece:
         self.organic = self.bm.verts.layers.int.new('organic')   # 1: gets convexity highlights
         self.mats = []
         self.rng = random.Random(seed)
+        self.smooth = 35   # degrees: edges sharper than this stay hard; organic pieces raise it
 
     def _mat_index(self, paint_name):
         if paint_name not in self.mats:
@@ -320,6 +330,106 @@ class Piece:
         faces = [f for f in bm.faces if f not in before]
         return self._finish(faces, paint_name, self.M(pos, rot), grain_axis=2, rnd=rnd)
 
+    def tube(self, paint_name, points, radii, seg=6, cap_start=False, cap_end=True, rnd=None, twist=0.0):
+        """A tube through points (trunks, branches, roots, logs, stems); radii per point.
+        Paint UV runs around (U) and along (V) the tube, so bark streaks follow it."""
+        bm = self.bm
+        r = self.rng.random() if rnd is None else rnd
+        mi = self._mat_index(paint_name)
+        pts = [Vector(p) for p in points]
+        rings = []
+        up = Vector((0, 0, 1))
+        prev_side = None
+        for i, p in enumerate(pts):
+            t = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+            ref = up if abs(t.dot(up)) < 0.9 else Vector((1, 0, 0))
+            side = t.cross(ref).normalized()
+            if prev_side is not None and side.dot(prev_side) < 0:
+                side = -side
+            prev_side = side
+            other = t.cross(side).normalized()
+            ring = []
+            for k in range(seg):
+                a = 2 * math.pi * k / seg + twist * i
+                d = side * math.cos(a) + other * math.sin(a)
+                ring.append(bm.verts.new(p + d * radii[i] * (1 + self.rng.uniform(-0.06, 0.06))))
+            rings.append(ring)
+        faces = []
+        dist = [0.0]
+        for i in range(1, len(pts)):
+            dist.append(dist[-1] + (pts[i] - pts[i - 1]).length)
+        for i in range(len(rings) - 1):
+            for k in range(seg):
+                a, b = rings[i][k], rings[i][(k + 1) % seg]
+                c, d = rings[i + 1][(k + 1) % seg], rings[i + 1][k]
+                f = bm.faces.new((a, b, c, d))
+                faces.append(f)
+                circ = 2 * math.pi * max(radii[i], 0.01)
+                for loop, (u, v) in zip(f.loops, ((k, dist[i]), (k + 1, dist[i]), (k + 1, dist[i + 1]), (k, dist[i + 1]))):
+                    loop[self.uv].uv = (u / seg * circ + r * 3.1, v + r * 1.7)
+        caps = []
+        if cap_start:
+            caps.append(bm.faces.new(list(reversed(rings[0]))))
+        if cap_end and radii[-1] > 0.002:
+            caps.append(bm.faces.new(rings[-1]))
+        for f in caps:
+            for loop in f.loops:
+                c = loop.vert.co
+                loop[self.uv].uv = (c.x + r * 3.1, c.y + r * 1.7)
+        for f in faces + caps:
+            f.material_index = mi
+            f[self.rnd] = r
+        bm.normal_update()
+        return faces + caps
+
+    def frond(self, paint_name, points, widths, up=(0, 0, 1), crease=0.35, rnd=None):
+        """A leaf, frond or grass blade: a strip through points with a raised midrib (V section),
+        so it reads from above and from the side without double-sided materials."""
+        bm = self.bm
+        r = self.rng.random() if rnd is None else rnd
+        mi = self._mat_index(paint_name)
+        pts = [Vector(p) for p in points]
+        upv = Vector(up)
+        rows = []
+        for i, p in enumerate(pts):
+            t = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+            side = t.cross(upv)
+            if side.length < 1e-4:
+                side = t.cross(Vector((1, 0, 0)))
+            side.normalize()
+            n = side.cross(t).normalized()
+            w = widths[i]
+            if w < 1e-4:
+                rows.append([bm.verts.new(p)])
+            else:
+                rows.append([bm.verts.new(p - side * w), bm.verts.new(p + n * w * crease), bm.verts.new(p + side * w)])
+        faces = []
+        L = 0.0
+        for i in range(len(rows) - 1):
+            a, b = rows[i], rows[i + 1]
+            if len(b) == 1:
+                fs = [bm.faces.new((a[0], a[1], b[0])), bm.faces.new((a[1], a[2], b[0]))]
+            elif len(a) == 1:
+                fs = [bm.faces.new((a[0], b[1], b[0])), bm.faces.new((a[0], b[2], b[1]))]
+            else:
+                fs = [bm.faces.new((a[0], a[1], b[1], b[0])), bm.faces.new((a[1], a[2], b[2], b[1]))]
+            seglen = (pts[i + 1] - pts[i]).length
+            for f in fs:
+                for loop in f.loops:
+                    v = loop.vert
+                    row = i if v in a else i + 1
+                    col = (a if v in a else b).index(v)
+                    loop[self.uv].uv = (col * 0.05 + r * 3.1, (L + (seglen if row == i + 1 else 0)) + r * 1.7)
+                f.material_index = mi
+                f[self.rnd] = r
+            faces += fs
+            L += seglen
+        bm.normal_update()
+        for f in faces:
+            if f.normal.dot(upv) < 0:
+                f.normal_flip()
+        return faces
+
     def quad_strip(self, paint_name, points, width, normal=(0, -1, 0), rnd=None):
         """A flat ribbon through points (for cobweb threads, ropes seen from the front)."""
         bm = self.bm
@@ -339,7 +449,7 @@ class Piece:
         bmesh.ops.recalc_face_normals(bm, faces=faces)
         return self._finish(faces, paint_name, Matrix.Identity(4), grain_axis=0, rnd=rnd)
 
-    def build(self, location=(0, 0, 0), collection=None, smooth_angle=35, ao_dist=0.22, cvx=(0.12, 0.45)):
+    def build(self, location=(0, 0, 0), collection=None, smooth_angle=None, ao_dist=0.22, cvx=(0.12, 0.45)):
         """Makes the object (origin at its bottom centre = world origin of the piece) with per-vertex
         'ao' (share of short hemisphere rays that hit the piece) and 'cvx' (how convex the vertex is)."""
         from mathutils.bvhtree import BVHTree
@@ -371,7 +481,7 @@ class Piece:
             me.materials.append(bake_material(pn))
         me.shade_smooth()
         try:
-            me.set_sharp_from_angle(angle=math.radians(smooth_angle))
+            me.set_sharp_from_angle(angle=math.radians(smooth_angle or self.smooth))
         except Exception:
             pass
         ob = bpy.data.objects.new(self.name, me)
@@ -766,3 +876,18 @@ def render_to(path, res=(1600, 900)):
     sc.render.image_settings.file_format = 'PNG'
     sc.render.filepath = path
     bpy.ops.render.render(write_still=True)
+
+
+def kit_sheet(coll_name, order, cols=6, dx=1.6, dy=2.2, raise_wall_decor=()):
+    """Lays the pieces of a location out in rows (front row nearest the camera) and frames them."""
+    objs = {o.name.split('.', 1)[1]: o for o in bpy.data.collections[coll_name].objects}
+    for o in objs.values():
+        o.hide_viewport = o.hide_render = False
+    rows = (len(order) + cols - 1) // cols
+    for i, name in enumerate(order):
+        o = objs[name]
+        o.location = ((i % cols) * dx, (i // cols) * dy, 0)
+    w = (cols - 1) * dx
+    d = (rows - 1) * dy
+    game_camera((w / 2, d / 2, 0.6), distance=max(w, d * 1.6) * 1.15 + 4, elevation=38, lens=40)
+

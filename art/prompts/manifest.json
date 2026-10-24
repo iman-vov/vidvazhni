@@ -1826,6 +1826,33 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "env-thorn-path",
+      "nameUk": "Набір оточення: тернова стежка",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 49,
+      "wave": 5,
+      "scenarios": [
+        2
+      ],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/thorn-path.blend",
+      "modelFile": "assets/models/env-thorn-path/env-thorn-path.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 16000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }
