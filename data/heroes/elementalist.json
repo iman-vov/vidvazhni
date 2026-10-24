@@ -4,6 +4,7 @@
   "color": "#C23B4E",
   "hpByLevel": [6, 7, 8, 9, 10],
   "handSize": 8,
+  "recommendedHand": ["elementalist.fire-arrow", "elementalist.ice-breath", "elementalist.gusts", "elementalist.stone-skin", "elementalist.fireball", "elementalist.ice-shackles", "elementalist.earth-breath", "elementalist.earth-rampart"],
   "classElement": "any",
   "classOrb": "any",
   "surge": [{ "type": "infuse", "element": "any" }, { "type": "attack", "value": 2, "range": 3 }],
@@ -148,6 +149,116 @@
         ]
       },
       "bottom": { "steps": [{ "type": "move", "value": 3 }, { "type": "infuse", "element": "earth" }] }
+    },
+    {
+      "id": "elementalist.wild-spark",
+      "level": 1,
+      "initiative": 27,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "x": 0,
+            "range": 4,
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              },
+              "xBest": true
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.earth-rampart",
+      "level": 1,
+      "initiative": 18,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round",
+            "xp": 1
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "self"
+          }
+        ]
+      }
+    },
+    {
+      "id": "elementalist.wind-wings",
+      "level": 1,
+      "initiative": 12,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "fly": true
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 1,
+            "range": 3,
+            "push": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      }
     },
     {
       "id": "elementalist.unstable-orb",
