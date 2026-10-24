@@ -5,16 +5,16 @@
   "surface": "worn-stone",
   "boundary": "walls",
   "ground": { "texture": "cave-rock", "tint": "#646068", "scale": 2.2 },
-  "walls": { "height": 1.8, "low": 0.32, "alt": 3, "inner": "#8c8886" },
+  "walls": { "height": 1.8, "low": 0.32, "alt": 3, "inner": "#8c8886", "sconce": { "piece": "wall-torch", "every": 4 } },
   "palette": { "stone": "#7c7876", "stoneDark": "#4e4b4d", "stoneLight": "#86817c", "glowCold": "#9fb4d8", "banner": "#3f2452", "crystal": "#8a62d0" },
   "light": {
-    "sky": "#d6daf0",
+    "sky": "#a8b0d0",
     "ground": "#2a2632",
-    "hemi": 0.85,
-    "sun": "#e8e4ff",
-    "sunIntensity": 1.6,
+    "hemi": 0.65,
+    "sun": "#d0d4f0",
+    "sunIntensity": 1.35,
     "env": 0.45,
-    "point": { "color": "#ffa64e", "intensity": 5.5, "distance": 6 }
+    "point": { "color": "#ff9a44", "intensity": 7, "distance": 7 }
   },
   "fog": { "color": "#1a1a24", "glow": "#2a2438", "start": 2.4, "end": 7, "morok": "#a8a8c0", "morokOpacity": 0.4 },
   "entrance": null,

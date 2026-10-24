@@ -8,13 +8,13 @@
   "walls": { "height": 1.6, "low": 0.3, "alt": 3, "inner": "#a08c76", "sconce": { "piece": "wall-torch", "every": 3 } },
   "palette": { "stone": "#94806b", "stoneDark": "#62524a", "stoneLight": "#a8927a", "wood": "#8c5c36", "woodDark": "#5a3b24" },
   "light": {
-    "sky": "#ffe2b6",
-    "ground": "#3c2c22",
-    "hemi": 0.9,
-    "sun": "#ffd6a0",
-    "sunIntensity": 1.75,
+    "sky": "#9aa4c0",
+    "ground": "#2a2018",
+    "hemi": 0.62,
+    "sun": "#c4cce4",
+    "sunIntensity": 1.2,
     "env": 0.35,
-    "point": { "color": "#ffac58", "intensity": 5, "distance": 6 }
+    "point": { "color": "#ff9c48", "intensity": 7, "distance": 7 }
   },
   "fog": { "color": "#1d1612", "glow": "#2c2018", "start": 2.0, "end": 6, "morok": "#aba8b2", "morokOpacity": 0.35 },
   "entrance": "stairs",

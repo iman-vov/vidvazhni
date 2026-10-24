@@ -8,13 +8,13 @@
   "walls": { "height": 1.0, "low": 0.4, "alt": 3, "inner": "#7a6a52" },
   "palette": { "leaf": "#6f8240", "leafDark": "#3e5632", "leafWarm": "#b87a3c", "bark": "#5a4430", "moss": "#6f8a42" },
   "light": {
-    "sky": "#ffcf9e",
+    "sky": "#9eaac8",
     "ground": "#2e3442",
-    "hemi": 1.0,
+    "hemi": 0.72,
     "sun": "#ffbd7e",
-    "sunIntensity": 1.95,
+    "sunIntensity": 1.7,
     "env": 0.4,
-    "point": { "color": "#ffc260", "intensity": 5, "distance": 7 }
+    "point": { "color": "#ffc260", "intensity": 6, "distance": 7 }
   },
   "fog": { "color": "#2a2e3a", "glow": "#6c5262", "start": 3.2, "end": 11, "morok": "#b8bcc8", "morokOpacity": 0.45 },
   "entrance": "lantern-post",

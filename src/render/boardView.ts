@@ -23,6 +23,7 @@ import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from '.
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
+import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
@@ -159,6 +160,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     hold: (x, y) => onHold(x, y),
     changed: () => requestRender(),
   });
+  // Ambient occlusion, colour grade and vignette (medium and high); low renders straight through.
+  const post = new BoardPost(renderer, scene, camera.camera);
 
   // «Reset view»: shown only while the camera is away from home.
   let resetButton: HTMLButtonElement | null = null;
@@ -209,6 +212,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const shadows = preset.shadows !== 'none';
     renderer.shadowMap.enabled = shadows;
     sun.castShadow = shadows;
+    post.configure(renderer, preset);
+    post.setSize(root.clientWidth, root.clientHeight, renderer.getPixelRatio());
     if (shadows && sun.shadow.mapSize.x !== preset.shadowMapSize) {
       sun.shadow.mapSize.set(preset.shadowMapSize, preset.shadowMapSize);
       sun.shadow.map?.dispose();
@@ -284,7 +289,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.spinGlow(t);
     }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
-    renderer.render(scene, camera.camera);
+    post.render();
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
     if (resetButton) resetButton.hidden = camera.atHome;
   }
@@ -331,7 +336,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (w === 0 || h === 0) return;
     renderer.setSize(w, h, false);
     camera.resize(w, h);
-    renderer.render(scene, camera.camera);
+    post.setSize(w, h, renderer.getPixelRatio());
+    post.render();
     overlay.update(camera.camera, w, h);
   }
 
@@ -471,6 +477,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (scenario) {
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
+      post.setGrade(environment.grade);
       tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null, environment.defaultBoundary);
     }
     tiles.syncRooms(s, c);
@@ -1347,6 +1354,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     disposeFigureParts(parts);
     envTexture?.dispose();
     overlay.dispose();
+    post.dispose();
     renderer.dispose();
     root.remove();
     hexListeners.clear();

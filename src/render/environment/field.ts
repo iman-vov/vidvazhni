@@ -69,9 +69,11 @@ export function bakeField(layout: EnvLayout, def: EnvironmentDef, n = 160): Fiel
       const nearHex = layout.centres[near.index]!;
       if (d > 0.02 && d < 2.3 && layout.terrain.get(hexKey(worldToHex(nearHex.x, nearHex.z))) === 'water') wet = Math.max(wet, 1 - smoothstep(1.4, 2.3, d));
       if (wet > 0.01) hasWater = true;
-      // The floor runs on under the grid unbroken: only the feet of the walls are darker.
+      // The floor runs on under the grid unbroken: the feet of the walls are darker, and the light
+      // falls off softly over the last two hexes toward the room's edges.
       const wallFoot = 1 - smoothstep(0, walled ? 0.55 : 0.4, outline);
-      const occl = wallFoot * (walled ? 0.6 : 0.3);
+      const edgeDark = 1 - smoothstep(0, 2.6, outline);
+      const occl = Math.max(wallFoot * (walled ? 0.6 : 0.3), edgeDark * (walled ? 0.34 : 0.2));
       data[o * 4] = Math.round(fog * 255);
       data[o * 4 + 2] = Math.round(wet * 255);
       data[o * 4 + 3] = Math.round(occl * 255);

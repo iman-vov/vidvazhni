@@ -14,12 +14,15 @@ export interface RendererPreset {
    *  model including the walls and props around the board. */
   shadows: 'none' | 'heroes' | 'figures' | 'all';
   shadowMapSize: number;
+  /** Finishing pass (post.ts): none, the location's colour grade with a vignette, or that plus
+   *  screen-space ambient occlusion. */
+  post: 'none' | 'grade' | 'ao';
 }
 
 export const RENDERER_PRESETS: Record<GraphicsQuality, RendererPreset> = {
-  low: { maxPixelRatio: 1, antialias: false, shadows: 'none', shadowMapSize: 0 },
-  medium: { maxPixelRatio: 1.5, antialias: true, shadows: 'figures', shadowMapSize: 1024 },
-  high: { maxPixelRatio: 2, antialias: true, shadows: 'all', shadowMapSize: 2048 },
+  low: { maxPixelRatio: 1, antialias: false, shadows: 'none', shadowMapSize: 0, post: 'none' },
+  medium: { maxPixelRatio: 1.5, antialias: true, shadows: 'figures', shadowMapSize: 1024, post: 'grade' },
+  high: { maxPixelRatio: 2, antialias: true, shadows: 'all', shadowMapSize: 2048, post: 'ao' },
 };
 
 const STORAGE_KEY = 'vidvazhni.graphicsQuality';

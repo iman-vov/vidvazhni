@@ -17,12 +17,14 @@ import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
 import { surfaceTexture } from '../surfaces';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
+import type { ColorGrade } from '../post';
 import type { GraphicsQuality } from '../quality';
 import { environmentFor } from './data';
 import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
 import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
 import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
+import { atmosphereFor } from './atmosphere';
 import { Morok } from './morok';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
@@ -338,6 +340,11 @@ export class BoardEnvironment {
     if (!this.veil.has(room)) return;
     this.veil.set(room, 1 - Math.min(1, Math.max(0, k)));
     this.applyVeil();
+  }
+
+  /** The location's colour grade and vignette (post.ts, medium and high). */
+  get grade(): ColorGrade {
+    return atmosphereFor(this.def?.id).grade;
   }
 
   /** Sets the location's light, background and image-light strength on the board's scene. */
