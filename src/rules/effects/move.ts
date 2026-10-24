@@ -4,6 +4,7 @@ import type { Step } from '../content';
 import { validatePath } from '../geometry';
 import { DIRECTIONS, add, areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { passiveItemValue } from '../items';
+import { moveObstacleError, pushObstacleAside } from '../obstacles';
 import { addNewGroupsToOrder } from '../round';
 import { doorLocked } from '../scenarioRules';
 import { revealRoom } from '../setup';
@@ -14,9 +15,17 @@ import type { StepResult } from './support';
 type S<T extends Step['type']> = Extract<Step, { type: T }>;
 type MoveTask = Extract<EngineTask, { t: 'move' }>;
 
-/** A hero's chosen move. A closed door may only be the last hex of the path. */
+/** A hero's chosen move. A closed door may only be the last hex of the path. Instead of a path the
+ *  hero may spend the move pushing an adjacent movable obstacle aside (`choice.moveObstacle`). */
 export function performMove(ctx: Ctx, f: Figure, step: S<'move'>, choice: StepChoice, bonus = 0): StepResult {
   if (f.conditions.immobilize) return 'immobilized';
+  if (choice.moveObstacle) {
+    if (choice.path?.length) return 'either move or push an obstacle aside';
+    const hex = choice.moveObstacle;
+    const err = moveObstacleError(ctx, f, hex);
+    if (err) return err;
+    return () => pushObstacleAside(ctx, f.id, hex);
+  }
   const path = choice.path ?? [];
   if (path.length === 0) return 'choose a path';
   const penalty = f.kind === 'hero' ? passiveItemValue(ctx, f, 'movePenalty') : 0;

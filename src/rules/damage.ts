@@ -3,6 +3,7 @@
 import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
+import { isShieldItem, readyItems } from './items';
 import { adjustDamage, checkBossPhase, onHeroExhausted, onMonsterDied } from './scenarioRules';
 import type { CardId, EngineTask, Figure, HeroState } from './state';
 import type { Variants } from './variants';
@@ -39,7 +40,9 @@ export function runDamage(ctx: Ctx, task: DamageTask): boolean {
     if (isPresent(target)) applyConditions(ctx, target, task.conditions);
     return true;
   }
-  if (target.kind === 'hero' && task.avoidable && canAvoidDamage(target)) {
+  // The window also opens for attack damage when the hero carries a ready shield item.
+  const shieldItem = !!task.attack && target.kind === 'hero' && readyItems(ctx, target, (d) => isShieldItem(ctx, d)).length > 0;
+  if (target.kind === 'hero' && task.avoidable && (canAvoidDamage(target) || shieldItem)) {
     // Sources are a figure id, 'trap', 'hazard' or 'condition' (wound).
     ctx.s.pending = { kind: 'avoidDamage', heroId: target.id, amount, source: task.source };
     return false;
@@ -63,6 +66,7 @@ export function resolveAvoidDamage(
   if (!task || task.t !== 'damage' || task.targetId !== heroId) return 'no damage to avoid';
   const h = hero(ctx.s, heroId);
   let lost: CardId[] = [];
+  if (choice.kind !== 'take' && !canAvoidDamage(h)) return 'not enough cards to avoid damage';
   if (choice.kind === 'loseHand') {
     if (!h.hand.includes(choice.cardId)) return 'card not in hand';
     lost = [choice.cardId];

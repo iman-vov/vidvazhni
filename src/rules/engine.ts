@@ -10,7 +10,7 @@ import { createGame as buildGame } from './setup';
 import type { Action, ApplyResult, GameSetup, GameState } from './state';
 import { endTurn, interact, resolveStep, reviveAlly, run, skipStep, startHalf, surge } from './turn';
 import { resolveFadeOut } from './special/fadeOut';
-import { useItem } from './items';
+import { passReaction, useItem } from './items';
 
 /** Builds the initial state: start room revealed, monsters spawned, decks shuffled with the seed,
  *  phase `selectCards` (or `chooseHandBeforeScenario` when a hand is smaller than the deck). */
@@ -78,6 +78,8 @@ function dispatch(ctx: Ctx, action: Exclude<Action, { type: 'undo' }>): string |
       return reviveAlly(ctx, action.heroId, action.cardId, action.half, action.targetId);
     case 'useItem':
       return useItem(ctx, action.heroId, action.itemId);
+    case 'passReaction':
+      return passReaction(ctx, action.heroId);
     case 'interact':
       return interact(ctx, action.heroId, action.cardId, action.half, action.objectId);
     case 'fadeOut':

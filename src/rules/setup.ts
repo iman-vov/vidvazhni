@@ -140,7 +140,12 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     return s.board.tiles[key];
   };
   for (const hex of room.hexes) tile(hex);
-  for (const o of room.obstacles ?? []) tile(o.hex).obstacle = true;
+  for (const o of room.obstacles ?? []) {
+    const t = tile(o.hex);
+    t.obstacle = true;
+    if (o.breakable) t.breakable = { hp: o.breakable.hp, maxHp: o.breakable.hp };
+    if (o.movable) t.movable = true;
+  }
   for (const t of room.terrain ?? []) tile(t.hex).terrain = t.terrain;
   for (const t of room.traps ?? []) tile(t.hex).trap = { damage: t.damage ?? trapDamage(s), conditions: t.conditions ?? [] };
   for (const c of room.coins ?? []) {
@@ -159,10 +164,22 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     if (!t.door) {
       t.door = { to: d.to, open: s.board.revealedRooms.includes(d.to) };
       if (d.key) t.door.key = d.key;
+      // Rubble or a barricade in the doorway blocks like an obstacle until broken or pushed aside.
+      if (!t.door.open && d.breakable) t.door.breakable = { hp: d.breakable.hp, maxHp: d.breakable.hp };
+      if (!t.door.open && d.movable) t.door.movable = true;
+      if (t.door.breakable || t.door.movable) t.obstacle = true;
     }
   }
   // Doors of already revealed rooms that lead here are now open.
-  for (const t of Object.values(s.board.tiles)) if (t.door && t.door.to === roomId) t.door.open = true;
+  for (const t of Object.values(s.board.tiles)) {
+    if (!t.door || t.door.to !== roomId) continue;
+    t.door.open = true;
+    if (t.door.breakable || t.door.movable) {
+      delete t.door.breakable;
+      delete t.door.movable;
+      delete t.obstacle;
+    }
+  }
   for (const [a, b] of room.walls ?? []) {
     const ka = hexKey(a);
     const kb = hexKey(b);

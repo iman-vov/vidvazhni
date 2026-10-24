@@ -137,8 +137,14 @@ export interface Tile {
   room: string;
   terrain: 'normal' | 'difficult' | 'hazardous' | 'water';
   obstacle?: boolean;
+  /** A breakable obstacle (mining crate, rubble): heroes attack it; at 0 hp it is gone. */
+  breakable?: { hp: number; maxHp: number };
+  /** A movable obstacle (barricade, cart): an adjacent hero spends a move step to push it aside. */
+  movable?: boolean;
   trap?: { damage: number; conditions: ConditionId[] };
-  door?: { to: string; open: boolean; key?: string };
+  /** A breakable or movable door blocks like an obstacle (`obstacle` is set) until it is broken
+   *  or pushed aside; then it opens like a door and reveals the room behind. */
+  door?: { to: string; open: boolean; key?: string; breakable?: { hp: number; maxHp: number }; movable?: boolean };
   coins?: number;
   chest?: string;
   object?: { id: string; kind: string; state?: string };
@@ -190,7 +196,11 @@ export type Pending =
   | { kind: 'heroTurn'; heroId: FigureId }
   /** A step that needs a choice from the player (move destination, targets, element…). */
   | { kind: 'stepChoice'; heroId: FigureId; step: Step; stepIndex: number }
+  /** Damage is coming: take it, avoid it with cards, or (attack damage) use a shield item first. */
   | { kind: 'avoidDamage'; heroId: FigureId; amount: number; source: FigureId | 'trap' | 'hazard' | 'condition' }
+  /** A monster is about to attack the hero, before the modifier is drawn: use an item that gives the
+   *  attack disadvantage (Шкіряний шолом), or pass. */
+  | { kind: 'beforeAttacked'; heroId: FigureId; attackerId: FigureId }
   | { kind: 'endOfRound'; heroIds: FigureId[] } // short rest decisions
   | { kind: 'longRestLoss'; heroId: FigureId }
   | { kind: 'shortRestReroll'; heroId: FigureId; lostCard: CardId }
@@ -274,10 +284,21 @@ export type EngineTask =
   | { t: 'figureStep'; figureId: FigureId; step: Step; targets: FigureId[] }
   | { t: 'endFigureTurn'; figureId: FigureId }
   | { t: 'move'; figureId: FigureId; path: Hex[]; jump?: boolean; fly?: boolean; forced?: 'push' | 'pull' }
-  | { t: 'attackTarget'; attackerId: FigureId; targetId: FigureId; spec: AttackSpec; pushPath?: Hex[] }
+  /** `reacted`: the target hero's before-attacked window is over. */
+  | { t: 'attackTarget'; attackerId: FigureId; targetId: FigureId; spec: AttackSpec; pushPath?: Hex[]; reacted?: boolean }
   | { t: 'afterHit'; attackerId: FigureId; targetId: FigureId; spec: AttackSpec; pushPath?: Hex[] }
   | { t: 'retaliate'; attackerId: FigureId; targetId: FigureId }
-  | { t: 'damage'; targetId: FigureId; amount: number; source: string; avoidable: boolean; conditions?: ConditionId[] }
+  /** `attack`: damage of an attack (value after the modifier, the shield counted, pierce), so a
+   *  shield item used in the damage window can lower `amount`. */
+  | {
+      t: 'damage';
+      targetId: FigureId;
+      amount: number;
+      source: string;
+      avoidable: boolean;
+      conditions?: ConditionId[];
+      attack?: { value: number; shield: number; pierce: number };
+    }
   | { t: 'stepDone' }
   | { t: 'endRound' }
   /** `heroIds` = heroes still to decide; absent until the offer is made. */
@@ -298,6 +319,8 @@ export interface StepChoice {
   consume?: boolean; // use the step's consume bonus
   pushPaths?: Record<FigureId, Hex[]>; // push/pull destinations per target
   elements?: ElementId[]; // consume of `count` > 1 `any` elements (Буря стихій)
+  obstacles?: Hex[]; // attack: breakable obstacles hit (with or instead of figure targets)
+  moveObstacle?: Hex; // move: spend the move pushing an adjacent movable obstacle aside
 }
 
 export type Action =
@@ -316,8 +339,12 @@ export type Action =
   | { type: 'surge'; heroId: FigureId }
   /** Fork «Підняти друга»: spend the top or bottom action of a card to raise an adjacent downed ally. */
   | { type: 'reviveAlly'; heroId: FigureId; cardId: CardId; half: 'top' | 'bottom'; targetId: FigureId }
-  /** Uses a carried item during the hero's own turn; an attack or move bonus applies to the pending step. */
+  /** Uses a carried item during the hero's own turn (an attack or move bonus applies to the pending
+   *  step), or as a reaction: a shield item in the `avoidDamage` window of attack damage, a
+   *  disadvantage item in the `beforeAttacked` window (see items.ts). */
   | { type: 'useItem'; heroId: FigureId; itemId: string }
+  /** Closes the `beforeAttacked` window without using an item. */
+  | { type: 'passReaction'; heroId: FigureId }
   /** Spends the top or bottom action of a selected card on a scenario object next to the hero
    *  (s3: top action lowers the sluice lever; s5: bottom action lights a brazier). */
   | { type: 'interact'; heroId: FigureId; cardId: CardId; half: 'top' | 'bottom'; objectId: string }
@@ -379,6 +406,25 @@ export type GameEvent =
   | { type: 'roundEnded'; round: number }
   | { type: 'itemUsed'; heroId: FigureId; itemId: string; to: 'spent' | 'lost' }
   | { type: 'itemsRefreshed'; heroId: FigureId; itemIds: string[] }
+  /** An item used as a reaction (after its `itemUsed`): in the damage window a shield (`shield`,
+   *  the damage before and after it), before an attack the attack's disadvantage. */
+  | {
+      type: 'itemReaction';
+      heroId: FigureId;
+      itemId: string;
+      window: 'damage' | 'beforeAttacked';
+      shield?: number;
+      damageBefore?: number;
+      damage?: number;
+      disadvantage?: true;
+      attackerId?: FigureId;
+    }
+  /** A breakable obstacle (or door) was hit: `damage` dealt, `hp` left (> 0). */
+  | { type: 'obstacleDamaged'; hex: Hex; damage: number; hp: number; byId: FigureId }
+  /** A breakable obstacle (or door) reached 0 hp and is gone; a door then opens (`roomRevealed`). */
+  | { type: 'obstacleDestroyed'; hex: Hex; byId: FigureId; door?: true }
+  /** A movable obstacle (or door) was pushed aside; a door then opens (`roomRevealed`). */
+  | { type: 'obstacleMoved'; hex: Hex; byId: FigureId; door?: true }
   | { type: 'undone' }
   /** A scenario object changed state (lever `down`, brazier `lit` / `unlit`); `byId` = who did it. */
   | { type: 'objectChanged'; objectId: string; hex: Hex; state: string; byId?: FigureId }

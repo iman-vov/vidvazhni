@@ -8,8 +8,9 @@ import { withConsumeBonus } from './effects/index';
 import { availableElements, canConsume, elementIds, ORBS } from './elements';
 import { apply } from './engine';
 import { reachableHexes } from './geometry';
-import { areAdjacent, hexesInRadius, neighbors, type Hex } from './hex';
+import { areAdjacent, distance, hexesInRadius, neighbors, type Hex } from './hex';
 import { itemDef, itemEffect } from './items';
+import { interactiveObstacles } from './obstacles';
 import { behaviourCard, monsterInitiative, typesOnBoard } from './round';
 import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
 import { availableCards } from './setup';
@@ -91,6 +92,13 @@ function candidateActions(state: GameState, content: Content): Action[] {
         const [a, b] = h.discard;
         if (a && b) out.push({ type: 'avoidDamage', heroId: h.id, choice: { kind: 'loseDiscard', cardIds: [a, b] } });
       }
+      for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
+      break;
+    }
+    case 'beforeAttacked': {
+      const h = hero(p.heroId);
+      out.push({ type: 'passReaction', heroId: h.id });
+      for (const it of h.items ?? []) if (it.state === 'ready') out.push({ type: 'useItem', heroId: h.id, itemId: it.id });
       break;
     }
     case 'endOfRound':
@@ -160,6 +168,7 @@ function stepChoices(state: GameState, content: Content, h: HeroState, step: Ste
       const opts = { figureId: h.id, ...(step.jump ? { jump: true } : {}), ...(step.fly ? { fly: true } : {}) };
       const bonus = step.consume?.add?.move ?? 0;
       for (const [, r] of reachableHexes(state, step.value + bonus, opts)) if (r.path.length > 0) base.push({ path: r.path });
+      for (const o of interactiveObstacles(state)) if (o.movable && areAdjacent(o.hex, h.hex)) base.push({ moveObstacle: o.hex });
       break;
     }
     case 'attack': {
@@ -173,6 +182,9 @@ function stepChoices(state: GameState, content: Content, h: HeroState, step: Ste
       } else {
         const extra = step.consume?.add?.targets ?? 0;
         for (const set of combos(enemies, (step.targets ?? 1) + extra)) base.push({ targets: set });
+        for (const o of interactiveObstacles(state)) {
+          if (o.breakable && distance(o.hex, h.hex) <= (step.range ?? 1) + (step.consume?.add?.range ?? 0)) base.push({ obstacles: [o.hex] });
+        }
       }
       break;
     }
@@ -511,6 +523,47 @@ export function attackPrompts(state: GameState, content: Content, heroId: Figure
   }
   return out;
 }
+
+export interface ReactionPrompt extends UsableItem {
+  window: 'damage' | 'beforeAttacked';
+  /** Damage window: the shield the item gives and the incoming damage without and with it. */
+  shield?: number;
+  damage?: number;
+  reduced?: number;
+  /** Before-attacked window: the attack gets disadvantage. */
+  disadvantage?: true;
+}
+
+/** The items the pending reaction window offers («Кольчуга: Щит 1?» while damage is coming,
+ *  «Шкіряний шолом: атака з вадою?» before a monster's attack), with what each would change.
+ *  Works in the base rules too: the windows are rules, not the itemPrompts fork. */
+export function reactionPrompts(state: GameState, content: Content): ReactionPrompt[] {
+  const p = state.pending;
+  if (p?.kind !== 'avoidDamage' && p?.kind !== 'beforeAttacked') return [];
+  const h = state.figures[p.heroId];
+  if (h?.kind !== 'hero') return [];
+  const out: ReactionPrompt[] = [];
+  for (const it of h.items ?? []) {
+    const def = itemDef({ c: content }, it.id);
+    if (!def || it.state !== 'ready') continue;
+    const r = apply(state, { type: 'useItem', heroId: h.id, itemId: it.id }, content);
+    if (!r.ok) continue;
+    const effect = itemEffect({ s: state }, def);
+    const base: UsableItem = { itemId: it.id, nameKey: `item.${it.id}`, slot: def.slot, use: def.use, effect };
+    if (p.kind === 'beforeAttacked') {
+      out.push({ ...base, window: 'beforeAttacked', disadvantage: true });
+      continue;
+    }
+    const ev = r.events.find((e): e is Extract<GameEvent, { type: 'itemReaction' }> => e.type === 'itemReaction');
+    out.push({ ...base, window: 'damage', shield: ev?.shield ?? 0, damage: p.amount, reduced: ev?.damage ?? p.amount });
+  }
+  return out;
+}
+
+/** Obstacles and closed doors the heroes can break (`breakable`, hp left) or push aside
+ *  (`movable`): attacked with `resolveStep { obstacles: [hex] }`, moved with
+ *  `resolveStep { moveObstacle: hex }` during a move step. */
+export { interactiveObstacles } from './obstacles';
 
 // ─── Scenarios ─────────────────────────────────────────────────────────────
 

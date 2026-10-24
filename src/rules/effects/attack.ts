@@ -5,15 +5,16 @@
 import type { AttackBonus, AttackBonusCondition, ConditionId, Step } from '../content';
 import { addCondition } from '../conditions';
 import { areaHexes } from '../geometry';
-import { areAdjacent, distance, hexEquals } from '../hex';
+import { areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { applyModifier, drawForAttack } from '../modifiers';
 import { findCard } from '../damage';
-import { passiveItemValue } from '../items';
+import { isAttackedItem, passiveItemValue, readyItems } from '../items';
 import { moveActiveOut } from '../round';
+import { breakableOf, hitObstacle, obstacleTargetError } from '../obstacles';
 import { scenarioShield } from '../scenarioRules';
 import { FOLLOW_UP_BONUS } from '../variants';
 import type { AttackSpec, EngineTask, Figure, HeroState, ModifierDeck, StepChoice } from '../state';
-import { emit, enemiesOf, figureAt, isPresent, schedule, wallBetween, type Ctx } from './context';
+import { emit, enemiesOf, figureAt, isPresent, schedule, tileAt, wallBetween, type Ctx } from './context';
 import { autoForcedPath, forcedMove, validForcedPath } from './move';
 import { curseFigure, inRangeWithSight, type StepResult } from './support';
 
@@ -164,6 +165,8 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
   if (f.conditions.disarm) return 'disarmed';
   const step = withRangeGrants(ctx, f, baseStep);
   let targets: Figure[];
+  // Breakable obstacles hit by this attack (heroes only; no modifier, see obstacles.ts).
+  let obstacles: Hex[] = [];
   if (step.targetAll === 'adjacentEnemies') {
     targets = enemiesOf(ctx.s, f).filter((e) => areAdjacent(e.hex, f.hex) && !wallBetween(ctx.s, e.hex, f.hex) && !e.conditions.invisible);
   } else if (step.area) {
@@ -177,11 +180,24 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
       .filter((t): t is Figure => !!t && enemiesOf(ctx.s, f).some((e) => e.id === t.id) && !t.conditions.invisible);
     // Ranged areas: the anchor is in range; every target needs line of sight.
     if (!fromSelf) targets = targets.filter((t) => hexEquals(t.hex, anchor) || inRangeWithSight(ctx, f.hex, t.hex, Infinity));
+    if (f.kind === 'hero') {
+      obstacles = hexes.filter(
+        (h) => !!breakableOf(tileAt(ctx.s, h)) && (fromSelf || hexEquals(h, anchor) || inRangeWithSight(ctx, f.hex, h, Infinity)),
+      );
+    }
   } else {
     const ids = choice.targets ?? [];
     const max = step.targets ?? 1;
-    if (ids.length === 0) return 'choose targets';
-    if (ids.length > max || new Set(ids).size !== ids.length) return `at most ${max} targets`;
+    obstacles = choice.obstacles ?? [];
+    if (ids.length + obstacles.length === 0) return 'choose targets';
+    const keys = obstacles.map((h) => `${h[0]},${h[1]}`);
+    if (ids.length + obstacles.length > max || new Set(ids).size !== ids.length || new Set(keys).size !== keys.length) {
+      return `at most ${max} targets`;
+    }
+    for (const h of obstacles) {
+      const err = obstacleTargetError(ctx, f, h, step.range ?? 1);
+      if (err) return err;
+    }
     targets = [];
     for (const id of ids) {
       const t = ctx.s.figures[id];
@@ -189,7 +205,7 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
       targets.push(t);
     }
   }
-  if (targets.length === 0) return 'no targets';
+  if (targets.length === 0 && obstacles.length === 0) return 'no targets';
   const forced = step.push ? 'push' : step.pull ? 'pull' : null;
   for (const t of targets) {
     const path = choice.pushPaths?.[t.id];
@@ -203,6 +219,7 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
       const path = choice.pushPaths?.[t.id];
       schedule(ctx, { t: 'attackTarget', attackerId: f.id, targetId: t.id, spec: attackSpecFor(ctx, f, t, step), ...(path ? { pushPath: path } : {}) });
     }
+    for (const h of obstacles) hitObstacle(ctx, f.id, h, step.value);
   };
 }
 
@@ -237,11 +254,23 @@ export function shieldOf(f: Figure, ctx?: Ctx): number {
   return grants + f.shields.reduce((sum, x) => sum + x.value, 0);
 }
 
-/** Task: draw the modifier and deal damage to one target. */
-export function runAttackTarget(ctx: Ctx, task: AttackTask): void {
+/** Whether the hero gets a before-attacked window: a ready item that gives the attack
+ *  disadvantage, and the attack has none yet. */
+function opensAttackedWindow(ctx: Ctx, target: Figure, task: AttackTask): boolean {
+  if (target.kind !== 'hero' || task.reacted || task.spec.disadvantage || target.attackedDisadvantage) return false;
+  return readyItems(ctx, target, (d) => isAttackedItem(ctx, d)).length > 0;
+}
+
+/** Task: draw the modifier and deal damage to one target. Returns false while the target hero's
+ *  before-attacked window is open (the task stays at the front of the queue). */
+export function runAttackTarget(ctx: Ctx, task: AttackTask): boolean {
   const attacker = ctx.s.figures[task.attackerId];
   const target = ctx.s.figures[task.targetId];
-  if (!isPresent(attacker) || !isPresent(target)) return;
+  if (!isPresent(attacker) || !isPresent(target)) return true;
+  if (opensAttackedWindow(ctx, target, task)) {
+    ctx.s.pending = { kind: 'beforeAttacked', heroId: target.id, attackerId: attacker.id };
+    return false;
+  }
   const spec = task.spec;
   const value = spec.value + (target.conditions.poison ? 1 : 0);
   const { drawn, chosen } = drawForAttack(ctx.s.rng, modifierDeckOf(ctx, attacker), value, spec.advantage, spec.disadvantage);
@@ -271,9 +300,17 @@ export function runAttackTarget(ctx: Ctx, task: AttackTask): void {
   if (target.kind === 'monster' && attacker.kind === 'hero' && !target.attackedBy.includes(attacker.id)) target.attackedBy.push(attacker.id);
   schedule(
     ctx,
-    { t: 'damage', targetId: target.id, amount: damage, source: attacker.id, avoidable: true },
+    {
+      t: 'damage',
+      targetId: target.id,
+      amount: damage,
+      source: attacker.id,
+      avoidable: true,
+      attack: { value: afterModifier, shield, pierce: spec.pierce },
+    },
     { t: 'afterHit', attackerId: attacker.id, targetId: target.id, spec, ...(task.pushPath ? { pushPath: task.pushPath } : {}) },
   );
+  return true;
 }
 
 /** Shields «for N attacks» lose a use per attack; the card leaves the active area at 0. */

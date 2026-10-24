@@ -82,8 +82,7 @@ function runTask(ctx: Ctx, task: EngineTask): boolean {
       runMove(ctx, task);
       return true;
     case 'attackTarget':
-      runAttackTarget(ctx, task);
-      return true;
+      return runAttackTarget(ctx, task);
     case 'afterHit':
       runAfterHit(ctx, task);
       return true;
