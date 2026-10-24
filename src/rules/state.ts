@@ -299,6 +299,8 @@ export interface GameState {
   firedEvents?: Record<string, number>;
   /** `collect` goal: objects carried into the goal zone so far. */
   delivered?: number;
+  /** Objects broken (`objects[].hp`), by id. */
+  destroyedObjects?: string[];
 }
 
 /** Resolved numbers of one attack against one target (after card, item and consume bonuses). */

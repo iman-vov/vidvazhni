@@ -227,6 +227,8 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
   for (const n of s.npcs ?? []) if (!owner.has(hexKey(n.hex))) err(`npc ${n.id} hex ${hexKey(n.hex)} is outside every room`);
   if (g.type === 'escort' && !s.npcs?.some((n) => n.id === g.npc)) err(`goal npc ${g.npc} missing`);
+  if (g.type === 'destroy' && !s.rooms.some((r) => r.objects?.some((o) => o.kind === g.kind && o.hp))) err(`goal destroys ${g.kind}, the map has none with hp`);
+  for (const o of s.rooms.flatMap((r) => r.objects ?? [])) if (o.spawn && !content.monsters[o.spawn.monster]) err(`object ${o.id} calls missing monster ${o.spawn.monster}`);
   if (g.type === 'collect') {
     const n = s.rooms.flatMap((r) => r.objects ?? []).filter((o) => o.kind === g.kind).length;
     if (n < g.count) err(`goal collects ${g.count} ${g.kind}, the map has ${n}`);

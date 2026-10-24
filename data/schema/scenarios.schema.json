@@ -542,6 +542,12 @@
           "required": ["type", "npc"],
           "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "destroy" }, "kind": { "type": "string", "minLength": 1 } },
+          "required": ["type", "kind"],
+          "additionalProperties": false
         }
       ]
     },
@@ -773,6 +779,20 @@
                     "opens": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
                   },
                   "required": ["half", "to"],
+                  "additionalProperties": false
+                },
+                "hp": { "type": "integer", "minimum": 1 },
+                "spawn": {
+                  "type": "object",
+                  "properties": {
+                    "monster": { "type": "string", "minLength": 1 },
+                    "by": {
+                      "type": "object",
+                      "properties": { "2": { "enum": ["normal", "elite"] }, "3": { "enum": ["normal", "elite"] }, "4": { "enum": ["normal", "elite"] } },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["monster", "by"],
                   "additionalProperties": false
                 }
               },

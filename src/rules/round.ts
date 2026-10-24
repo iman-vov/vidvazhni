@@ -5,6 +5,7 @@ import { exhaust, findCard, loseScenario } from './damage';
 import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
 import { decayAtEndOfRound, scenarioOrbs } from './elements';
 import { onRoundStart } from './events';
+import { objectSpawns } from './scenarioRules';
 import { shuffleIfNeeded } from './modifiers';
 import { goalReached, lostByRules, secondaryMet } from './objectives';
 import { nextInt, shuffle } from './rng';
@@ -425,6 +426,7 @@ export function startRound(ctx: Ctx): void {
   emit(ctx, { type: 'roundStarted', round: s.round });
   scenarioOrbs(ctx, 'eachRound');
   onRoundStart(ctx);
+  objectSpawns(ctx);
   drawIntents(ctx);
 }
 

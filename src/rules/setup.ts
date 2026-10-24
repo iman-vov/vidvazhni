@@ -185,6 +185,11 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     t.object = { id: o.id, kind: o.kind, ...(o.state !== undefined ? { state: o.state } : {}) };
     // Lever, brazier, millstones: impassable like an obstacle; a hero acts from a neighbouring hex.
     if (o.blocks) t.obstacle = true;
+    // A totem: breakable like a crate.
+    if (o.hp) {
+      t.obstacle = true;
+      t.breakable = { hp: o.hp, maxHp: o.hp };
+    }
   }
   for (const d of room.doors ?? []) {
     const t = tile(d.hex);

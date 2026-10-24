@@ -476,6 +476,7 @@
   "objective.escape": "Flucht: {done}/{of} am Ausgang",
   "objective.collect": "Sammeln: {done}/{of}",
   "objective.escort": "Geleit · Leben {done}/{of}",
+  "objective.destroy": "Zerstören: {done}/{of}",
   "objective.roundsLeft": "Verbleibende Runden: {n}",
   "objective.secondary.chestOpened": "Die Truhe öffnen",
   "objective.secondary.noneExhausted": "Niemand erschöpft",

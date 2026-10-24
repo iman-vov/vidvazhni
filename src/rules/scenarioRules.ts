@@ -15,10 +15,11 @@ import type { Content, DropDef, RoomDef, ScenarioDef, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
 import { openDoor } from './effects/move';
 import { infuse } from './elements';
-import { onTaggedMonsterDied } from './events';
+import { onTaggedMonsterDied, spawnHex } from './events';
+import { spawnKey, spawnMonster } from './setup';
 import { goalZone, inZone, npcId } from './objectives';
 import { hasLineOfSight } from './geometry';
-import { areAdjacent, distance, hexKey, parseHexKey, type Hex } from './hex';
+import { areAdjacent, distance, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
 import type { Figure, GameState, HeroState, MonsterState, SummonState, Tile } from './state';
 
@@ -240,6 +241,19 @@ export function npcGoal(ctx: Pick<Ctx, 's' | 'c'>, npc: SummonState): Hex[] | nu
   if (!scenario || !heroes(ctx.s).some((h) => isPresent(h) && distance(h.hex, npc.hex) <= NPC_LEAD)) return null;
   const zone = goalZone(scenario);
   return zone.length ? zone : null;
+}
+
+/** Start of a round: every standing object with `spawn` (a totem) calls a monster next to it. */
+export function objectSpawns(ctx: Ctx): void {
+  const key = spawnKey(heroes(ctx.s).length);
+  for (const room of scenarioOf(ctx)?.rooms ?? []) {
+    for (const o of room.objects ?? []) {
+      const rank = o.spawn?.by[key];
+      if (!o.spawn || !rank || ctx.s.board.tiles[hexKey(o.hex)]?.object?.id !== o.id) continue;
+      const hex = spawnHex(ctx.s, neighbors(o.hex).filter((n) => !wallBetween(ctx.s, n, o.hex)));
+      if (hex) spawnMonster(ctx, o.spawn.monster, rank, hex);
+    }
+  }
 }
 
 function deliver(ctx: Ctx, h: HeroState): void {

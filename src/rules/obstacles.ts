@@ -65,6 +65,12 @@ export function hitObstacle(ctx: Ctx, byId: string, hex: Hex, amount: number): v
   } else {
     delete tile.breakable;
     emit(ctx, { type: 'obstacleDestroyed', hex: at, byId });
+    if (tile.object) {
+      // A totem or a nest: gone for good, counted for the `destroy` goal.
+      (ctx.s.destroyedObjects ??= []).push(tile.object.id);
+      emit(ctx, { type: 'objectChanged', objectId: tile.object.id, hex: at, state: 'destroyed', byId });
+      delete tile.object;
+    }
   }
 }
 

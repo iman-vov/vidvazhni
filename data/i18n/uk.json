@@ -476,6 +476,7 @@
   "objective.escape": "Втеча: {done}/{of} біля виходу",
   "objective.collect": "Зібрати: {done}/{of}",
   "objective.escort": "Супровід · здоров'я {done}/{of}",
+  "objective.destroy": "Знищити: {done}/{of}",
   "objective.roundsLeft": "Раундів лишилось: {n}",
   "objective.secondary.chestOpened": "Відкрити скриню",
   "objective.secondary.noneExhausted": "Ніхто не виснажився",

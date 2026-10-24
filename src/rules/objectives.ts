@@ -1,7 +1,7 @@
 // Scenario objectives: the main goal, optional secondary goals and what the HUD shows about them.
 // Pure checks over the state; the round decides when they are applied (docs/design/missions.md).
 
-import type { Content, ScenarioDef, SecondaryGoalDef } from './content';
+import type { Content, ObjectDef, ScenarioDef, SecondaryGoalDef } from './content';
 import { activeHeroes, heroes, isPresent, monsters, type Ctx } from './effects/context';
 import { hexEquals, type Hex } from './hex';
 import type { GameState } from './state';
@@ -59,11 +59,19 @@ export function goalReached(ctx: Ctx): boolean {
       const npc = s.figures[npcId(goal.npc)];
       return isPresent(npc) && inZone(zone, npc.hex);
     }
+    case 'destroy': {
+      const all = objectsOfKind(scenario, goal.kind);
+      return all.length > 0 && all.every((o) => (s.destroyedObjects ?? []).includes(o.id));
+    }
     case 'survive':
       return living.length > 0 && s.round >= goal.rounds;
     case 'defend':
       return living.length > 0 && s.round >= goal.rounds && !monsterInZone(s, zone);
   }
+}
+
+function objectsOfKind(scenario: ScenarioDef, kind: string): ObjectDef[] {
+  return scenario.rooms.flatMap((r) => r.objects ?? []).filter((o) => o.kind === kind);
 }
 
 function monsterInZone(s: GameState, zone: Hex[]): boolean {
@@ -149,6 +157,11 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
       status.done = npc.hp;
       status.of = npc.maxHp;
     }
+  }
+  if (goal.type === 'destroy') {
+    const all = objectsOfKind(scenario, goal.kind);
+    status.done = all.filter((o) => (s.destroyedObjects ?? []).includes(o.id)).length;
+    status.of = all.length;
   }
   if (goal.type === 'killAll') status.done = monsters(s).filter(isPresent).length;
   if (goal.type === 'survive' || goal.type === 'defend') {

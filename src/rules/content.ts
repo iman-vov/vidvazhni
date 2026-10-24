@@ -334,6 +334,11 @@ export interface ObjectDef {
    *  `from` (default: its initial state) to `to`; the doors on `opens` open (a floor lever opening
    *  a locked door on the other side of the room). */
   interact?: { half: 'top' | 'bottom'; from?: string; to: string; opens?: Hex[] };
+  /** Heroes break it like a breakable obstacle (a totem, a nest); broken, it leaves the board. */
+  hp?: number;
+  /** While it stands, a monster of the rank for the party size appears next to it at the start of
+   *  every round. */
+  spawn?: { monster: string; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>> };
 }
 
 /** A friendly figure without an owner (the shepherd, a freed prisoner): it appears with its room,
@@ -372,7 +377,9 @@ export type ScenarioGoal =
    *  the zone: a hero ending its turn there hands over what it carries. */
   | { type: 'collect'; kind: string; count: number; to?: Hex[]; zone?: string }
   /** Bring the NPC `npc` into the zone (it walks there while a hero is near); its death loses. */
-  | { type: 'escort'; npc: string; to?: Hex[]; zone?: string };
+  | { type: 'escort'; npc: string; to?: Hex[]; zone?: string }
+  /** Break every object of `kind` (`objects[].hp`), the ones in rooms not yet revealed too. */
+  | { type: 'destroy'; kind: string };
 
 /** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
  *  reached by the end of round `rounds` (the escape's timer). */
