@@ -332,6 +332,9 @@ export interface ItemDef {
   effect: Step[];
   /** Replaces `effect` when the orbs fork is on (Амулет світла: no Light orb). */
   forkEffect?: Step[];
+  /** The ★ version, carried as id `<id>+`: bought for `price`, its effect replaces `effect`
+   *  (and `forkEffect`, which falls back to the upgraded `effect`). */
+  upgrade?: { price: number; effect: Step[]; forkEffect?: Step[] };
 }
 
 export interface BattleGoalDef {

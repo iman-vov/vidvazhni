@@ -25,8 +25,21 @@ type SpecialStep = Extract<Step, { type: 'special' }>;
 /** Item specials that change the pending step instead of doing something on their own. */
 export const STEP_ITEM_SPECIALS: readonly string[] = ['meleeAttackBonus', 'moveBonus', 'jumpOnMove'];
 
+/** Suffix of an upgraded (★) item id: `dagger+`. */
+export const UPGRADED = '+';
+
+/** The item, or for `<id>+` its ★ version: the base item with the upgrade's effect. */
 export function itemDef(ctx: { c: Ctx['c'] }, id: string): ItemDef | undefined {
-  return ctx.c.items?.[id];
+  if (!id.endsWith(UPGRADED)) return ctx.c.items?.[id];
+  const base = ctx.c.items?.[id.slice(0, -UPGRADED.length)];
+  if (!base?.upgrade) return undefined;
+  const { upgrade, ...rest } = base;
+  return { ...rest, id, effect: upgrade.effect, forkEffect: upgrade.forkEffect };
+}
+
+/** i18n key of the item's name: `item.<id>`, `item.<id>.plus` for the ★ version. */
+export function itemNameKey(id: string): string {
+  return id.endsWith(UPGRADED) ? `item.${id.slice(0, -UPGRADED.length)}.plus` : `item.${id}`;
 }
 
 /** The item's effect under these rules (`forkEffect` with the orbs fork). */

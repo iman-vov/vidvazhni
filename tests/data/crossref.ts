@@ -42,6 +42,8 @@ export function allSteps(content: Content): Step[] {
   for (const item of Object.values(content.items ?? {})) {
     add(item.effect);
     add(item.forkEffect);
+    add(item.upgrade?.effect);
+    add(item.upgrade?.forkEffect);
   }
   return out;
 }

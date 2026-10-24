@@ -56,7 +56,10 @@ describe('translations', () => {
         for (const chest of room.chests ?? []) if (chest.loot?.questItem) need.push(`questItem.${chest.loot.questItem}`);
       }
     }
-    for (const i of Object.values(content.items ?? {})) need.push(`item.${i.id}`, `slot.${i.slot}`, `use.${i.use}`);
+    for (const i of Object.values(content.items ?? {})) {
+      need.push(`item.${i.id}`, `slot.${i.slot}`, `use.${i.use}`);
+      if (i.upgrade) need.push(`item.${i.id}.plus`);
+    }
     for (const g of Object.values(content.battleGoals ?? {})) need.push(`goal.${g.id}`, `goal.${g.id}.text`);
     for (const p of Object.values(content.perks ?? {})) need.push(`perk.${p.id}`);
     for (const step of allSteps(content)) {

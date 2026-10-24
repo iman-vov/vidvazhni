@@ -5,7 +5,8 @@
     "price": 20,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }]
+    "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
   },
   {
     "id": "chainmail",
@@ -13,7 +14,8 @@
     "price": 25,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
   },
   {
     "id": "swift-boots",
@@ -21,7 +23,8 @@
     "price": 20,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 2 } }]
+    "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 2 } }],
+    "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 3 } }] }
   },
   {
     "id": "dagger",
@@ -29,7 +32,8 @@
     "price": 15,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 1 } }]
+    "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 1 } }],
+    "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 2 } }] }
   },
   {
     "id": "buckler",
@@ -37,7 +41,8 @@
     "price": 20,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }]
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
   },
   {
     "id": "healing-potion",
@@ -45,7 +50,8 @@
     "price": 10,
     "unlockedAfter": 0,
     "use": "lost",
-    "effect": [{ "type": "heal", "value": 3, "target": "self" }]
+    "effect": [{ "type": "heal", "value": 3, "target": "self" }],
+    "upgrade": { "price": 10, "effect": [{ "type": "heal", "value": 4, "target": "self" }] }
   },
   {
     "id": "strength-potion",
@@ -53,7 +59,8 @@
     "price": 15,
     "unlockedAfter": 0,
     "use": "lost",
-    "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }]
+    "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }],
+    "upgrade": { "price": 15, "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
   },
   {
     "id": "grappling-rope",
@@ -61,7 +68,8 @@
     "price": 15,
     "unlockedAfter": 0,
     "use": "spent",
-    "effect": [{ "type": "special", "name": "jumpOnMove" }]
+    "effect": [{ "type": "special", "name": "jumpOnMove" }],
+    "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "jumpOnMove" }, { "type": "special", "name": "moveBonus", "params": { "value": 1 } }] }
   },
   {
     "id": "light-amulet",
@@ -70,7 +78,8 @@
     "unlockedAfter": 3,
     "use": "lost",
     "effect": [{ "type": "infuse", "element": "light" }],
-    "forkEffect": [{ "type": "infuse", "element": "earth" }]
+    "forkEffect": [{ "type": "infuse", "element": "earth" }],
+    "upgrade": { "price": 30, "effect": [{ "type": "infuse", "element": "light" }, { "type": "heal", "value": 2, "target": "self" }], "forkEffect": [{ "type": "infuse", "element": "earth" }, { "type": "heal", "value": 2, "target": "self" }] }
   },
   {
     "id": "shadow-cloak",
@@ -78,7 +87,8 @@
     "price": 40,
     "unlockedAfter": 3,
     "use": "lost",
-    "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }]
+    "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }],
+    "upgrade": { "price": 40, "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
   },
   {
     "id": "yew-bow",
@@ -86,7 +96,8 @@
     "price": 35,
     "unlockedAfter": 3,
     "use": "passive",
-    "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 1 } }]
+    "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 1 } }],
+    "upgrade": { "price": 35, "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 2 } }] }
   },
   {
     "id": "heavy-armor",
@@ -97,6 +108,7 @@
     "effect": [
       { "type": "shield", "value": 1, "target": "self", "duration": "persistent" },
       { "type": "special", "name": "movePenalty", "params": { "value": 1 } }
-    ]
+    ],
+    "upgrade": { "price": 45, "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "persistent" }] }
   }
 ]

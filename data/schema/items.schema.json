@@ -394,7 +394,18 @@
       "unlockedAfter": { "type": "integer", "minimum": 0 },
       "use": { "enum": ["spent", "lost", "passive"] },
       "effect": { "$ref": "#/definitions/steps" },
-      "forkEffect": { "$ref": "#/definitions/steps" }
+      "forkEffect": { "$ref": "#/definitions/steps" },
+      "upgrade": {
+        "description": "The ★ version (id `<id>+`): its price and the effect that replaces `effect` / `forkEffect`.",
+        "type": "object",
+        "properties": {
+          "price": { "type": "integer", "minimum": 1 },
+          "effect": { "$ref": "#/definitions/steps" },
+          "forkEffect": { "$ref": "#/definitions/steps" }
+        },
+        "required": ["price", "effect"],
+        "additionalProperties": false
+      }
     },
     "required": ["id", "slot", "price", "unlockedAfter", "use", "effect"],
     "additionalProperties": false
