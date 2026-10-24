@@ -18,6 +18,8 @@ const OUT = join(ROOT, 'src/ui/game/assets');
 /** kind: 'cutout' (alpha) or 'opaque'; width: max output width in px. */
 const JOBS = [
   { id: 'menu-bg', src: 'art/ui-mockups/main-menu/assets/background.png', kind: 'opaque', width: 1920, quality: 80 },
+  { id: 'campaign-map', src: 'art/ui-mockups/campaign-map/v2.png', kind: 'opaque', width: 1448, quality: 80 },
+  { id: 'campaign-map-lo', src: 'art/ui-mockups/campaign-map/v2.png', kind: 'opaque', width: 960, quality: 78 },
   { id: 'button', src: 'art/ui-mockups/main-menu/assets/button-base.png', kind: 'cutout', width: 760, slice: true },
   { id: 'logo-uk', src: 'art/ui-mockups/logos/uk/final.png', kind: 'cutout', width: 1200 },
   { id: 'logo-en', src: 'art/ui-mockups/logos/en/v2.png', kind: 'cutout', width: 1200 },

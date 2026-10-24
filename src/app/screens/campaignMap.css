@@ -1,0 +1,393 @@
+/* The campaign map (src/app/screens/campaignMap.ts): the painted map unrolled on the tavern table,
+   held by the game's blue-slate frame with a thin gold line and a parchment edge. Markers keep their
+   screen size while the map zooms (`--s` is the stage scale). Tablet first; on narrow screens the
+   frame fills the view, the map pans and zooms, the mission card becomes a bottom sheet. */
+
+.gmap {
+  --mp-gold: #e9c46a;
+  --mp-gold-hi: #f7d46f;
+  --mp-ink: #f8e8c0;
+  --mp-panel: linear-gradient(180deg, rgba(27, 52, 86, 0.94), rgba(13, 27, 48, 0.96));
+  --mp-line: rgba(214, 170, 80, 0.6);
+  --mp-parchment: #ead9ad;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  color: var(--mp-ink);
+  background: #1d1a17;
+}
+
+.gmap-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(10, 8, 6, 0.2), rgba(10, 8, 6, 0.7)),
+    url(../../ui/game/assets/camp-bg.webp) center / cover no-repeat;
+  filter: blur(3px) saturate(0.8);
+}
+
+.gmap > :not(.gmap-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+.gmap-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gmap-head h1 {
+  margin: 0;
+  font-size: clamp(1.3em, 2.6vw, 1.8em);
+  color: var(--mp-gold-hi);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.gmap-camp {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Frame: slate, gold line, parchment edge ─── */
+
+.gmap-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+}
+
+.gmap-frame {
+  --pad: 14px;
+  position: relative;
+  box-sizing: border-box;
+  width: min(100cqw, calc((100cqh - 2 * var(--pad)) * 1448 / 1086 + 2 * var(--pad)));
+  height: min(100cqh, calc((100cqw - 2 * var(--pad)) * 1086 / 1448 + 2 * var(--pad)));
+  padding: var(--pad);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #24466f, #11233d);
+  border: 2px solid var(--mp-gold);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 4px rgba(10, 20, 36, 0.9),
+    inset 0 0 0 5px rgba(233, 196, 106, 0.45),
+    0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+@container (max-aspect-ratio: 1 / 1) {
+  .gmap-frame {
+    --pad: 8px;
+    width: 100cqw;
+    height: 100cqh;
+  }
+}
+
+.gmap-paper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--mp-parchment);
+  /* The thin parchment edge: a light rim with a darker, slightly worn inner line over the art. */
+  outline: 4px solid var(--mp-parchment);
+  box-shadow: 0 0 0 5px #b89a5e;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.gmap-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 2px rgba(120, 88, 40, 0.45),
+    inset 0 0 18px rgba(120, 88, 40, 0.35);
+}
+
+.gmap-stage {
+  --s: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.gmap-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.gmap-routes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.gmap-route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: calc(4px / var(--s));
+  stroke-dasharray: calc(10px / var(--s)) calc(8px / var(--s));
+}
+
+.gmap-route.is-done {
+  stroke: #8a5a24;
+  opacity: 0.85;
+}
+
+.gmap-route.is-open {
+  stroke: var(--mp-gold-hi);
+  stroke-width: calc(6px / var(--s));
+  filter: drop-shadow(0 0 3px rgba(60, 30, 0, 0.9));
+  animation: gmap-march 1.2s linear infinite;
+}
+
+.gmap-route.is-closed {
+  stroke: #8d8d8d;
+  opacity: 0.75;
+}
+
+.gmap-route.is-hint {
+  stroke: #6b5536;
+  opacity: 0.5;
+}
+
+@keyframes gmap-march {
+  to {
+    stroke-dashoffset: calc(-18px / var(--s));
+  }
+}
+
+/* ─── Markers ─── */
+
+.gmap-marker {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transform: translate(-50%, -24px) scale(calc(1 / var(--s)));
+  transform-origin: 50% 24px;
+}
+
+.gmap-pin {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px solid var(--mp-gold);
+  background: radial-gradient(circle at 40% 35%, #2f5f98, #13284a);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+  color: var(--mp-gold-hi);
+}
+
+.gmap-pin .gi {
+  width: 26px;
+  height: 26px;
+}
+
+.gmap-pin b {
+  font-size: 1.5em;
+  line-height: 1;
+}
+
+.gmap-marker.is-completed .gmap-pin {
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle at 40% 35%, #c99a3c, #7d5418);
+  border-color: #fbe7a6;
+  color: #fff6d8;
+}
+
+.gmap-marker.is-available .gmap-pin {
+  border-color: var(--mp-gold-hi);
+  animation: gmap-pulse 1.8s ease-in-out infinite;
+}
+
+.gmap-marker.is-locked .gmap-pin {
+  width: 36px;
+  height: 36px;
+  border-color: #9a9a9a;
+  background: radial-gradient(circle at 40% 35%, #6f6f6f, #3d3d3d);
+  color: #d5d5d5;
+  filter: grayscale(1);
+}
+
+.gmap-marker.is-unknown .gmap-pin {
+  width: 38px;
+  height: 38px;
+  border-style: dashed;
+  border-color: #7b6136;
+  background: rgba(234, 217, 173, 0.92);
+  color: #5b4320;
+}
+
+.gmap-marker.is-selected .gmap-pin {
+  outline: 3px solid #fff3c4;
+  outline-offset: 3px;
+}
+
+.gmap-marker:focus-visible .gmap-pin {
+  outline: 3px solid #fff3c4;
+  outline-offset: 3px;
+}
+
+@keyframes gmap-pulse {
+  0%,
+  100% {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55), 0 0 0 0 rgba(247, 212, 111, 0.65);
+  }
+  50% {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55), 0 0 0 10px rgba(247, 212, 111, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gmap-marker.is-available .gmap-pin,
+  .gmap-route.is-open {
+    animation: none;
+  }
+}
+
+.gmap-tag {
+  max-width: 190px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--mp-line);
+  background: var(--mp-panel);
+  font-size: 0.85em;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.gmap-zoom {
+  position: absolute;
+  right: calc(var(--pad) + 8px);
+  bottom: calc(var(--pad) + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gmap-zoom .gbtn {
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+/* ─── Mission card ─── */
+
+.gmap-panel {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: min(340px, 42cqw);
+  z-index: 2;
+}
+
+.gmap-panel.is-left {
+  right: auto;
+  left: 24px;
+}
+
+.gmap-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--mp-line);
+  background: var(--mp-panel);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+.gmap-card h2 {
+  margin: 0;
+  padding-right: 44px;
+  color: var(--mp-gold-hi);
+  font-size: 1.3em;
+}
+
+.gmap-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.gmap-region {
+  color: var(--mp-gold);
+  opacity: 0.85;
+  font-weight: 700;
+}
+
+.gmap-intro {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+
+.gmap-goal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.gmap-goal .gi {
+  width: 26px;
+  height: 26px;
+  color: var(--mp-gold-hi);
+}
+
+.gmap-msg {
+  margin: 0;
+  color: #ffc4b4;
+}
+
+.gmap-card .ubtn {
+  width: 100%;
+  margin-top: 4px;
+}
+
+@container (max-aspect-ratio: 1 / 1) {
+  .gmap-panel,
+  .gmap-panel.is-left {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+  }
+}

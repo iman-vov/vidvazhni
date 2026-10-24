@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Campaign map markers (src/app/screens/campaignMap.ts): where each scenario slot sits on the map art",
+  "type": "object",
+  "properties": {
+    "image": {
+      "description": "Size of the map art in px; marker x/y are fractions of it.",
+      "type": "object",
+      "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } },
+      "required": ["width", "height"],
+      "additionalProperties": false
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^s[0-9]+$" },
+          "x": { "type": "number", "minimum": 0, "maximum": 1 },
+          "y": { "type": "number", "minimum": 0, "maximum": 1 },
+          "region": { "enum": ["alba", "forest", "mountains", "marshes", "glass", "gloom"] },
+          "branch": {
+            "description": "Choice node and option (`c1:mine`): once another option of the node is played or open, this slot is closed.",
+            "type": "string",
+            "pattern": "^c[0-9a-z]+:[a-z-]+$"
+          }
+        },
+        "required": ["id", "x", "y", "region"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "links": {
+      "description": "Route lines between slots, in play order.",
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+    }
+  },
+  "required": ["image", "markers", "links"],
+  "additionalProperties": false
+}

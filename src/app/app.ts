@@ -1,5 +1,6 @@
-// The game app: main menu → new game → scenario → scenario end, plus settings. One board is
-// created when the first scenario opens and kept for later ones.
+// The game app: main menu → new game → scenario → scenario end, plus settings; a campaign goes
+// menu → campaign map ⇄ camp → scenario. One board is created when the first scenario opens and
+// kept for later ones.
 
 import { applyScenarioResult, newCampaign } from '../rules/campaign';
 import { loadContent } from '../rules/load';
@@ -13,6 +14,7 @@ import { createGameBoard } from './board';
 import { GameController, type PlayerInfo } from './game';
 import { mountScenario } from './scenarioScreen';
 import { campScreen } from './screens/camp';
+import { campaignMapScreen } from './screens/campaignMap';
 import { endScreen } from './screens/end';
 import { menuBackdrop, menuScreen } from './screens/menu';
 import { newGameScreen } from './screens/newGame';
@@ -25,7 +27,7 @@ import { mountCoach } from './tutorial/coach';
 import { isTutorial, tutorialContent, tutorialPlayers, tutorialSetup, tutorialStorage } from './tutorial/scenario';
 import { saveTutorialProgress, shouldOfferTutorial, tutorialEnd, tutorialOffer } from './tutorial/screens';
 
-type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'settings' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
+type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'map' | 'settings' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
 
 export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
@@ -111,7 +113,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
             onNewGame: () => go(shouldOfferTutorial() ? 'tutorialOffer' : 'newGame'),
             onSettings: () => go('settings'),
             campaign: campaigns.load(),
-            onCampaign: () => go(campaigns.load() ? 'camp' : 'newCampaign'),
+            onCampaign: () => go(campaigns.load() ? 'map' : 'newCampaign'),
             onHelp: () => go('help'),
             onTutorial: () => startTutorial(),
           }),
@@ -142,6 +144,21 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
             onSave: (state) => campaigns.save(state, saved.players),
             onMission: (setup) => startNew(setup, saved.players, true),
             onNewCampaign: () => (campaigns.clear(), go('newCampaign')),
+            onMenu: () => go('menu'),
+            onMap: () => go('map'),
+          }),
+        );
+        break;
+      }
+      case 'map': {
+        const saved = campaigns.load();
+        if (!saved) return go('menu');
+        overlay.replaceChildren(
+          campaignMapScreen({
+            content,
+            campaign: saved.campaign,
+            onMission: (setup) => startNew(setup, saved.players, true),
+            onCamp: () => go('camp'),
             onMenu: () => go('menu'),
           }),
         );
