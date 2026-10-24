@@ -4,6 +4,7 @@
   "color": "#3B6FB6",
   "hpByLevel": [10, 12, 14, 16, 18],
   "handSize": 10,
+  "recommendedHand": ["warden.shield-bash", "warden.iron-wall", "warden.challenge", "warden.sweeping-blow", "warden.thorn-shield", "warden.ram", "warden.unyielding", "warden.earth-strike", "warden.last-stand", "warden.shoulder-charge"],
   "classElement": "earth",
   "classOrb": "earth",
   "surge": [
@@ -133,6 +134,108 @@
       "initiative": 30,
       "top": { "steps": [{ "type": "attack", "value": 4, "conditions": ["stun"], "xp": 2 }], "loss": true },
       "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "warden.shoulder-charge",
+      "level": 1,
+      "initiative": 28,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "attack",
+            "value": 2,
+            "push": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.cover-friend",
+      "level": 1,
+      "initiative": 14,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "shield",
+            "value": 2,
+            "target": "ally",
+            "range": 1,
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "retaliate",
+            "value": 1,
+            "duration": "round"
+          },
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "self"
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.stone-fist",
+      "level": 1,
+      "initiative": 46,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "xp": 1,
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 2
+              },
+              "conditions": [
+                "immobilize"
+              ]
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "infuse",
+            "element": "earth"
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      }
     },
     {
       "id": "warden.stone-bulwark",
