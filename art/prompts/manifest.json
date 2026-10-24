@@ -1907,6 +1907,354 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "shelf",
+      "nameUk": "Полиця",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/shelf.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 52,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/shelf/shelf.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "wine-rack",
+      "nameUk": "Стелаж для пляшок",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/wine-rack.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 53,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/wine-rack/wine-rack.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "keg-rack",
+      "nameUk": "Бочки на козлах",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/keg-rack.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 54,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/keg-rack/keg-rack.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "sacks-pile",
+      "nameUk": "Купа мішків",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/sacks-pile.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 55,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/sacks-pile/sacks-pile.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "crate-broken",
+      "nameUk": "Розбитий ящик",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/crate-broken.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 56,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/crate-broken/crate-broken.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "rubble-pile",
+      "nameUk": "Купа каміння",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/rubble-pile.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 57,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/rubble-pile/rubble-pile.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "stool",
+      "nameUk": "Табурет",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/stool.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 58,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/stool/stool.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "crate-stack",
+      "nameUk": "Стос ящиків",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/crate-stack.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 59,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/crate-stack/crate-stack.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "candles-stone",
+      "nameUk": "Свічки на камені",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/candles-stone.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 60,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/showcase-s1.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/candles-stone/candles-stone.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "prisoner-cage",
+      "nameUk": "Клітка для полонених",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/prisoner-cage.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 61,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/design/missions.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/prisoner-cage/prisoner-cage.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "tribal-totem",
+      "nameUk": "Тотем",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/tribal-totem.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 62,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/design/missions.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/tribal-totem/tribal-totem.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "crystal-cluster",
+      "nameUk": "Кристали",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/crystal-cluster.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 63,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/design/missions.md",
+      "meshy": {
+        "model": "Meshy 6",
+        "workflow": "Text to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/crystal-cluster/crystal-cluster.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }
