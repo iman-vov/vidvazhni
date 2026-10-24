@@ -1,0 +1,53 @@
+{
+  "id": "dark-depths",
+  "scenarios": ["s9"],
+  "edge": "mine",
+  "surface": "rock",
+  "boundary": "walls",
+  "rooms": { "s9.gate": { "edge": "forge" } },
+  "ground": { "texture": "cave-rock", "tint": "#363a44", "scale": 2.8, "water": 0.35, "waterColor": "#0e1a22" },
+  "walls": { "height": 1.8, "low": 0.36, "alt": 3, "inner": "#3e4048", "sconce": { "piece": "mine-lamp", "every": 4 } },
+  "palette": { "rock": "#4a4e58", "rockDark": "#2c2e36", "stone": "#55555e", "stoneDark": "#3a3a42", "stoneLight": "#6a6a72", "wood": "#5e4632", "woodDark": "#3a2a1e", "ore": "#a8743c", "crystal": "#7a5ad0", "glowCold": "#6ac0d8", "iron": "#3c3e46" },
+  "light": {
+    "sky": "#4a5070",
+    "ground": "#0c0e14",
+    "hemi": 0.38,
+    "sun": "#7a88c0",
+    "sunIntensity": 0.6,
+    "env": 0.25,
+    "point": { "color": "#ffb060", "intensity": 7, "distance": 6 }
+  },
+  "fog": { "color": "#08090e", "glow": "#141428", "start": 1.8, "end": 6.5, "morok": "#8c8ca8", "morokOpacity": 0.45 },
+  "weather": { "kind": "dust", "count": 420, "color": "#8a90a8", "wind": [0.06, 0.03] },
+  "entrance": "mine-lantern",
+  "propModels": {
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "cage": { "model": "prisoner-cage", "height": 1.1 },
+    "totem": { "model": "tribal-totem", "height": 1.5 },
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
+    "brazier": { "model": "brazier", "height": 0.8 },
+    "brazier-lit": { "model": "brazier", "height": 0.8 },
+    "barrel": { "model": "barrel", "height": 0.85 },
+    "crate": { "model": "crate", "height": 0.6 },
+    "mine-cart": { "model": "mine-cart", "height": 0.75 },
+    "mine-support": { "model": "mine-support", "height": 1.45 },
+    "ore-pile": { "model": "ore-pile", "height": 0.45 },
+    "mine-lantern": { "model": "mine-lantern", "height": 1.5 }
+  },
+  "obstacles": { "rock": ["boulder", "stalagmite", "boulder"], "mine-support": ["mine-support"] },
+  "dressing": {
+    "sets": [
+      { "weight": 2, "items": [{ "piece": "stalagmite", "x": 0, "z": -0.05 }, { "piece": "glow-mushrooms", "x": 0.45, "z": 0.25 }, { "piece": "rock", "x": -0.5, "z": 0.2 }] },
+      { "weight": 2, "items": [{ "piece": "crystals", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.15 }] },
+      { "weight": 1, "items": [{ "piece": "rails", "x": -0.45, "z": 0.05, "align": true }, { "piece": "mine-cart", "x": 0.1, "z": 0.05, "align": true }] },
+      { "weight": 1, "items": [{ "piece": "ore-pile", "x": 0, "z": 0.05 }, { "piece": "timber-stack", "x": 0.75, "z": 0.1, "align": true }] }
+    ],
+    "ring": [["rock", 3], ["stalagmite", 2], ["ore-pile", 2], ["glow-mushrooms", 2], ["crystals", 1], ["rubble-heap", 2], ["timber-stack", 1]],
+    "far": [["stalagmite-big", 2]],
+    "density": 0.6
+  }
+}
