@@ -151,6 +151,75 @@ export class BoardEffects {
     );
   }
 
+  /** A warm glow that swells over a spot and fades (an opened chest). */
+  glow(at: THREE.Vector3, color: string, seconds: number, size = 1.4): Promise<void> {
+    const s = this.sprite(color, true, 0);
+    s.position.copy(at);
+    this.root.add(s);
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        s.scale.setScalar(size * (0.5 + 0.7 * k));
+        s.material.opacity = 0.9 * Math.min(1, k * 5) * (1 - k);
+      },
+      { ease: linear, done: () => this.drop(s) },
+    );
+  }
+
+  /** Coins jump out of a spot in every direction and fall back, glinting (a chest bursting open). */
+  coinBurst(at: THREE.Vector3, count: number, seconds: number): Promise<void> {
+    const group = new THREE.Group();
+    const coins: { m: THREE.Mesh; v: THREE.Vector3; spin: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+      const m = new THREE.Mesh(this.coinGeo, this.gold);
+      m.position.copy(at);
+      m.scale.setScalar(0.75);
+      group.add(m);
+      coins.push({ m, v: new THREE.Vector3(Math.cos(a) * (0.5 + Math.random() * 0.4), 2.1 + Math.random() * 0.8, Math.sin(a) * (0.5 + Math.random() * 0.4)), spin: 8 + Math.random() * 8 });
+    }
+    this.root.add(group);
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        const t = k * seconds;
+        for (const { m, v, spin } of coins) {
+          m.position.set(at.x + v.x * t, Math.max(at.y - 0.15, at.y + v.y * t - 4.5 * t * t), at.z + v.z * t);
+          m.rotation.set(t * spin, t * spin * 0.7, 0);
+          m.scale.setScalar(0.75 * (1 - Math.max(0, k - 0.75) * 4));
+        }
+      },
+      { ease: linear, done: () => this.drop(group) },
+    );
+  }
+
+  /** Carries `o` (a found item) from a spot to a hero along a high arc, turning, with a gold glint
+   *  around it; the object is removed on arrival. */
+  fly(o: THREE.Object3D, from: THREE.Vector3, to: THREE.Vector3, seconds: number): Promise<void> {
+    const holder = new THREE.Group();
+    const glint = this.sprite('#ffd86a', true, 0.75);
+    glint.scale.setScalar(0.7);
+    holder.add(glint, o);
+    holder.position.copy(from);
+    this.root.add(holder);
+    const p = new THREE.Vector3();
+    return this.anim.tween(
+      seconds,
+      (k) => {
+        // Hover up over the chest for the first third, then arc to the hero.
+        const rise = Math.min(1, k * 3);
+        const go = Math.max(0, (k - 0.33) / 0.67);
+        p.lerpVectors(from, to, easeOut(go));
+        p.y += rise * 0.55 * (1 - go) + Math.sin(go * Math.PI) * 0.5;
+        holder.position.copy(p);
+        o.rotation.y = k * Math.PI * 3;
+        holder.scale.setScalar(1 - go * 0.6);
+        glint.material.opacity = 0.75 * (0.7 + 0.3 * Math.sin(k * 30));
+      },
+      { ease: linear, done: () => this.drop(holder) },
+    );
+  }
+
   // ─── Orbs ────────────────────────────────────────────────────────────────
 
   /** Shows exactly these orbs (age 1 = dimmed); returns the ids that appeared. */

@@ -23,6 +23,7 @@ import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from '.
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slidePose, type MovePose } from './motion';
 import { listModels } from './models';
+import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
@@ -725,7 +726,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       case 'spawn':
         return spawn(step.figureId, ctx);
       case 'loot':
-        return loot(step.heroId, step.coins, ctx);
+        return loot(step.heroId, step.coins, ctx, step.chest);
       case 'trap': {
         const fv = figures.get(step.figureId);
         if (!fv) return;
@@ -1037,7 +1038,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     tiles.setRoomRise(roomId, 1, origin);
   }
 
-  async function loot(heroId: FigureId, coins: number, ctx: JobCtx): Promise<void> {
+  async function loot(heroId: FigureId, coins: number, ctx: JobCtx, chestId?: string): Promise<void> {
     const hero = figures.get(heroId);
     if (!hero) return;
     // The nearest coin or chest that is gone after the events.
@@ -1053,17 +1054,72 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     });
     const pick = best >= 0 ? ctx.lootGone.splice(best, 1)[0] : undefined;
     const label = () => hero.headPoint().add(new THREE.Vector3(0, 0.3, 0));
-    if (pick) {
+    if (pick?.chest) await openChest(pick.key, hero, coins, ctx, chestId);
+    else if (pick) {
       const p = tiles.prop(pick.key);
       const from = p ? p.object.position.clone().setY(PLATE_HEIGHT + 0.2) : hero.chestPoint();
-      if (pick.chest && p?.lid) {
-        const lid = p.lid;
-        await anim.tween(0.35, (k) => (lid.rotation.x = -k * 1.9));
-        void effects.puff(from.clone().setY(PLATE_HEIGHT + 0.45), '#ffe27a', { count: 10, size: 0.4, additive: true, seconds: 0.9, rise: 1.4 });
-      } else if (p) tiles.removeProp(pick.key);
+      if (p) tiles.removeProp(pick.key);
       if (coins > 0) await effects.coin(from, hero.chestPoint(), TIMING.loot * 0.7);
     }
     if (coins > 0) overlay.float(`+${coins}`, 'coin', label, TIMING.floatLabel, 'coin');
+  }
+
+  /**
+   * A chest gives up its loot: it shakes, a golden glow swells over it, coins and sparkles burst
+   * out (the lid flies open where the chest has one) and the found thing flies to the hero: its
+   * model when there is one (the lantern shard), else a golden glint.
+   */
+  async function openChest(key: string, hero: FigureView, coins: number, ctx: JobCtx, chestId?: string): Promise<void> {
+    const p = tiles.prop(key);
+    const base = p ? p.object.position.clone() : hero.chestPoint().setY(PLATE_HEIGHT);
+    const top = base.clone().setY(PLATE_HEIGHT + 0.45);
+    const thing = lootModel(ctx.job.content, chestId);
+    if (p) {
+      const o = p.object;
+      const rot = o.rotation.clone();
+      const y = o.position.y;
+      await anim.tween(0.45, (k) => {
+        const a = Math.sin(k * Math.PI * 7) * (1 - k) * 0.09;
+        o.rotation.set(rot.x + a * 0.5, rot.y, rot.z + a);
+        o.position.y = y + Math.abs(Math.sin(k * Math.PI * 7)) * 0.03 * (1 - k);
+      });
+      o.rotation.copy(rot);
+      o.position.y = y;
+    }
+    void effects.glow(top, '#ffcf4a', 1.1, 1.8);
+    void effects.puff(top, '#ffe27a', { count: 12, size: 0.35, additive: true, seconds: 0.9, rise: 1.5 });
+    void effects.coinBurst(top.clone().setY(PLATE_HEIGHT + 0.3), Math.min(8, 3 + coins), 0.75);
+    const lid = p?.lid;
+    if (lid) void anim.tween(0.35, (k) => (lid.rotation.x = -k * 1.9));
+    const object = await Promise.race([thing, new Promise<null>((r) => setTimeout(() => r(null), 250))]);
+    const star = object ? null : glintStar();
+    await effects.fly(object ?? star!, top, hero.chestPoint(), 0.9);
+    if (star) {
+      star.geometry.dispose();
+      (star.material as THREE.Material).dispose();
+    }
+    // A chest without a lid to open (a closed model) is emptied: it sinks away.
+    if (p && !lid) {
+      const o = p.object;
+      const s0 = o.scale.clone();
+      await anim.tween(0.3, (k) => o.scale.copy(s0).multiplyScalar(1 - k * 0.9));
+      tiles.removeProp(key);
+    }
+  }
+
+  /** The model of what a chest holds, normalised to a small hand-held size; null without one. */
+  function lootModel(content: Content, chestId?: string): Promise<THREE.Object3D | null> {
+    const chest = chestId ? Object.values(content.scenarios).flatMap((s) => s.rooms.flatMap((r) => r.chests ?? [])).find((c) => c.id === chestId) : undefined;
+    const id = chest?.loot?.questItem?.replace(/-\d+$/, '') ?? chest?.loot?.item;
+    if (!id || !available.has(id)) return Promise.resolve(null);
+    return loadPropPrototype({ model: id, height: 0.42, rotY: 0 }, quality).then((proto) => proto?.object.clone() ?? null);
+  }
+
+  /** A golden four-pointed glint for loot without a model. */
+  function glintStar(): THREE.Mesh {
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), new THREE.MeshBasicMaterial({ color: '#ffe08a' }));
+    mesh.scale.set(1, 1.6, 0.4);
+    return mesh;
   }
 
   async function orb(step: Extract<AnimStep, { kind: 'orb' }>, ctx: JobCtx): Promise<void> {

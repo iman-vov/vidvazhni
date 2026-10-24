@@ -16,7 +16,7 @@
 import { createGame, apply } from '../rules/engine';
 import type { ConditionId, ElementId, OrbId } from '../rules/content';
 import type { Ctx } from '../rules/effects/context';
-import { hexKey, hexesInRadius, distance, type Hex } from '../rules/hex';
+import { hexKey, hexesInRadius, distance, parseHexKey, type Hex } from '../rules/hex';
 import { loadContent } from '../rules/load';
 import { legalActionResults } from '../rules/queries';
 import { revealRoom } from '../rules/setup';
@@ -344,6 +344,15 @@ const BEATS: { name: string; run: (s: GameState) => Beat }[] = [
       return b;
     },
   },
+  {
+    name: 'Скриня: тремтіння, сяйво, здобич до героя',
+    run: (s) => {
+      const chest = Object.entries(s.board.tiles).find(([, t]) => t.chest);
+      if (!chest) return new Beat(s);
+      const id = has('rogue') ? H('rogue') : H('warden');
+      return new Beat(s).turn(id).loot(id, parseHexKey(chest[0]));
+    },
+  },
 ];
 
 // ─── Movement demo (any board): jump over something, a flight, a push ──────
@@ -610,3 +619,8 @@ async function modelsReady(timeoutMs = 8000): Promise<void> {
 
 Object.assign(window, { board, devBoard: { get state() { return state; }, content, playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
 if (params.get('play') === '1') void playAll();
+// Screenshots of a moment: ?seek=<beat or "last">&t=<seconds into it> plays there and holds the frame.
+if (params.has('seek')) {
+  const n = params.get('seek') === 'last' ? BEATS.length - 1 : Number(params.get('seek'));
+  void seek(n, Number(params.get('t') ?? 1)).then(() => board.freeze(true));
+}
