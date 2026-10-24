@@ -111,6 +111,265 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "tinker.homemade-charge",
+      "level": 2,
+      "initiative": 52,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "range": 2,
+            "xp": 1
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.bolt-oil",
+      "level": 2,
+      "initiative": 23,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "summon",
+            "xp": 1
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "loot",
+            "range": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.spark-trap",
+      "level": 3,
+      "initiative": 36,
+      "top": {
+        "steps": [
+          {
+            "type": "trap",
+            "damage": 3,
+            "conditions": [
+              "wound"
+            ],
+            "xp": 1
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.powder-keg",
+      "level": 3,
+      "initiative": 61,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "xp": 1,
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.grabber-arm",
+      "level": 4,
+      "initiative": 34,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "pull": 2,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.spring-shield",
+      "level": 4,
+      "initiative": 31,
+      "top": {
+        "steps": [
+          {
+            "type": "active",
+            "uses": 3,
+            "on": "attacked",
+            "grant": {
+              "shield": 2
+            },
+            "xp": 1
+          }
+        ],
+        "loss": true,
+        "active": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "summon"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.big-bang",
+      "level": 5,
+      "initiative": 82,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "range": 3,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "xp": 2,
+            "consume": {
+              "element": "fire",
+              "conditions": [
+                "wound"
+              ]
+            }
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.field-workshop",
+      "level": 5,
+      "initiative": 40,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "alliesInRadius",
+            "radius": 2,
+            "xp": 2
+          },
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "summon"
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "trap",
+            "damage": 2
+          }
+        ]
+      }
     }
   ]
 }
