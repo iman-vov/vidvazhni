@@ -2,6 +2,50 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Scenario",
   "definitions": {
+    "eventAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "spawn" },
+            "monster": { "type": "string", "minLength": 1 },
+            "by": {
+          "type": "object",
+          "properties": {
+            "2": { "enum": ["normal", "elite"] },
+            "3": { "enum": ["normal", "elite"] },
+            "4": { "enum": ["normal", "elite"] }
+          },
+          "additionalProperties": false
+        },
+            "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "count": { "type": "integer", "minimum": 1 },
+            "burst": { "type": "boolean" },
+            "tag": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "monster", "by", "hexes"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "openDoor" }, "hex": { "$ref": "#/definitions/hex" } },
+          "required": ["type", "hex"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "story" }, "text": { "type": "string", "minLength": 1 } },
+          "required": ["type", "text"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "coins" }, "coins": { "type": "integer", "minimum": 1 } },
+          "required": ["type", "coins"],
+          "additionalProperties": false
+        }
+      ]
+    },
     "drop": {
       "description": "What a killed figure may leave (docs/design/camp.md «Звідки здобич»).",
       "type": "object",
@@ -628,7 +672,8 @@
                   "required": [],
                   "additionalProperties": false
                 },
-                "drops": { "$ref": "#/definitions/drop" }
+                "drops": { "$ref": "#/definitions/drop" },
+                "tag": { "type": "string", "minLength": 1 }
               },
               "required": ["monster", "hex", "by"],
               "additionalProperties": false
@@ -699,6 +744,70 @@
       },
       "required": ["goldEach"],
       "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "trigger": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": { "type": { "const": "doorOpened" }, "room": { "type": "string", "minLength": 1 } },
+                "required": ["type", "room"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "heroEnters" },
+                  "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+                  "adjacent": { "$ref": "#/definitions/hex" }
+                },
+                "required": ["type"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "round" },
+                  "round": { "type": "integer", "minimum": 1 },
+                  "every": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["type", "round"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "monsterTurnsAlive" },
+                  "tag": { "type": "string", "minLength": 1 },
+                  "turns": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["type", "tag", "turns"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "objectReached" },
+                  "tag": { "type": "string", "minLength": 1 },
+                  "hex": { "$ref": "#/definitions/hex" }
+                },
+                "required": ["type", "tag", "hex"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "actions": { "type": "array", "items": { "$ref": "#/definitions/eventAction" }, "minItems": 1 },
+          "prevented": { "type": "array", "items": { "$ref": "#/definitions/eventAction" } },
+          "hidden": { "type": "boolean" }
+        },
+        "required": ["id", "trigger", "actions"],
+        "additionalProperties": false
+      }
     },
     "draft": { "type": "boolean" }
   },

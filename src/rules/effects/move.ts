@@ -5,6 +5,7 @@ import { validatePath } from '../geometry';
 import { DIRECTIONS, add, areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { passiveItemValue } from '../items';
 import { moveObstacleError, pushObstacleAside } from '../obstacles';
+import { onHeroEnters } from '../events';
 import { addNewGroupsToOrder } from '../round';
 import { doorLocked } from '../scenarioRules';
 import { revealRoom } from '../setup';
@@ -87,6 +88,12 @@ export function runMove(ctx: Ctx, task: MoveTask): void {
     if (f.kind === 'hero' && !task.forced && tile?.door && !tile.door.open) {
       emit(ctx, moved(f.id, walked, task));
       openDoor(ctx, hex);
+      return;
+    }
+    // An ambush (scenario event `heroEnters`) stops the move on the hex that sprang it.
+    if (f.kind === 'hero' && onHeroEnters(ctx, f)) {
+      emit(ctx, moved(f.id, walked, task));
+      if (damage) schedule(ctx, damage);
       return;
     }
     if (damage) {

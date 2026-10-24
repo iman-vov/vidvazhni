@@ -95,4 +95,19 @@ describe('scenario cross references', () => {
     s.startHexes[0] = s.rooms[1]?.hexes[0] as Hex;
     expect(checkScenario(s, content).join('\n')).toMatch(/outside the start room/);
   });
+
+  it('flags scenario events that point at nothing', () => {
+    const s = s1();
+    s.events = [
+      { id: 'a', trigger: { type: 'doorOpened', room: 's1.attic' }, actions: [{ type: 'spawn', monster: 'dragon', by: { '2': 'normal' }, hexes: [[40, 40]] }] },
+      { id: 'a', trigger: { type: 'monsterTurnsAlive', tag: 'horn', turns: 2 }, actions: [{ type: 'openDoor', hex: [0, 1] }] },
+    ];
+    const errors = checkScenario(s, content).join('\n');
+    expect(errors).toMatch(/event a twice/);
+    expect(errors).toMatch(/missing room s1\.attic/);
+    expect(errors).toMatch(/spawns unknown dragon/);
+    expect(errors).toMatch(/hex 40,40 is outside every room/);
+    expect(errors).toMatch(/untagged horn/);
+    expect(errors).toMatch(/opens no door at 0,1/);
+  });
 });

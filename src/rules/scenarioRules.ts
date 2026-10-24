@@ -13,6 +13,7 @@
 import type { Content, DropDef, RoomDef, ScenarioDef, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
 import { infuse } from './elements';
+import { onTaggedMonsterDied } from './events';
 import { hasLineOfSight } from './geometry';
 import { areAdjacent, distance, hexKey, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
@@ -240,6 +241,7 @@ export function rollDrops(ctx: Ctx, m: MonsterState): void {
  *  story item on its hex. */
 export function onMonsterDied(ctx: Ctx, m: MonsterState): void {
   rollDrops(ctx, m);
+  onTaggedMonsterDied(ctx, m);
   if (!m.room) return;
   const room = scenarioOf(ctx)?.rooms.find((r) => r.id === m.room);
   for (const drop of room?.drops ?? []) {

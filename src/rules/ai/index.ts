@@ -269,3 +269,31 @@ export function planTurn(state: GameState, figureId: FigureId, steps: Step[]): M
   });
   return { focusId: focus.id, path: dest.route.path, attackTargets };
 }
+
+/** A runner (scenario event `objectReached`) heads for `goal` instead of fighting: among the hexes
+ *  reachable this turn (staying included) it ends where the rest of the way to the nearest goal hex
+ *  is shortest (fewest negative hexes first), then with the least movement, then lowest q, r. It
+ *  attacks no one. Goal hexes it cannot end on are ignored; with none left it stays. */
+export function planRun(state: GameState, figureId: FigureId, steps: Step[], goal: Hex[]): MonsterPlan {
+  const me = state.figures[figureId];
+  if (!me) throw new Error(`ai.planRun: unknown figure ${figureId}`);
+  const attacks = steps.filter((s) => s.type === 'attack').map((): FigureId[] => []);
+  const stay: MonsterPlan = { focusId: null, path: [], attackTargets: attacks };
+  const moveStep = steps.find((s): s is MoveStep => s.type === 'move');
+  if (!moveStep) return stay;
+  const model = buildMoveModel(state, { figureId, jump: moveStep.jump, fly: moveStep.fly, avoidNegativeHexes: true });
+  const targets = goal.map(hexKey).filter((k) => k === model.startKey || model.endable(k));
+  if (targets.includes(model.startKey)) return stay;
+  const field = distanceField(model, targets);
+  const candidates: Candidate[] = [{ hex: me.hex, route: { path: [], cost: 0, negative: 0 } }];
+  for (const [k, route] of searchWithin(model, moveStep.value)) candidates.push({ hex: parseHexKey(k), route });
+  let best: { c: Candidate; total: Label } | null = null;
+  for (const c of candidates) {
+    const rest = field.get(hexKey(c.hex));
+    if (!rest) continue;
+    const total: Label = { negative: c.route.negative + rest.negative, cost: rest.cost };
+    const diff = best ? compareLabels(true, total, best.total) || c.route.cost - best.c.route.cost || byHex(c.hex, best.c.hex) : -1;
+    if (diff < 0) best = { c, total };
+  }
+  return best ? { focusId: null, path: best.c.route.path, attackTargets: attacks } : stay;
+}

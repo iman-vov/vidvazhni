@@ -311,8 +311,9 @@ export interface RoomDef {
   doors?: { hex: Hex; to: string; key?: string; kind?: DoorKind; breakable?: { hp: number }; movable?: true }[];
 
   /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear.
-   *  `drops`: a named enemy's own loot, replacing its type's. */
-  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>; drops?: DropDef }[];
+   *  `drops`: a named enemy's own loot, replacing its type's. `tag`: names the figure for
+   *  scenario events (the horn-blower, the bell runner). */
+  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>; drops?: DropDef; tag?: string }[];
   coins?: Hex[];
   /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
   chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
@@ -371,9 +372,57 @@ export interface ScenarioDef {
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
   reward: { goldEach: number; items?: string[]; unlock?: string[] };
+  /** Scenario events: ambushes, calls for help, alarms, waves (events.ts). */
+  events?: ScenarioEventDef[];
   /** Drafted in the map editor, not yet playtested or balanced. */
   draft?: boolean;
 }
+
+/** A scenario event (docs/design/missions.md «Події й підкріплення»): when the trigger holds, the
+ *  actions run, once (a `round` trigger with `every` repeats). An event tied to a tagged monster
+ *  (`monsterTurnsAlive`, `objectReached`) is prevented when the last monster with that tag dies
+ *  first: then `prevented` runs instead (a reward for stopping the alarm). */
+export interface ScenarioEventDef {
+  id: string;
+  trigger: EventTrigger;
+  actions: EventAction[];
+  prevented?: EventAction[];
+  /** A surprise: no warning before it fires. Default: hidden for `doorOpened` and `heroEnters`
+   *  (ambushes), warned in the intents and the round forecast for the rest. */
+  hidden?: boolean;
+}
+
+export type EventTrigger =
+  /** The room is revealed (its door opened, broken or pushed aside). */
+  | { type: 'doorOpened'; room: string }
+  /** A hero steps on one of `hexes`, or next to `adjacent` (a cupboard, a barrel). The move stops there. */
+  | { type: 'heroEnters'; hexes?: Hex[]; adjacent?: Hex }
+  /** At the start of round `round` (before the cards are chosen), then every `every` rounds. */
+  | { type: 'round'; round: number; every?: number }
+  /** At the end of the `turns`-th turn of a monster with `tag` (the horn-blower calls). */
+  | { type: 'monsterTurnsAlive'; tag: string; turns: number }
+  /** A monster with `tag` ends its turn on or next to `hex` (the bell, a door). Such a monster
+   *  runs there instead of fighting. */
+  | { type: 'objectReached'; tag: string; hex: Hex };
+
+export type EventAction =
+  /** `count` figures (default 1) of the rank for the party size (`by`, like room spawns) on the
+   *  first free hexes of `hexes`, else the nearest free revealed hexes. `burst`: the obstacle on the
+   *  first hex (barrel, cupboard) breaks open first. */
+  | {
+      type: 'spawn';
+      monster: string;
+      by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>;
+      hexes: Hex[];
+      count?: number;
+      burst?: boolean;
+      tag?: string;
+    }
+  | { type: 'openDoor'; hex: Hex }
+  /** A story line (i18n key) shown to the players. */
+  | { type: 'story'; text: string }
+  /** Coins left where the event's figure stood (the stopped bell runner's hex). */
+  | { type: 'coins'; coins: number };
 
 export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';
 

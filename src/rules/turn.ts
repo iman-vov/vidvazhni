@@ -2,7 +2,7 @@
 // `state.queue`; a task that needs a player's answer (avoid damage, short rest) stays at the front
 // and sets `pending`. Tasks scheduled by a task run before the rest of the queue (depth first).
 
-import { planTurn } from './ai';
+import { planRun, planTurn } from './ai';
 import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
 import { findCard, runDamage } from './damage';
@@ -10,6 +10,7 @@ import { attackSpecFor, canTarget, runAfterHit, runAttackTarget, runRetaliate } 
 import { emit, hero, isPresent, monsterStats, schedule, wallBetween, type Ctx } from './effects/context';
 import { performStep, withConsumeBonus } from './effects/index';
 import { runMove } from './effects/move';
+import { onMonsterTurnEnd, runnerGoal } from './events';
 import { lootHex } from './effects/support';
 import { canConsume, consume, endTurnInfusions } from './elements';
 import { runShortRests } from './rest';
@@ -368,6 +369,7 @@ function endFigureTurn(ctx: Ctx, figureId: string): void {
     if (f.kind === 'hero') lootHex(ctx, f, f.hex);
     expireConditions(ctx, f);
     onFigureTurnEnd(ctx, f);
+    if (f.kind === 'monster') onMonsterTurnEnd(ctx, f);
   }
   endTurnInfusions(ctx);
   emit(ctx, { type: 'turnEnded', figureId });
@@ -476,7 +478,8 @@ function figureAct(ctx: Ctx, figureId: string): void {
   const steps = figureSteps(ctx, f);
   // Consume the elements whose bonuses were folded in.
   for (const st of steps) if (st.consume && st.consume.element !== 'any' && canConsume(ctx, st.consume.element)) consume(ctx, st.consume.element);
-  const plan = planTurn(ctx.s, figureId, steps);
+  const goal = f.kind === 'monster' ? runnerGoal(ctx, f) : null;
+  const plan = goal ? planRun(ctx.s, figureId, steps, goal) : planTurn(ctx.s, figureId, steps);
   let attackIndex = 0;
   let moved = false;
   for (const st of steps) {

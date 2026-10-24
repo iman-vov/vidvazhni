@@ -4,6 +4,7 @@ import type { Content, HeroClass, PerkOp, ScenarioDef } from './content';
 import { emit, isPresent, monsters, scaleMonsterStats, trapDamage, type Ctx } from './effects/context';
 import { initialElements, scenarioOrbs } from './elements';
 import { setupItems } from './items';
+import { onRoomRevealed, onRoundStart } from './events';
 import { drawIntents } from './round';
 import { MONSTER_HP_BONUS_WITH_INTENTS } from './variants';
 import { hexKey, type Hex } from './hex';
@@ -143,6 +144,7 @@ export function createGame(setup: GameSetup, content: Content): GameState {
   revealRoom(ctx, scenario, scenario.startRoom);
   scenarioOrbs(ctx, 'atStart');
   scenarioOrbs(ctx, 'eachRound');
+  onRoundStart(ctx);
   drawIntents(ctx);
   s.pending =
     needsChoice.length > 0
@@ -219,7 +221,9 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     // Rooms whose last monster of a type drops a story item remember where the monster came from.
     if (room.drops?.some((d) => d.monster === sp.monster)) m.room = roomId;
     if (sp.drops) m.drops = sp.drops;
+    if (sp.tag) m.tag = sp.tag;
   }
+  onRoomRevealed(ctx, roomId);
 }
 
 function nextStandeeNumber(s: GameState, typeId: string): number {

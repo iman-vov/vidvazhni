@@ -5,6 +5,7 @@
 import type { Content, DropDef, RoomDef, ScenarioDef, Step } from '../../src/rules/content';
 import { areAdjacent, hexKey } from '../../src/rules/hex';
 import type { Hex } from '../../src/rules/hex';
+import { eventHexes } from '../../src/rules/events';
 import { goalZone } from '../../src/rules/objectives';
 
 /** Calls `fn` for the step and every step nested in its consume bonus. */
@@ -224,5 +225,22 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
   if ((g.type === 'reachExit' || g.type === 'carryItem') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
   for (const h of goalZone(s)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
+
+  const tags = new Set(s.rooms.flatMap((r) => (r.spawns ?? []).flatMap((sp) => (sp.tag ? [sp.tag] : []))));
+  for (const ev of s.events ?? []) for (const a of ev.actions) if (a.type === 'spawn' && a.tag) tags.add(a.tag);
+  const eventIds = new Set<string>();
+  for (const ev of s.events ?? []) {
+    if (eventIds.has(ev.id)) err(`event ${ev.id} twice`);
+    eventIds.add(ev.id);
+    const t = ev.trigger;
+    if (t.type === 'doorOpened' && !rooms.has(t.room)) err(`event ${ev.id} waits for missing room ${t.room}`);
+    if (t.type === 'heroEnters' && !t.hexes?.length && !t.adjacent) err(`event ${ev.id} has no hexes to enter`);
+    if ((t.type === 'monsterTurnsAlive' || t.type === 'objectReached') && !tags.has(t.tag)) err(`event ${ev.id} waits for untagged ${t.tag}`);
+    for (const key of eventHexes(ev)) if (!owner.has(key)) err(`event ${ev.id} hex ${key} is outside every room`);
+    for (const a of [...ev.actions, ...(ev.prevented ?? [])]) {
+      if (a.type === 'spawn' && !content.monsters[a.monster]) err(`event ${ev.id} spawns unknown ${a.monster}`);
+      if (a.type === 'openDoor' && !doorHexes.has(hexKey(a.hex))) err(`event ${ev.id} opens no door at ${hexKey(a.hex)}`);
+    }
+  }
   return errors;
 }

@@ -4,6 +4,7 @@ import type { MonsterCard } from './content';
 import { exhaust, findCard, loseScenario } from './damage';
 import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
 import { decayAtEndOfRound, scenarioOrbs } from './elements';
+import { onRoundStart } from './events';
 import { shuffleIfNeeded } from './modifiers';
 import { goalReached, lostByRules, secondaryMet } from './objectives';
 import { nextInt, shuffle } from './rng';
@@ -420,6 +421,7 @@ export function startRound(ctx: Ctx): void {
   s.pending = { kind: 'selectCards', heroIds: activeHeroes(s).map((h) => h.id) };
   emit(ctx, { type: 'roundStarted', round: s.round });
   scenarioOrbs(ctx, 'eachRound');
+  onRoundStart(ctx);
   drawIntents(ctx);
 }
 

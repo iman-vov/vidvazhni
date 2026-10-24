@@ -131,6 +131,8 @@ export interface MonsterState extends FigureBase {
   drops?: DropDef;
   /** Boss phase (Тінерук: 2 from ≤ 50% health for the rest of the scenario); absent = 1. */
   bossPhase?: number;
+  /** Names the figure for scenario events (`spawns[].tag`). */
+  tag?: string;
 }
 
 export interface SummonState extends FigureBase {
@@ -289,6 +291,9 @@ export interface GameState {
   /** Separate seeded stream for drop chances, so loot never shifts the fight's RNG (old saves and
    *  recorded games replay unchanged). */
   lootRng?: RngState;
+  /** Scenario events: the round each one last fired; `0` = prevented (its tagged monster died
+   *  first). Absent = none yet. */
+  firedEvents?: Record<string, number>;
 }
 
 /** Resolved numbers of one attack against one target (after card, item and consume bonuses). */
@@ -481,6 +486,10 @@ export type GameEvent =
   /** A story item fell on a hex: dropped by the last monster of a room, or by an exhausted carrier. */
   | { type: 'questItemDropped'; item: string; hex: Hex; byId: FigureId }
   | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
+  /** A scenario event fired (`prevented`: its tagged monster died before it could). */
+  | { type: 'scenarioEvent'; eventId: string; prevented?: true }
+  /** A scenario event's story line (i18n key). */
+  | { type: 'story'; text: string; eventId: string }
   /** Тінерук «Згасання»: the hero lost a random discarded card (`lost`) or took the damage. */
   | { type: 'fadeOutResolved'; heroId: FigureId; lost?: CardId };
 
