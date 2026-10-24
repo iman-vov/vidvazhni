@@ -5,6 +5,7 @@ import { allSteps, walkSteps } from './crossref';
 
 const content = loadContent();
 const heroes = Object.values(content.heroes);
+const starting = (hero: HeroClass): HeroCard[] => hero.cards.filter((c) => c.level === 1);
 
 const effectiveHalves = (card: HeroCard): CardHalf[] => [card.fork?.top ?? card.top, card.fork?.bottom ?? card.bottom];
 const stepsOf = (halves: CardHalf[]): Step[] => {
@@ -26,13 +27,19 @@ describe('hero classes', () => {
   });
 
   it.each(heroes.map((h) => [h.id, h] as const))('%s: ten level-1 cards, hand size within bounds', (_id, hero) => {
-    expect(hero.cards).toHaveLength(10);
+    expect(starting(hero)).toHaveLength(10);
     for (const card of hero.cards) {
-      expect(card.level).toBe(1);
       expect(card.initiative).toBeGreaterThanOrEqual(1);
       expect(card.initiative).toBeLessThanOrEqual(99);
     }
-    expect(hero.handSize).toBeLessThanOrEqual(hero.cards.length);
+    expect(hero.handSize).toBeLessThanOrEqual(starting(hero).length);
+  });
+
+  const levelled = heroes.filter((h) => h.cards.some((c) => c.level > 1)).map((h) => h.id);
+  it.each(levelled)('%s: two cards for each level 2–5 (progression.md)', (id) => {
+    const hero = content.heroes[id] as HeroClass;
+    for (const level of [2, 3, 4, 5]) expect(hero.cards.filter((c) => c.level === level), `${id} L${level}`).toHaveLength(2);
+    expect(new Set(hero.cards.map((c) => c.id)).size).toBe(hero.cards.length);
   });
 
   it('health per level follows the «+1,5» rule (Вартовий +2, Стихійник +1)', () => {
@@ -65,7 +72,7 @@ describe('hero classes', () => {
 
 describe('fork data on hero cards', () => {
   it.each(heroes.map((h) => [h.id, h] as const))('%s: about half of the cards carry the momentum mark', (_id, hero) => {
-    const marked = hero.cards.filter((c) => c.fork?.momentum).length;
+    const marked = starting(hero).filter((c) => c.fork?.momentum).length;
     expect(marked).toBeGreaterThanOrEqual(4);
     expect(marked).toBeLessThanOrEqual(6);
   });
@@ -89,7 +96,7 @@ describe('fork data on hero cards', () => {
   it('classes other than the Стихійник have 2–3 cards consuming another class orb', () => {
     for (const hero of heroes) {
       if (hero.classOrb === 'any') continue;
-      const foreign = hero.cards.filter((card) =>
+      const foreign = starting(hero).filter((card) =>
         stepsOf(effectiveHalves(card)).some(
           (s) => s.consume && s.consume.element !== 'any' && s.consume.element !== hero.classOrb,
         ),

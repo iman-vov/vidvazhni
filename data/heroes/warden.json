@@ -133,6 +133,299 @@
       "initiative": 30,
       "top": { "steps": [{ "type": "attack", "value": 4, "conditions": ["stun"], "xp": 2 }], "loss": true },
       "bottom": { "steps": [{ "type": "move", "value": 3 }] }
+    },
+    {
+      "id": "warden.stone-bulwark",
+      "level": 2,
+      "initiative": 24,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 2,
+            "target": "adjacentAllies",
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "provoke",
+            "radius": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.counter-blow",
+      "level": 2,
+      "initiative": 62,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3
+          },
+          {
+            "type": "retaliate",
+            "value": 2,
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "consume": {
+              "element": "earth",
+              "then": [
+                {
+                  "type": "shield",
+                  "value": 1,
+                  "target": "self",
+                  "duration": "round"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.tremor",
+      "level": 3,
+      "initiative": 48,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "targetAll": "adjacentEnemies",
+            "conditions": [
+              "immobilize"
+            ],
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.living-shield",
+      "level": 3,
+      "initiative": 16,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "shield",
+            "value": 2,
+            "target": "ally",
+            "range": 1,
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "provoke",
+            "radius": 2
+          },
+          {
+            "type": "retaliate",
+            "value": 1,
+            "duration": "round"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.rockslide",
+      "level": 4,
+      "initiative": 70,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "area": {
+              "shape": "line",
+              "length": 3,
+              "fromSelf": true
+            },
+            "push": 1,
+            "consume": {
+              "element": "earth",
+              "conditions": [
+                "stun"
+              ]
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.warden-oath",
+      "level": 4,
+      "initiative": 32,
+      "top": {
+        "steps": [
+          {
+            "type": "active",
+            "uses": 6,
+            "on": "attacked",
+            "grant": {
+              "shield": 1
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true,
+        "active": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "self"
+          },
+          {
+            "type": "provoke",
+            "radius": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.steadfast-mountain",
+      "level": 5,
+      "initiative": 20,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 3,
+            "target": "self",
+            "duration": "round"
+          },
+          {
+            "type": "retaliate",
+            "value": 3,
+            "duration": "round"
+          },
+          {
+            "type": "provoke",
+            "radius": 3,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.earthquake",
+      "level": 5,
+      "initiative": 75,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "targetAll": "adjacentEnemies",
+            "push": 1,
+            "consume": {
+              "element": "earth",
+              "conditions": [
+                "stun"
+              ]
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
     }
   ]
 }
