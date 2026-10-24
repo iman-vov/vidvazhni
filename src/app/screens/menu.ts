@@ -1,9 +1,14 @@
-// Main menu: continue the saved game, new game, settings; the debug overlay stays reachable.
+// Main menu over the town at dusk: the localized logo with the shared Lantern, the four art buttons
+// (continue, new game, campaign, settings), the version in the corner. The debug overlay stays
+// reachable through a small link.
 
+import pkg from '../../../package.json';
 import type { LoadedContent } from '../../rules/load';
 import { replay } from '../../rules/engine';
 import { h } from '../../ui/dom';
-import { t } from '../../ui/i18n';
+import { getLang, t } from '../../ui/i18n';
+import { icon, type IconName } from '../../ui/icons';
+import { installUiArt, logoOf } from '../../ui/game/uiArt';
 import type { SavedGame } from '../storage';
 
 export interface MenuOptions {
@@ -14,22 +19,49 @@ export interface MenuOptions {
   onSettings: () => void;
 }
 
+export const VERSION = pkg.version.replace(/\.0$/, '');
+
+/** A menu button on the button art: icon, label, optional second line. */
+export function artButton(iconName: IconName | null, label: string, onclick: () => void, extra: { note?: string; cls?: string; disabled?: boolean } = {}): HTMLButtonElement {
+  installUiArt();
+  return h(
+    'button',
+    { class: `ubtn${extra.cls ? ` ${extra.cls}` : ''}`, onclick, disabled: extra.disabled },
+    iconName ? h('span', { class: 'ubtn-icon' }, icon(iconName, { title: false })) : null,
+    h('span', { class: 'ubtn-text' }, h('span', { class: 'ubtn-label' }, label), extra.note ? h('small', null, extra.note) : null),
+  );
+}
+
+/** The menu backdrop (also behind the other pages): the town with a breathing Lantern and fog. */
+export function menuBackdrop(dim = false): HTMLElement {
+  return h('div', { class: `mbg${dim ? ' is-dim' : ''}`, 'aria-hidden': 'true' }, h('div', { class: 'mbg-art' }, h('div', { class: 'mbg-glow' }), h('div', { class: 'mbg-fog' })));
+}
+
 export function menuScreen(o: MenuOptions): HTMLElement {
+  installUiArt();
+  const logo = logoOf(getLang());
+  const notice = h('p', { class: 'mmenu-notice', role: 'status' });
+  const campaign = artButton('map', t('menu.campaign'), () => (notice.textContent = t('menu.campaign.soon')), { cls: 'is-soon' });
   return h(
     'div',
-    { class: 'gmenu' },
-    h('h1', { class: 'gmenu-title' }, t('ui.title')),
-    h('p', { class: 'gmenu-sub' }, t('menu.subtitle')),
+    { class: 'mmenu' },
+    menuBackdrop(),
     h(
-      'div',
-      { class: 'gmenu-buttons' },
-      o.saved
-        ? h('button', { class: 'gbtn gbtn-primary gbtn-big', onclick: o.onContinue }, h('span', null, t('ui.continue')), h('small', null, savedSummary(o.saved, o.content)))
-        : null,
-      h('button', { class: `gbtn gbtn-big${o.saved ? '' : ' gbtn-primary'}`, onclick: o.onNewGame }, t('ui.newGame')),
-      h('button', { class: 'gbtn gbtn-big', onclick: o.onSettings }, t('ui.settings')),
+      'main',
+      { class: 'mmenu-main' },
+      h('h1', { class: 'mmenu-logo' }, h('img', { src: logo.url, width: logo.width, height: logo.height, alt: t('ui.title'), draggable: 'false' })),
+      h(
+        'nav',
+        { class: 'mmenu-buttons' },
+        o.saved ? artButton('play', t('ui.continue'), o.onContinue, { note: savedSummary(o.saved, o.content) }) : null,
+        artButton('compass', t('ui.newGame'), o.onNewGame),
+        campaign,
+        artButton('gear', t('ui.settings'), o.onSettings),
+        notice,
+      ),
     ),
-    h('a', { class: 'gmenu-debug', href: '?debug' }, t('ui.debug')),
+    h('a', { class: 'mmenu-debug', href: '?debug' }, t('ui.debug')),
+    h('span', { class: 'mmenu-version', title: t('menu.version', { version: VERSION }) }, `v${VERSION}`),
   );
 }
 

@@ -29,6 +29,7 @@ import { cardName, elementName, figureName, modifierLabel, monsterTypeName, play
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
+import { artButton } from './screens/menu';
 import { settingsPanel } from './screens/settings';
 
 export interface ScenarioScreenOptions {
@@ -1083,11 +1084,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       h(
         'div',
         { class: 'gcol' },
-        h('button', { class: 'gbtn gbtn-primary', onclick: () => ((ui.modal = null), render()) }, t('game.resume')),
-        h('button', { class: 'gbtn', onclick: () => ((ui.modal = 'settings'), render()) }, t('ui.settings')),
-        h('button', { class: 'gbtn', onclick: () => ((ui.modal = 'intro'), render()) }, t('game.goal')),
+        artButton('play', t('game.resume'), () => ((ui.modal = null), render())),
+        artButton('gear', t('ui.settings'), () => ((ui.modal = 'settings'), render())),
+        artButton('map', t('ui.scenario'), () => ((ui.modal = 'intro'), render())),
         h('button', { class: 'gbtn', onclick: () => void copyLog() }, t('game.copyLog')),
-        h('button', { class: 'gbtn', onclick: () => o.onExit() }, t('game.toMenu')),
+        artButton(null, t('game.toMenu'), () => o.onExit()),
       ),
       () => ((ui.modal = null), render()),
     );

@@ -12,7 +12,7 @@ import { createGameBoard } from './board';
 import { GameController, type PlayerInfo } from './game';
 import { mountScenario } from './scenarioScreen';
 import { endScreen } from './screens/end';
-import { menuScreen } from './screens/menu';
+import { menuBackdrop, menuScreen } from './screens/menu';
 import { newGameScreen } from './screens/newGame';
 import { settingsPanel } from './screens/settings';
 import { settings } from './settings';
@@ -73,7 +73,8 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
         overlay.replaceChildren(
           h(
             'div',
-            { class: 'gpage' },
+            { class: 'gpage is-art' },
+            menuBackdrop(true),
             h('header', { class: 'gpage-head' }, h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.back'), onclick: () => go('menu') }, icon('left')), h('h1', null, t('ui.settings'))),
             settingsPanel({ onQuality: (q) => board?.setQuality(q), onSpeed: (n) => board?.setSpeed?.(n) }),
           ),

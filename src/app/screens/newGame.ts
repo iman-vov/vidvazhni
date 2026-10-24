@@ -10,6 +10,7 @@ import { icon } from '../../ui/game/icons';
 import { heroColor } from '../boardViewStub';
 import type { PlayerInfo } from '../game';
 import { localStore, readJson } from '../storage';
+import { artButton, menuBackdrop } from './menu';
 import { hintRow } from './settings';
 
 const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
@@ -61,7 +62,7 @@ function loadDraft(): Draft {
 
 export function newGameScreen(o: NewGameOptions): HTMLElement {
   const draft = loadDraft();
-  const root = h('div', { class: 'gpage' });
+  const root = h('div', { class: 'gpage is-art' });
   let itemsOpen = draft.heroes.some((x) => x.items.length > 0);
 
   const playerName = (p: PlayerInfo, i: number) => p.name.trim() || t('menu.player', { n: i + 1 });
@@ -127,6 +128,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     const err = problem();
     fill(
       root,
+      menuBackdrop(true),
       h('header', { class: 'gpage-head' }, h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.back'), onclick: o.onBack }, icon('left')), h('h1', null, t('ui.newGame'))),
       section(
         t('ui.scenario'),
@@ -258,7 +260,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
           ),
         ),
       ),
-      h('footer', { class: 'gpage-foot' }, err ? h('p', { class: 'gerror' }, err) : null, h('button', { class: 'gbtn gbtn-primary gbtn-big', disabled: !!err, onclick: start }, t('menu.start'))),
+      h('footer', { class: 'gpage-foot' }, err ? h('p', { class: 'gerror' }, err) : null, artButton('play', t('menu.start'), start, { disabled: !!err })),
     );
   }
 

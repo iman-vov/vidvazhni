@@ -895,5 +895,12 @@
   "icon.revive": "Wiederbeleben",
   "icon.arrow": "wird zu",
   "icon.add-player": "Ein Spieler mehr",
-  "icon.remove-player": "Ein Spieler weniger"
+  "icon.remove-player": "Ein Spieler weniger",
+  "icon.play": "Weiter",
+  "icon.compass": "Kompass",
+  "icon.map": "Karte",
+  "icon.gear": "Einstellungen",
+  "menu.campaign": "Kampagne",
+  "menu.campaign.soon": "Die Kampagne kommt in der nächsten Phase: Stadt, Laden, Heldenstufen.",
+  "menu.version": "Version {version}"
 }

@@ -895,5 +895,12 @@
   "icon.revive": "Revive",
   "icon.arrow": "becomes",
   "icon.add-player": "One more player",
-  "icon.remove-player": "One player fewer"
+  "icon.remove-player": "One player fewer",
+  "icon.play": "Continue",
+  "icon.compass": "Compass",
+  "icon.map": "Map",
+  "icon.gear": "Settings",
+  "menu.campaign": "Campaign",
+  "menu.campaign.soon": "The campaign comes in the next phase: town, shop, hero levels.",
+  "menu.version": "version {version}"
 }

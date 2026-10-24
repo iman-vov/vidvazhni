@@ -1,0 +1,42 @@
+{
+  "menu-bg": {
+    "src": "art/ui-mockups/main-menu/assets/background.png",
+    "width": 1448,
+    "height": 1086,
+    "bytes": 239368
+  },
+  "button": {
+    "src": "art/ui-mockups/main-menu/assets/button-base.png",
+    "width": 760,
+    "height": 130,
+    "bytes": 11840,
+    "keyed": false,
+    "slice": {
+      "top": 65,
+      "bottom": 65,
+      "left": 48,
+      "right": 48
+    }
+  },
+  "logo-uk": {
+    "src": "art/ui-mockups/logos/uk/final.png",
+    "width": 1200,
+    "height": 678,
+    "bytes": 202686,
+    "keyed": false
+  },
+  "logo-en": {
+    "src": "art/ui-mockups/logos/en/v2.png",
+    "width": 1200,
+    "height": 634,
+    "bytes": 192674,
+    "keyed": false
+  },
+  "logo-de": {
+    "src": "art/ui-mockups/logos/de/v1.png",
+    "width": 1200,
+    "height": 463,
+    "bytes": 155514,
+    "keyed": false
+  }
+}

@@ -895,5 +895,12 @@
   "icon.revive": "Підняти героя",
   "icon.arrow": "стає",
   "icon.add-player": "Ще один гравець",
-  "icon.remove-player": "На одного гравця менше"
+  "icon.remove-player": "На одного гравця менше",
+  "icon.play": "Продовжити",
+  "icon.compass": "Компас",
+  "icon.map": "Мапа",
+  "icon.gear": "Налаштування",
+  "menu.campaign": "Кампанія",
+  "menu.campaign.soon": "Кампанія з'явиться в наступній фазі: місто, крамниця, рівні героїв.",
+  "menu.version": "версія {version}"
 }

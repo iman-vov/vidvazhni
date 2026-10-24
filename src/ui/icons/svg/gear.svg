@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- gear: Settings: a cog wheel. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M19.04 9.71 L21.88 10.44 L21.88 13.56 L19.04 14.29 L18.59 15.36 L20.09 17.88 L17.88 20.09 L15.36 18.59 L14.29 19.04 L13.56 21.88 L10.44 21.88 L9.71 19.04 L8.64 18.59 L6.12 20.09 L3.91 17.88 L5.41 15.36 L4.96 14.29 L2.12 13.56 L2.12 10.44 L4.96 9.71 L5.41 8.64 L3.91 6.12 L6.12 3.91 L8.64 5.41 L9.71 4.96 L10.44 2.12 L13.56 2.12 L14.29 4.96 L15.36 5.41 L17.88 3.91 L20.09 6.12 L18.59 8.64 Z"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M19.04 9.71 L21.88 10.44 L21.88 13.56 L19.04 14.29 L18.59 15.36 L20.09 17.88 L17.88 20.09 L15.36 18.59 L14.29 19.04 L13.56 21.88 L10.44 21.88 L9.71 19.04 L8.64 18.59 L6.12 20.09 L3.91 17.88 L5.41 15.36 L4.96 14.29 L2.12 13.56 L2.12 10.44 L4.96 9.71 L5.41 8.64 L3.91 6.12 L6.12 3.91 L8.64 5.41 L9.71 4.96 L10.44 2.12 L13.56 2.12 L14.29 4.96 L15.36 5.41 L17.88 3.91 L20.09 6.12 L18.59 8.64 Z"/>
+  </g>
+  <g style="fill:var(--icon-line,#3a2414)">
+    <path d="M8.6 12 A3.4 3.4 0 1 0 15.4 12 A3.4 3.4 0 1 0 8.6 12 Z"/>
+  </g>
+</svg>

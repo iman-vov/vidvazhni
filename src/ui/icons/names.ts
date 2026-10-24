@@ -9,6 +9,7 @@ export const ICON_GROUPS = {
   elements: ['fire', 'ice', 'air', 'earth', 'light', 'dark', 'any', 'orb-fire', 'orb-earth', 'orb-air'],
   world: ['door', 'trap', 'chest', 'coin', 'hp', 'monster', 'hero', 'elite'],
   interface: ['hand', 'discard', 'rest', 'item', 'approach', 'hold', 'early', 'late', 'undo', 'skip', 'menu', 'close', 'left', 'right', 'up', 'down', 'check', 'rotate', 'hint', 'revive', 'arrow', 'add-player', 'remove-player'],
+  menu: ['play', 'compass', 'map', 'gear'],
 } as const;
 
 export type IconGroup = keyof typeof ICON_GROUPS;

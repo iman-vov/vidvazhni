@@ -5,6 +5,7 @@ import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
 import { icon } from '../../ui/game/icons';
 import { figureName } from '../../ui/game/text';
+import { artButton, menuBackdrop } from './menu';
 import { addFeedback, type FeedbackRating } from '../feedback';
 import type { GameController } from '../game';
 
@@ -21,7 +22,7 @@ export function endScreen(o: EndOptions): HTMLElement {
   let rating: FeedbackRating | null = null;
   let comment = '';
   let sent = false;
-  const root = h('div', { class: `gpage gend-screen ${won ? 'is-win' : 'is-loss'}` });
+  const root = h('div', { class: `gpage is-art gend-screen ${won ? 'is-win' : 'is-loss'}` });
 
   function send(): void {
     if (!rating) return;
@@ -42,6 +43,7 @@ export function endScreen(o: EndOptions): HTMLElement {
 
   function render(): void {
     root.replaceChildren(
+      menuBackdrop(true),
       h('h1', { class: 'gend-title' }, won ? t('ui.victory') : t('ui.defeat')),
       h('p', { class: 'gintro' }, won ? t(`scenario.${s.scenarioId}.outro`) : t('game.end.lossText')),
       h('p', { class: 'gside-hint' }, t('game.end.rounds', { rounds: s.round })),
@@ -71,7 +73,7 @@ export function endScreen(o: EndOptions): HTMLElement {
               h('button', { class: 'gbtn', disabled: !rating, onclick: send }, t('game.feedback.send')),
             ],
       ),
-      h('footer', { class: 'gpage-foot' }, h('button', { class: 'gbtn', onclick: o.onAgain }, t('game.end.again')), h('button', { class: 'gbtn gbtn-primary gbtn-big', onclick: o.onMenu }, t('game.toMenu'))),
+      h('footer', { class: 'gpage-foot' }, artButton('compass', t('game.end.again'), o.onAgain, { cls: 'is-small' }), artButton('play', t('game.toMenu'), o.onMenu)),
     );
   }
 
