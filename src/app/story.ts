@@ -15,7 +15,7 @@ export type StoryMode = 'full' | 'short' | 'off';
 export const STORY_MODES: readonly StoryMode[] = ['full', 'short', 'off'];
 
 /** Off-board voices; a hero speaks by its class id. */
-export type NpcId = 'narrator' | 'marta' | 'miller' | 'shadowhand';
+export type NpcId = 'narrator' | 'marta' | 'miller' | 'shadowhand' | 'lina' | 'theo' | 'flip' | 'hammerfist';
 
 export interface StoryLineDef {
   id: string;
@@ -57,9 +57,11 @@ export function scenarioStory(lang: Lang, scenarioId: string): ScenarioStory | n
 }
 
 /** Monsters that speak as an NPC when they stand on the board. */
-export const NPC_FIGURES: Partial<Record<string, string>> = { miller: 'bog-miller', shadowhand: 'shadowhand' };
+export const NPC_FIGURES: Partial<Record<string, string>> = { miller: 'bog-miller', shadowhand: 'shadowhand', hammerfist: 'hammerfist' };
 
-export const isHeroSpeaker = (speaker: string): boolean => !(['narrator', 'marta', 'miller', 'shadowhand', 'hero'] as string[]).includes(speaker);
+const NPC_IDS: readonly string[] = ['narrator', 'marta', 'miller', 'shadowhand', 'lina', 'theo', 'flip', 'hammerfist'] satisfies NpcId[];
+
+export const isHeroSpeaker = (speaker: string): boolean => ![...NPC_IDS, 'hero'].includes(speaker);
 
 /** A small stable hash (FNV-1a): the same seed and line always pick the same hero. */
 function hash(text: string): number {
