@@ -1,29 +1,25 @@
-// Act II «Сиві гори» (docs/design/act2.md) before it is wired into loadContent(): the new monsters
-// pass the content cross-checks, and the card budget of tests/replay/card-budget.test.ts is estimated
-// for s6–s10 (maps, rooms and setup are covered by scenarios-maps.test.ts). When the act is wired,
-// s6–s10 join PARTIES in card-budget.test.ts and this file goes.
+// Act II «Сиві гори» (docs/design/act2.md), s6–s10: the new monsters pass the content cross-checks,
+// the card budget of tests/replay/card-budget.test.ts is estimated for a level-3 party (that file plays
+// level 1), and a smoke run: each scenario set up for 2 heroes, the greedy bot plays a few rounds with
+// no engine error. Maps, rooms and setup are covered by tests/data/scenarios-maps.test.ts.
 
 import { describe, expect, it } from 'vitest';
 import type { Content, ScenarioDef } from '../../src/rules/content';
-import { createGame } from '../../src/rules/engine';
+import { apply, createGame } from '../../src/rules/engine';
 import { hexKey, type Hex } from '../../src/rules/hex';
 import { loadContent } from '../../src/rules/load';
 import { goalZone } from '../../src/rules/objectives';
 import { revealRoom } from '../../src/rules/setup';
-import { BASE_RULES } from '../../src/rules/variants';
+import { BASE_RULES, FULL_FORK } from '../../src/rules/variants';
 import { stepsFrom } from '../../tools/map-editor/checks';
-import { withAct2 } from './act2';
-import { checkContent } from './crossref';
+import { checkContent } from '../data/crossref';
+import { chooseAction } from './bot';
 
-import s6 from '../../data/scenarios/s6.json';
-import s7 from '../../data/scenarios/s7.json';
-import s8 from '../../data/scenarios/s8.json';
-import s9 from '../../data/scenarios/s9.json';
-import s10 from '../../data/scenarios/s10.json';
-
-const base = loadContent();
-const scenarios = [s6, s7, s8, s9, s10] as unknown as ScenarioDef[];
-const content: Content = withAct2({ ...base, scenarios: { ...base.scenarios, ...Object.fromEntries(scenarios.map((s) => [s.id, s])) } });
+const content: Content = loadContent();
+const ACT2 = ['s6', 's7', 's8', 's9', 's10'];
+const scenarios: ScenarioDef[] = ACT2.map((id) => content.scenarios[id]!);
+/** Bot rounds per smoke run: enough to reveal rooms and fight, short enough for the suite. */
+const SMOKE_ROUNDS = 4;
 
 /** Act II starts at hero level 3 (docs/design/act2.md «Прогрес»). */
 const LEVEL = 3;
@@ -101,4 +97,29 @@ describe('Act II data (s6–s10)', () => {
       expect(b.slack).toBeGreaterThanOrEqual(0.25);
     });
   }
+});
+
+describe('Act II smoke: the bot plays s6–s10 with 2 heroes', () => {
+  for (const s of scenarios)
+    for (const variants of [BASE_RULES, FULL_FORK])
+      it(`${s.id} (${variants === FULL_FORK ? 'fork' : 'base'}): ${SMOKE_ROUNDS} bot rounds without an engine error`, () => {
+        let g = createGame(
+          {
+            scenarioId: s.id,
+            seed: 3,
+            heroes: PARTIES[s.id]!.map((classId, i) => ({ classId, playerId: `p${i}`, level: LEVEL })),
+            difficulty: 'normal',
+            variants: { ...variants },
+          },
+          content,
+        );
+        let actions = 0;
+        while (g.phase !== 'won' && g.phase !== 'lost' && g.round <= SMOKE_ROUNDS) {
+          const r = apply(g, chooseAction(g, content), content);
+          if (!r.ok) throw new Error(`${s.id} round ${g.round}: ${r.error}`);
+          g = r.state;
+          if (++actions > 2000) throw new Error(`${s.id}: the bot is stuck in round ${g.round}`);
+        }
+        expect(g.round > SMOKE_ROUNDS || g.phase === 'won' || g.phase === 'lost').toBe(true);
+      }, 120_000);
 });

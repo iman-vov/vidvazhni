@@ -20,11 +20,11 @@
       "traps": [{ "hex": [4, -1] }, { "hex": [6, -3] }],
       "doors": [{ "hex": [7, -2], "to": "s9.lake" }],
       "spawns": [
-        { "monster": "night-moth", "hex": [5, -1], "by": { "2": "elite", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [5, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "night-moth", "hex": [6, -2], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "night-moth", "hex": [4, -2], "by": { "3": "normal", "4": "normal" } },
         { "monster": "night-moth", "hex": [6, -1], "by": { "4": "normal" } },
-        { "monster": "cellar-rat", "hex": [3, 0], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "cellar-rat", "hex": [3, 0], "by": { "3": "normal", "4": "elite" } },
         { "monster": "cellar-rat", "hex": [3, 1], "by": { "4": "normal" } }
       ],
       "chests": [{ "hex": [1, 2], "id": "s9.lamp", "loot": { "questItem": "miner-lamp" } }]
