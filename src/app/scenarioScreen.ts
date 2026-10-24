@@ -1550,6 +1550,7 @@ function objectivePlate(content: Content, s: GameState): HTMLElement {
     'div',
     { class: 'gplate gtop-round gtop-goal' },
     h('b', null, t(`objective.${st.goal}`, { done: st.done ?? 0, of: st.of ?? 0 })),
+    st.roundsLeft !== undefined ? h('small', null, t('objective.roundsLeft', { n: st.roundsLeft })) : null,
     secondary.length ? h('small', null, ...secondary) : null,
   );
 }

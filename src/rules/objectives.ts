@@ -48,7 +48,27 @@ export function goalReached(ctx: Ctx): boolean {
       return living.length > 0 && living.every((h) => inZone(zone, h.hex));
     case 'carryItem':
       return living.some((h) => ((h.questItems ?? []).includes(goal.item) || (h.chests ?? []).includes(goal.item)) && inZone(zone, h.hex));
+    case 'survive':
+      return living.length > 0 && s.round >= goal.rounds;
+    case 'defend':
+      return living.length > 0 && s.round >= goal.rounds && !monsterInZone(s, zone);
   }
+}
+
+function monsterInZone(s: GameState, zone: Hex[]): boolean {
+  return monsters(s).some((m) => isPresent(m) && inZone(zone, m.hex));
+}
+
+// ─── Lose rules ────────────────────────────────────────────────────────────
+
+/** Checked at the end of every round after the goal: a monster in the defended zone, or the
+ *  scenario's `lose` rules. (Every hero exhausted is checked as it happens, in damage.ts.) */
+export function lostByRules(ctx: Ctx): boolean {
+  const s = ctx.s;
+  const scenario = ctx.c.scenarios[s.scenarioId];
+  if (!scenario) return false;
+  if (scenario.goal.type === 'defend' && monsterInZone(s, goalZone(scenario))) return true;
+  return (scenario.lose ?? []).some((rule) => rule.type === 'roundLimit' && s.round >= rule.rounds);
 }
 
 // ─── Secondary goals ───────────────────────────────────────────────────────
@@ -86,6 +106,8 @@ export interface ObjectiveStatus {
   /** Progress counter when the goal has one (heroes at the exit, monsters left). */
   done?: number;
   of?: number;
+  /** Rounds left before `roundLimit` loses the scenario, this one included. */
+  roundsLeft?: number;
   secondary: { id: string; check: string; params?: SecondaryGoalDef['params']; met: boolean }[];
 }
 
@@ -104,5 +126,11 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
     status.of = living.length;
   }
   if (goal.type === 'killAll') status.done = monsters(s).filter(isPresent).length;
+  if (goal.type === 'survive' || goal.type === 'defend') {
+    status.done = Math.min(s.round, goal.rounds);
+    status.of = goal.rounds;
+  }
+  const limits = (scenario.lose ?? []).filter((r) => r.type === 'roundLimit').map((r) => r.rounds);
+  if (limits.length) status.roundsLeft = Math.max(0, Math.min(...limits) - s.round + 1);
   return status;
 }

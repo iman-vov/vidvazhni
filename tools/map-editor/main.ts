@@ -624,6 +624,10 @@ function newGoal(type: ScenarioGoal['type']): ScenarioGoal {
       return { type, boss: Object.keys(content.bosses)[0] ?? '' };
     case 'carryItem':
       return { type, item: '', to: old };
+    case 'survive':
+      return { type, rounds: 6 };
+    case 'defend':
+      return { type, zone: '', rounds: 6 };
   }
 }
 

@@ -5,7 +5,7 @@ import { exhaust, findCard, loseScenario } from './damage';
 import { activeHeroes, emit, hero, heroes, isPresent, monsters, schedule, victoryXp, type Ctx } from './effects/context';
 import { decayAtEndOfRound, scenarioOrbs } from './elements';
 import { shuffleIfNeeded } from './modifiers';
-import { goalReached, secondaryMet } from './objectives';
+import { goalReached, lostByRules, secondaryMet } from './objectives';
 import { nextInt, shuffle } from './rng';
 import type { BehaviourDeckState, CardId, HeroState, InitiativeRoll, TurnEntry } from './state';
 import { INITIATIVE_DIE_MAX, INITIATIVE_DIE_SIDES } from './variants';
@@ -363,6 +363,7 @@ export function finishRound(ctx: Ctx): void {
   }
   emit(ctx, { type: 'roundEnded', round: s.round });
   if (goalReached(ctx)) return winScenario(ctx);
+  if (lostByRules(ctx)) return loseScenario(ctx);
   startRound(ctx);
 }
 

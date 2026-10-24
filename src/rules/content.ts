@@ -324,7 +324,15 @@ export type ScenarioGoal =
   | { type: 'killAll' }
   | { type: 'reachExit'; hexes?: Hex[]; zone?: string }
   | { type: 'killBoss'; boss: string }
-  | { type: 'carryItem'; item: string; to?: Hex[]; zone?: string };
+  | { type: 'carryItem'; item: string; to?: Hex[]; zone?: string }
+  /** Hold out until the end of round `rounds`; monsters need not be beaten. */
+  | { type: 'survive'; rounds: number }
+  /** Hold out `rounds` rounds; a monster standing in the zone at the end of a round loses it. */
+  | { type: 'defend'; zone: string; rounds: number };
+
+/** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
+ *  reached by the end of round `rounds` (the escape's timer). */
+export type LoseRule = { type: 'roundLimit'; rounds: number };
 
 /** Optional goal on top of the main one (docs/design/missions.md): a named check from the
  *  engine's registry (`objectives.ts`), like a battle goal, paid when the scenario is won. */
@@ -342,6 +350,7 @@ export interface ScenarioDef {
   goal: ScenarioGoal;
   secondary?: SecondaryGoalDef[];
   zones?: ZoneDef[];
+  lose?: LoseRule[];
   startRoom: string;
   startHexes: Hex[];
   rooms: RoomDef[];
