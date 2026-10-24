@@ -21,9 +21,9 @@
       "properties": {
         "id": { "type": "string", "pattern": "^s[0-9]+\\.[a-z0-9.-]+$" },
         "speaker": {
-          "description": "narrator/horpyna/miller/shadowhand; 'hero' = a party hero picked by 'pick', using 'variants'; a hero id = plays only if that hero is in the party",
+          "description": "narrator/marta/miller/shadowhand; 'hero' = a party hero picked by 'pick', using 'variants'; a hero id = plays only if that hero is in the party",
           "anyOf": [
-            { "enum": ["narrator", "horpyna", "miller", "shadowhand", "hero"] },
+            { "enum": ["narrator", "marta", "miller", "shadowhand", "hero"] },
             { "$ref": "#/definitions/heroId" }
           ]
         },
@@ -82,7 +82,7 @@
         "epilogue": {
           "allOf": [
             { "$ref": "#/definitions/line" },
-            { "properties": { "speaker": { "const": "horpyna" } } }
+            { "properties": { "speaker": { "const": "marta" } } }
           ]
         }
       }
