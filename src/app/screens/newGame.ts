@@ -10,11 +10,13 @@ import { VARIANT_ORDER } from '../../rules/variants';
 import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
 import { icon } from '../../ui/game/icons';
+import { heroBustUrl } from '../../ui/game/uiArt';
 import type { PlayerInfo } from '../game';
 import { settings } from '../settings';
 import { localStore, readJson } from '../storage';
 import { artButton, menuBackdrop } from './menu';
 import { hintRow } from './settings';
+import './newGame.css';
 
 export const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
 const KEY = 'vidvazhni.newGame';
@@ -217,7 +219,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     const other = pickOf(player, slot === 0 ? 1 : 0);
     // A hero kept from the last game that someone before has taken meanwhile is dropped.
     const taken = new Map(earlier(player).map((x) => [x.classId, nameOf(playerIndex(x.playerId))]));
-    if (other) taken.set(other.classId, t('newGame.firstHero'));
+    if (other) taken.set(other.classId, slot === 0 ? t('newGame.secondHero') : t('newGame.firstHero'));
     if (own && taken.has(own.classId)) setPick(player, slot, null);
     const chosen = pickOf(player, slot)?.classId ?? null;
     const done = () => {
@@ -262,7 +264,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
               draft.picks
                 .filter((x) => x.playerId === p.id)
                 .sort((a, b) => a.slot - b.slot)
-                .map((x) => h('span', { class: 'gnew-member-hero' }, t(`class.${x.classId}`))),
+                .map((x) => h('span', { class: `gnew-member-hero${x.slot === 1 ? ' is-second' : ''}` }, bust(x.classId), t(`class.${x.classId}`))),
             ),
           ),
         ),
@@ -331,6 +333,7 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
         return h(
           'button',
           { class: 'gnew-tile', role: 'radio', 'aria-checked': String(id === o.chosen), disabled: !!owner, onclick: () => o.onChoose(id) },
+          bust(id),
           h('b', null, t(`class.${id}`)),
           h('span', null, t(`class.${id}.role`)),
           owner ? h('small', { class: 'gnew-owner' }, owner) : null,
@@ -348,6 +351,11 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
         )
       : h('p', { class: 'gside-hint gnew-pickfirst' }, t('newGame.pickFirst')),
   );
+}
+
+function bust(classId: string): HTMLElement {
+  const url = heroBustUrl(classId);
+  return h('span', { class: 'gnew-bust', 'aria-hidden': 'true' }, url ? h('img', { src: url, alt: '', draggable: 'false', loading: 'lazy' }) : null);
 }
 
 /** «Правила: форк» or «Правила: свої (4 з 7)» for the rules set in Settings. */

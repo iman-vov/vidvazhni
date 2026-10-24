@@ -624,6 +624,7 @@
   "menu.rules.fork.text": "All our mechanics: orbs, three monster intents, follow-up, momentum, revive an ally, forecast, item prompts.",
   "menu.rules.custom.text": "Turn on only the fork mechanics you want.",
   "menu.start": "Start the adventure",
+  "newGame.secondHero": "Your second hero",
   "newGame.next": "Next: heroes",
   "newGame.steps": "New game steps",
   "newGame.step.setup": "Adventure",

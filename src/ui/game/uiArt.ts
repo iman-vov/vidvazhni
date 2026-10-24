@@ -42,3 +42,10 @@ export function portraitOf(figureId: string): string | undefined {
   if (!a) return undefined;
   return portraitUrl(kind === 'summon' ? a.replace('.', '-') : a);
 }
+
+const BUSTS = import.meta.glob<string>('./assets/heroes/*.webp', { eager: true, query: '?url', import: 'default' });
+
+/** Hero bust cut out of the concept art (tools/hero-busts.py), for the New Game gallery. */
+export function heroBustUrl(classId: string): string | undefined {
+  return BUSTS[`./assets/heroes/${classId}.webp`];
+}
