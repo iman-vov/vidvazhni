@@ -400,6 +400,12 @@
     "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "The class colour (art/prompts/ui/card-frames.md): portraits, frames, board tokens." },
     "hpByLevel": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 5, "maxItems": 5 },
     "handSize": { "type": "integer", "minimum": 1 },
+    "recommendedHand": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "description": "The hand offered in one tap on the hand-pick screen: handSize level-1 card ids."
+    },
     "classElement": { "enum": ["fire", "ice", "air", "earth", "light", "dark", "any"] },
     "classOrb": { "enum": ["fire", "earth", "air", "any"] },
     "surge": { "$ref": "#/definitions/steps" },

@@ -181,6 +181,8 @@ export interface HeroClass {
   color: string;
   hpByLevel: number[]; // index 0 = level 1
   handSize: number;
+  /** The hand offered in one tap on the hand-pick screen («Рекомендована рука»): `handSize` level-1 cards. */
+  recommendedHand?: string[];
   /** Base: the element the class perk infuses. */
   classElement: ElementId | 'any';
   /** Fork: the orb the class is associated with. */

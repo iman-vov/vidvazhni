@@ -15,7 +15,7 @@ import { interactiveObstacles } from './obstacles';
 import { dodgeChances, dodgeItemRolls } from './defense';
 import { behaviourCard, groupInitiative, monsterInitiative, typesOnBoard } from './round';
 import { adjustDamage, boardObjects, doorLocked } from './scenarioRules';
-import { availableCards } from './setup';
+import { availableCards, recommendedHand } from './setup';
 import type { Action, CardId, Figure, FigureId, GameEvent, GameState, HeroState, StepChoice } from './state';
 import { figureSteps } from './turn';
 import { MOMENTUM_MAX } from './variants';
@@ -37,7 +37,7 @@ function candidateActions(state: GameState, content: Content): Action[] {
       for (const id of p.heroIds) {
         const h = hero(id);
         const cls = content.heroes[h.classId];
-        if (cls) out.push({ type: 'chooseHand', heroId: id, cards: availableCards(cls, h.level, h.cardPool).slice(0, cls.handSize) });
+        if (cls) out.push({ type: 'chooseHand', heroId: id, cards: recommendedHand(cls, availableCards(cls, h.level, h.cardPool)) });
       }
       break;
     case 'selectCards':

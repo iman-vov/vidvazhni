@@ -6,6 +6,7 @@
 import tutorialMap from '../../../data/tutorial/s0-tutorial.json';
 import type { ScenarioDef } from '../../rules/content';
 import { loadContent, type LoadedContent } from '../../rules/load';
+import { availableCards, recommendedHand } from '../../rules/setup';
 import type { GameSetup } from '../../rules/state';
 import { FULL_FORK } from '../../rules/variants';
 import type { PlayerInfo } from '../game';
@@ -30,11 +31,13 @@ export function isTutorial(scenarioId: string | undefined): boolean {
   return scenarioId === TUTORIAL_ID;
 }
 
+/** The tutorial skips the hand choice: the hero starts with the recommended hand. */
 export function tutorialSetup(seed = TUTORIAL_SEED): GameSetup {
+  const cls = loadContent().heroes[TUTORIAL_HERO]!;
   return {
     scenarioId: TUTORIAL_ID,
     seed,
-    heroes: [{ classId: TUTORIAL_HERO, playerId: 'p1', level: 1 }],
+    heroes: [{ classId: TUTORIAL_HERO, playerId: 'p1', level: 1, hand: recommendedHand(cls, availableCards(cls, 1)) }],
     difficulty: 'easy',
     variants: { ...FULL_FORK },
   };

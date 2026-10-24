@@ -1,23 +1,29 @@
 // Helpers for the scenario tests: real content, a game of Вартовий + Травниця (both take all
-// their cards, so no hand choice), and direct board edits for setting up a situation.
+// recommended hand, so no hand choice), and direct board edits for setting up a situation.
 
 import { act, endTurn } from '../../helpers/engineFixtures';
 import { createGame } from '../../../src/rules/engine';
 import type { Ctx } from '../../../src/rules/effects/context';
 import type { Hex } from '../../../src/rules/hex';
 import { loadContent } from '../../../src/rules/load';
-import { revealRoom } from '../../../src/rules/setup';
+import { availableCards, recommendedHand, revealRoom } from '../../../src/rules/setup';
 import type { GameState, HeroState, MonsterState } from '../../../src/rules/state';
 import { BASE_RULES, type Variants } from '../../../src/rules/variants';
 
 export const content = loadContent();
+
+/** The recommended hand, so a game starts in card selection without the hand choice. */
+export function startHand(classId: string, level = 1): string[] {
+  const cls = content.heroes[classId]!;
+  return recommendedHand(cls, availableCards(cls, level));
+}
 
 export function game(scenarioId: string, variants: Partial<Variants> = {}, heroes = ['warden', 'herbalist'], level = 1, seed = 1): GameState {
   return createGame(
     {
       scenarioId,
       seed,
-      heroes: heroes.map((classId, i) => ({ classId, playerId: `p${i}`, level })),
+      heroes: heroes.map((classId, i) => ({ classId, playerId: `p${i}`, level, hand: startHand(classId, level) })),
       difficulty: 'normal',
       variants: { ...BASE_RULES, ...variants },
     },

@@ -15,7 +15,7 @@ import { apply, createGame } from '../../src/rules/engine';
 import { hexKey, type Hex } from '../../src/rules/hex';
 import { loadContent } from '../../src/rules/load';
 import { goalZone } from '../../src/rules/objectives';
-import { revealRoom } from '../../src/rules/setup';
+import { availableCards, recommendedHand, revealRoom } from '../../src/rules/setup';
 import type { GameSetup, GameState } from '../../src/rules/state';
 import { scaleMonsterStats } from '../../src/rules/effects/context';
 import { BASE_RULES } from '../../src/rules/variants';
@@ -60,9 +60,11 @@ function setup(scenarioId: string, seed: number): GameSetup {
 
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
 
-/** Mean value of a step type over the class's cards (top halves for attacks, bottom for moves). */
+/** Mean value of a step type over the class's recommended hand (top halves for attacks, bottom for moves). */
 function meanStep(content: Content, classId: string, half: 'top' | 'bottom', type: 'attack' | 'move'): number {
-  const values = content.heroes[classId]!.cards.flatMap((card) =>
+  const cls = content.heroes[classId]!;
+  const hand = recommendedHand(cls, availableCards(cls, 1));
+  const values = cls.cards.filter((card) => hand.includes(card.id)).flatMap((card) =>
     card[half].steps.flatMap((st) => (st.type === type && 'value' in st && typeof st.value === 'number' ? [st.value] : [])),
   );
   return mean(values);

@@ -34,6 +34,15 @@ export function availableCards(cls: HeroClass, level: number, owned?: string[]):
   return cls.cards.filter((c) => c.level <= Math.max(1, level) && (!owned || c.level <= 1 || owned.includes(c.id))).map((c) => c.id);
 }
 
+/** The default hand from a pool: the level cards (highest level first; a levelled hero takes its new
+ *  cards), then the class's `recommendedHand`, then the rest of the pool in data order. */
+export function recommendedHand(cls: HeroClass, pool: string[]): string[] {
+  const level = (id: string) => cls.cards.find((c) => c.id === id)?.level ?? 1;
+  const rec = cls.recommendedHand ?? [];
+  const rank = (id: string) => (rec.includes(id) ? rec.indexOf(id) : rec.length + pool.indexOf(id));
+  return [...pool].sort((a, b) => level(b) - level(a) || rank(a) - rank(b)).slice(0, cls.handSize);
+}
+
 /** The deck edits of the hero's perks (campaign level-ups). */
 function perkOps(content: Content, perks: string[] = []): PerkOp[] {
   return perks.flatMap((id) => {
