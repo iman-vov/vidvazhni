@@ -12,7 +12,8 @@ import { DIRECTIONS, hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
 import { planAnimation, TIMING, type AnimStep } from './animPlan';
-import { BoardCamera } from './boardCamera';
+import { BoardCamera, KEY_ZOOM_STEP } from './boardCamera';
+import { KEY_YAW_STEP } from './cameraGestures';
 import { BoardEffects, ELEMENT_COLORS } from './boardEffects';
 import { BoardEnvironment, type EnvironmentStats } from './environment';
 import { BoardOverlay, CONDITION_ICONS, conditionIconSvg, FigureBadge, type OverlayItem } from './boardOverlay';
@@ -38,10 +39,13 @@ const RING_FPS = 24;
 const AMBIENT_FPS: Record<GraphicsQuality, number> = { low: 15, medium: 24, high: 30 };
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
-const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string; overview: string }> = {
-  uk: { miss: 'Промах', shield: 'Щит', resetView: 'Повернути огляд', overview: 'Уся мапа' },
-  de: { miss: 'Daneben', shield: 'Schild', resetView: 'Ansicht zurücksetzen', overview: 'Ganze Karte' },
-  en: { miss: 'Miss', shield: 'Shield', resetView: 'Reset view', overview: 'Whole map' },
+const LABELS: Record<
+  'uk' | 'de' | 'en',
+  { miss: string; shield: string; resetView: string; overview: string; turnLeft: string; turnRight: string; zoomIn: string; zoomOut: string }
+> = {
+  uk: { miss: 'Промах', shield: 'Щит', resetView: 'Повернути огляд', overview: 'Уся мапа', turnLeft: 'Повернути ліворуч (Q)', turnRight: 'Повернути праворуч (E)', zoomIn: 'Ближче (+)', zoomOut: 'Далі (−)' },
+  de: { miss: 'Daneben', shield: 'Schild', resetView: 'Ansicht zurücksetzen', overview: 'Ganze Karte', turnLeft: 'Nach links drehen (Q)', turnRight: 'Nach rechts drehen (E)', zoomIn: 'Näher (+)', zoomOut: 'Weiter (−)' },
+  en: { miss: 'Miss', shield: 'Shield', resetView: 'Reset view', overview: 'Whole map', turnLeft: 'Turn left (Q)', turnRight: 'Turn right (E)', zoomIn: 'Zoom in (+)', zoomOut: 'Zoom out (−)' },
 };
 
 /** Extra handles for the dev page and tests; not part of the BoardView contract. */
@@ -174,17 +178,29 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   let resetButton: HTMLButtonElement | null = null;
   let resetShows: 'home' | 'overview' | null = null;
   if (opts.resetButton !== false) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'bv-reset';
-    b.title = b.ariaLabel = LABELS[lang].resetView;
-    b.innerHTML = iconSvg('compass', { size: 24 });
-    b.hidden = true;
-    // Keep the press away from the board's gestures (no pan, no tap through to a hex).
-    b.addEventListener('pointerdown', (e) => e.stopPropagation());
-    b.addEventListener('click', () => (camera.atHome && camera.hasOverview ? camera.overview() : resetCamera()));
-    root.appendChild(b);
-    resetButton = b;
+    const bar = document.createElement('div');
+    bar.className = 'bv-cam';
+    const button = (cls: string, label: string, html: string, act: () => void): HTMLButtonElement => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = cls;
+      b.title = b.ariaLabel = label;
+      b.innerHTML = html;
+      // Keep the press away from the board's gestures (no pan, no tap through to a hex).
+      b.addEventListener('pointerdown', (e) => e.stopPropagation());
+      b.addEventListener('click', act);
+      bar.appendChild(b);
+      return b;
+    };
+    button('bv-cam-btn', LABELS[lang].turnLeft, '⟲', () => camera.rotateBy(-KEY_YAW_STEP));
+    button('bv-cam-btn', LABELS[lang].turnRight, '⟳', () => camera.rotateBy(KEY_YAW_STEP));
+    button('bv-cam-btn', LABELS[lang].zoomIn, '+', () => camera.zoomBy(1 / KEY_ZOOM_STEP));
+    button('bv-cam-btn', LABELS[lang].zoomOut, '−', () => camera.zoomBy(KEY_ZOOM_STEP));
+    resetButton = button('bv-cam-btn bv-reset', LABELS[lang].resetView, iconSvg('compass', { size: 20 }), () =>
+      camera.atHome && camera.hasOverview ? camera.overview() : resetCamera(),
+    );
+    resetButton.hidden = true;
+    root.appendChild(bar);
   }
 
   function resetCamera(): void {
@@ -305,7 +321,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       resetButton.hidden = shows === null;
       if (shows && shows !== resetShows) {
         resetButton.title = resetButton.ariaLabel = shows === 'home' ? LABELS[lang].resetView : LABELS[lang].overview;
-        resetButton.innerHTML = iconSvg(shows === 'home' ? 'compass' : 'map', { size: 24 });
+        resetButton.innerHTML = iconSvg(shows === 'home' ? 'compass' : 'map', { size: 20 });
       }
       resetShows = shows;
     }

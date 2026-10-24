@@ -59,9 +59,11 @@ const CSS = `
 .bv-cost{transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#3a2a08;background:rgba(255,226,140,.92);border-radius:8px;padding:0 5px;line-height:16px}
 .bv-exp{transform:translate(-50%,-100%);display:flex;align-items:center;gap:2px;white-space:nowrap;font-size:14px;font-weight:800;color:#fff;background:rgba(196,60,40,.92);border-radius:9px;padding:1px 7px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .bv-exp.ally{background:rgba(36,128,64,.94);box-shadow:0 0 0 1.5px rgba(160,255,180,.7),0 1px 3px rgba(0,0,0,.5)}
-.bv-reset{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(240,196,112,.7);background:rgba(28,24,22,.78);color:#f4e2bc;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.45);transition:opacity .2s;z-index:1;touch-action:manipulation}
-.bv-reset[hidden]{display:none}
-.bv-reset:active{transform:translateY(-50%) scale(.94)}
+.bv-cam{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:1}
+.bv-cam-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(240,196,112,.7);background:rgba(28,24,22,.78);color:#f4e2bc;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.45);font:700 20px/1 system-ui,sans-serif;touch-action:manipulation}
+.bv-cam-btn[hidden]{display:none}
+.bv-cam-btn:active{transform:scale(.92)}
+.bv-reset{border-color:rgba(240,196,112,.95)}
 @keyframes bv-pop{0%{transform:scale(.2)}60%{transform:scale(1.4)}100%{transform:scale(1)}}
 `;
 

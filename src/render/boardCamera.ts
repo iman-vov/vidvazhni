@@ -2,7 +2,8 @@
 // target and a pitch (home 55°, the player may tilt within 35–70°). Gestures move a goal camera;
 // the shown camera follows it with smooth damping. Touch: one finger pans, two fingers pinch-zoom,
 // twist to turn the view and pan together, or slide up/down together to tilt. Mouse: left (or
-// middle, or shift+left) drag pans, right drag turns and tilts, the wheel zooms; Q/E turn the view.
+// middle, or shift+left) drag pans, right (or alt+left) drag turns and tilts, the wheel zooms; Q/E turn
+// the view and +/− zoom.
 // Taps, double taps and long presses are reported with screen coordinates for picking. Bounds keep
 // the view centre over the board, so the board never leaves the screen.
 
@@ -26,6 +27,8 @@ import {
 } from './cameraGestures';
 
 const FOV = 40;
+/** One +/− key press or zoom button: the distance changes by this factor. */
+export const KEY_ZOOM_STEP = 1.25;
 const MIN_DISTANCE = 4 * HEX_SIZE;
 const FIT_MARGIN = 0.9;
 /** The game UI puts the initiative bar along the top, so the board leaves more room there. */
@@ -440,8 +443,8 @@ export class BoardCamera {
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.held = false;
     this.cancelHold();
-    if (mouse && e.button === 2) {
-      // Right drag turns and tilts the view; it never taps.
+    if (mouse && (e.button === 2 || (e.button === 0 && e.altKey && !e.shiftKey))) {
+      // Right (or alt+left) drag turns and tilts the view; it never taps.
       this.tapCandidate = null;
       this.mode = 'orbit';
       this.orbitStart = { x: e.clientX, y: e.clientY, yaw: this.goal.yaw, pitch: this.goal.pitch };
@@ -554,18 +557,28 @@ export class BoardCamera {
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const key = e.key.toLowerCase();
-    if (key !== 'q' && key !== 'e') return;
+    const zoom = key === '+' || key === '=' ? 1 / KEY_ZOOM_STEP : key === '-' || key === '_' ? KEY_ZOOM_STEP : 0;
+    if (key !== 'q' && key !== 'e' && !zoom) return;
     const t = e.target as HTMLElement | null;
     if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
     // Only the board that is on screen.
     if (!this.el.isConnected || this.el.getClientRects().length === 0) return;
-    this.rotateBy(key === 'q' ? -KEY_YAW_STEP : KEY_YAW_STEP);
+    if (zoom) this.zoomBy(zoom);
+    else this.rotateBy(key === 'q' ? -KEY_YAW_STEP : KEY_YAW_STEP);
   };
 
   /** Turns the view around its centre by `radians` (eased). */
   rotateBy(radians: number): void {
     this.userMoved = true;
     this.goal.yaw += radians;
+    placeCamera(this.goalCamera, this.goal);
+    this.on.changed();
+  }
+
+  /** Scales the view distance by `k` around the view centre (eased; below 1 comes closer). */
+  zoomBy(k: number): void {
+    this.userMoved = true;
+    this.goal.distance = this.clampDistance(this.goal.distance * k);
     placeCamera(this.goalCamera, this.goal);
     this.on.changed();
   }
