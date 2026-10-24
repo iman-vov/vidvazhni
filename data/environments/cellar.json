@@ -5,7 +5,7 @@
   "surface": "flagstones",
   "boundary": "walls",
   "ground": { "texture": "tavern-planks", "tint": "#5e4434", "scale": 2.4 },
-  "walls": { "height": 1.6, "low": 0.3, "alt": 3, "inner": "#a08c76" },
+  "walls": { "height": 1.6, "low": 0.3, "alt": 3, "inner": "#a08c76", "sconce": { "piece": "wall-torch", "every": 3 } },
   "palette": { "stone": "#94806b", "stoneDark": "#62524a", "stoneLight": "#a8927a", "wood": "#8c5c36", "woodDark": "#5a3b24" },
   "light": {
     "sky": "#ffe2b6",
@@ -22,11 +22,14 @@
     "barrel": { "model": "barrel", "height": 0.92 },
     "crate": { "model": "crate", "height": 0.62 },
     "sack": { "model": "flour-sack", "height": 0.5 },
+    "brazier": { "model": "brazier", "height": 0.68 },
+    "brazier-lit": { "model": "brazier", "height": 0.72 },
     "chest": { "model": "chest", "height": 0.6 },
     "door": { "model": "dungeon-door", "height": 1.0 },
     "trap": { "model": "bear-trap", "height": 0.18 }
   },
   "dressing": {
+    "anchors": [["brazier-lit", 2]],
     "ring": [["barrel", 3], ["keg-rack", 2], ["crate", 2], ["crate-stack", 2], ["sacks", 2], ["wine-rack", 2], ["candles", 2], ["shelf", 1], ["sack", 1]],
     "density": 0.75
   }

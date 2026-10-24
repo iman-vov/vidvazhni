@@ -91,6 +91,8 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
 
   // ── Outline: walls or their outdoor stand-ins, doorways, corners.
   const altCount = new Map<EdgeStyle, number>();
+  const sconce = def.walls?.sconce;
+  let plain = 0;
   layout.edges.forEach((e, i) => {
     const style = styleOf(def, e.room);
     const s = STYLE_PIECES[style];
@@ -109,6 +111,10 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
       }
       // Walls take no room from the strip: props stand right against their inner face.
       put({ piece, x: e.x, z: e.z, rot: inward(e.nx, e.nz), scale: 1, height: e.front ? lowH : wallH, room: e.room, band: 'edge' }, 0.05);
+      if (sconce && piece === s.wall && sconce.every > 0 && ++plain % sconce.every === 1) {
+        const meta = pieceMeta(sconce.piece);
+        if (meta && meta.height < wallH) put({ piece: sconce.piece, x: e.x, z: e.z, rot: inward(e.nx, e.nz), scale: 1, height: meta.height, room: e.room, band: 'edge' }, 0.05);
+      }
       return;
     }
     // Loose clumps a little outside the edge, varied in size; low in front of the board.
@@ -152,10 +158,52 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     put({ piece: lm.piece, x: e.x + e.nx * out1, z: e.z + e.nz * out1, rot: inward(e.nx, e.nz) + Math.PI / 2, scale: 1, height: meta.height, room: null, band: 'feature' }, meta.radius);
   }
 
+  // ── Anchors: pieces that always stand in the ring, spread apart along the far and side walls.
+  const anchored = new Set<string>();
+  const anchorList = (def.dressing.anchors ?? []).flatMap(([id, n]) => Array.from({ length: n }, () => id));
+  if (anchorList.length) {
+    const spots = [...layout.ring.keys()].sort().filter((k) => {
+      if (layout.clear.has(k)) return false;
+      const own = layout.edges.filter((e) => hexKey(e.inner) === k);
+      return own.length > 0 && own.every((e) => !e.front && !e.door);
+    });
+    const chosen: { x: number; z: number }[] = [];
+    for (const piece of anchorList) {
+      const meta = pieceMeta(piece);
+      if (!meta) continue;
+      let best: string | null = null;
+      let bestD = -1;
+      for (const k of spots) {
+        if (anchored.has(k)) continue;
+        const [q, r] = parseHexKey(k);
+        const c = hexToWorld(q, r);
+        if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6)) continue;
+        // The first one nearest the board's middle, the rest as far from the others as possible.
+        const d = chosen.length ? Math.min(...chosen.map((o) => Math.hypot(o.x - c.x, o.z - c.z))) : -Math.hypot(c.x - layout.centre.x, c.z - layout.centre.z);
+        if (d > bestD || best === null) {
+          bestD = d;
+          best = k;
+        }
+      }
+      if (!best) break;
+      anchored.add(best);
+      const [q, r] = parseHexKey(best);
+      const c = hexToWorld(q, r);
+      const own = layout.edges.filter((e) => hexKey(e.inner) === best);
+      let nx = own.reduce((s, e) => s + e.nx, 0);
+      let nz = own.reduce((s, e) => s + e.nz, 0);
+      const len = Math.hypot(nx, nz) || 1;
+      nx /= len;
+      nz /= len;
+      chosen.push(c);
+      put({ piece, x: c.x + nx * 0.22, z: c.z + nz * 0.22, rot: inward(nx, nz), scale: 1, height: meta.height, room: layout.ring.get(best)!, band: 'ring' }, meta.radius);
+    }
+  }
+
   // ── Ring strip: props against the walls (or along the forest edge).
   const ringList = def.dressing.ring;
   for (const k of [...layout.ring.keys()].sort()) {
-    if (layout.clear.has(k)) continue;
+    if (layout.clear.has(k) || anchored.has(k)) continue;
     if (rnd() > share * density) continue;
     const [q, r] = parseHexKey(k);
     const c = hexToWorld(q, r);

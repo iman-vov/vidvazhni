@@ -87,7 +87,7 @@ export interface PieceMeta {
   height: number;
   radius: number;
   /** A light source on the piece (a point light may be put there), in the piece's frame. */
-  light?: { x: number; y: number; z: number; kind: 'flame' | 'lantern' | 'crystal' | 'window' };
+  light?: { x: number; y: number; z: number; kind: 'flame' | 'lantern' | 'crystal' | 'window'; fire?: number };
 }
 
 export interface BuildOptions {
@@ -761,7 +761,7 @@ const PIECES: Record<string, PieceDef> = {
     kind: 'prop',
     height: 1.4,
     radius: 0.25,
-    light: { x: 0, y: 1.42, z: 0, kind: 'flame' },
+    light: { x: 0, y: 1.42, z: 0, kind: 'flame', fire: 1.6 },
     build: (b) => {
       b.cyl('iron', 0.03, 0.04, 1.2, 5, [0, 0, 0]);
       b.cyl('woodDark', 0.06, 0.04, 0.2, 6, [0, 1.15, 0]);
@@ -853,7 +853,21 @@ const PIECES: Record<string, PieceDef> = {
 
   // Scenario objects (state in the id: a lit brazier, a lever pulled down).
   brazier: { kind: 'prop', height: 0.75, radius: 0.4, build: (b) => brazier(b, false) },
-  'brazier-lit': { kind: 'prop', height: 1.0, radius: 0.4, light: { x: 0, y: 0.95, z: 0, kind: 'lantern' }, build: (b) => brazier(b, true) },
+  'brazier-lit': { kind: 'prop', height: 1.0, radius: 0.4, light: { x: 0, y: 0.72, z: 0, kind: 'lantern', fire: 2.6 }, build: (b) => brazier(b, true) },
+  // A torch in an iron bracket on a wall's inner face (origin at the wall foot, facing the board).
+  'wall-torch': {
+    kind: 'prop',
+    height: 1.35,
+    radius: 0.12,
+    light: { x: 0, y: 1.26, z: 0.2, kind: 'flame', fire: 1.5 },
+    build: (b) => {
+      b.box('iron', [0.16, 0.26, 0.05], [0, 0.98, 0.03]);
+      b.box('iron', [0.05, 0.05, 0.2], [0, 0.98, 0.12]);
+      b.cyl('woodDark', 0.045, 0.03, 0.4, 5, [0, 0.86, 0.13], [-0.3, 0, 0]);
+      b.cyl('iron', 0.065, 0.05, 0.1, 6, [0, 1.14, 0.18], [-0.3, 0, 0]);
+      flameOn(b, [0, 1.24, 0.2], 1.8);
+    },
+  },
   lever: { kind: 'prop', height: 1.0, radius: 0.35, build: (b) => lever(b, false) },
   'lever-down': { kind: 'prop', height: 0.8, radius: 0.35, build: (b) => lever(b, true) },
   millstone: {

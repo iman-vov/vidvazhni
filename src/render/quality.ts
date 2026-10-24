@@ -10,14 +10,15 @@ export interface RendererPreset {
   maxPixelRatio: number;
   /** Takes effect only when a renderer is created (WebGL fixes it at context creation). */
   antialias: boolean;
-  /** Which models cast shadows: none, heroes only, or every model. */
-  shadows: 'none' | 'heroes' | 'all';
+  /** Which models cast shadows: none, heroes only, figures and the props on the hexes, or every
+   *  model including the walls and props around the board. */
+  shadows: 'none' | 'heroes' | 'figures' | 'all';
   shadowMapSize: number;
 }
 
 export const RENDERER_PRESETS: Record<GraphicsQuality, RendererPreset> = {
   low: { maxPixelRatio: 1, antialias: false, shadows: 'none', shadowMapSize: 0 },
-  medium: { maxPixelRatio: 1.5, antialias: true, shadows: 'heroes', shadowMapSize: 1024 },
+  medium: { maxPixelRatio: 1.5, antialias: true, shadows: 'figures', shadowMapSize: 1024 },
   high: { maxPixelRatio: 2, antialias: true, shadows: 'all', shadowMapSize: 2048 },
 };
 
@@ -69,7 +70,9 @@ export function rendererPreset(quality = getGraphicsQuality()): RendererPreset {
 
 /** Whether a model of this manifest kind casts shadows under the preset. */
 export function castsShadow(preset: RendererPreset, kind: string): boolean {
-  return preset.shadows === 'all' || (preset.shadows === 'heroes' && kind === 'hero');
+  if (preset.shadows === 'all') return true;
+  if (preset.shadows === 'figures') return kind === 'hero' || kind === 'monster' || kind === 'prop';
+  return preset.shadows === 'heroes' && kind === 'hero';
 }
 
 export interface DeviceInfo {

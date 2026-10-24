@@ -49,14 +49,17 @@ describe('detectGraphicsQuality', () => {
 describe('renderer presets', () => {
   it('grow with the level', () => {
     expect(RENDERER_PRESETS.low).toMatchObject({ maxPixelRatio: 1, antialias: false, shadows: 'none' });
-    expect(RENDERER_PRESETS.medium).toMatchObject({ maxPixelRatio: 1.5, antialias: true, shadows: 'heroes' });
+    expect(RENDERER_PRESETS.medium).toMatchObject({ maxPixelRatio: 1.5, antialias: true, shadows: 'figures' });
     expect(RENDERER_PRESETS.high.maxPixelRatio).toBe(2);
     expect(RENDERER_PRESETS.high.shadowMapSize).toBeGreaterThan(RENDERER_PRESETS.medium.shadowMapSize);
   });
 
-  it('cast shadows from heroes only on medium', () => {
+  it('cast shadows from figures and board props on medium, from everything on high', () => {
     expect(castsShadow(RENDERER_PRESETS.medium, 'hero')).toBe(true);
-    expect(castsShadow(RENDERER_PRESETS.medium, 'monster')).toBe(false);
+    expect(castsShadow(RENDERER_PRESETS.medium, 'monster')).toBe(true);
+    expect(castsShadow(RENDERER_PRESETS.medium, 'prop')).toBe(true);
+    expect(castsShadow(RENDERER_PRESETS.medium, 'environment')).toBe(false);
+    expect(castsShadow(RENDERER_PRESETS.low, 'monster')).toBe(false);
     expect(castsShadow(RENDERER_PRESETS.high, 'monster')).toBe(true);
     expect(castsShadow(RENDERER_PRESETS.low, 'hero')).toBe(false);
   });

@@ -10,9 +10,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { BoundaryKind, ScenarioDef } from '../../rules/content';
-import type { HexKey } from '../../rules/hex';
+import { parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, textureUrl } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
+import { hexToWorld } from '../hexLayout';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
 import type { GraphicsQuality } from '../quality';
@@ -20,6 +21,7 @@ import { environmentFor } from './data';
 import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
 import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
+import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
 import { Morok } from './morok';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
@@ -29,10 +31,10 @@ export type { EnvironmentDef, PropModelSpec } from './types';
 export { environmentFor, ENVIRONMENTS } from './data';
 
 /** Per quality: point lights at candles and lanterns, Морок wisps, wisps per veiled hex, field size. */
-const QUALITY: Record<GraphicsQuality, { lights: number; wisps: number; roomWisps: number; field: number; shadows: boolean }> = {
-  low: { lights: 0, wisps: 0, roomWisps: 0, field: 112, shadows: false },
-  medium: { lights: 2, wisps: 14, roomWisps: 0.3, field: 144, shadows: false },
-  high: { lights: 4, wisps: 30, roomWisps: 0.55, field: 176, shadows: true },
+const QUALITY: Record<GraphicsQuality, { lights: number; wisps: number; roomWisps: number; field: number; shadows: boolean; flames: number; embers: number; dust: number; fog: number; beam: boolean }> = {
+  low: { lights: 0, wisps: 0, roomWisps: 0, field: 112, shadows: false, flames: 4, embers: 1, dust: 0, fog: 0, beam: false },
+  medium: { lights: 3, wisps: 14, roomWisps: 0.3, field: 144, shadows: false, flames: 6, embers: 2, dust: 36, fog: 0.45, beam: true },
+  high: { lights: 5, wisps: 30, roomWisps: 0.55, field: 176, shadows: true, flames: 8, embers: 3, dust: 60, fog: 0.8, beam: true },
 };
 
 const GROUND_EXTRA = 70;
@@ -96,6 +98,9 @@ export class BoardEnvironment {
   private materials = new Map<MaterialKey | THREE.Material, THREE.Material>();
   private disposables: { dispose(): void }[] = [];
   private morok: Morok | null = null;
+  private ambient: Ambient | null = null;
+  /** Unlit flame and glow materials with their base colour (they flicker with the lights). */
+  private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
   private placements: Placement[] = [];
   private kitParts = new Map<string, Part[]>();
@@ -332,6 +337,9 @@ export class BoardEnvironment {
   /** Flickers flames and drifts the fog; `time` in seconds. */
   update(time: number): void {
     if (this.morok) this.morok.uniforms.uTime.value = time;
+    this.ambient?.update(time);
+    const glow = 1 + 0.06 * Math.sin(time * 8.3) + 0.04 * Math.sin(time * 13.7 + 1.3);
+    for (const f of this.flicker) f.material.color.copy(f.base).multiplyScalar(glow);
     for (const l of this.lights) {
       if (l.kind === 'crystal' || l.kind === 'window') continue;
       const f = 1 + 0.07 * Math.sin(time * 9.1 + l.phase) + 0.05 * Math.sin(time * 15.3 + l.phase * 2.1);
@@ -341,7 +349,7 @@ export class BoardEnvironment {
 
   /** Whether anything animates over time (the board may keep drawing slowly for it). */
   get animated(): boolean {
-    return !!this.morok || this.lights.length > 0;
+    return !!this.morok || this.lights.length > 0 || !!this.ambient;
   }
 
   stats(): EnvironmentStats {
@@ -377,6 +385,8 @@ export class BoardEnvironment {
     this.disposables = [];
     this.materials.clear();
     this.morok = null;
+    this.ambient = null;
+    this.flicker = [];
     this.lights = [];
   }
 
@@ -411,6 +421,7 @@ export class BoardEnvironment {
       this.root.add(this.morok.mesh);
       this.disposables.push(this.morok);
     }
+    this.buildAmbient();
     this.onChange();
   }
 
@@ -466,7 +477,9 @@ export class BoardEnvironment {
     if (typeof key !== 'string') {
       m = key.clone();
     } else if (UNLIT.has(key)) {
-      m = new THREE.MeshBasicMaterial({ color: this.palette(key), vertexColors: true });
+      const basic = new THREE.MeshBasicMaterial({ color: this.palette(key), vertexColors: true });
+      if (key === 'flame' || key === 'glow') this.flicker.push({ material: basic, base: basic.color.clone() });
+      m = basic;
     } else {
       const lit =
         this.quality === 'low'
@@ -659,12 +672,67 @@ export class BoardEnvironment {
     this.update(0);
   }
 
+  /** Fire over every flame, dust in the light of the point lights and the entrance beam, low fog
+   *  along the walls (see ambient.ts); the amounts follow the quality. */
+  private buildAmbient(): void {
+    const def = this.def!;
+    const layout = this.layout!;
+    const q = QUALITY[this.quality];
+    const up = new THREE.Vector3(0, 1, 0);
+    const fires: FireSpot[] = [];
+    let beam: LightBeam | null = null;
+    for (const p of this.placements) {
+      const l = pieceMeta(p.piece)?.light;
+      if (l && (l.kind === 'flame' || l.kind === 'lantern')) {
+        const v = new THREE.Vector3(l.x * p.scale, l.y * p.scale, l.z * p.scale).applyAxisAngle(up, p.rot);
+        // A prop model's bowl may stand taller than the placeholder's: the fire burns on its rim.
+        const proto = this.propProtos.get(p.piece);
+        if (proto && l.kind === 'lantern') v.y = Math.max(v.y, proto.spec.height * p.scale - 0.06);
+        fires.push({ pos: new THREE.Vector3(p.x + v.x, v.y, p.z + v.z), size: (l.fire ?? (l.kind === 'lantern' ? 1.3 : 0.8)) * p.scale, room: p.room });
+      }
+      if (q.beam && p.band === 'feature' && p.piece === 'stairs') {
+        // Light from the tavern falls down the stairs onto the cellar floor.
+        const dx = Math.sin(p.rot);
+        const dz = Math.cos(p.rot);
+        beam = { top: new THREE.Vector3(p.x - dx * 1.3, 3.4, p.z - dz * 1.3), bottom: new THREE.Vector3(p.x + dx * 0.7, 0, p.z + dz * 0.7), radius: 0.85 };
+      }
+    }
+    const dust: DustVolume[] = this.lights.map((l) => ({ pos: l.light.position.clone().setY(Math.max(0.6, l.light.position.y - 0.2)), radius: 0.95, height: 1.1, count: q.dust, room: l.room }));
+    if (beam) dust.push({ pos: beam.top.clone().lerp(beam.bottom, 0.6), radius: 0.5, height: 1.8, count: q.dust, room: null });
+    const fog: FogPatch[] = [];
+    if (q.fog > 0) {
+      const rnd = seededRandom(`low-fog:${layout.scenarioId}`);
+      for (const [k, room] of [...layout.ring].sort(([a], [b]) => (a < b ? -1 : 1))) {
+        if (rnd() > q.fog) continue;
+        const [hq, hr] = parseHexKey(k);
+        const c = hexToWorld(hq, hr);
+        fog.push({ x: c.x + (rnd() - 0.5) * 0.6, z: c.z + (rnd() - 0.5) * 0.6, size: 1.8 + rnd() * 1.2, room });
+      }
+    }
+    const ambient = new Ambient({
+      fires,
+      flames: q.flames,
+      embers: q.embers,
+      dust,
+      fog,
+      beam,
+      fogColor: outputColor(mixHex(def.fog.morok, def.light.sun, 0.3)),
+      rooms: [...this.veil.keys()],
+    });
+    if (ambient.empty) return;
+    for (const [room, v] of this.veil) ambient.setRoomVeil(room, v);
+    this.ambient = ambient;
+    this.root.add(ambient.root);
+    this.disposables.push(ambient);
+  }
+
   private applyVeil(): void {
     if (this.field && this.fieldTex) {
       writeVeil(this.field, (room) => this.veil.get(room) ?? 0);
       this.fieldTex.needsUpdate = true;
     }
     if (this.morok) for (const [room, v] of this.veil) this.morok.setRoomVeil(room, v);
+    if (this.ambient) for (const [room, v] of this.veil) this.ambient.setRoomVeil(room, v);
   }
 
   /** Swaps in art-kit pieces that exist for this location (none yet: all procedural). */

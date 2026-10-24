@@ -30,6 +30,8 @@ import { iconSvg } from '../ui/icons/svg';
 const BACKGROUND = '#1b1d27';
 /** Frame rate while only the rings under figures move. */
 const RING_FPS = 24;
+/** Frame rate of the idle board while the location lives (flames, dust, fog): low on tablets. */
+const AMBIENT_FPS: Record<GraphicsQuality, number> = { low: 15, medium: 24, high: 30 };
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
 const LABELS: Record<'uk' | 'de' | 'en', { miss: string; shield: string; resetView: string }> = {
@@ -211,7 +213,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       sun.shadow.map?.dispose();
       sun.shadow.map = null;
     }
-    tiles.setCastShadows(preset.shadows === 'all');
+    tiles.setCastShadows(castsShadow(preset, 'prop'));
     for (const fv of figures.values()) fv.setCastShadow(castsShadow(preset, fv.look.kind === 'hero' ? 'hero' : 'monster'));
     scene.traverse((o) => {
       const material = (o as THREE.Mesh).material;
@@ -310,12 +312,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     else {
       lastTime = 0;
       fps = 0;
-      // A turning ring under the active figure: keep drawing, but slowly (saves the tablet's battery).
-      if (!frozen && !ringTimer && [...figures.values()].some((fv) => fv.glowing)) {
+      // A turning ring under the active figure or a living location: keep drawing, but slowly
+      // (saves the tablet's battery).
+      const idleFps = Math.max([...figures.values()].some((fv) => fv.glowing) ? RING_FPS : 0, environment.animated ? AMBIENT_FPS[quality] : 0);
+      if (!frozen && !ringTimer && idleFps > 0 && !document.hidden) {
         ringTimer = setTimeout(() => {
           ringTimer = 0;
           requestRender();
-        }, 1000 / RING_FPS);
+        }, 1000 / idleFps);
       }
     }
   }
@@ -334,6 +338,11 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   applyQuality();
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(root);
+  // The idle loop stops in a hidden tab; pick it up again when the tab is shown.
+  const onVisibility = () => {
+    if (!document.hidden) requestRender();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
   resize();
   tiles.onChange = requestRender;
   environment.onChange = requestRender;
@@ -1268,6 +1277,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     frame = 0;
     if (ringTimer) clearTimeout(ringTimer);
     resizeObserver.disconnect();
+    document.removeEventListener('visibilitychange', onVisibility);
     stopQuality();
     camera.dispose();
     for (const fv of [...figures.values()]) removeFigure(fv);

@@ -28,7 +28,9 @@ describe('environment data', () => {
         ...env.dressing.ring,
         ...(env.dressing.outside ?? []),
         ...(env.dressing.far ?? []),
+        ...(env.dressing.anchors ?? []),
       ].map(([id]) => id);
+      if (env.walls?.sconce) named.push(env.walls.sconce.piece);
       if (env.entrance) named.push(env.entrance);
       if (env.exit) named.push(env.exit);
       for (const l of env.landmarks ?? []) named.push(l.piece);
@@ -105,6 +107,23 @@ describe('placements', () => {
     const low = planEnvironment(layout, env, 'low').filter((p) => p.band === 'outside' || p.band === 'ring').length;
     const high = planEnvironment(layout, env, 'high').filter((p) => p.band === 'outside' || p.band === 'ring').length;
     expect(low).toBeLessThan(high);
+  });
+});
+
+describe('showcase cellar (s1)', () => {
+  const layout = buildLayout(content.scenarios.s1!);
+  const def = environmentFor('s1');
+
+  it('hangs torches on full walls and keeps two lit braziers at every quality', () => {
+    for (const q of ['low', 'medium', 'high'] as const) {
+      const plan = planEnvironment(layout, def, q);
+      const torches = plan.filter((p) => p.piece === 'wall-torch');
+      const braziers = plan.filter((p) => p.piece === 'brazier-lit');
+      expect(torches.length, q).toBeGreaterThanOrEqual(3);
+      expect(braziers.length, q).toBe(2);
+      for (const b of braziers) expect(hidesBoard(layout, b.x, b.z, 1, 0.24), q).toBe(false);
+      expect(Math.hypot(braziers[0]!.x - braziers[1]!.x, braziers[0]!.z - braziers[1]!.z)).toBeGreaterThan(3);
+    }
   });
 });
 

@@ -51,7 +51,14 @@
         "height": { "type": "number", "exclusiveMinimum": 0 },
         "low": { "type": "number", "exclusiveMinimum": 0 },
         "alt": { "type": "integer", "minimum": 0 },
-        "inner": { "$ref": "#/definitions/color" }
+        "inner": { "$ref": "#/definitions/color" },
+        "sconce": {
+          "description": "A piece hung on the inner face of every n-th full wall segment (a torch in a bracket).",
+          "type": "object",
+          "properties": { "piece": { "type": "string" }, "every": { "type": "integer", "minimum": 1 } },
+          "required": ["piece", "every"],
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -129,7 +136,8 @@
         "ring": { "$ref": "#/definitions/weighted" },
         "outside": { "$ref": "#/definitions/weighted" },
         "far": { "$ref": "#/definitions/weighted" },
-        "density": { "type": "number", "minimum": 0, "maximum": 1 }
+        "density": { "type": "number", "minimum": 0, "maximum": 1 },
+        "anchors": { "description": "Pieces that always stand in the ring, spread along the far and side walls (count instead of weight).", "$ref": "#/definitions/weighted" }
       },
       "required": ["ring"],
       "additionalProperties": false

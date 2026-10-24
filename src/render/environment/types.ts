@@ -49,6 +49,8 @@ export interface EnvironmentDef {
     alt?: number;
     /** Colour of the thin walls between rooms (drawn by the tile layer). */
     inner?: string;
+    /** A piece hung on the inner face of every n-th full wall segment (a torch in a bracket). */
+    sconce?: { piece: string; every: number };
   };
   /** Colours of the procedural materials (see PALETTE_DEFAULTS in pieces.ts). */
   palette?: Record<string, string>;
@@ -97,6 +99,9 @@ export interface EnvironmentDef {
     far?: Weighted[];
     /** 0..1, multiplied by the quality's share. Default 0.6. */
     density?: number;
+    /** Pieces that always stand in the ring (at every quality), spread apart along the far and side
+     *  walls before the random dressing: a pair of braziers, a lantern. */
+    anchors?: Weighted[];
   };
 }
 
