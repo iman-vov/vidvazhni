@@ -1,0 +1,110 @@
+# Портрети NPC для сюжету (ChatGPT)
+
+Навіщо: сюжетні сцени (`src/app/screens/storyScene.ts`) показують мовця великим портретом, а репліки в бою й аутро — круглим значком. У героїв і пані Марти портрети вже є, у решти NPC поки стоїть сірий силует. Імена й характери взято з `docs/design/story.md`.
+
+Куди класти результат: `art/ui-mockups/story/assets/npc/<id>.png` (по пояс) і `art/ui-mockups/story/assets/npc/<id>-token.png` (круглий значок), плюс `art/ui-mockups/story/assets/npc/manifest.json`.
+
+## Черга
+
+| id | Хто | Що потрібно |
+|---|---|---|
+| `marta` | пані Марта, корчмарка | лише круглий значок; портрет по пояс уже є (`camp/assets/marta.png`) |
+| `bruno` | мірошник Бруно, звільнений від туману | по пояс + значок |
+| `bog-miller` | Бруно під туманом (бос s3) | по пояс; значок уже є як фішка боса |
+| `shadowhand` | Тінерук, чаклун, що краде світло | по пояс; значок уже є як фішка боса |
+| `lumo` | Лумо, учень ліхтарника (Тінерук у минулому) | по пояс + значок |
+| `lina` | Ліна, донька рудокопа (Акт II) | по пояс + значок |
+| `theo` | Тео, рудокоп, тато Ліни (Акт II) | по пояс + значок |
+| `heron` | стара Чапля з Сонних боліт | по пояс + значок |
+
+## Як просити
+
+1. **Додай референси.** До кожного запиту прикріпи `art/ui-mockups/camp/assets/marta.png` і `art/ui-mockups/camp/assets/heroes/warden.png`: так генератор тримає той самий масштаб, мазок і пропорції голови. Одна справжня картинка важить більше, ніж десять речень.
+2. **Два проходи.** Спершу чорно-білий ескіз (крок 1). Коли поза й обличчя влаштовують, у тому самому чаті проси розфарбувати **саме цей ескіз** (крок 2).
+3. **Один персонаж на запит.** Спільні блоки нижче вставляй щоразу повністю, бо скорочений запит повертає генератор до його звичного «глянцевого» вигляду.
+4. **Якщо результат поплив**, встав цей рядок:
+   `Too glossy and detailed, looks AI-generated. Redo as the attached hero art: same flat warm light, two cel-shade tones per color, bigger simpler shapes, no glow, no sparkles, plain transparent background, same waist-up crop.`
+
+### Блок STYLE (вставляти завжди)
+
+```
+Style: hand-painted 2D STORYBOOK character illustration for a family fantasy board game, matching the attached reference characters exactly (same head-to-body proportions, same soft rounded faces, same brush finish, same scale). Waist-up, three-quarter view, the character looks slightly to the side with a readable, kind or characterful expression. Big simple shapes and a clear silhouette; clean dark outline (#3A2A20) of even weight; every color has its base tone plus exactly ONE darker cel-shade tone, with no airbrush gradients.
+Detail budget: nothing smaller than 1/40 of the image width. At most 3 accessories per character. Hair is drawn as 4–6 big locks, not strands. Cloth folds are 3–5 big shapes. The face stays the most detailed part.
+Lighting: flat, even, matte daylight from the top-left. One soft shadow side. No rim light, no glow, no shine.
+Canvas: 1024×1024, genuine transparent background (alpha), the figure cut off at the waist by the bottom edge, head top about 6% below the top edge, centered.
+```
+
+### Блок NEGATIVE (вставляти завжди)
+
+```
+Do NOT use: glow, bloom, lens flare, god rays, light beams, sparkles, magic particles, fireflies, glowing eyes, glowing objects, neon, sunset or golden-hour light, dramatic backlight, rim light, vignette, cloud or fog frame, smoke frame, background scenery, floor shadow, frame or border, gloss, plastic skin, 3D render look, HDR, teal-and-orange grading, oversaturated colors, depth-of-field blur, hyper-detailed texture, tiny repeated details, embroidery patterns, jewelry clutter, weapons drawn, blood, scary faces, text, letters, labels, watermark, signature.
+```
+
+### Блок «деталі для гри» (додавати до кроку 2)
+
+```
+Also give me, as separate files on a transparent background, with no text baked in:
+1. <id>.png — the waist-up figure, 1024×1024, exactly as above.
+2. <id>-token.png — a round token portrait 512×512: head and shoulders of the SAME character, centered, filling a circle of 470 px diameter; outside the circle fully transparent; no frame or ring (the game draws the ring).
+3. manifest.json: [{ "file": "<id>.png", "size": [1024,1024], "use": "story scene portrait, waist-up" }, { "file": "<id>-token.png", "size": [512,512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 } }].
+```
+
+## Промпти персонажів
+
+У кожному запиті: **Крок 1** = рядок «Sketch» нижче + `Black-and-white clean ink line sketch only, no color, no shading, no hatching, transparent background.` **Крок 2** = `Now color THIS exact sketch. Keep every line, shape and position unchanged.` + STYLE + NEGATIVE + рядок «Palette» персонажа + блок «деталі для гри».
+
+### `marta`: лише значок
+
+```
+Use the attached marta.png as the ONLY source of the face, hair and clothes. Make <id>-token.png only (see the game-parts block): her head and shoulders, same white headscarf, curly brown hair, rosy round face, gentle smile, brown apron straps over a cream blouse. Do not include the lantern.
+Palette (only these): skin #F2C3A0, skin shade #D99A7A, hair #7A4A2A, hair shade #5A3420, headscarf #EFE6D2, apron #7B4B2E, blouse #F1E6CC, outline #3A2A20.
+```
+
+### `bruno`: мірошник, уже вільний
+
+```
+Sketch: BRUNO THE MILLER, a tired, kind old miller of about 60, large and round-shouldered, a big grey moustache, bald crown with grey hair at the sides, bushy eyebrows, flour dust on his cheeks shown as 3 simple pale patches, a rumpled linen shirt with rolled sleeves, a patched brown waistcoat, a flour sack held against his chest with both arms. A relieved, slightly embarrassed smile.
+Palette (only these): skin #EBB898, skin shade #C98E70, hair and moustache #B8B2A8, shirt #E9E2D0, waistcoat #6E5134, patches #8C6A3F, sack #D9CBA8, flour #F6F2E8, outline #3A2A20.
+```
+
+### `bog-miller`: Бруно під туманом (бос s3)
+
+```
+Sketch: the BOG MILLER, the same old miller Bruno (big moustache, bald crown, round shoulders) but under a curse: draped in hanging pond weed and reeds, his clothes soaked and dark, a mill-wheel paddle in one hand held upright like a staff, eyes half-closed and confused (not evil), mouth open mid-grumble. Funny, not scary: a child should feel sorry for him.
+Palette (only these): skin #B7B48F, skin shade #8F8C6C, weed #5E7F45, weed shade #3F5B30, wet cloth #4B4A3E, paddle wood #7A5A3A, mud #6B5A3E, outline #2B2A33. The curse is shown only by these muted green colors and the weed, not by any glow or smoke.
+```
+
+### `shadowhand`: Тінерук
+
+```
+Sketch: SHADOWHAND, a tall, thin sorcerer in a long hooded cloak of layered dark cloth, the hood down to show a pale, narrow, polite face with a thin smile and calm half-lowered eyelids; one gloved hand raised at chest height with fingers spread elegantly; a round glass orb hangs on a chain on his chest (dark inside, NOT glowing). Courteous and arrogant, never monstrous. The cloak's lower edge breaks into 5–6 simple moth-wing shapes.
+Palette (only these): face #DCD3D8, face shade #B3A8B2, cloak #3B3550, cloak shade #2A2540, lining #5B4F78, glove #2B2A33, chain #9A968C, orb glass #8FA4B8, outline #1F1D26.
+```
+
+### `lumo`: Лумо, учень ліхтарника
+
+```
+Sketch: LUMO, a shy apprentice lantern-maker of about 14, the young Shadowhand before the fall: thin, big worried eyes, messy dark hair falling over his forehead, a too-big leather work apron over a sky-blue shirt, rolled sleeves, a small unlit lantern frame and a pair of pliers held close to his chest. Hopeful, a little scared.
+Palette (only these): skin #F0C9A8, skin shade #CFA07E, hair #3B3550, shirt #8FB3CF, shirt shade #6F93AF, apron #8A5E3B, lantern brass #C99A4A, outline #3A2A20.
+```
+
+### `lina`: донька рудокопа
+
+```
+Sketch: LINA, a brave miner's daughter of about 10, round face with freckles, two short thick braids, a too-big miner's helmet with an unlit candle holder pushed back on her head, a mustard-yellow scarf, a dark-green work jacket with rolled sleeves, a small pickaxe resting on her shoulder (head pointing back). A big determined grin.
+Palette (only these): skin #F2C7A2, skin shade #D49F7C, hair #8A4B2A, helmet #9A968C, scarf #D8A93A, jacket #4E6B45, jacket shade #3A5234, pickaxe wood #7A5A3A, outline #3A2A20.
+```
+
+### `theo`: рудокоп, тато Ліни
+
+```
+Sketch: THEO, a broad-shouldered miner of about 40, Lina's father: short dark beard, kind tired eyes, the same freckles as Lina, a grey wool cap, a soot-grey canvas jacket with a leather shoulder pad, a coil of rope over one shoulder, a hand on his belt. Warm, calm, dependable.
+Palette (only these): skin #E3B08E, skin shade #BF8A6A, beard and hair #4A3426, cap #7D7A73, jacket #6C6A66, jacket shade #4F4D4A, leather #7A5A3A, rope #C9B07A, outline #3A2A20.
+```
+
+### `heron`: стара Чапля
+
+```
+Sketch: OLD HERON, a tall, very old marsh wise-woman with a long neck and a long sharp nose, grey hair in a high bun stuck with two reed stalks, small round spectacles, a long grey-blue shawl like folded wings, a wooden staff topped with a carved heron head. A dry, knowing half-smile.
+Palette (only these): skin #E6CDB8, skin shade #C4A894, hair #C9C5BE, shawl #7F96A6, shawl shade #5F7686, dress #5E6B55, staff #7A5A3A, reed #9AA868, outline #2B2A33.
+```
