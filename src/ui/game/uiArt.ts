@@ -19,13 +19,14 @@ export function logoOf(lang: Lang): { url: string; width: number; height: number
 
 let installed = false;
 
-/** Sets `--ubtn-slice` and `--ubtn-side` (end width per unit of button height) on :root, once. */
+/** Sets `--ubtn-slice` and `--ubtn-side` (end width per unit of button height) on :root, once.
+ *  Only the two ends are sliced (3-slice): a top/bottom split meets mid-height and shows as a seam. */
 export function installUiArt(): void {
   if (installed) return;
   installed = true;
   const b = manifest.button;
   const root = document.documentElement.style;
-  root.setProperty('--ubtn-slice', `${b.slice.top} ${b.slice.right} ${b.slice.bottom} ${b.slice.left}`);
+  root.setProperty('--ubtn-slice', `0 ${b.slice.right} 0 ${b.slice.left}`);
   root.setProperty('--ubtn-side', String(+(b.slice.left / b.height).toFixed(3)));
 }
 

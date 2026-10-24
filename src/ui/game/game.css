@@ -1725,8 +1725,8 @@ textarea.ginput {
   padding: 0 calc(var(--ubtn-h) * var(--ubtn-side, 0.37) + 4px);
   border: 0;
   border-image-source: url(./assets/button.webp);
-  border-image-slice: var(--ubtn-slice, 65 48 65 48) fill;
-  border-image-width: calc(var(--ubtn-h) / 2) calc(var(--ubtn-h) * var(--ubtn-side, 0.37));
+  border-image-slice: var(--ubtn-slice, 0 48 0 48) fill;
+  border-image-width: 0 calc(var(--ubtn-h) * var(--ubtn-side, 0.37));
   border-image-repeat: stretch;
   background: none;
   color: var(--ubtn-ink);
