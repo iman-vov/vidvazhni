@@ -3,15 +3,6 @@
   "number": 9,
   "draft": true,
   "goal": { "type": "carryItem", "item": "miner-lamp", "zone": "s9.seal" },
-  "zones": [{ "id": "s9.seal", "hexes": [[17, -7], [17, -6]] }],
-  "secondary": [
-    {
-      "id": "s9.gems",
-      "check": "chestOpened",
-      "params": { "chest": "s9.gem-chest" },
-      "reward": { "gold": 5 }
-    }
-  ],
   "startRoom": "s9.slope",
   "startHexes": [[0, 0], [0, 1], [0, 2], [1, 1]],
   "introduces": ["darkness"],
@@ -64,14 +55,20 @@
         { "monster": "shadow-wraith", "hex": [12, -6], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "shadow-wraith", "hex": [11, -4], "by": { "4": "normal" } }
       ],
-      "chests": [{ "hex": [12, -7], "id": "s9.gem-chest", "loot": { "coins": 2 } }],
-      "coins": [[8, 0]]
+      "coins": [[8, 0]],
+      "chests": [{ "hex": [12, -7], "id": "s9.gem-chest", "loot": { "coins": 2 } }]
     },
     {
       "id": "s9.gate",
       "hexes": [
         [14, -7], [14, -6], [14, -5], [14, -4], [15, -7], [15, -6], [15, -5], [15, -4],
         [16, -8], [16, -7], [16, -6], [16, -5], [17, -8], [17, -7], [17, -6], [17, -5]
+      ],
+      "spawns": [
+        { "monster": "gloom-cultist", "hex": [15, -6], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "gloom-cultist", "hex": [15, -5], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "gloom-cultist", "hex": [14, -4], "by": { "4": "normal" } },
+        { "monster": "stone-sentinel", "hex": [16, -6], "by": { "3": "normal", "4": "normal" } }
       ],
       "objects": [
         {
@@ -90,13 +87,17 @@
           "blocks": true,
           "interact": { "half": "bottom", "from": "unlit", "to": "lit" }
         }
-      ],
-      "spawns": [
-        { "monster": "gloom-cultist", "hex": [15, -6], "by": { "2": "normal", "3": "elite", "4": "elite" } },
-        { "monster": "gloom-cultist", "hex": [15, -5], "by": { "3": "normal", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [14, -4], "by": { "4": "normal" } },
-        { "monster": "stone-sentinel", "hex": [16, -6], "by": { "3": "normal", "4": "normal" } }
       ]
+    }
+  ],
+  "reward": { "goldEach": 20, "unlock": ["s10"] },
+  "zones": [{ "id": "s9.seal", "hexes": [[17, -7], [17, -6]] }],
+  "secondary": [
+    {
+      "id": "s9.gems",
+      "check": "chestOpened",
+      "params": { "chest": "s9.gem-chest" },
+      "reward": { "gold": 5 }
     }
   ],
   "events": [
@@ -112,6 +113,5 @@
         }
       ]
     }
-  ],
-  "reward": { "goldEach": 20, "unlock": ["s10"] }
+  ]
 }

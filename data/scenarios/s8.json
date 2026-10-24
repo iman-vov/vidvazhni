@@ -3,7 +3,6 @@
   "number": 8,
   "draft": true,
   "goal": { "type": "destroy", "kind": "cage" },
-  "secondary": [{ "id": "s8.six-rounds", "check": "withinRounds", "params": { "rounds": 7 }, "reward": { "gold": 5 } }],
   "startRoom": "s8.square",
   "startHexes": [[0, 1], [0, 2], [0, 3], [1, 2]],
   "introduces": ["prisoners"],
@@ -44,12 +43,12 @@
         [7, -3], [7, -2], [7, -1], [8, -4], [8, -3], [8, -2], [9, -4], [9, -3],
         [9, -2], [10, -5], [10, -4], [10, -3]
       ],
-      "objects": [{ "hex": [10, -5], "id": "s8.cage-1", "kind": "cage", "hp": 3, "blocks": true }],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [9, -3], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "gloom-cultist", "hex": [8, -4], "by": { "3": "normal", "4": "normal" } }
       ],
-      "coins": [[10, -3]]
+      "coins": [[10, -3]],
+      "objects": [{ "hex": [10, -5], "id": "s8.cage-1", "kind": "cage", "hp": 3, "blocks": true }]
     },
     {
       "id": "s8.storeroom-south",
@@ -57,13 +56,13 @@
         [7, 1], [7, 2], [7, 3], [8, 0], [8, 1], [8, 2], [9, 0], [9, 1],
         [9, 2], [10, -1], [10, 0], [10, 1], [11, 0]
       ],
-      "objects": [{ "hex": [10, 1], "id": "s8.cage-2", "kind": "cage", "hp": 3, "blocks": true }],
       "doors": [{ "hex": [11, 0], "to": "s8.office", "key": "office-key" }],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [9, 1], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "mountain-ram", "hex": [8, 2], "by": { "2": "normal", "3": "normal", "4": "elite" } }
       ],
-      "drops": [{ "monster": "gloom-cultist", "questItem": "office-key" }]
+      "drops": [{ "monster": "gloom-cultist", "questItem": "office-key" }],
+      "objects": [{ "hex": [10, 1], "id": "s8.cage-2", "kind": "cage", "hp": 3, "blocks": true }]
     },
     {
       "id": "s8.office",
@@ -73,15 +72,19 @@
         [16, -5], [16, -4], [16, -3], [16, -2]
       ],
       "obstacles": [{ "hex": [14, -4], "model": "crate-stack" }],
-      "objects": [{ "hex": [16, -3], "id": "s8.cage-theo", "kind": "cage", "hp": 3, "blocks": true }],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [15, -3], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "gloom-cultist", "hex": [15, -1], "by": { "4": "normal" } },
         { "monster": "mountain-ram", "hex": [14, -2], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "mountain-ram", "hex": [13, -2], "by": { "3": "normal", "4": "normal" } }
       ],
-      "chests": [{ "hex": [16, -5], "id": "s8.office-chest", "loot": { "coins": 3 } }]
+      "chests": [{ "hex": [16, -5], "id": "s8.office-chest", "loot": { "coins": 3 } }],
+      "objects": [{ "hex": [16, -3], "id": "s8.cage-theo", "kind": "cage", "hp": 3, "blocks": true }]
     }
+  ],
+  "reward": { "goldEach": 20, "items": ["healing-potion"], "unlock": ["s9"] },
+  "secondary": [
+    { "id": "s8.six-rounds", "check": "withinRounds", "params": { "rounds": 7 }, "reward": { "gold": 5 } }
   ],
   "events": [
     {
@@ -97,6 +100,5 @@
       ],
       "prevented": [{ "type": "coins", "coins": 2 }]
     }
-  ],
-  "reward": { "goldEach": 20, "items": ["healing-potion"], "unlock": ["s9"] }
+  ]
 }

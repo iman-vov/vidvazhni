@@ -2,7 +2,7 @@
 
 > Дизайн другого акту для даних. Джерела: вкладка «Сценарії 6–10» дизайн-документа (монстри, бос, правила, крамниця), граф кампанії в [story.md](story.md#граф-кампанії) (s6 і s7 — альтернативи, далі s8–s10) і типи цілей у [missions.md](missions.md#мапа-кампанії). Імена — з таблиці «Імена» в story.md: Ліна, Тео, Фліп, Мідна Долина, пані Марта.
 
-Дані: `data/scenarios/s6..s10.json`, нові монстри `data/monsters/mountain-ram.json` і `night-moth.json`, бос `data/bosses/hammerfist.json` з колодою `data/decks/boss.hammerfist.json`, тексти uk — `data/story/uk.json`. У `loadContent()` акт ще **не підключено**: це зробимо разом із перекладами de/en, бо тести вимагають однакових ключів у трьох мовах. До того дані перевіряє `tests/data/act2.test.ts`.
+Дані: `data/scenarios/s6..s10.json`, нові монстри `data/monsters/mountain-ram.json` і `night-moth.json`, бос `data/bosses/hammerfist.json` з колодою `data/decks/boss.hammerfist.json`, тексти uk — `data/story/uk.json`. У `loadContent()` акт ще **не підключено**: це зробимо разом із перекладами de/en, бо тести вимагають однакових ключів у трьох мовах. До того карти перевіряє `tests/data/scenarios-maps.test.ts` (з монстрами акту з `tests/data/act2.ts`), а бюджет карт — `tests/data/act2.test.ts`.
 
 ## Сюжет одним абзацом
 
@@ -132,7 +132,7 @@
 
 ## Що потрібно, щоб акт став грабельним
 
-1. Підключити s6–s10, двох монстрів, боса й колоду в `loadContent()` разом із ключами i18n uk/de/en (назви, цілі, кімнати, `introduces.*`, `scenarioSpecial.*`, `object.*`, `questItem.*`, `monsterCard.*`) і перекладами `data/story/de.json`, `en.json`. Тоді прибрати `tests/data/act2.test.ts`, а сценарії додати в `PARTIES` card-budget.
+1. Підключити s6–s10, двох монстрів, боса й колоду в `loadContent()` разом із ключами i18n uk/de/en (назви, цілі, кімнати, `introduces.*`, `scenarioSpecial.*`, `object.*`, `questItem.*`, `monsterCard.*`) і перекладами `data/story/de.json`, `en.json`. Тоді прибрати `tests/data/act2.ts`, `act2.test.ts` і винятки `ACT2` / `UNTRANSLATED` у `scenarios-maps.test.ts` і `story.test.ts`, а сценарії додати в `PARTIES` card-budget.
 2. Рушій: `caveIns`, `windGusts`, `rescue`, `darkness` (+ `stealth`), щит від об'єкта й фази боса з даних, `hammerQuake`, риси `pushOnAttack`, `unmovable`, `seeksLight`.
 3. Табір: вибір №1 після s5 (s6 чи s7; поле `unlock` у s5 належить сесії s1–s5), прапорець `ally.gremlin` за додаткову ціль s6, 6 предметів крамниці з вкладки.
 4. Локація: **потрібен новий набір оточення** `data/environments/` для гір і шахти (штольня s6, s9; перевал і селище s7, s8; кузня s10) з `propModels` для `mine-cart`, `mine-support`, `rubble`, `campfire`, `pennant-pole`, `forge`, `dark-lantern`, `cage`, `brazier`.
