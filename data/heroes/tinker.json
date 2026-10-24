@@ -4,6 +4,7 @@
   "color": "#A65E2E",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 10,
+  "recommendedHand": ["tinker.gather-button", "tinker.wrench", "tinker.repair", "tinker.trap", "tinker.explosive-jar", "tinker.spring-boots", "tinker.smoke-canister", "tinker.clever-device", "tinker.crossbow", "tinker.first-aid"],
   "classElement": "fire",
   "classOrb": "fire",
   "summon": { "id": "tinker.button", "hp": 5, "move": 3, "attack": 2 },
@@ -111,6 +112,101 @@
       },
       "bottom": { "steps": [{ "type": "move", "value": 2 }, { "type": "loot", "range": 1 }] },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "tinker.crossbow",
+      "level": 1,
+      "initiative": 33,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 3,
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.barbed-wire",
+      "level": 1,
+      "initiative": 42,
+      "top": {
+        "steps": [
+          {
+            "type": "trap",
+            "damage": 2,
+            "conditions": [
+              "wound"
+            ],
+            "xp": 1
+          },
+          {
+            "type": "trap",
+            "damage": 2,
+            "conditions": [
+              "wound"
+            ]
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.first-aid",
+      "level": 1,
+      "initiative": 18,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "alliesInRadius",
+            "radius": 1,
+            "xp": 1
+          },
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "summon"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          }
+        ]
+      }
     },
     {
       "id": "tinker.homemade-charge",
