@@ -132,6 +132,277 @@
         "steps": [{ "type": "attack", "value": 1, "bonuses": [{ "if": "allyAdjacentToTarget", "attack": 2 }] }]
       },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "rogue.risky-strike",
+      "level": 2,
+      "initiative": 22,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "xp": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.shadow-step",
+      "level": 2,
+      "initiative": 12,
+      "top": {
+        "steps": [
+          {
+            "type": "teleport",
+            "range": 3,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "condition",
+            "condition": "invisible",
+            "target": "self"
+          }
+        ],
+        "loss": true
+      }
+    },
+    {
+      "id": "rogue.dodge",
+      "level": 3,
+      "initiative": 18,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "jump": true
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "bonuses": [
+              {
+                "if": "allyAdjacentToTarget",
+                "attack": 1
+              }
+            ]
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.venom-whirl",
+      "level": 3,
+      "initiative": 58,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "targetAll": "adjacentEnemies",
+            "conditions": [
+              "poison"
+            ],
+            "xp": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.fate-strike",
+      "level": 4,
+      "initiative": 68,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "xp": 2,
+            "bonuses": [
+              {
+                "if": "targetHasNoOtherEnemyAdjacent",
+                "attack": 2
+              }
+            ]
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "jump": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "rogue.night-raid",
+      "level": 4,
+      "initiative": 26,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "jump": true
+          },
+          {
+            "type": "loot",
+            "range": 2,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              },
+              "then": [
+                {
+                  "type": "condition",
+                  "condition": "invisible",
+                  "target": "self"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rogue.blade-dance",
+      "level": 5,
+      "initiative": 64,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3
+          },
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "attack",
+            "value": 3,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.vanish",
+      "level": 5,
+      "initiative": 16,
+      "top": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "invisible",
+            "target": "alliesInRadius",
+            "radius": 1,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "bonuses": [
+              {
+                "if": "allyAdjacentToTarget",
+                "attack": 2
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
