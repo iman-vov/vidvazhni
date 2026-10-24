@@ -4,11 +4,11 @@
 import type { ColorGrade } from '../post';
 
 /** Atlas cells of the floor decals (see decals.ts for how each one is painted). */
-export type FloorDecal = 'stain' | 'crack' | 'puddle' | 'straw' | 'leaves' | 'debris' | 'slab' | 'planks' | 'moss' | 'slime' | 'soot' | 'dust' | 'roots' | 'rubble';
+export type FloorDecal = 'stain' | 'crack' | 'puddle' | 'straw' | 'leaves' | 'debris' | 'slab' | 'planks' | 'moss' | 'slime' | 'soot' | 'dust' | 'roots' | 'rubble' | 'snow';
 /** Atlas cells of the wall decals. */
-export type WallDecal = 'damp' | 'drips' | 'cobweb' | 'tapestry' | 'window' | 'ivy' | 'crack' | 'banner' | 'slit' | 'moss' | 'watermark' | 'slime' | 'soot' | 'plaster';
+export type WallDecal = 'damp' | 'drips' | 'cobweb' | 'tapestry' | 'window' | 'ivy' | 'crack' | 'banner' | 'slit' | 'moss' | 'watermark' | 'slime' | 'soot' | 'plaster' | 'ore' | 'frost';
 /** Simple geometry added to a plain wall segment so a run is not one segment repeated. */
-export type WallVariant = 'plain' | 'buttress' | 'blocks' | 'plinth' | 'beam';
+export type WallVariant = 'plain' | 'buttress' | 'blocks' | 'plinth' | 'beam' | 'support' | 'chains';
 
 export interface Atmosphere {
   grade: ColorGrade;
@@ -72,6 +72,57 @@ export const ATMOSPHERE: Record<string, Atmosphere> = {
     edge: 0.8,
     walls: { share: 0.8, kinds: [['slime', 3], ['drips', 2], ['crack', 2]] },
     variants: [['plain', 1]],
+  },
+  // Act II, the Grey Mountains.
+  'mine-tunnel': {
+    // Dark, warm-brown; light only in the lantern pools.
+    grade: grade([0.012, 0.01, 0.02], [1.1, 0.98, 0.84], 0.95, 1.18, 0.62),
+    pools: 0.62,
+    grime: '#1e1710',
+    floor: { density: 1.2, kinds: [['debris', 3], ['rubble', 2], ['stain', 2], ['dust', 2], ['crack', 1], ['planks', 1], ['puddle', 1]] },
+    edge: 0.85,
+    walls: { share: 0.75, kinds: [['ore', 3], ['crack', 2], ['damp', 2], ['drips', 1], ['cobweb', 1]] },
+    variants: [['plain', 3], ['support', 2]],
+  },
+  'mountain-pass': {
+    // Cold, washed-out blue daylight; snow everywhere it can lie.
+    grade: grade([0.03, 0.04, 0.07], [0.96, 1.0, 1.08], 0.82, 1.08, 0.42),
+    pools: 0.35,
+    grime: '#2a2c34',
+    floor: { density: 1.3, kinds: [['snow', 5], ['debris', 2], ['crack', 1], ['rubble', 1], ['dust', 1]] },
+    edge: 0.4,
+    walls: { share: 0.85, kinds: [['frost', 4], ['crack', 2]] },
+    variants: [['plain', 1]],
+  },
+  copperdale: {
+    // A grey mining village at dusk; the bandits' fire is the warm spot.
+    grade: grade([0.025, 0.028, 0.045], [1.04, 0.99, 0.92], 0.9, 1.1, 0.5),
+    pools: 0.5,
+    grime: '#26201a',
+    floor: { density: 1.2, kinds: [['stain', 3], ['puddle', 2], ['straw', 2], ['debris', 2], ['snow', 1], ['soot', 1], ['planks', 1]] },
+    edge: 0.65,
+    walls: { share: 0.8, kinds: [['damp', 2], ['plaster', 2], ['crack', 2], ['soot', 1], ['cobweb', 1], ['window', 1]] },
+    variants: [['plain', 3], ['beam', 2], ['plinth', 1]],
+  },
+  'dark-depths': {
+    // Deep, wet and cold: black water, a faint violet of Морок, dim lantern pools.
+    grade: grade([0.01, 0.015, 0.035], [0.95, 0.98, 1.08], 0.85, 1.16, 0.62),
+    pools: 0.55,
+    grime: '#14161c',
+    floor: { density: 1.2, kinds: [['puddle', 3], ['slime', 1], ['debris', 2], ['crack', 2], ['stain', 2], ['rubble', 1]] },
+    edge: 0.85,
+    walls: { share: 0.8, kinds: [['ore', 2], ['damp', 3], ['drips', 3], ['slime', 1], ['crack', 1]] },
+    variants: [['plain', 3], ['support', 1]],
+  },
+  'old-forge': {
+    // Hot orange forge light against soot-black brick.
+    grade: grade([0.03, 0.012, 0.0], [1.14, 0.96, 0.8], 1.08, 1.16, 0.58),
+    pools: 0.72,
+    grime: '#1a120c',
+    floor: { density: 1.2, kinds: [['soot', 4], ['crack', 2], ['debris', 2], ['rubble', 2], ['stain', 2], ['slab', 1]] },
+    edge: 0.85,
+    walls: { share: 0.8, kinds: [['soot', 4], ['crack', 2], ['plaster', 1], ['banner', 1]] },
+    variants: [['plain', 2], ['chains', 2], ['buttress', 1], ['blocks', 1]],
   },
 };
 

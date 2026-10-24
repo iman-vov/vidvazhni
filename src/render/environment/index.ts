@@ -23,7 +23,7 @@ import { environmentFor } from './data';
 import { bakeField, createUniforms, fieldTexture, outputColor, patchMaterial, writeVeil, type EnvUniforms, type Field } from './field';
 import { kitPieces, loadKitPiece, loadLocationKit, locationKits } from './kit';
 import { buildLayout, seededRandom, type EnvLayout } from './layout';
-import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam } from './ambient';
+import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam, type Weather } from './ambient';
 import { atmosphereFor } from './atmosphere';
 import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
@@ -42,6 +42,8 @@ const QUALITY: Record<GraphicsQuality, { lights: number; wisps: number; roomWisp
   medium: { lights: 3, wisps: 14, roomWisps: 0.3, field: 144, shadows: false, flames: 6, embers: 2, dust: 36, fog: 0.45, beam: true },
   high: { lights: 5, wisps: 30, roomWisps: 0.55, field: 176, shadows: true, flames: 8, embers: 3, dust: 60, fog: 0.8, beam: true },
 };
+/** Share of a location's `weather` particles drawn per quality. */
+const WEATHER_SHARE: Record<GraphicsQuality, number> = { low: 0.3, medium: 0.6, high: 1 };
 
 const GROUND_EXTRA = 70;
 
@@ -49,7 +51,7 @@ const GROUND_EXTRA = 70;
  *  model in the location's `propModels` table can replace them by these ids). */
 export const BOUNDARY_PIECES: Record<Exclude<BoundaryKind, 'walls'>, string> = { reeds: 'reed-fence', thicket: 'thicket-hedge', rocks: 'rock-pile', logs: 'log-wall' };
 /** Default boundary between rooms for a location edge style. */
-const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 'walls', timber: 'walls', forest: 'thicket', shore: 'reeds', cave: 'rocks' };
+const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 'walls', timber: 'walls', forest: 'thicket', shore: 'reeds', cave: 'rocks', mine: 'walls', cliff: 'rocks', forge: 'walls' };
 /** The map edge style a room boundary stands for (outdoor rooms close with plants, caves with rock). */
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
@@ -71,6 +73,9 @@ const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
   'lever:up': { piece: 'lever', scale: 1 },
   'lever:down': { piece: 'lever-down', scale: 1 },
   millstone: { piece: 'millstone', scale: 1 },
+  rubble: { piece: 'rubble-heap', scale: 1 },
+  'mine-cart:stuck': { piece: 'mine-cart', scale: 1 },
+  'mine-cart:free': { piece: 'mine-cart', scale: 1 },
 };
 
 interface LightSpot {
@@ -529,7 +534,7 @@ export class BoardEnvironment {
       m = key.clone();
     } else if (UNLIT.has(key)) {
       const basic = new THREE.MeshBasicMaterial({ color: this.palette(key), vertexColors: true });
-      if (key === 'flame' || key === 'glow') this.flicker.push({ material: basic, base: basic.color.clone() });
+      if (key === 'flame' || key === 'glow' || key === 'ember') this.flicker.push({ material: basic, base: basic.color.clone() });
       m = basic;
     } else {
       const lit =
@@ -778,6 +783,27 @@ export class BoardEnvironment {
         fog.push({ x: c.x + (rnd() - 0.5) * 0.6, z: c.z + (rnd() - 0.5) * 0.6, size: 1.8 + rnd() * 1.2, room });
       }
     }
+    let weather: Weather | null = null;
+    if (def.weather) {
+      const min = new THREE.Vector2(Infinity, Infinity);
+      const max = new THREE.Vector2(-Infinity, -Infinity);
+      for (const k of layout.footprint.keys()) {
+        const [hq, hr] = parseHexKey(k);
+        const c = hexToWorld(hq, hr);
+        min.min(new THREE.Vector2(c.x, c.z));
+        max.max(new THREE.Vector2(c.x, c.z));
+      }
+      const w = def.weather;
+      weather = {
+        kind: w.kind,
+        count: Math.round(w.count * WEATHER_SHARE[this.quality]),
+        color: outputColor(w.color),
+        wind: w.wind,
+        min: min.subScalar(2.5),
+        max: max.addScalar(2.5),
+        height: w.kind === 'dust' ? 2.2 : 3.2,
+      };
+    }
     const ambient = new Ambient({
       fires,
       flames: q.flames,
@@ -785,6 +811,7 @@ export class BoardEnvironment {
       dust,
       fog,
       beam,
+      weather,
       fogColor: outputColor(mixHex(def.fog.morok, def.light.sun, 0.3)),
       rooms: [...this.veil.keys()],
     });
@@ -854,7 +881,7 @@ export class BoardEnvironment {
  */
 export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): EnvironmentDef {
   const rooms: Record<string, { edge: EdgeStyle }> = {};
-  const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber';
+  const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber' || def.edge === 'mine' || def.edge === 'forge';
   for (const room of scenario.rooms) {
     const b = room.boundary;
     if (!b || def.rooms?.[room.id]) continue;

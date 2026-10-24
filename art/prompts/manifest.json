@@ -2394,6 +2394,354 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "mine-cart",
+      "nameUk": "Вагонетка",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/mine-cart.md",
+      "conceptDir": "art/concepts/mine-cart/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 67,
+      "wave": 6,
+      "scenarios": [
+        6,
+        8,
+        9
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/mine-cart.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 4000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "mine-support",
+      "nameUk": "Кріплення штольні",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/mine-support.md",
+      "conceptDir": "art/concepts/mine-support/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 68,
+      "wave": 6,
+      "scenarios": [
+        6,
+        9
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/mine-support.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2500,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "campfire",
+      "nameUk": "Вогнище",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/campfire.md",
+      "conceptDir": "art/concepts/campfire/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 69,
+      "wave": 6,
+      "scenarios": [
+        7,
+        8
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/campfire.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2500,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "pennant-pole",
+      "nameUk": "Стовп із вимпелами",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/pennant-pole.md",
+      "conceptDir": "art/concepts/pennant-pole/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 70,
+      "wave": 6,
+      "scenarios": [
+        7
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/pennant-pole.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2500,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "forge",
+      "nameUk": "Горн",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/forge.md",
+      "conceptDir": "art/concepts/forge/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 71,
+      "wave": 6,
+      "scenarios": [
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/forge.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 5000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "dark-lantern",
+      "nameUk": "Темний Ліхтар на ковадлі",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/dark-lantern.md",
+      "conceptDir": "art/concepts/dark-lantern/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 72,
+      "wave": 6,
+      "scenarios": [
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/dark-lantern.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 4000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "anvil",
+      "nameUk": "Ковадло",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/anvil.md",
+      "conceptDir": "art/concepts/anvil/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 73,
+      "wave": 6,
+      "scenarios": [
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/anvil.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2500,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "ore-pile",
+      "nameUk": "Купа руди",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/ore-pile.md",
+      "conceptDir": "art/concepts/ore-pile/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 74,
+      "wave": 6,
+      "scenarios": [
+        6,
+        8,
+        9,
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/ore-pile.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2500,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "mine-lantern",
+      "nameUk": "Шахтарський ліхтар на стовпі",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/mine-lantern.md",
+      "conceptDir": "art/concepts/mine-lantern/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 75,
+      "wave": 6,
+      "scenarios": [
+        6,
+        9
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/mine-lantern.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 2000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "chain-hoist",
+      "nameUk": "Підйомник із ланцюгами",
+      "kind": "prop",
+      "styleBlock": "D",
+      "promptFile": "art/prompts/props/chain-hoist.md",
+      "conceptDir": "art/concepts/chain-hoist/",
+      "conceptFiles": [
+        "sketch.png",
+        "front.png"
+      ],
+      "order": 76,
+      "wave": 6,
+      "scenarios": [
+        10
+      ],
+      "descriptionSource": "docs/design/act2.md",
+      "meshy": {
+        "model": "Meshy 7",
+        "workflow": "Image to 3D",
+        "multiView": [],
+        "poseMode": null
+      },
+      "modelFile": "assets/models/chain-hoist.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 4000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

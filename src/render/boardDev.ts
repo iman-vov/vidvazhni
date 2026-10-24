@@ -8,7 +8,7 @@
 //   &quality=low|medium|high                    graphics quality (default: device)
 //   &speed=2                                    animation speed
 //   &play=1                                     start the script at once
-//   ?board=s1…s5                                any scenario map with its environment, every room
+//   ?board=s1…s10                               any scenario map with its environment, every room
 //                                               revealed (&reveal=0 keeps the start room only)
 //   &props=fixture                              prop models from tests/fixtures/props (a test barrel)
 //                                               where assets/models has none yet
@@ -40,6 +40,15 @@ const panel = document.getElementById('panel')!;
 const info = document.getElementById('info')!;
 
 const content = loadContent();
+// Act II (s6–s10) is not in loadContent() yet: ?board=s6…s10 adds its maps and monsters here.
+if (/^s([6-9]|10)$/.test(params.get('board') ?? '')) {
+  const act2 = import.meta.glob<Record<string, unknown>>(['/data/scenarios/s{6,7,8,9,10}.json', '/data/monsters/{mountain-ram,night-moth}.json', '/data/bosses/hammerfist.json', '/data/decks/boss.hammerfist.json'], { eager: true, import: 'default' });
+  for (const [path, data] of Object.entries(act2)) {
+    const [, dir, id] = /\/data\/(\w+)\/(.+)\.json$/.exec(path)!;
+    const table = (content as unknown as Record<string, Record<string, unknown>>)[dir!];
+    if (table) table[id!] = data;
+  }
+}
 const heroes = (params.get('heroes') ?? 'warden,wind-archer,herbalist,rogue').split(',').filter((id) => content.heroes[id]);
 const fork = params.get('fork') === '1';
 const setup = {

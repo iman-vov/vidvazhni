@@ -4,7 +4,7 @@
   "description": "What surrounds the playable hexes of a scenario location (src/render/environment). Piece ids are the kit ids in src/render/environment/pieces.ts.",
   "definitions": {
     "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-    "edge": { "enum": ["stone", "tower", "timber", "forest", "shore", "cave"] },
+    "edge": { "enum": ["stone", "tower", "timber", "forest", "shore", "cave", "mine", "cliff", "forge"] },
     "piece": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "weighted": {
       "type": "array",
@@ -97,6 +97,18 @@
         "morokOpacity": { "type": "number", "minimum": 0, "maximum": 1 }
       },
       "required": ["color", "start", "end", "morok", "morokOpacity"],
+      "additionalProperties": false
+    },
+    "weather": {
+      "description": "Particles blown across the location: snow, dust or rising sparks; count at high quality.",
+      "type": "object",
+      "properties": {
+        "kind": { "enum": ["snow", "dust", "sparks"] },
+        "count": { "type": "integer", "minimum": 1, "maximum": 4000 },
+        "color": { "$ref": "#/definitions/color" },
+        "wind": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+      },
+      "required": ["kind", "count", "color", "wind"],
       "additionalProperties": false
     },
     "entrance": { "oneOf": [{ "$ref": "#/definitions/piece" }, { "type": "null" }] },

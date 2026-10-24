@@ -34,7 +34,10 @@ export type MaterialKey =
   | 'crystal'
   | 'flame'
   | 'glow'
-  | 'glowCold';
+  | 'glowCold'
+  | 'ore'
+  | 'snow'
+  | 'ember';
 
 /** Default colours; data/environments/<id>.json `palette` overrides any of them. */
 export const PALETTE_DEFAULTS: Record<MaterialKey, string> = {
@@ -65,10 +68,13 @@ export const PALETTE_DEFAULTS: Record<MaterialKey, string> = {
   flame: '#ffc35a',
   glow: '#ffd27a',
   glowCold: '#8ad0e0',
+  ore: '#b8743a',
+  snow: '#dfe6ee',
+  ember: '#ff7a2a',
 };
 
 /** Unlit (they shine): flames, lit windows, glowing fungi. Crystals are lit but emissive. */
-export const UNLIT: ReadonlySet<MaterialKey> = new Set(['flame', 'glow', 'glowCold', 'shadow']);
+export const UNLIT: ReadonlySet<MaterialKey> = new Set(['flame', 'glow', 'glowCold', 'shadow', 'ember']);
 
 export interface Part {
   geometry: THREE.BufferGeometry;
@@ -253,6 +259,69 @@ function rockWall(b: Builder, h: number, crystal: boolean): void {
   }
 }
 
+/** A mine wall: rough rock behind a timber set (two posts and a cap), the lagging boards above;
+ *  with `ore`, copper veins run through the rock. */
+function mineWall(b: Builder, h: number, ore: boolean): void {
+  b.box('rockDark', [WALL_LEN, h, WALL_THICK], [0, h / 2, -WALL_THICK / 2]);
+  b.rock('rock', 0.3, [-0.18, h * 0.35, -0.02], [1.3, h * 0.9, 0.35], [0.2, 0.4, 0.1], true);
+  b.rock('rockDark', 0.26, [0.22, h * 0.62, -0.02], [1.2, h * 0.8, 0.35], [0.5, 1.1, 0.2], true);
+  for (const x of [-0.45, 0.45]) {
+    b.box('woodDark', [0.13, h - 0.08, 0.13], [x, (h - 0.08) / 2, 0.05], [0, 0, x * 0.05]);
+    b.box('rockDark', [0.2, 0.08, 0.2], [x, 0.04, 0.05]);
+  }
+  b.box('wood', [WALL_LEN + 0.06, 0.15, 0.17], [0, h - 0.075, 0.05]);
+  for (let i = 0; i < 4; i++) b.box(i % 2 ? 'wood' : 'woodDark', [0.2, 0.05, 0.3], [-0.3 + i * 0.2, h - 0.17, -0.06], [0, 0, (i - 1.5) * 0.04], true);
+  if (ore) {
+    for (let i = 0; i < 3; i++) b.box('ore', [0.5 - i * 0.1, 0.04, 0.03], [-0.1 + i * 0.12, 0.45 + i * 0.28, 0.01], [0, 0, 0.5 - i * 0.35]);
+    for (let i = 0; i < 5; i++) b.add(new THREE.OctahedronGeometry(0.05, 0), 'ore', [-0.25 + i * 0.13, 0.4 + ((i * 7) % 5) * 0.12, 0.03], [i, i * 0.5, 0], [1, 1.4, 0.7], true);
+  }
+}
+
+/** A thick timber post on a stone footing (mine corners). */
+function minePost(b: Builder, h: number): void {
+  b.box('woodDark', [0.26, h + 0.1, 0.26], [0, (h + 0.1) / 2, -0.1]);
+  b.box('wood', [0.48, 0.14, 0.4], [0, h + 0.03, -0.1]);
+  b.rock('rockDark', 0.2, [0, 0.07, -0.1], [1.3, 0.6, 1.3]);
+  b.box('iron', [0.28, 0.04, 0.28], [0, h * 0.5, -0.1], [0, 0, 0], true);
+}
+
+/** A cliff face of the mountain pass: a straight rock wall with ledges and snow on top. */
+function cliffWall(b: Builder, h: number, drift: boolean): void {
+  b.box('rockDark', [WALL_LEN, h, 0.42], [0, h / 2, -0.21]);
+  b.rock('rock', 0.34, [-0.25, h * 0.3, -0.04], [1.4, h * 0.75, 0.4], [0.1, 0.3, 0.05]);
+  b.rock('rockDark', 0.3, [0.28, h * 0.58, -0.05], [1.3, h * 0.7, 0.4], [0.3, 0.9, 0.1]);
+  b.rock('rock', 0.22, [0.05, h * 0.85, -0.06], [1.8, 0.5, 0.5], [0, 0.2, 0], true);
+  b.blob('snow', 0.3, [-0.2, h + 0.02, -0.2], [1.9, 0.32, 1.1]);
+  b.blob('snow', 0.26, [0.3, h - 0.02, -0.18], [1.6, 0.3, 1.0]);
+  b.blob('snow', 0.12, [0.1, h * 0.55, 0.02], [2.2, 0.35, 0.8], true);
+  if (drift) {
+    b.blob('snow', 0.32, [0, 0.06, 0.06], [2.4, 0.4, 0.8]);
+    for (let i = 0; i < 4; i++) b.cone('snow', 0.03, 0.18, 4, [-0.3 + i * 0.2, h * 0.84, 0.06], [Math.PI, 0, 0], true);
+  }
+}
+
+/** Dark brick of the old forge, bound with iron. */
+function forgeWall(b: Builder, h: number, seed: number): void {
+  b.box('stoneDark', [WALL_LEN, h, WALL_THICK], [0, h / 2, -WALL_THICK / 2]);
+  b.box('rockDark', [WALL_LEN + 0.02, 0.2, WALL_THICK + 0.06], [0, 0.1, -WALL_THICK / 2]);
+  b.box('iron', [WALL_LEN + 0.04, 0.08, WALL_THICK + 0.06], [0, h * 0.58, -WALL_THICK / 2]);
+  b.box('rockDark', [WALL_LEN + 0.04, 0.1, WALL_THICK + 0.08], [0, h + 0.05, -WALL_THICK / 2]);
+  blocks(b, h, seed, 'stone');
+  for (const x of [-0.36, 0.36]) b.cyl('iron', 0.03, 0.03, 0.03, 6, [x, h * 0.58, 0.02], [Math.PI / 2, 0, 0], true);
+}
+
+/** A forge wall with a glowing hearth mouth in it. */
+function hearthWall(b: Builder, h: number): void {
+  forgeWall(b, h, 4);
+  b.box('shadow', [0.56, 0.5, 0.02], [0, 0.45, 0.006]);
+  b.add(new THREE.CircleGeometry(0.28, 10, 0, Math.PI), 'shadow', [0, 0.7, 0.006]);
+  b.box('ember', [0.48, 0.12, 0.04], [0, 0.26, 0.02]);
+  b.blob('ember', 0.08, [-0.1, 0.32, 0.02], [1.6, 0.6, 0.4], true);
+  b.add(new THREE.TorusGeometry(0.32, 0.06, 4, 10, Math.PI), 'iron', [0, 0.7, 0.03]);
+  for (const x of [-0.32, 0.32]) b.box('iron', [0.1, 0.5, 0.07], [x, 0.45, 0.03]);
+  b.box('rockDark', [0.7, 0.08, 0.16], [0, 0.18, 0.06]);
+}
+
 function wall(build: (b: Builder, o: BuildOptions) => void, kind: PieceKind = 'wall', light?: PieceMeta['light']): PieceDef {
   return { kind, height: 1.6, radius: 0.55, ...(light ? { light } : {}), build };
 }
@@ -387,6 +456,34 @@ function mineCart(b: Builder): void {
   for (const x of [-0.26, 0.26]) for (const z of [-0.24, 0.24]) b.cyl('iron', 0.11, 0.11, 0.05, 10, [x, 0.11, z + (z > 0 ? -0.025 : 0.025)], [Math.PI / 2, 0, 0]);
   b.rock('rockDark', 0.14, [0.08, 0.62, 0], [1.3, 0.6, 1], [0.3, 0.2, 0], true);
   b.rock('rock', 0.1, [-0.15, 0.62, 0.05], [1.2, 0.6, 1], [0.1, 0.7, 0], true);
+}
+
+/** A pine with snow on its boughs (the mountain pass). */
+function snowPine(b: Builder, h: number): void {
+  pine(b, h);
+  b.cone('snow', 0.5, h * 0.12, 7, [0, h * 0.42, 0], [0, 0, 0], true);
+  b.cone('snow', 0.36, h * 0.1, 7, [0, h * 0.62, 0], [0, 0, 0], true);
+  b.cone('snow', 0.18, h * 0.12, 7, [0, h * 0.86, 0]);
+}
+
+/** A campfire: a ring of stones, crossed logs and glowing coals. */
+function campfire(b: Builder): void {
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    b.rock(i % 2 ? 'rock' : 'rockDark', 0.08, [Math.cos(a) * 0.3, 0.05, Math.sin(a) * 0.3], [1.3, 0.8, 1], [0, a, 0]);
+  }
+  b.add(new THREE.CircleGeometry(0.24, 9).rotateX(-Math.PI / 2), 'ember', [0, 0.03, 0]);
+  for (let i = 0; i < 3; i++) b.cyl('woodDark', 0.045, 0.05, 0.5, 6, [Math.cos(i * 2.1) * 0.18, 0.04, Math.sin(i * 2.1) * 0.18], [Math.PI / 2 - 0.5, i * 2.1 + Math.PI / 2, 0]);
+  flameOn(b, [0, 0.08, 0], 2.4);
+  flameOn(b, [0.08, 0.08, 0.05], 1.6);
+}
+
+/** An anvil on a stump. */
+function anvil(b: Builder): void {
+  b.cyl('woodDark', 0.2, 0.23, 0.32, 8, [0, 0, 0]);
+  b.box('iron', [0.2, 0.12, 0.18], [0, 0.38, 0]);
+  b.box('iron', [0.44, 0.1, 0.2], [0.02, 0.49, 0]);
+  b.cone('iron', 0.08, 0.16, 4, [0.3, 0.49, 0], [0, 0, -Math.PI / 2]);
 }
 
 function tree(b: Builder, h: number, warm: boolean): void {
@@ -1020,6 +1117,266 @@ const PIECES: Record<string, PieceDef> = {
     build: (b) => {
       for (const z of [-0.2, 0.2]) b.box('iron', [2.0, 0.04, 0.04], [0.45, 0.04, z]);
       for (let i = 0; i < 7; i++) b.box('woodDark', [0.1, 0.03, 0.56], [-0.45 + i * 0.3, 0.015, 0]);
+    },
+  },
+  // Act II, the Grey Mountains: mine (s6, s9), mountain pass (s7), Copperdale (s8), old forge (s10).
+  'mine-wall': wall((b, o) => mineWall(b, o.height, false)),
+  'mine-wall-ore': wall((b, o) => mineWall(b, o.height, true)),
+  'mine-wall-low': wall((b, o) => lowWall(b, o.height, 'rockDark', 'woodDark')),
+  'mine-post': wall((b, o) => minePost(b, o.height), 'corner'),
+  'mine-post-low': wall((b, o) => minePost(b, o.height), 'corner'),
+  'mine-adit': wall((b, o) => {
+    doorway(b, o.height, 'rockDark', 'woodDark');
+    for (const x of [-0.4, 0.4]) b.box('woodDark', [0.13, 1.2, 0.13], [x, 0.6, 0.05]);
+    b.box('wood', [1.0, 0.15, 0.17], [0, 1.25, 0.05]);
+  }, 'doorway'),
+  'cliff-wall': wall((b, o) => cliffWall(b, o.height, false)),
+  'cliff-wall-snow': wall((b, o) => cliffWall(b, o.height, true)),
+  'cliff-low': wall((b, o) => {
+    b.rock('rockDark', 0.3, [-0.25, o.height * 0.4, -0.12], [1.3, o.height * 2.2, 0.9], [0.2, 0.4, 0]);
+    b.rock('rock', 0.26, [0.25, o.height * 0.35, -0.1], [1.3, o.height * 2.0, 0.9], [0.1, 1.3, 0]);
+    b.blob('snow', 0.22, [0, o.height * 0.9, -0.12], [2.2, 0.3, 1.0]);
+  }),
+  'cliff-pillar': wall((b, o) => {
+    b.rock('rockDark', 0.32, [0, o.height * 0.5, -0.12], [1.0, o.height * 1.7, 1.0], [0.1, 0.5, 0.05]);
+    b.blob('snow', 0.24, [0, o.height + 0.02, -0.12], [1.3, 0.4, 1.3]);
+  }, 'corner'),
+  'cliff-pillar-low': wall((b) => {
+    b.rock('rockDark', 0.24, [0, 0.12, -0.1], [1.2, 0.8, 1]);
+    b.blob('snow', 0.16, [0, 0.26, -0.1], [1.4, 0.35, 1.2], true);
+  }, 'corner'),
+  'cliff-gap': {
+    kind: 'doorway',
+    height: 1.6,
+    radius: 0.6,
+    build: (b, o) => {
+      for (const x of [-0.56, 0.56]) {
+        b.rock('rockDark', 0.34, [x, o.height * 0.38, -0.18], [0.8, o.height * 1.1, 0.9], [0.2, x * 2, 0]);
+        b.blob('snow', 0.2, [x, o.height * 0.8, -0.18], [1.2, 0.35, 1.1]);
+      }
+      b.blob('snow', 0.3, [0, 0.03, -0.2], [2.2, 0.15, 1.2], true);
+    },
+  },
+  'forge-wall': wall((b, o) => forgeWall(b, o.height, 6)),
+  'forge-hearth': wall((b, o) => hearthWall(b, o.height), 'wall', { x: 0, y: 0.34, z: 0.12, kind: 'lantern', fire: 1.8 }),
+  'forge-wall-low': wall((b, o) => lowWall(b, o.height, 'stoneDark', 'iron')),
+  'forge-pillar': wall((b, o) => pillar(b, o.height, 'stoneDark', 'iron'), 'corner'),
+  'forge-pillar-low': wall((b, o) => pillar(b, o.height, 'stoneDark', 'iron'), 'corner'),
+  'forge-doorway': wall((b, o) => doorway(b, o.height, 'stoneDark', 'iron'), 'doorway'),
+
+  // Mine dressing and obstacles.
+  'mine-support': {
+    kind: 'prop',
+    height: 1.45,
+    radius: 0.5,
+    build: (b) => {
+      for (const x of [-0.34, 0.34]) {
+        b.box('woodDark', [0.13, 1.3, 0.13], [x, 0.65, 0], [0, 0, -x * 0.08]);
+        b.rock('rockDark', 0.1, [x, 0.04, 0.02], [1.4, 0.6, 1.2], [0, 0, 0], true);
+      }
+      b.box('wood', [0.98, 0.15, 0.17], [0, 1.35, 0]);
+      for (const s of [-1, 1]) b.box('woodDark', [0.07, 0.42, 0.07], [s * 0.22, 1.15, 0], [0, 0, s * 0.8], true);
+      b.box('rockDark', [0.5, 0.06, 0.22], [0.1, 1.45, -0.02], [0, 0.2, 0.05], true);
+    },
+  },
+  'mine-lantern': {
+    kind: 'prop',
+    height: 1.5,
+    radius: 0.25,
+    light: { x: 0.26, y: 1.18, z: 0, kind: 'lantern', fire: 0.9 },
+    build: (b) => {
+      b.box('woodDark', [0.11, 1.5, 0.11], [0, 0.75, 0]);
+      b.box('iron', [0.3, 0.03, 0.03], [0.13, 1.42, 0]);
+      b.box('iron', [0.01, 0.12, 0.01], [0.26, 1.36, 0], [0, 0, 0], true);
+      b.cyl('iron', 0.06, 0.08, 0.04, 6, [0.26, 1.27, 0]);
+      b.cyl('glow', 0.055, 0.055, 0.13, 6, [0.26, 1.12, 0]);
+      b.cyl('iron', 0.07, 0.07, 0.03, 6, [0.26, 1.09, 0]);
+      b.rock('rockDark', 0.12, [0, 0.05, 0.02], [1.4, 0.6, 1.2], [0, 0, 0], true);
+    },
+  },
+  // A miner's lamp hung on a wall's inner face (origin at the wall foot, facing the board).
+  'mine-lamp': {
+    kind: 'prop',
+    height: 1.2,
+    radius: 0.12,
+    light: { x: 0, y: 0.98, z: 0.2, kind: 'lantern', fire: 0.8 },
+    build: (b) => {
+      b.box('iron', [0.05, 0.05, 0.24], [0, 1.18, 0.1]);
+      b.box('iron', [0.01, 0.1, 0.01], [0, 1.12, 0.2], [0, 0, 0], true);
+      b.cyl('iron', 0.055, 0.07, 0.035, 6, [0, 1.06, 0.2]);
+      b.cyl('glow', 0.05, 0.05, 0.12, 6, [0, 0.93, 0.2]);
+      b.cyl('iron', 0.06, 0.06, 0.03, 6, [0, 0.91, 0.2]);
+    },
+  },
+  'ore-pile': {
+    kind: 'prop',
+    height: 0.45,
+    radius: 0.45,
+    build: (b) => {
+      b.rock('rockDark', 0.26, [0, 0.14, 0], [1.4, 0.75, 1.1], [0.2, 0.5, 0]);
+      b.rock('rock', 0.16, [0.26, 0.08, 0.12], [1.2, 0.7, 1], [0.4, 1.2, 0]);
+      for (let i = 0; i < 6; i++) b.rock('ore', 0.06, [Math.cos(i * 1.7) * 0.22, 0.2 + (i % 3) * 0.06, Math.sin(i * 1.7) * 0.16], [1.2, 0.8, 1], [i, i * 0.6, 0], i > 3);
+      b.cyl('woodDark', 0.02, 0.025, 0.6, 5, [-0.24, 0.05, 0.2], [0.3, 0, -1.2], true);
+      b.box('iron', [0.18, 0.05, 0.04], [-0.47, 0.1, 0.3], [0, 0, -0.4], true);
+    },
+  },
+  'timber-stack': {
+    kind: 'prop',
+    height: 0.5,
+    radius: 0.55,
+    build: (b) => {
+      for (let row = 0; row < 3; row++) {
+        const n = 3 - row;
+        for (let i = 0; i < n; i++) b.box(i % 2 ? 'wood' : 'woodDark', [1.0, 0.13, 0.14], [0.02 * row, 0.07 + row * 0.13, (-0.15 * (n - 1)) / 2 + i * 0.15], [0, (row - 1) * 0.04, 0]);
+      }
+      b.box('iron', [0.04, 0.42, 0.5], [-0.38, 0.21, 0], [0, 0, 0], true);
+    },
+  },
+
+  // Mountain pass.
+  'snow-pine': { kind: 'prop', height: 3.0, radius: 0.7, build: (b) => snowPine(b, 3.0) },
+  'snow-rock': {
+    kind: 'prop',
+    height: 0.6,
+    radius: 0.45,
+    build: (b) => {
+      b.rock('rockDark', 0.34, [0, 0.22, 0], [1.2, 0.75, 1], [0.3, 0.7, 0.1]);
+      b.rock('rock', 0.18, [0.3, 0.1, 0.12], [1.1, 0.7, 1], [0.2, 1.4, 0]);
+      b.blob('snow', 0.26, [-0.02, 0.44, -0.02], [1.4, 0.32, 1.2]);
+      b.blob('snow', 0.18, [0.1, 0.04, 0.24], [1.8, 0.25, 1.0], true);
+    },
+  },
+  cairn: {
+    kind: 'prop',
+    height: 0.75,
+    radius: 0.35,
+    build: (b) => {
+      let y = 0;
+      [0.26, 0.22, 0.18, 0.14, 0.1].forEach((r, i) => {
+        b.rock(i % 2 ? 'rock' : 'rockDark', r, [(((i * 7) % 3) - 1) * 0.03, y + r * 0.4, 0], [1.3, 0.55, 1.2], [0, i * 0.9, 0]);
+        y += r * 0.75;
+      });
+      b.blob('snow', 0.12, [0, y + 0.02, 0], [1.4, 0.4, 1.2], true);
+    },
+  },
+  'pennant-pole': {
+    kind: 'prop',
+    height: 2.1,
+    radius: 0.4,
+    build: (b) => {
+      b.rock('rockDark', 0.26, [0, 0.1, 0], [1.4, 0.6, 1.4]);
+      b.rock('rock', 0.16, [0.12, 0.24, 0.05], [1.2, 0.6, 1.1], [0.3, 0.8, 0], true);
+      b.cyl('woodDark', 0.04, 0.06, 2.0, 6, [0, 0.1, 0]);
+      b.cone('iron', 0.05, 0.12, 5, [0, 2.1, 0]);
+      (['banner', 'cloth', 'ore', 'banner'] as const).forEach((c, i) => {
+        b.add(new THREE.ConeGeometry(0.11, 0.42 - i * 0.04, 3).rotateZ(-Math.PI / 2), c, [0.22, 1.95 - i * 0.24, 0], [0, 0, i % 2 ? 0.08 : -0.06], [1, 1, 0.12]);
+      });
+    },
+  },
+  campfire: { kind: 'prop', height: 0.55, radius: 0.4, light: { x: 0, y: 0.22, z: 0, kind: 'lantern', fire: 2.4 }, build: (b) => campfire(b) },
+
+  // Copperdale.
+  'bell-post': {
+    kind: 'prop',
+    height: 1.9,
+    radius: 0.35,
+    build: (b) => {
+      for (const x of [-0.3, 0.3]) b.box('woodDark', [0.1, 1.8, 0.1], [x, 0.9, 0]);
+      b.box('wood', [0.8, 0.12, 0.14], [0, 1.8, 0]);
+      b.add(new THREE.CylinderGeometry(0.1, 0.17, 0.26, 10, 1, true), 'ore', [0, 1.55, 0]);
+      b.cyl('ore', 0.04, 0.04, 0.05, 6, [0, 1.68, 0]);
+      b.blob('iron', 0.04, [0, 1.43, 0], [1, 1, 1], true);
+      b.box('cloth', [0.01, 0.6, 0.01], [0.08, 1.1, 0], [0, 0, 0.1], true);
+    },
+  },
+  'house-far': {
+    kind: 'prop',
+    height: 2.6,
+    radius: 1.2,
+    light: { x: 0.35, y: 0.9, z: 0.72, kind: 'window' },
+    build: (b) => {
+      b.box('stoneDark', [1.8, 0.4, 1.4], [0, 0.2, 0]);
+      b.box('wood', [1.7, 1.1, 1.3], [0, 0.95, 0]);
+      b.add(new THREE.CylinderGeometry(1.1, 1.1, 1.9, 3, 1).rotateZ(Math.PI / 2).rotateX(Math.PI / 6), 'woodDark', [0, 1.85, 0], [0, 0, 0], [1, 0.55, 0.78]);
+      b.blob('snow', 0.5, [0, 2.15, 0], [1.9, 0.18, 0.6], true);
+      b.box('woodDark', [0.4, 0.34, 0.05], [0.35, 0.9, 0.66]);
+      b.box('glow', [0.3, 0.24, 0.02], [0.35, 0.9, 0.68]);
+      b.box('stoneDark', [0.24, 0.8, 0.24], [-0.5, 2.3, -0.2], [0, 0, 0], true);
+    },
+  },
+
+  // Old forge.
+  forge: {
+    kind: 'prop',
+    height: 1.9,
+    radius: 0.5,
+    light: { x: 0, y: 0.7, z: 0.1, kind: 'lantern', fire: 2.8 },
+    build: (b) => {
+      b.box('stoneDark', [0.92, 0.6, 0.8], [0, 0.3, 0]);
+      b.box('rockDark', [1.0, 0.08, 0.88], [0, 0.62, 0]);
+      b.box('ember', [0.66, 0.06, 0.56], [0, 0.66, 0.02]);
+      for (let i = 0; i < 5; i++) b.rock('ember', 0.07, [-0.22 + i * 0.11, 0.69, (((i * 3) % 5) - 2) * 0.08], [1.2, 0.6, 1], [i, i, 0], true);
+      b.add(new THREE.CylinderGeometry(0.16, 0.5, 0.55, 4, 1).rotateY(Math.PI / 4), 'stoneDark', [0, 1.38, -0.15]);
+      b.box('stoneDark', [0.3, 0.6, 0.3], [0, 1.95, -0.15]);
+      for (const x of [-0.38, 0.38]) b.box('iron', [0.06, 0.6, 0.06], [x, 0.95, 0.24]);
+      b.box('iron', [1.0, 0.07, 0.07], [0, 1.1, 0.24]);
+      b.box('woodDark', [0.3, 0.12, 0.5], [0.62, 0.42, 0], [0, 0, 0.3], true);
+      b.blob('clothDark', 0.16, [0.62, 0.48, 0.05], [1, 0.5, 1.4], true);
+      flameOn(b, [0, 0.68, 0.02], 2.2);
+      flameOn(b, [0.18, 0.68, -0.06], 1.5);
+      flameOn(b, [-0.16, 0.68, 0.08], 1.6);
+    },
+  },
+  'dark-lantern': {
+    kind: 'prop',
+    height: 1.15,
+    radius: 0.45,
+    light: { x: 0, y: 0.82, z: 0, kind: 'crystal' },
+    build: (b) => {
+      anvil(b);
+      b.cyl('iron', 0.13, 0.15, 0.05, 6, [0, 0.54, 0]);
+      for (let i = 0; i < 6; i++) b.box('iron', [0.025, 0.36, 0.025], [Math.cos(i * 1.05) * 0.13, 0.76, Math.sin(i * 1.05) * 0.13]);
+      b.cyl('crystal', 0.1, 0.1, 0.32, 6, [0, 0.58, 0]);
+      b.add(new THREE.OctahedronGeometry(0.07, 0), 'glowCold', [0, 0.76, 0], [0, 0, 0], [1, 1.6, 1]);
+      b.cone('iron', 0.16, 0.16, 6, [0, 0.94, 0]);
+      b.add(new THREE.TorusGeometry(0.06, 0.015, 4, 8), 'iron', [0, 1.13, 0], [0, 0, 0], [1, 1, 1], true);
+    },
+  },
+  anvil: { kind: 'prop', height: 0.6, radius: 0.35, build: (b) => anvil(b) },
+  'chain-hoist': {
+    kind: 'prop',
+    height: 1.8,
+    radius: 0.5,
+    build: (b) => {
+      for (const x of [-0.42, 0.42]) b.box('woodDark', [0.12, 1.75, 0.12], [x, 0.875, -0.1]);
+      b.box('wood', [1.0, 0.14, 0.16], [0, 1.72, -0.1]);
+      for (const [x, n] of [[-0.18, 9], [0.12, 6]] as const) {
+        for (let i = 0; i < n; i++) b.add(new THREE.TorusGeometry(0.03, 0.01, 3, 6), 'iron', [x, 1.62 - i * 0.07, -0.1], [0, (i % 2) * (Math.PI / 2), 0], [1, 1.4, 1], i % 2 === 1);
+      }
+      b.add(new THREE.TorusGeometry(0.06, 0.018, 4, 8, Math.PI * 1.4), 'iron', [-0.18, 0.95, -0.1], [0, 0, Math.PI]);
+      b.box('iron', [0.16, 0.1, 0.1], [0.12, 1.12, -0.1]);
+    },
+  },
+  'quench-trough': {
+    kind: 'prop',
+    height: 0.45,
+    radius: 0.5,
+    build: (b) => {
+      b.box('stoneDark', [0.9, 0.38, 0.42], [0, 0.19, 0]);
+      b.box('bottle', [0.78, 0.02, 0.3], [0, 0.37, 0]);
+      b.box('iron', [0.04, 0.3, 0.04], [0.2, 0.5, 0.05], [0.4, 0, 0.3], true);
+      b.box('iron', [0.04, 0.3, 0.04], [0.26, 0.5, -0.02], [-0.3, 0, 0.5], true);
+    },
+  },
+  'coal-pile': {
+    kind: 'prop',
+    height: 0.35,
+    radius: 0.45,
+    build: (b) => {
+      b.rock('rockDark', 0.26, [0, 0.1, 0], [1.5, 0.55, 1.2], [0.2, 0.4, 0]);
+      for (let i = 0; i < 7; i++) b.rock('shadow', 0.07, [Math.cos(i * 0.9) * 0.24, 0.12 + (i % 2) * 0.05, Math.sin(i * 0.9) * 0.18], [1.1, 0.8, 1], [i, i, 0], i > 4);
+      b.rock('ember', 0.04, [0.08, 0.2, 0.06], [1, 0.7, 1], [0, 0, 0], true);
+      b.cyl('woodDark', 0.02, 0.02, 0.7, 5, [-0.3, 0.05, 0.2], [0.2, 0, -1.25], true);
     },
   },
 };

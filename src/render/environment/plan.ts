@@ -52,6 +52,9 @@ export const STYLE_PIECES: Record<EdgeStyle, StylePieces> = {
   forest: { wall: 'thicket', alt: 'thicket-thorn', low: 'thicket-low', corner: null, cornerLow: null, door: 'forest-gap', walled: false },
   shore: { wall: 'reeds-bank', alt: 'reeds-bank', low: 'reeds-low', corner: null, cornerLow: null, door: 'forest-gap', walled: false },
   cave: { wall: 'rock-wall', alt: 'rock-wall-crystal', low: 'rock-low', corner: 'rock-pillar', cornerLow: 'rock-pillar-low', door: 'cave-mouth', walled: false },
+  mine: { wall: 'mine-wall', alt: 'mine-wall-ore', low: 'mine-wall-low', corner: 'mine-post', cornerLow: 'mine-post-low', door: 'mine-adit', walled: true },
+  cliff: { wall: 'cliff-wall', alt: 'cliff-wall-snow', low: 'cliff-low', corner: 'cliff-pillar', cornerLow: 'cliff-pillar-low', door: 'cliff-gap', walled: true },
+  forge: { wall: 'forge-wall', alt: 'forge-hearth', low: 'forge-wall-low', corner: 'forge-pillar', cornerLow: 'forge-pillar-low', door: 'forge-doorway', walled: true },
 };
 
 /** Share of the dressing kept per quality level (the outline is always complete). */

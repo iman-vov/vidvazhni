@@ -7,7 +7,7 @@
 import type { BoundaryKind, SurfaceId } from '../../rules/content';
 
 /** How the edge of the map is closed: walls indoors, plants and rock outdoors. */
-export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave';
+export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave' | 'mine' | 'cliff' | 'forge';
 
 /** A piece id with a relative weight, for random picks. */
 export type Weighted = [piece: string, weight: number];
@@ -77,6 +77,9 @@ export interface EnvironmentDef {
     morok: string;
     morokOpacity: number;
   };
+  /** Particles carried across the whole location by the wind: blowing snow on the pass, dust in a
+   *  mine, sparks rising in a forge. `count` is for high quality (medium 60 %, low 30 %). */
+  weather?: { kind: 'snow' | 'dust' | 'sparks'; count: number; color: string; wind: [x: number, z: number] };
   /** Piece placed outside the entrance next to the start hexes (stairs up to the tavern), or null. */
   entrance?: string | null;
   /** Piece placed beyond the exit hexes of a reach-exit goal (the forester's hut), or null. */

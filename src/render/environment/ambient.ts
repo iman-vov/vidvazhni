@@ -37,6 +37,19 @@ export interface LightBeam {
   radius: number;
 }
 
+/** Particles blown across the whole location (see `weather` in the location data). */
+export interface Weather {
+  kind: 'snow' | 'dust' | 'sparks';
+  count: number;
+  color: THREE.Vector3;
+  /** World units per second along x and z. */
+  wind: [number, number];
+  /** The area they fill: x and z bounds, and the height of the layer. */
+  min: THREE.Vector2;
+  max: THREE.Vector2;
+  height: number;
+}
+
 export interface AmbientOptions {
   fires: FireSpot[];
   /** Flame tongues and embers per fire of size 1 (bigger fires get more). */
@@ -45,6 +58,7 @@ export interface AmbientOptions {
   dust: DustVolume[];
   fog: FogPatch[];
   beam: LightBeam | null;
+  weather?: Weather | null;
   fogColor: THREE.Vector3;
   rooms: string[];
 }
@@ -85,6 +99,7 @@ export class Ambient {
     if (dust.length) this.root.add(this.motes(dust, sync));
     if (opts.fog.length) this.root.add(this.lowFog(opts.fog, opts.fogColor));
     if (opts.beam) this.root.add(this.shaft(opts.beam));
+    if (opts.weather && opts.weather.count > 0) this.root.add(this.blown(opts.weather, sync));
   }
 
   /** Whether there is anything at all to animate. */
@@ -325,6 +340,79 @@ export class Ambient {
     mesh.name = 'env:low-fog';
     this.owned.push(g, m, { dispose: () => mesh.dispose() });
     return mesh;
+  }
+
+  /** Snow, dust or sparks carried by the wind over the location, wrapping around its area. Snow
+   *  falls and swirls, dust hangs low and drifts, sparks rise and wink out. */
+  private blown(w: Weather, sync: (r: THREE.WebGLRenderer) => void): THREE.Points {
+    const rnd = seeded(31);
+    const pos: number[] = [];
+    for (let i = 0; i < w.count; i++) pos.push(rnd(), rnd(), rnd());
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const kind = w.kind === 'snow' ? 0 : w.kind === 'dust' ? 1 : 2;
+    const m = new THREE.ShaderMaterial({
+      uniforms: {
+        ...this.uniforms,
+        uColor: { value: w.color.clone() },
+        uMin: { value: w.min.clone() },
+        uSize: { value: w.max.clone().sub(w.min) },
+        uHeight: { value: w.height },
+        uWind: { value: new THREE.Vector2(...w.wind) },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: kind === 2 ? THREE.AdditiveBlending : THREE.NormalBlending,
+      vertexShader: `
+        uniform float uTime;
+        uniform float uScale;
+        uniform vec2 uMin;
+        uniform vec2 uSize;
+        uniform float uHeight;
+        uniform vec2 uWind;
+        varying float vAlpha;
+        void main() {
+          float seed = fract(position.x * 7.13 + position.y * 3.71 + position.z * 1.37);
+          float a = seed * 60.0;
+          vec2 drift = uWind * uTime * (0.7 + 0.6 * seed);
+          float y;
+          float px;
+          vec2 sway = vec2(sin(uTime * 0.9 + a), cos(uTime * 0.7 + a * 1.3));
+          ${kind === 0 ? `
+          // Snow: falls, swirls in gusts.
+          float life = fract(position.y + uTime * (0.12 + seed * 0.1));
+          y = uHeight * (1.0 - life);
+          drift += sway * 0.35 + uWind * 0.4 * sin(uTime * 0.5 + seed * 3.0);
+          px = 0.03 + 0.03 * seed;
+          vAlpha = smoothstep(0.0, 0.1, life) * (0.55 + 0.35 * seed);` : kind === 1 ? `
+          // Dust: hangs low, drifts slowly, twinkles where the light catches it.
+          float life = 0.5;
+          y = 0.08 + position.y * position.y * uHeight * 0.55 + sway.x * 0.08;
+          drift += sway * 0.2;
+          px = 0.018 + 0.016 * seed;
+          vAlpha = (0.25 + 0.3 * pow(0.5 + 0.5 * sin(uTime * (0.5 + seed) + a), 2.0));` : `
+          // Sparks: rise from the floor, sway and wink out.
+          float life = fract(position.y + uTime * (0.16 + seed * 0.22));
+          y = life * uHeight;
+          drift = uWind * life * 1.5 + sway * 0.25 * life;
+          px = 0.022 + 0.018 * seed;
+          vAlpha = sin(life * 3.14159) * (0.55 + 0.45 * sin(uTime * 9.0 + a));`}
+          vec2 f = fract(position.xz + drift / uSize);
+          vAlpha *= smoothstep(0.0, 0.08, f.x) * smoothstep(1.0, 0.92, f.x) * smoothstep(0.0, 0.08, f.y) * smoothstep(1.0, 0.92, f.y);
+          vec4 mv = modelViewMatrix * vec4(uMin.x + f.x * uSize.x, y, uMin.y + f.y * uSize.y, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = px * uScale * projectionMatrix[1][1] / -mv.z;
+        }`,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          float r = length(gl_PointCoord - 0.5) * 2.0;
+          float disc = 1.0 - smoothstep(${kind === 0 ? '0.35' : '0.0'}, 1.0, r);
+          ${kind === 2 ? 'gl_FragColor = vec4(uColor * disc * vAlpha, 1.0);' : 'gl_FragColor = vec4(uColor, disc * vAlpha);'}
+        }`,
+    });
+    return this.points(g, m, `env:weather:${w.kind}`, sync);
   }
 
   /** A soft cone of warm light, brightest at the top and at its axis, slowly breathing. */

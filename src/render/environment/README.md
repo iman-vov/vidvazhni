@@ -10,7 +10,7 @@
 | `pieces.ts` | процедурні деталі за kit id і їхні розміри |
 | `field.ts` | одна текстура над локацією: туман з відстанню (R), завіса над нерозкритими кімнатами (G), вода (B), затінення біля плит і стін (A) |
 | `morok.ts` | клуби Мороку (medium і high) |
-| `ambient.ts` | жива атмосфера: вогонь над полум'ям, пил у світлі, промінь від входу, низький туман |
+| `ambient.ts` | жива атмосфера: вогонь над полум'ям, пил у світлі, промінь від входу, низький туман, погода локації (`weather`: сніг, пил, іскри) |
 | `atmosphere.ts`, `decals.ts` | обжитість: грейдинг локації, бруд і сміття на підлозі, бруд біля стін, декалі й варіанти стін, теплі плями від вогню (див. `docs/art/atmosphere.md`) |
 | `kit.ts` | заміна деталей GLB-файлами з `assets/environment/` |
 | `index.ts` | `BoardEnvironment`: збирає все, зливає геометрію за матеріалом (~10–20 викликів малювання), ставить світло |
@@ -25,6 +25,7 @@
 | точкові світла (свічки, ліхтарі) | 0 | 3 | 5 |
 | вогонь над кожним полум'ям (`ambient.ts`: язики, іскри, сяйво) | так, менше | так | так |
 | пил у світлі й промені від входу, низький туман біля стін | ні | так | так, густіше |
+| погода локації (`weather`: сніг на перевалі, пил у шахті, іскри в кузні) | 30 % | 60 % | 100 % |
 | кадрів за секунду в спокої (мерехтіння, вогонь) | 15 | 24 | 30 |
 | клуби Мороку | 0 | ~14 + над нерозкритими кімнатами | ~30 + більше |
 | тіні від фігур і пропсів на гексах | ні | так | так |
@@ -53,6 +54,11 @@
 | `flooded-mill` (с. 3) | `reeds-bank`, `reeds-low`, `forest-gap`; зала млина: `timber-wall`, `timber-window`, `timber-wall-low`, `timber-post`, `timber-doorway` | `reeds`, `lilies`, `post`, `fence`, `rock`, `sacks`, `log`, `tree-green`, `tree-far` | `mill-wheel` біля зали, `lantern-post` |
 | `watchtower` (с. 4) | `tower-wall`, `tower-slit`, `tower-wall-low`, `tower-pillar`, `tower-pillar-low`, `tower-doorway` | `crate`, `barrel`, `banner`, `torch`, `rubble`, `weapon-rack`, `sacks`, `crate-stack` | — |
 | `gloom-heart` (с. 5) | `rock-wall`, `rock-wall-crystal`, `rock-low`, `rock-pillar`, `rock-pillar-low`, `cave-mouth` | `stalagmite`, `rock`, `crystals`, `glow-mushrooms`, `stalagmite-big` | — |
+| `mine-tunnel` (с. 6) | `mine-wall` (скеля за кріпленням), `mine-wall-ore` (мідні жили), `mine-wall-low`, `mine-post`, `mine-post-low`, `mine-adit`; на стінах `mine-lamp` | `ore-pile`, `rubble-heap`, `timber-stack`, `mine-cart` на `rails`, `crate`, `barrel`, `sacks` | `mine-lantern` (вхід, якорі); перешкоди `mine-support` |
+| `mountain-pass` (с. 7) | `cliff-wall`, `cliff-wall-snow`, `cliff-low`, `cliff-pillar`, `cliff-pillar-low`, `cliff-gap` | `snow-rock`, `rock`, `cairn`, `snow-pine`, `stalagmite-big` (далекі скелі) | `campfire` на заставі, об'єкт `pennant-pole`; сніг з вітром |
+| `copperdale` (с. 8) | `timber-*` (фасади хат) | `crate`, `barrel`, `sacks`, `mine-cart`, `ore-pile`, `weapon-rack`, `timber-stack`, `house-far` (за краєм) | `bell-post`, `torch`; перешкода `campfire`, об'єкти `cage` |
+| `dark-depths` (с. 9) | `mine-*`; брама кузні — `forge-*` | `rock`, `stalagmite`, `ore-pile`, `glow-mushrooms`, `crystals`, `rubble-heap` | вода, згаслі `brazier` |
+| `old-forge` (с. 10) | `forge-wall` (цегла з залізом), `forge-hearth` (жар у стіні), `forge-wall-low`, `forge-pillar`, `forge-pillar-low`, `forge-doorway` | `coal-pile`, `anvil`, `ore-pile`, `quench-trough`, `chain-hoist`, `rubble-heap`, `weapon-rack` | об'єкти `forge`, `dark-lantern`; іскри |
 
 Перешкоди й об'єкти на гексах без власної моделі теж беруться звідси: `obstacle-tree`, `boulder`, `pillar`, `bunk`, `table`, `hut` (зменшена), `brazier` / `brazier-lit`, `lever` / `lever-down`, `millstone`.
 

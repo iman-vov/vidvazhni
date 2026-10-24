@@ -146,6 +146,7 @@ export const FLOOR_CELLS: Record<FloorDecal | 'edge', { cell: number; tinted: bo
   roots: { cell: 12, tinted: false },
   rubble: { cell: 13, tinted: false },
   edge: { cell: 14, tinted: true },
+  snow: { cell: 15, tinted: false },
 };
 
 export const WALL_CELLS: Record<WallDecal, { cell: number; tinted: boolean; wet?: boolean; big?: boolean }> = {
@@ -163,6 +164,8 @@ export const WALL_CELLS: Record<WallDecal, { cell: number; tinted: boolean; wet?
   slime: { cell: 11, tinted: false, wet: true },
   soot: { cell: 12, tinted: false },
   plaster: { cell: 13, tinted: false },
+  ore: { cell: 14, tinted: false },
+  frost: { cell: 15, tinted: false },
 };
 
 function paintFloor(): Uint8Array {
@@ -271,6 +274,14 @@ function paintFloor(): Uint8Array {
   stones(14, 0.012, 0.025, 0.4);
 
   p.cell(FLOOR_CELLS.edge.cell).fill((u, v) => [WHITE, Math.pow(1 - v, 1.6) * (0.5 + 0.5 * fbm(u, v, 5, 17)) * smooth(0, 0.12, u) * smooth(1, 0.88, u)]);
+
+  // Blown snow: a soft drift with a streaky edge along the wind.
+  p.cell(FLOOR_CELLS.snow.cell).fill((u, v) => {
+    const d = blob(u, v * 1.4 - 0.2, 19, 0.85);
+    const streak = 0.75 + 0.25 * Math.sin(u * 30 + fbm(u, v, 4, 20) * 8);
+    const g = 214 + 30 * fbm(u, v, 10, 21);
+    return [[g * 0.96, g * 0.98, g], smooth(0.95, 0.45, d) * streak * 0.9];
+  });
   return p.data;
 }
 
@@ -433,6 +444,20 @@ function paintWalls(): Uint8Array {
     const g = 186 + 20 * fbm(u, v, 12, 41);
     return [[g, g * 0.95, g * 0.86], 0.8];
   });
+
+  // A copper vein: a crooked bright seam with green-blue weathering around it.
+  p.cell(WALL_CELLS.ore.cell);
+  p.walk(rnd, 0.08, 0.3 + rnd() * 0.3, 0.5, 12, 0.075, 0.07, [52, 86, 78], 0.5, 0.7, 0.2);
+  p.walk(rnd, 0.08, 0.35 + rnd() * 0.3, 0.45, 12, 0.075, 0.03, [196, 124, 62], 1, 0.7, 0.3);
+  for (let i = 0; i < 6; i++) p.disc(0.2 + rnd() * 0.6, 0.25 + rnd() * 0.5, 0.02 + rnd() * 0.02, [226, 160, 84], 1);
+
+  // Rime and snow caught on a cliff face, thickest on the top and on the ledges.
+  p.cell(WALL_CELLS.frost.cell).fill((u, v) => {
+    const top = smooth(0.55, 0.95, v + (fbm(u, v, 6, 42) - 0.5) * 0.3);
+    const ledge = smooth(0.05, 0, Math.abs(v - 0.45 - (fbm(u, 0, 5, 43) - 0.5) * 0.1)) * 0.8;
+    const g = 220 + 30 * fbm(u, v, 12, 44);
+    return [[g * 0.95, g * 0.98, g], Math.max(top, ledge) * smooth(0, 0.08, u) * smooth(1, 0.92, u) * (0.6 + 0.4 * fbm(u, v, 9, 45))];
+  });
   return p.data;
 }
 
@@ -517,7 +542,7 @@ export interface AtmosphereBuild {
 
 const FLOOR_SIZE: Record<FloorDecal, [number, number]> = {
   stain: [0.9, 1.6], crack: [0.7, 1.2], puddle: [0.8, 1.4], straw: [0.6, 1.0], leaves: [0.7, 1.1], debris: [0.5, 0.8], slab: [0.55, 0.7],
-  planks: [0.8, 1.0], moss: [0.8, 1.4], slime: [0.9, 1.5], soot: [0.8, 1.2], dust: [1.2, 1.8], roots: [0.8, 1.2], rubble: [0.5, 0.8],
+  planks: [0.8, 1.0], moss: [0.8, 1.4], slime: [0.9, 1.5], soot: [0.8, 1.2], dust: [1.2, 1.8], roots: [0.8, 1.2], rubble: [0.5, 0.8], snow: [1.0, 1.8],
 };
 
 const POOL_RADIUS = { flame: 1.7, lantern: 2.1, crystal: 1.5, window: 1.3 } as const;
@@ -718,6 +743,10 @@ function wallSpot(kind: WallDecal, len: number, h: number, rnd: () => number): D
       return { w: 0.55, h: Math.max(0.3, h - 1.12), x: 0, y: 1.12 + Math.max(0.3, h - 1.12) / 2 };
     case 'plaster':
       return { w: r(0.4, 0.6), h: r(0.35, 0.5), x: r(-0.25, 0.25), y: r(0.5, h - 0.35) };
+    case 'ore':
+      return { w: r(0.6, 0.85), h: r(0.5, 0.7), x: r(-0.15, 0.15), y: r(0.55, h - 0.5) };
+    case 'frost':
+      return { w: len, h: Math.min(1.2, h), x: 0, y: h - Math.min(1.2, h) / 2 };
   }
 }
 
@@ -773,6 +802,7 @@ function buildWalls(input: AtmosphereInput, atm: Atmosphere, dry: Quads, wet: Qu
     const h = p.height;
     const plain = plainWalls.has(p.piece);
     const timber = p.piece.startsWith('timber');
+    const mine = p.piece.startsWith('mine');
     const torch = torches.some((t) => Math.hypot(t.x - p.x, t.z - p.z) < 0.05);
     sinceBig++;
 
@@ -780,17 +810,30 @@ function buildWalls(input: AtmosphereInput, atm: Atmosphere, dry: Quads, wet: Qu
     let variant: WallVariant = plain ? pick(atm.variants, rnd()) : 'plain';
     if (quality === 'low' && variant === 'blocks') variant = 'plain';
     if (timber && (variant === 'blocks' || variant === 'buttress')) variant = 'beam';
+    if (mine && (variant === 'blocks' || variant === 'plinth')) variant = 'plain';
     const dark: MaterialKey = timber ? 'woodDark' : 'stoneDark';
     if (variant === 'buttress') box(p, dark, [0.22, h * 0.97, 0.1], [0, (h * 0.97) / 2, 0.05]);
     else if (variant === 'plinth') box(p, dark, [len, 0.22, 0.07], [0, 0.11, 0.035]);
     else if (variant === 'beam') {
       box(p, 'woodDark', [0.12, h, 0.08], [(rnd() - 0.5) * 0.5, h / 2, 0.04]);
       box(p, 'wood', [len, 0.1, 0.06], [0, h * 0.62, 0.03]);
+    } else if (variant === 'support') {
+      // An extra timber set in the middle of a mine run: a post and a short cap on wedges.
+      box(p, 'woodDark', [0.13, h - 0.1, 0.13], [0, (h - 0.1) / 2, 0.07]);
+      box(p, 'wood', [0.5, 0.13, 0.16], [0, h - 0.17, 0.07]);
+      box(p, 'wood', [0.16, 0.06, 0.14], [0.12, h - 0.08, 0.07]);
+    } else if (variant === 'chains') {
+      // Chains hanging from iron rings set into the forge wall, one ending in a hook.
+      for (const x of [-0.25, 0.2]) {
+        box(p, 'iron', [0.09, 0.06, 0.06], [x, h - 0.2, 0.03]);
+        const n = 5 + Math.floor(rnd() * 5);
+        for (let i = 0; i < n; i++) box(p, 'iron', i % 2 ? [0.02, 0.07, 0.05] : [0.05, 0.07, 0.02], [x, h - 0.27 - i * 0.065, 0.06]);
+      }
     } else if (variant === 'blocks') {
       const n = 2 + Math.floor(rnd() * 3);
       for (let i = 0; i < n; i++) box(p, rnd() < 0.5 ? 'stoneLight' : 'stoneDark', [0.18 + rnd() * 0.14, 0.1 + rnd() * 0.06, 0.05], [(rnd() - 0.5) * 0.8 * len, 0.25 + rnd() * (h - 0.5), 0.02]);
     }
-    const awayFromCentre = variant === 'buttress';
+    const awayFromCentre = variant === 'buttress' || variant === 'support';
 
     if (torch) {
       decal(p, 'soot', wallSpot('soot', len, h, rnd));
