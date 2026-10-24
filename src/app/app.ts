@@ -36,6 +36,8 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
   let screen: Screen = 'menu';
   let game: GameController | null = null;
   let board: BoardView | null = null;
+  /** The first board is built once even if «Почати» is tapped twice while it loads. */
+  let boardLoading: Promise<BoardView> | null = null;
   let unmountScenario: (() => void) | null = null;
   let unmountCoach: (() => void) | null = null;
   document.documentElement.lang = getLang();
@@ -65,7 +67,9 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
 
   async function openScenario(g: GameController): Promise<void> {
     game = g;
-    board ??= await createGameBoard(boardEl, { quality: getGraphicsQuality(), lang: getLang(), speed: settings.get().speed });
+    boardLoading ??= createGameBoard(boardEl, { quality: getGraphicsQuality(), lang: getLang(), speed: settings.get().speed });
+    board = await boardLoading;
+    if (game !== g) return; // a later start (a second tap) took over while the board loaded
     go(g.actions.length === 0 && storyOf(g, 'intro').length ? 'storyIntro' : 'scenario');
   }
 
