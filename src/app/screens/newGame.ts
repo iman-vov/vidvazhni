@@ -207,9 +207,8 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
       h(
         'section',
         { class: 'gnew-handoff' },
-        h('p', { class: 'gnew-kicker' }, t('newGame.handoff.title')),
         h('h2', null, nameOf(player)),
-        h('p', { class: 'gside-hint' }, t('newGame.handoff.text', { name: nameOf(player) })),
+        h('p', { class: 'gnew-handoff-text' }, t('newGame.handoff.text', { name: nameOf(player) })),
         artButton('play', t('newGame.handoff.go', { name: nameOf(player) }), () => go({ kind: 'hero', player, slot: 0 }), { cls: 'is-go' }),
       ),
     ];
@@ -325,7 +324,7 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
   return h(
     'div',
     { class: `gnew-hero${o.slot === 1 ? ' is-second' : ''}` },
-    o.slot === 1 ? h('p', { class: 'gnew-second-note' }, icon('add-player'), ' ', t('newGame.second.text', { name: o.playerName })) : null,
+    o.slot === 1 ? h('p', { class: 'gnew-second-note' }, h('b', { class: 'gnew-second-badge' }, '2'), h('span', null, t('newGame.second.text', { name: o.playerName }))) : null,
     h(
       'div',
       { class: 'gnew-gallery', role: 'radiogroup', 'aria-label': t('newGame.heroes') },
@@ -345,11 +344,21 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
       ? h(
           'section',
           { class: 'gsection gnew-detail' },
-          h('h2', null, t(`class.${chosen.id}`), ' ', h('small', { class: `gtag is-${chosen.complexity}` }, t(`complexity.${chosen.complexity}`))),
-          h('p', null, t(`class.${chosen.id}.role`), ' · ', `${t('stat.hp')} ${chosen.hpByLevel[0] ?? ''} · ${t('menu.handSize', { n: chosen.handSize })}`),
-          deck(c, chosen.id),
-          h('h3', null, t('newGame.hints')),
-          hintRow(chosen.id, o.onChange),
+          h(
+            'div',
+            { class: 'gnew-detail-hero' },
+            bust(chosen.id),
+            h('h2', null, t(`class.${chosen.id}`)),
+            h('p', { class: 'gnew-role' }, t(`class.${chosen.id}.role`)),
+            h('small', { class: `gtag is-${chosen.complexity}` }, t(`complexity.${chosen.complexity}`)),
+            h(
+              'p',
+              { class: 'gnew-stats' },
+              h('span', { title: t('stat.hp') }, icon('hp'), ' ', chosen.hpByLevel[0] ?? ''),
+              h('span', { title: t('menu.handSize', { n: chosen.handSize }) }, icon('hand'), ' ', chosen.handSize),
+            ),
+          ),
+          h('div', { class: 'gnew-detail-body' }, deck(c, chosen.id), h('div', { class: 'gnew-hints' }, h('h3', null, t('newGame.hints')), hintRow(chosen.id, o.onChange))),
         )
       : h('p', { class: 'gside-hint gnew-pickfirst' }, t('newGame.pickFirst')),
   );

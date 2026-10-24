@@ -1,8 +1,113 @@
-/* New Game (src/app/screens/newGame.ts): hero gallery with busts, the chosen hero's deck, party. */
+/* New Game (src/app/screens/newGame.ts) in the hybrid look: the painted town behind (style A),
+   blue-slate translucent panels with thin gold borders and lantern-gold accents (style B). The
+   second-hero step is tinted violet so it never reads as the first choice again. */
+
+.gnew {
+  --ng-gold: #e9c46a;
+  --ng-gold-hi: #f7d46f;
+  --ng-ink: #f8e8c0;
+  --ng-panel: linear-gradient(180deg, rgba(27, 52, 86, 0.86), rgba(13, 27, 48, 0.9));
+  --ng-line: rgba(214, 170, 80, 0.55);
+  --ng-glow: rgba(255, 196, 92, 0.55);
+  --ng-step: var(--ng-gold);
+  color: var(--ng-ink);
+  gap: 14px;
+}
+
+.gnew .gpage-head h1 {
+  font-size: clamp(1.4em, 3.2vw, 2em);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Steps ribbon ─── */
+
+.gnew-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ngstep;
+}
+
+.gnew-steps li {
+  counter-increment: ngstep;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 170, 80, 0.3);
+  background: rgba(10, 20, 38, 0.62);
+  color: rgba(248, 232, 192, 0.6);
+  font-size: 0.9em;
+  max-width: 14em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gnew-steps li::before {
+  content: counter(ngstep);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.gnew-steps li.is-done {
+  color: var(--ng-ink);
+}
+
+.gnew-steps li.is-done::before {
+  content: '✓';
+  background: rgba(233, 196, 106, 0.2);
+  color: var(--ng-gold);
+}
+
+.gnew-steps li.is-now {
+  color: #241a08;
+  background: linear-gradient(180deg, var(--ng-gold-hi), #c99a3c);
+  border-color: var(--ng-gold-hi);
+  box-shadow: 0 0 14px var(--ng-glow);
+  font-weight: 700;
+}
+
+/* ─── Panels ─── */
+
+.gnew.gpage.is-art .gsection {
+  background: var(--ng-panel);
+  border: 1px solid var(--ng-line);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(246, 217, 138, 0.12), 0 10px 26px rgba(0, 0, 0, 0.4);
+}
+
+.gnew .gsection h2 {
+  color: var(--ng-gold);
+}
+
+.gnew h3 {
+  margin: 14px 0 8px;
+  font-size: 1em;
+  color: var(--ng-gold);
+}
+
+.gnew h3 .gside-hint {
+  font-weight: 400;
+  color: rgba(248, 232, 192, 0.65);
+}
+
+/* ─── Hero gallery ─── */
 
 .gnew-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -12,32 +117,215 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 8px 10px;
+  padding: 10px 8px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--ng-line);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 196, 92, 0.32), transparent 62%),
+    linear-gradient(180deg, rgba(36, 66, 104, 0.9), rgba(12, 25, 45, 0.94));
+  box-shadow: inset 0 0 0 1px rgba(246, 217, 138, 0.14), 0 8px 18px rgba(0, 0, 0, 0.4);
+  color: var(--ng-ink);
   font: inherit;
-  color: inherit;
+  text-align: center;
   cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.gnew-tile b {
+  font-size: 1.05em;
+  color: var(--ng-gold-hi);
+}
+
+.gnew-tile > span:not(.gnew-bust) {
+  font-size: 0.82em;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+.gnew-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.gnew-tile[aria-checked='true'] {
+  border-color: var(--ng-step);
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 2px var(--ng-step),
+    0 0 26px var(--ng-glow),
+    0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+.gnew-tile[aria-checked='true']::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ng-step);
+  color: #1d1406;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.gnew-tile:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.gnew-tile:disabled .gnew-bust img {
+  filter: grayscale(0.85) brightness(0.7);
+}
+
+.gnew-owner {
+  position: absolute;
+  top: 44%;
+  left: 6px;
+  right: 6px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: rgba(10, 18, 34, 0.88);
+  border: 1px solid var(--ng-line);
+  color: var(--ng-gold);
+  font-size: 0.8em;
+  font-weight: 700;
 }
 
 .gnew-bust {
   display: block;
   width: 100%;
+  max-width: 180px;
   aspect-ratio: 1;
 }
 
 .gnew-bust img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
 }
+
+.gnew-pickfirst {
+  text-align: center;
+  font-size: 1.05em;
+  padding: 18px 0;
+}
+
+/* ─── Second hero: a violet step of its own ─── */
+
+.gnew-hero.is-second {
+  --ng-step: #c9a2ff;
+  --ng-glow: rgba(176, 132, 255, 0.55);
+}
+
+.gnew-second-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(201, 162, 255, 0.6);
+  background: linear-gradient(90deg, rgba(74, 44, 120, 0.88), rgba(30, 24, 62, 0.82));
+  font-size: 1.05em;
+}
+
+.gnew-second-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #c9a2ff;
+  color: #20103a;
+  font-size: 1.4em;
+  box-shadow: 0 0 16px rgba(176, 132, 255, 0.7);
+}
+
+.gnew-hero.is-second .gsection {
+  border-color: rgba(201, 162, 255, 0.55);
+}
+
+.gnew-second-btn {
+  border-color: rgba(201, 162, 255, 0.7);
+  background: rgba(58, 36, 98, 0.85);
+  color: #ecdcff;
+}
+
+/* ─── The chosen hero ─── */
+
+.gnew-detail {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.gnew-detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 196, 92, 0.28), transparent 70%);
+}
+
+.gnew-detail-hero h2 {
+  margin: 4px 0 0;
+  font-size: 1.35em;
+}
+
+.gnew-role {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.gnew-stats {
+  display: flex;
+  gap: 16px;
+  margin: 6px 0 0;
+  font-size: 1.15em;
+  font-weight: 700;
+}
+
+.gnew-stats .gi {
+  color: var(--ng-gold);
+}
+
+.gnew-detail-body h3:first-child {
+  margin-top: 0;
+}
+
+.gnew-hints .gfield-label {
+  display: none;
+}
+
+/* ─── Deck ─── */
 
 .gnew-deck {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: 8px;
 }
 
 .gnew-deck .gcc {
   min-height: 84px;
+  transition: transform 0.12s ease;
+}
+
+.gnew-deck .gcc:hover {
+  transform: translateY(-2px);
 }
 
 .gnew-cardview,
@@ -48,7 +336,8 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(6, 10, 20, 0.72);
+  background: rgba(6, 10, 20, 0.74);
+  backdrop-filter: blur(3px);
   overflow: auto;
 }
 
@@ -57,9 +346,147 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  max-width: min(420px, 100%);
+  width: min(420px, 100%);
 }
 
 .gnew-cardview .gcard {
-  width: var(--g-card-w);
+  width: 100%;
+}
+
+.gnew-keywords {
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid var(--ng-line);
+  background: var(--ng-panel);
+}
+
+.gnew-keywords dt {
+  color: var(--ng-gold);
+  font-weight: 700;
+}
+
+.gnew-keywords dd {
+  margin: 0 0 8px;
+  font-size: 0.92em;
+}
+
+.gnew-keywords dd:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── Hand-off ─── */
+
+.gnew > .gnew-handoff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-top: 8vh;
+  padding: 32px 24px;
+  width: min(560px, 100%);
+  box-sizing: border-box;
+  border-radius: 22px;
+  border: 1px solid var(--ng-line);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 196, 92, 0.3), transparent 60%),
+    var(--ng-panel);
+  box-shadow: 0 0 40px rgba(255, 196, 92, 0.2), 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+.gnew-handoff-text {
+  margin: 0;
+  font-size: 1.1em;
+  opacity: 0.85;
+}
+
+.gnew-handoff h2 {
+  margin: 0;
+  font-size: clamp(2em, 6vw, 3em);
+  color: var(--ng-gold-hi);
+  text-shadow: 0 0 22px var(--ng-glow);
+}
+
+.gnew-handoff .ubtn {
+  margin-top: 12px;
+}
+
+/* ─── Party ─── */
+
+.gnew-party {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gnew-member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 16px;
+  flex: 1 1 240px;
+  padding: 12px 14px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--ng-line);
+  background: linear-gradient(180deg, rgba(36, 66, 104, 0.8), rgba(12, 25, 45, 0.9));
+  color: var(--ng-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.gnew-member > b {
+  flex: 1 0 100%;
+  text-align: left;
+  color: var(--ng-gold-hi);
+  font-size: 1.15em;
+}
+
+.gnew-member-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.gnew-member-hero .gnew-bust {
+  width: 112px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 196, 92, 0.45), rgba(10, 20, 38, 0.6) 70%);
+  border: 2px solid var(--ng-gold);
+  overflow: hidden;
+}
+
+.gnew-member-hero.is-second .gnew-bust {
+  border-color: #c9a2ff;
+}
+
+/* ─── Tablet portrait and phones ─── */
+
+@media (max-width: 900px) {
+  .gnew-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gnew-bust {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .gnew-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .gnew-detail-hero .gnew-bust {
+    max-width: 140px;
+  }
+
+  .gnew-deck {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  }
 }
