@@ -4,6 +4,7 @@
   "color": "#7E4FC4",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 9,
+  "recommendedHand": ["rogue.quick-stab", "rogue.backstab", "rogue.smoke-bomb", "rogue.twin-daggers", "rogue.throwing-knife", "rogue.shadow", "rogue.deadly-strike", "rogue.strike-from-dark", "rogue.lucky-throw"],
   "classElement": "dark",
   "classOrb": "air",
   "surge": [
@@ -132,6 +133,98 @@
         "steps": [{ "type": "attack", "value": 1, "bonuses": [{ "if": "allyAdjacentToTarget", "attack": 2 }] }]
       },
       "fork": { "momentum": true }
+    },
+    {
+      "id": "rogue.lucky-throw",
+      "level": 1,
+      "initiative": 32,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 3,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.joint-ambush",
+      "level": 1,
+      "initiative": 45,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "bonuses": [
+              {
+                "if": "allyAdjacentToTarget",
+                "attack": 1,
+                "advantage": true
+              }
+            ]
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "strengthen",
+            "target": "ally",
+            "range": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "rogue.dust-in-eyes",
+      "level": 1,
+      "initiative": 13,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 1,
+            "conditions": [
+              "muddle"
+            ],
+            "xp": 1
+          },
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      }
     },
     {
       "id": "rogue.risky-strike",
