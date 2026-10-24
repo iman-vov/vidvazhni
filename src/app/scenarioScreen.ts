@@ -21,7 +21,7 @@ import { stepText } from '../ui/debug/format';
 import { emptySelection, stepModel, tapStep, type StepModel, type StepSelection } from '../ui/debug/stepPicker';
 import { h } from '../ui/dom';
 import { onLangChange, t } from '../ui/i18n';
-import { cardKeywords, cardView, type Half } from '../ui/game/card';
+import { cardKeywords, cardView, compactCard, type Half } from '../ui/game/card';
 import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
@@ -582,9 +582,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   /** Card selection for one hero: the hand strip, intent tokens, long rest, confirm. */
-  /** Choosing the round's cards over the dimmed board (as in Gloomhaven digital): the hand large
-   *  and readable in the middle, tap to pick two, choose the leading one, confirm; long press shows
-   *  the card with its explanations. Intents fold into one button; «Поле» peeks at the board. */
+  /** Choosing the round's cards over the dimmed board: the hand as a compact grid (name, initiative,
+   *  both halves as icons), the corner button picks two, «Ведуча» marks the leading one; a tap opens
+   *  the full card with its explanations. Intents fold into one button; «Поле» peeks at the board. */
   function selectionOverlay(heroId: FigureId): HTMLElement {
     const s = game.state;
     const hero = s.figures[heroId] as HeroState;
@@ -600,28 +600,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         const picked = choosingHand ? ui.handPick.includes(cardId) : ui.pick.includes(cardId) && !ui.longRest;
         const leading = !choosingHand && picked && ui.leading === cardId;
         const order = choosingHand ? -1 : ui.pick.indexOf(cardId);
-        const el = cardView({
+        const toggle = () => (choosingHand ? toggleHandPick(cardId, need) : togglePick(cardId));
+        const el = compactCard({
           s,
           content,
           hero,
           cardId,
-          full: true,
           accent: colorOf(heroId),
-          bonuses: bonuses.filter((b) => b.cardId === cardId),
+          bonus: bonuses.some((b) => b.cardId === cardId && b.available),
           picked,
           leading,
-          footer:
-            !choosingHand && picked
-              ? leading
-                ? h('div', { class: 'gsel-lead is-on' }, icon('initiative'), t('game.leading'))
-                : h('button', { class: 'gbtn gbtn-small gsel-lead', onclick: (e: Event) => (e.stopPropagation(), (ui.leading = cardId), render()) }, icon('initiative'), t('game.makeLeading'))
-              : null,
+          onToggle: toggle,
         });
         el.setAttribute('role', 'listitem');
+        if (!choosingHand && picked && !leading)
+          el.append(h('button', { class: 'gbtn gbtn-small gsel-lead', onclick: (e: Event) => (e.stopPropagation(), (ui.leading = cardId), render()) }, icon('initiative'), t('game.makeLeading')));
         if (picked && order >= 0) el.append(h('span', { class: 'gsel-badge' }, order + 1));
-        if (picked && choosingHand) el.append(h('span', { class: 'gsel-badge' }, icon('check')));
+        // Tap: the full card with its explanations (pick / leading there too); the corner button picks.
         onPress(el, {
-          tap: () => (choosingHand ? toggleHandPick(cardId, need) : togglePick(cardId)),
+          tap: () => openCard(heroId, cardId),
           down: () => {
             if (choosingHand) return;
             ui.pressCard = cardId;
@@ -632,8 +629,10 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             ui.pressCard = null;
             renderTop();
           },
-          hold: () => openCard(heroId, cardId),
         });
+        // The buttons on the card act on their own, without opening it.
+        for (const b of el.querySelectorAll('button')) b.addEventListener('pointerdown', (e) => e.stopPropagation());
+        el.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && e.target === el && (e.preventDefault(), openCard(heroId, cardId)));
         return el;
       }),
     );
@@ -644,7 +643,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       : ui.longRest
         ? t('game.longRest.text')
         : ui.pick.length < 2
-          ? t('game.select.hint3', { n: 2 - ui.pick.length })
+          ? t('game.select.hint2', { n: 2 - ui.pick.length })
           : t('game.select.leading', { card: cardName(ui.leading ?? ''), initiative: leadCard?.initiative ?? '' });
     const head = h(
       'div',
@@ -692,7 +691,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       const ready = ui.longRest || (a && b && ui.leading);
       foot.append(
         rest,
-        h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : a && b ? `${cardName(a)} + ${cardName(b)}` : t('game.select.hint3', { n: 2 - ui.pick.length })),
+        h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : a && b ? `${cardName(a)} + ${cardName(b)}` : t('game.select.hint2', { n: 2 - ui.pick.length })),
         artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go', disabled: !ready }),
       );
     }
@@ -879,7 +878,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const m = info.model;
     out.push(h('div', { class: 'gstep-now' }, icon(stepIconOf(info.step)), h('b', null, stepLine(info.step, s.variants.orbs))));
     // «Карти з X»: the roll behind the value, «X = 4».
-    if (info.step.xRoll !== undefined) out.push(h('p', { class: 'gstep-die' }, t('game.dieX', { roll: info.step.xRoll })));
+    if (info.step.xRoll !== undefined) {
+      out.push(h('p', { class: 'gstep-die', title: t('game.dieX', { roll: info.step.xRoll }) }, 'X =', h('span', { class: 'gdie', key: `die-${info.step.xRoll}` }, String(info.step.xRoll))));
+    }
     const hint = { path: t('game.step.move'), targets: m.maxTargets > 1 ? t('game.step.targets', { n: m.maxTargets }) : t('game.step.target'), area: t('game.step.area'), hex: t('ui.chooseHex'), plain: '' }[m.mode];
     if (m.choices.length === 0) out.push(h('p', { class: 'gside-hint' }, t('ui.noTarget')));
     else if (hint) out.push(h('p', { class: 'gside-hint' }, ui.chosen ? t('game.step.again') : hint));

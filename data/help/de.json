@@ -252,7 +252,7 @@
   "tutorial.step.curtain.title": "Tablet weitergeben",
   "tutorial.step.curtain.text": "Vor dem Kartenwählen verdeckt das Spiel die Hand, damit niemand schaut. Bei mehreren Spielern gib das Tablet an den, dessen Name auf dem Bildschirm steht. Tippe auf den Bildschirm.",
   "tutorial.step.hand.title": "Deine Hand",
-  "tutorial.step.hand.text": "Das sind deine Karten. Jede Runde wählst du zwei. Tippe auf „Schildstoß“ und „Erdschlag“. Langes Drücken zeigt eine Karte groß, und Tippen auf ein Symbol darauf erklärt es.",
+  "tutorial.step.hand.text": "Das sind deine Karten. Jede Runde wählst du zwei. Drücke den ✋-Knopf in der Ecke von „Schildstoß“ und „Erdschlag“. Tippen auf die Karte selbst zeigt sie groß, mit Erklärungen.",
   "tutorial.step.leading.title": "Die führende Karte",
   "tutorial.step.leading.text": "Eine der zwei Karten ist führend {icon:initiative}: Ihre Zahl (Initiative) bestimmt, wann du dran bist. Kleiner heißt früher. „Schildstoß“ (15) ist schon führend, also ist der Hüter vor den Ratten dran. Die andere Karte machst du mit „{button}“ zur führenden.",
   "tutorial.step.ready.title": "Fertig!",
