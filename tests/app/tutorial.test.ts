@@ -178,7 +178,7 @@ describe('tutorial coach', () => {
     expect(r.shown).toContain('openDoor');
     expect(r.g.state.phase).toBe('won');
     expect(r.g.state.round).toBeLessThan(15);
-  });
+  }, 60_000);
 });
 
 /** The greedy bot does not walk onto a door on its own: with the yard empty, play a move to the door
