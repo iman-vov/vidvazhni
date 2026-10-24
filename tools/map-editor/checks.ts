@@ -43,6 +43,34 @@ export function blockedHexes(s: ScenarioDef): Set<string> {
   return out;
 }
 
+/** Steps on foot from the nearest of `from` to every reachable hex, every door open (thin walls block). */
+export function stepsFrom(s: ScenarioDef, from: Hex[]): Map<string, number> {
+  const owners = hexOwners(s);
+  const blocked = blockedHexes(s);
+  const walls = new Set<string>();
+  for (const room of s.rooms)
+    for (const [a, b] of room.walls ?? []) {
+      walls.add(`${hexKey(a)}|${hexKey(b)}`);
+      walls.add(`${hexKey(b)}|${hexKey(a)}`);
+    }
+  const steps = new Map<string, number>();
+  const queue: Hex[] = from.filter((h) => owners.has(hexKey(h)));
+  for (const h of queue) steps.set(hexKey(h), 0);
+  while (queue.length) {
+    const h = queue.shift() as Hex;
+    const d0 = steps.get(hexKey(h)) as number;
+    for (const d of DIRECTIONS) {
+      const n = add(h, d);
+      const k = hexKey(n);
+      if (steps.has(k) || !owners.has(k) || walls.has(`${hexKey(h)}|${k}`)) continue;
+      steps.set(k, d0 + 1);
+      // A blocking hex can be the target (a chest, a brazier to light) but is never walked through.
+      if (!blocked.has(k)) queue.push(n);
+    }
+  }
+  return steps;
+}
+
 /** Hexes reachable on foot from the start hexes with every door open (thin walls block). */
 export function walkable(s: ScenarioDef): Set<string> {
   const owners = hexOwners(s);
