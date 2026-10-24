@@ -1,41 +1,48 @@
-// New game: scenario, 1–4 players with 1–2 heroes each (role and difficulty from data), hint level
-// per hero, difficulty, rule set («Основа» / «Форк» / own toggles) and optional equipment.
+// New game for one shared device, step by step: the adventure (scenario, players, difficulty), then
+// each player alone picks a hero (and, if there is room, a clearly separate second hero) with their
+// hint level, the device is handed on, and the party summary starts the game. No gear here: it is
+// earned in the campaign. `heroStep` is one player's choice on its own, so network play can show it
+// on each player's device without the hand-off.
 
 import type { LoadedContent } from '../../rules/load';
 import type { GameSetup } from '../../rules/state';
-import { BASE_RULES, FULL_FORK, VARIANT_ORDER, type Variants } from '../../rules/variants';
+import { VARIANT_ORDER } from '../../rules/variants';
 import { h } from '../../ui/dom';
 import { t } from '../../ui/i18n';
 import { icon } from '../../ui/game/icons';
-import { heroColor } from '../boardViewStub';
 import type { PlayerInfo } from '../game';
 import { settings } from '../settings';
 import { localStore, readJson } from '../storage';
 import { artButton, menuBackdrop } from './menu';
 import { hintRow } from './settings';
 
-const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
+export const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
 const KEY = 'vidvazhni.newGame';
 const MAX_PLAYERS = 4;
 const MAX_HEROES = 4;
-const MAX_PER_PLAYER = 2;
-const MAX_ITEMS = 3;
 
-type RuleSet = 'base' | 'fork' | 'custom';
+interface Pick {
+  classId: string;
+  playerId: string;
+  /** 0 = the player's hero, 1 = their second hero. */
+  slot: 0 | 1;
+}
 
 interface Draft {
   scenarioId: string;
   players: PlayerInfo[];
-  heroes: { classId: string; playerId: string; items: string[] }[];
+  picks: Pick[];
   difficulty: GameSetup['difficulty'];
-  rules: RuleSet;
-  variants: Variants;
 }
+
+type Step = { kind: 'setup' } | { kind: 'handoff'; player: number } | { kind: 'hero'; player: number; slot: 0 | 1 } | { kind: 'party' };
 
 export interface NewGameOptions {
   content: LoadedContent;
   onStart: (setup: GameSetup, players: PlayerInfo[]) => void;
   onBack: () => void;
+  /** Hot-seat (default): «pass the device» between players. Network play turns it off. */
+  handoff?: boolean;
 }
 
 function defaultDraft(): Draft {
@@ -45,73 +52,97 @@ function defaultDraft(): Draft {
       { id: 'p1', name: '' },
       { id: 'p2', name: '' },
     ],
-    heroes: [
-      { classId: 'warden', playerId: 'p1', items: [] },
-      { classId: 'wind-archer', playerId: 'p2', items: [] },
-    ],
+    picks: [],
     difficulty: 'normal',
-    rules: 'base',
-    variants: { ...BASE_RULES },
   };
 }
 
 function loadDraft(): Draft {
-  const d = readJson<Draft>(localStore, KEY);
-  if (!d?.players?.length || !Array.isArray(d.heroes)) return defaultDraft();
-  return { ...defaultDraft(), ...d, variants: { ...BASE_RULES, ...d.variants } };
+  const d = readJson<Partial<Draft>>(localStore, KEY);
+  if (!d?.players?.length) return defaultDraft();
+  return { ...defaultDraft(), ...d, picks: Array.isArray(d.picks) ? d.picks : [] };
 }
 
 export function newGameScreen(o: NewGameOptions): HTMLElement {
   const draft = loadDraft();
-  const root = h('div', { class: 'gpage is-art' });
-  let itemsOpen = draft.heroes.some((x) => x.items.length > 0);
+  const handoff = o.handoff ?? true;
+  const root = h('div', { class: 'gpage is-art gnew' });
+  let step: Step = { kind: 'setup' };
 
-  const playerName = (p: PlayerInfo, i: number) => p.name.trim() || t('menu.player', { n: i + 1 });
-  const heroesOf = (playerId: string) => draft.heroes.filter((x) => x.playerId === playerId);
+  const nameOf = (i: number) => draft.players[i]?.name.trim() || t('menu.player', { n: i + 1 });
+  const pickOf = (player: number, slot: 0 | 1) => draft.picks.find((x) => x.playerId === draft.players[player]?.id && x.slot === slot);
+  const playerIndex = (id: string) => draft.players.findIndex((p) => p.id === id);
+  /** Heroes of the players before `player`, who already chose. */
+  const earlier = (player: number) => draft.picks.filter((x) => playerIndex(x.playerId) < player);
+  /** Room for a second hero: everyone after still gets one, at most four in all. */
+  const canTakeSecond = (player: number) => earlier(player).length + 2 + (draft.players.length - player - 1) <= MAX_HEROES;
 
-  function problem(): string | null {
-    if (draft.heroes.length === 0) return t('menu.problem.noHeroes');
-    for (const [i, p] of draft.players.entries()) {
-      const n = heroesOf(p.id).length;
-      if (n === 0) return t('menu.problem.playerNoHero', { name: playerName(p, i) });
-      if (n > MAX_PER_PLAYER) return t('menu.problem.playerTooMany', { name: playerName(p, i), max: MAX_PER_PLAYER });
+  function setPick(player: number, slot: 0 | 1, classId: string | null): void {
+    const playerId = (draft.players[player] as PlayerInfo).id;
+    draft.picks = draft.picks.filter((x) => !(x.playerId === playerId && x.slot === slot));
+    if (classId) draft.picks.push({ classId, playerId, slot });
+  }
+
+  /** After a player confirms: later players lose heroes taken meanwhile and second heroes that no longer fit. */
+  function settleLater(player: number): void {
+    const before = earlier(player + 1);
+    const taken = new Set(before.map((x) => x.classId));
+    const later: Pick[] = [];
+    const sorted = draft.picks.filter((x) => playerIndex(x.playerId) > player).sort((a, b) => playerIndex(a.playerId) - playerIndex(b.playerId) || a.slot - b.slot);
+    for (const x of sorted) {
+      const rest = draft.players.length - playerIndex(x.playerId) - 1;
+      if (taken.has(x.classId) || (x.slot === 1 && before.length + later.length + 1 + rest > MAX_HEROES)) continue;
+      taken.add(x.classId);
+      later.push(x);
     }
-    return null;
+    draft.picks = [...before, ...later];
   }
 
   function setPlayers(n: number): void {
     const count = Math.max(1, Math.min(MAX_PLAYERS, n));
     while (draft.players.length < count) draft.players.push({ id: `p${draft.players.length + 1}`, name: '' });
     draft.players = draft.players.slice(0, count);
-    const ids = draft.players.map((p) => p.id);
-    for (const hero of draft.heroes) if (!ids.includes(hero.playerId)) hero.playerId = ids[ids.length - 1] as string;
+    const ids = new Set(draft.players.map((p) => p.id));
+    draft.picks = draft.picks.filter((x) => ids.has(x.playerId));
+    settleLater(-1);
     render();
   }
 
-  function toggleHero(classId: string): void {
-    if (draft.heroes.some((x) => x.classId === classId)) draft.heroes = draft.heroes.filter((x) => x.classId !== classId);
-    else if (draft.heroes.length < MAX_HEROES) {
-      // The player with the fewest heroes takes it.
-      const owner = [...draft.players].sort((a, b) => heroesOf(a.id).length - heroesOf(b.id).length)[0] as PlayerInfo;
-      draft.heroes.push({ classId, playerId: owner.id, items: [] });
-    }
+  function go(next: Step): void {
+    step = next;
+    localStore.set(KEY, JSON.stringify(draft));
     render();
+    root.scrollTo?.({ top: 0 });
   }
 
+  /** The step after a player is done: hand the device on, or the party. */
+  function afterPlayer(player: number): void {
+    settleLater(player);
+    if (player + 1 >= draft.players.length) go({ kind: 'party' });
+    else go(handoff ? { kind: 'handoff', player: player + 1 } : { kind: 'hero', player: player + 1, slot: 0 });
+  }
 
+  function back(): void {
+    const last = draft.players.length - 1;
+    const lastStep = (p: number): Step => ({ kind: 'hero', player: p, slot: pickOf(p, 1) ? 1 : 0 });
+    if (step.kind === 'setup') o.onBack();
+    else if (step.kind === 'party') go(lastStep(last));
+    else if (step.kind === 'handoff') go(lastStep(step.player - 1));
+    else if (step.slot === 1) go({ kind: 'hero', player: step.player, slot: 0 });
+    else if (step.player === 0) go({ kind: 'setup' });
+    else go(handoff ? { kind: 'handoff', player: step.player } : lastStep(step.player - 1));
+  }
 
   function start(): void {
-    if (problem()) return;
     localStore.set(KEY, JSON.stringify(draft));
-    const players = draft.players.map((p, i) => ({ id: p.id, name: playerName(p, i) }));
-    const order = draft.players.map((p) => p.id);
+    const players = draft.players.map((p, i) => ({ id: p.id, name: nameOf(i) }));
     // Heroes in player order, so the curtain passes the tablet around the table once.
-    const heroes = [...draft.heroes].sort((a, b) => order.indexOf(a.playerId) - order.indexOf(b.playerId));
+    const heroes = [...draft.picks].sort((a, b) => playerIndex(a.playerId) - playerIndex(b.playerId) || a.slot - b.slot);
     o.onStart(
       {
         scenarioId: draft.scenarioId,
         seed: Math.floor(Math.random() * 1_000_000_000),
-        heroes: heroes.map((x) => ({ classId: x.classId, playerId: x.playerId, level: 1, ...(x.items.length ? { items: [...x.items] } : {}) })),
+        heroes: heroes.map((x) => ({ classId: x.classId, playerId: x.playerId, level: 1 })),
         difficulty: draft.difficulty,
         variants: { ...settings.get().variants },
       },
@@ -119,13 +150,9 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     );
   }
 
-  function render(): void {
+  function setupStep(): HTMLElement[] {
     const c = o.content;
-    const err = problem();
-    fill(
-      root,
-      menuBackdrop(true),
-      h('header', { class: 'gpage-head' }, h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.back'), onclick: o.onBack }, icon('left')), h('h1', null, t('ui.newGame'))),
+    return [
       section(
         t('ui.scenario'),
         h(
@@ -157,41 +184,8 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
             }),
           ),
         ),
+        h('p', { class: 'gside-hint' }, t('newGame.players.text')),
       ),
-      section(
-        t('menu.heroes', { max: MAX_HEROES }),
-        h(
-          'div',
-          { class: 'gclasses' },
-          CLASS_ORDER.filter((id) => c.heroes[id]).map((id) => {
-            const cls = c.heroes[id];
-            const picked = draft.heroes.find((x) => x.classId === id);
-            const index = draft.heroes.findIndex((x) => x.classId === id);
-            return h(
-              'div',
-              { class: `gclass${picked ? ' is-picked' : ''}`, style: picked ? { borderColor: heroColor(index) } : {} },
-              h(
-                'button',
-                { class: 'gclass-main', 'aria-pressed': String(!!picked), onclick: () => toggleHero(id) },
-                h('b', null, t(`class.${id}`)),
-                h('span', null, t(`class.${id}.role`)),
-                h('small', { class: `gtag is-${cls?.complexity}` }, t(`complexity.${cls?.complexity ?? 'simple'}`)),
-                h('small', { class: 'gside-hint' }, `${t('stat.hp')} ${cls?.hpByLevel[0] ?? ''} · ${t('menu.handSize', { n: cls?.handSize ?? 0 })}`),
-              ),
-              picked && draft.players.length > 1
-                ? h(
-                    'div',
-                    { class: 'gseg is-small' },
-                    draft.players.map((p, i) =>
-                      h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(picked.playerId === p.id), onclick: () => ((picked.playerId = p.id), render()) }, playerName(p, i)),
-                    ),
-                  )
-                : null,
-            );
-          }),
-        ),
-      ),
-      draft.heroes.length ? section(t('settings.hints'), h('p', { class: 'gside-hint' }, t('settings.hints.text')), draft.heroes.map((x) => hintRow(x.classId, render))) : null,
       section(
         t('ui.difficulty'),
         h(
@@ -199,47 +193,161 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
           { class: 'gseg' },
           (['easy', 'normal', 'hard'] as const).map((d) => h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(d === draft.difficulty), onclick: () => ((draft.difficulty = d), render()) }, t(`ui.difficulty.${d}`))),
         ),
+        h('p', { class: 'gside-hint gnew-rules' }, rulesSummary(), ' ', h('small', null, t('menu.rules.where'))),
       ),
-      h('p', { class: 'gside-hint gnew-rules' }, rulesSummary(), ' ', h('small', null, t('menu.rules.where'))),
+      h('footer', { class: 'gpage-foot' }, artButton('right', t('newGame.next'), () => go({ kind: 'hero', player: 0, slot: 0 }), { cls: 'is-go' })),
+    ];
+  }
+
+  function handoffStep(player: number): HTMLElement[] {
+    return [
       h(
-        'details',
-        { class: 'gsection', open: itemsOpen, ontoggle: (e: Event) => (itemsOpen = (e.target as HTMLDetailsElement).open) },
-        h('summary', null, t('menu.items')),
-        h('p', { class: 'gside-hint' }, t('menu.items.text', { max: MAX_ITEMS })),
-        draft.heroes.map((hero) =>
-          h(
-            'div',
-            { class: 'gfield' },
-            h('span', { class: 'gfield-label' }, t(`class.${hero.classId}`)),
+        'section',
+        { class: 'gnew-handoff' },
+        h('p', { class: 'gnew-kicker' }, t('newGame.handoff.title')),
+        h('h2', null, nameOf(player)),
+        h('p', { class: 'gside-hint' }, t('newGame.handoff.text', { name: nameOf(player) })),
+        artButton('play', t('newGame.handoff.go', { name: nameOf(player) }), () => go({ kind: 'hero', player, slot: 0 }), { cls: 'is-go' }),
+      ),
+    ];
+  }
+
+  function heroPickStep(player: number, slot: 0 | 1): HTMLElement[] {
+    const own = pickOf(player, slot);
+    const other = pickOf(player, slot === 0 ? 1 : 0);
+    // A hero kept from the last game that someone before has taken meanwhile is dropped.
+    const taken = new Map(earlier(player).map((x) => [x.classId, nameOf(playerIndex(x.playerId))]));
+    if (other) taken.set(other.classId, t('newGame.firstHero'));
+    if (own && taken.has(own.classId)) setPick(player, slot, null);
+    const chosen = pickOf(player, slot)?.classId ?? null;
+    const done = () => {
+      if (slot === 0 && !canTakeSecond(player)) setPick(player, 1, null);
+      afterPlayer(player);
+    };
+    return [
+      heroStep({
+        content: o.content,
+        playerName: nameOf(player),
+        slot,
+        chosen,
+        taken,
+        onChoose: (classId) => (setPick(player, slot, classId), render()),
+        onChange: render,
+      }),
+      h(
+        'footer',
+        { class: 'gpage-foot' },
+        slot === 0 && canTakeSecond(player)
+          ? h('button', { class: 'gbtn gnew-second-btn', disabled: !chosen, onclick: () => go({ kind: 'hero', player, slot: 1 }) }, icon('add-player'), ' ', pickOf(player, 1) ? t('newGame.second.edit') : t('newGame.second.add'))
+          : null,
+        slot === 1 ? h('button', { class: 'gbtn', onclick: () => (setPick(player, 1, null), afterPlayer(player)) }, t('newGame.second.none')) : null,
+        artButton('check', t('newGame.done'), done, { cls: 'is-go', disabled: !chosen }),
+      ),
+    ];
+  }
+
+  function partyStep(): HTMLElement[] {
+    return [
+      section(
+        t('newGame.party'),
+        h('p', { class: 'gside-hint' }, `${t(`scenario.${draft.scenarioId}`)} · ${t(`ui.difficulty.${draft.difficulty}`)}`),
+        h(
+          'div',
+          { class: 'gnew-party' },
+          draft.players.map((p, i) =>
             h(
-              'div',
-              { class: 'gseg is-wrap' },
-              Object.values(c.items)
-                .filter((it) => it.unlockedAfter === 0)
-                .map((it) =>
-                  h(
-                    'button',
-                    {
-                      class: 'gbtn gbtn-chip',
-                      'aria-pressed': String(hero.items.includes(it.id)),
-                      onclick: () => {
-                        hero.items = hero.items.includes(it.id) ? hero.items.filter((x) => x !== it.id) : hero.items.length < MAX_ITEMS ? [...hero.items, it.id] : hero.items;
-                        render();
-                      },
-                    },
-                    t(`item.${it.id}`),
-                  ),
-                ),
+              'button',
+              { class: 'gnew-member', onclick: () => go(handoff && i > 0 ? { kind: 'handoff', player: i } : { kind: 'hero', player: i, slot: 0 }), title: t('newGame.edit') },
+              h('b', null, nameOf(i)),
+              draft.picks
+                .filter((x) => x.playerId === p.id)
+                .sort((a, b) => a.slot - b.slot)
+                .map((x) => h('span', { class: 'gnew-member-hero' }, t(`class.${x.classId}`))),
             ),
           ),
         ),
       ),
-      h('footer', { class: 'gpage-foot' }, err ? h('p', { class: 'gerror' }, err) : null, artButton('play', t('menu.start'), start, { disabled: !!err })),
+      h('footer', { class: 'gpage-foot' }, artButton('play', t('menu.start'), start, { cls: 'is-go', disabled: draft.players.some((_, i) => !pickOf(i, 0)) })),
+    ];
+  }
+
+  function title(): string {
+    if (step.kind === 'setup') return t('ui.newGame');
+    if (step.kind === 'party') return t('newGame.party.title');
+    if (step.kind === 'handoff') return t('newGame.handoff.title');
+    return step.slot === 1 ? t('newGame.second.title', { name: nameOf(step.player) }) : t('newGame.choose', { name: nameOf(step.player) });
+  }
+
+  function progress(): HTMLElement {
+    const at = step.kind === 'setup' ? 0 : step.kind === 'party' ? draft.players.length + 1 : step.player + 1;
+    const labels = [t('newGame.step.setup'), ...draft.players.map((_, i) => nameOf(i)), t('newGame.step.party')];
+    return h(
+      'ol',
+      { class: 'gnew-steps', 'aria-label': t('newGame.steps') },
+      labels.map((label, i) => h('li', { class: i < at ? 'is-done' : i === at ? 'is-now' : '', 'aria-current': i === at ? 'step' : null }, label)),
+    );
+  }
+
+  function render(): void {
+    const body = step.kind === 'setup' ? setupStep() : step.kind === 'handoff' ? handoffStep(step.player) : step.kind === 'hero' ? heroPickStep(step.player, step.slot) : partyStep();
+    root.replaceChildren(
+      menuBackdrop(true),
+      h('header', { class: 'gpage-head' }, h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.back'), onclick: back }, icon('left')), h('h1', null, title())),
+      progress(),
+      ...body,
     );
   }
 
   render();
   return root;
+}
+
+export interface HeroStepOptions {
+  content: LoadedContent;
+  playerName: string;
+  /** 1: the player's second hero, shown apart from the first. */
+  slot: 0 | 1;
+  chosen: string | null;
+  /** Heroes others have (class → who). */
+  taken: Map<string, string>;
+  onChoose: (classId: string) => void;
+  /** Hint level changed. */
+  onChange: () => void;
+}
+
+/** One player's hero choice: the gallery, the chosen hero's details and deck, its hint level. */
+export function heroStep(o: HeroStepOptions): HTMLElement {
+  const c = o.content;
+  const chosen = o.chosen ? c.heroes[o.chosen] : undefined;
+  return h(
+    'div',
+    { class: `gnew-hero${o.slot === 1 ? ' is-second' : ''}` },
+    o.slot === 1 ? h('p', { class: 'gnew-second-note' }, icon('add-player'), ' ', t('newGame.second.text', { name: o.playerName })) : null,
+    h(
+      'div',
+      { class: 'gnew-gallery', role: 'radiogroup', 'aria-label': t('newGame.heroes') },
+      CLASS_ORDER.filter((id) => c.heroes[id]).map((id) => {
+        const owner = o.taken.get(id);
+        return h(
+          'button',
+          { class: 'gnew-tile', role: 'radio', 'aria-checked': String(id === o.chosen), disabled: !!owner, onclick: () => o.onChoose(id) },
+          h('b', null, t(`class.${id}`)),
+          h('span', null, t(`class.${id}.role`)),
+          owner ? h('small', { class: 'gnew-owner' }, owner) : null,
+        );
+      }),
+    ),
+    chosen
+      ? h(
+          'section',
+          { class: 'gsection gnew-detail' },
+          h('h2', null, t(`class.${chosen.id}`), ' ', h('small', { class: `gtag is-${chosen.complexity}` }, t(`complexity.${chosen.complexity}`))),
+          h('p', null, t(`class.${chosen.id}.role`), ' · ', `${t('stat.hp')} ${chosen.hpByLevel[0] ?? ''} · ${t('menu.handSize', { n: chosen.handSize })}`),
+          h('h3', null, t('settings.hints')),
+          hintRow(chosen.id, o.onChange),
+        )
+      : h('p', { class: 'gside-hint gnew-pickfirst' }, t('newGame.pickFirst')),
+  );
 }
 
 /** «Правила: форк» or «Правила: свої (4 з 7)» for the rules set in Settings. */
@@ -248,10 +356,6 @@ function rulesSummary(): string {
   const on = VARIANT_ORDER.filter((k) => v[k]).length;
   const name = on === VARIANT_ORDER.length ? t('menu.rules.fork') : on === 0 ? t('menu.rules.base') : t('menu.rules.customCount', { n: on, of: VARIANT_ORDER.length });
   return `${t('menu.rules')}: ${name}.`;
-}
-
-function fill(el: HTMLElement, ...parts: (HTMLElement | null)[]): void {
-  el.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
 }
 
 function section(title: string, ...body: (HTMLElement | HTMLElement[] | null)[]): HTMLElement {
