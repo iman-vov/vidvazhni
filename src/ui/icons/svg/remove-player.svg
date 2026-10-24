@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- remove-player: One player fewer: a figure with a minus. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M5.4 7.6 A4 4 0 1 0 13.4 7.6 A4 4 0 1 0 5.4 7.6 Z"/>
-    <path style="stroke-width:2.5" d="M2.4 21.4 C2.4 16.2 5.6 13.2 9.4 13.2 C13.2 13.2 16.4 16.2 16.4 21.4 Z"/>
-    <path style="fill:none;stroke-width:4.9" d="M15.6 6.8 L22 6.8"/>
+  <!-- remove-player: Remove a player: a person and a red minus. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M5.4 7 A3.6 3.6 0 1 0 12.6 7 A3.6 3.6 0 1 0 5.4 7 Z"/>
+    <path d="M2 21.5 C2 15.8 5 12.8 9 12.8 C13 12.8 16 15.8 16 21.5 Z"/>
+    <path style="fill:none;stroke-width:5.4" d="M15.1 9.5 L22.2 9.5"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M5.4 7.6 A4 4 0 1 0 13.4 7.6 A4 4 0 1 0 5.4 7.6 Z"/>
-    <path d="M2.4 21.4 C2.4 16.2 5.6 13.2 9.4 13.2 C13.2 13.2 16.4 16.2 16.4 21.4 Z"/>
-    <path style="fill:none;stroke-width:2.4" d="M15.6 6.8 L22 6.8"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M5.4 7 A3.6 3.6 0 1 0 12.6 7 A3.6 3.6 0 1 0 5.4 7 Z"/>
+    <path style="fill:currentColor" d="M2 21.5 C2 15.8 5 12.8 9 12.8 C13 12.8 16 15.8 16 21.5 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:2.4" d="M15.1 9.5 L22.2 9.5"/>
   </g>
 </svg>

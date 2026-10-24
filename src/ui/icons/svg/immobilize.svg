@@ -1,11 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- immobilize: Immobilize: two chain links. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="fill:none;stroke-width:4.7" d="M7.4 7 H9.4 A5 5 0 0 1 14.4 12 V12 A5 5 0 0 1 9.4 17 H7.4 A5 5 0 0 1 2.4 12 V12 A5 5 0 0 1 7.4 7 Z"/>
-    <path style="fill:none;stroke-width:4.7" d="M14.6 7 H16.6 A5 5 0 0 1 21.6 12 V12 A5 5 0 0 1 16.6 17 H14.6 A5 5 0 0 1 9.6 12 V12 A5 5 0 0 1 14.6 7 Z"/>
+  <!-- immobilize: Immobilize: a boot chained to a post. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M19 6.4 L20.2 6.4 A1 1 0 0 1 21.2 7.4 L21.2 18.4 A1 1 0 0 1 20.2 19.4 L19 19.4 A1 1 0 0 1 18 18.4 L18 7.4 A1 1 0 0 1 19 6.4 Z"/>
+    <path d="M17.6 5.6 A2 2 0 1 0 21.6 5.6 A2 2 0 1 0 17.6 5.6 Z"/>
+    <path d="M17.4 19.4 L21.8 19.4 A0.8 0.8 0 0 1 22.6 20.2 L22.6 20.8 A0.8 0.8 0 0 1 21.8 21.6 L17.4 21.6 A0.8 0.8 0 0 1 16.6 20.8 L16.6 20.2 A0.8 0.8 0 0 1 17.4 19.4 Z"/>
+    <path d="M2 8.6 L7.06 8.6 L7.06 14.1 L11.68 15.42 L13 16.96 L13 19.6 L2 19.6 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path style="fill:none;stroke-width:2.2" d="M7.4 7 H9.4 A5 5 0 0 1 14.4 12 V12 A5 5 0 0 1 9.4 17 H7.4 A5 5 0 0 1 2.4 12 V12 A5 5 0 0 1 7.4 7 Z"/>
-    <path style="fill:none;stroke-width:2.2" d="M14.6 7 H16.6 A5 5 0 0 1 21.6 12 V12 A5 5 0 0 1 16.6 17 H14.6 A5 5 0 0 1 9.6 12 V12 A5 5 0 0 1 14.6 7 Z"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M19 6.4 L20.2 6.4 A1 1 0 0 1 21.2 7.4 L21.2 18.4 A1 1 0 0 1 20.2 19.4 L19 19.4 A1 1 0 0 1 18 18.4 L18 7.4 A1 1 0 0 1 19 6.4 Z"/>
+    <path style="fill:currentColor" d="M17.6 5.6 A2 2 0 1 0 21.6 5.6 A2 2 0 1 0 17.6 5.6 Z"/>
+    <path style="fill:currentColor" d="M17.4 19.4 L21.8 19.4 A0.8 0.8 0 0 1 22.6 20.2 L22.6 20.8 A0.8 0.8 0 0 1 21.8 21.6 L17.4 21.6 A0.8 0.8 0 0 1 16.6 20.8 L16.6 20.2 A0.8 0.8 0 0 1 17.4 19.4 Z"/>
+    <path style="fill:currentColor" d="M2 8.6 L7.06 8.6 L7.06 14.1 L11.68 15.42 L13 16.96 L13 19.6 L2 19.6 Z"/>
+  </g>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:4.4" d="M8.1 13.6 A1.7 1.05 0 1 0 11.5 13.6 A1.7 1.05 0 1 0 8.1 13.6 Z M11.3 13.6 A1.7 1.05 0 1 0 14.7 13.6 A1.7 1.05 0 1 0 11.3 13.6 Z M14.5 13.6 A1.7 1.05 0 1 0 17.9 13.6 A1.7 1.05 0 1 0 14.5 13.6 Z"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:var(--icon-accent,#d39b22);stroke-width:1.4" d="M8.1 13.6 A1.7 1.05 0 1 0 11.5 13.6 A1.7 1.05 0 1 0 8.1 13.6 Z M11.3 13.6 A1.7 1.05 0 1 0 14.7 13.6 A1.7 1.05 0 1 0 11.3 13.6 Z M14.5 13.6 A1.7 1.05 0 1 0 17.9 13.6 A1.7 1.05 0 1 0 14.5 13.6 Z"/>
   </g>
 </svg>

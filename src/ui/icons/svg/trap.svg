@@ -1,25 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- trap: Trap: a toothed jaw ring seen from above. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M18.66 13.37 L14.25 13.3 L16.52 17.08 Z"/>
-    <path style="stroke-width:2.5" d="M14.14 18.45 L12 14.6 L9.86 18.45 Z"/>
-    <path style="stroke-width:2.5" d="M7.48 17.08 L9.75 13.3 L5.34 13.37 Z"/>
-    <path style="stroke-width:2.5" d="M5.34 10.63 L9.75 10.7 L7.48 6.92 Z"/>
-    <path style="stroke-width:2.5" d="M9.86 5.55 L12 9.4 L14.14 5.55 Z"/>
-    <path style="stroke-width:2.5" d="M16.52 6.92 L14.25 10.7 L18.66 10.63 Z"/>
-    <path style="fill:none;stroke-width:4.7" d="M4.4 12 A7.6 7.6 0 1 0 19.6 12 A7.6 7.6 0 1 0 4.4 12 Z"/>
-    <path style="fill:none;stroke-width:5.9" d="M1.8 12 L3.6 12"/>
-    <path style="fill:none;stroke-width:5.9" d="M20.4 12 L22.2 12"/>
+  <!-- trap: Trap: the toothed jaws of a trap on a red plate. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M4 17 L4 12 C4 9 6 7.5 8 7 L9 10 L10.5 7 L12 10 L13.5 7 L15 10 L16 7 C18 7.5 20 9 20 12 L20 17 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M18.66 13.37 L14.25 13.3 L16.52 17.08 Z"/>
-    <path d="M14.14 18.45 L12 14.6 L9.86 18.45 Z"/>
-    <path d="M7.48 17.08 L9.75 13.3 L5.34 13.37 Z"/>
-    <path d="M5.34 10.63 L9.75 10.7 L7.48 6.92 Z"/>
-    <path d="M9.86 5.55 L12 9.4 L14.14 5.55 Z"/>
-    <path d="M16.52 6.92 L14.25 10.7 L18.66 10.63 Z"/>
-    <path style="fill:none;stroke-width:2.2" d="M4.4 12 A7.6 7.6 0 1 0 19.6 12 A7.6 7.6 0 1 0 4.4 12 Z"/>
-    <path style="fill:none;stroke-width:3.4" d="M1.8 12 L3.6 12"/>
-    <path style="fill:none;stroke-width:3.4" d="M20.4 12 L22.2 12"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M4 17 L4 12 C4 9 6 7.5 8 7 L9 10 L10.5 7 L12 10 L13.5 7 L15 10 L16 7 C18 7.5 20 9 20 12 L20 17 Z"/>
+    <path style="fill:var(--icon-halo,#fbf5e6)" d="M7.6 12 L16.4 12 A1.2 1.2 0 0 1 17.6 13.2 L17.6 14 A1.2 1.2 0 0 1 16.4 15.2 L7.6 15.2 A1.2 1.2 0 0 1 6.4 14 L6.4 13.2 A1.2 1.2 0 0 1 7.6 12 Z"/>
+  </g>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M4.1 17 L19.9 17 A1.6 1.6 0 0 1 21.5 18.6 L21.5 19.8 A1.6 1.6 0 0 1 19.9 21.4 L4.1 21.4 A1.6 1.6 0 0 1 2.5 19.8 L2.5 18.6 A1.6 1.6 0 0 1 4.1 17 Z"/>
+    <path d="M10 17.8 L14 17.8 A1 1 0 0 1 15 18.8 L15 19.6 A1 1 0 0 1 14 20.6 L10 20.6 A1 1 0 0 1 9 19.6 L9 18.8 A1 1 0 0 1 10 17.8 Z"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M4.1 17 L19.9 17 A1.6 1.6 0 0 1 21.5 18.6 L21.5 19.8 A1.6 1.6 0 0 1 19.9 21.4 L4.1 21.4 A1.6 1.6 0 0 1 2.5 19.8 L2.5 18.6 A1.6 1.6 0 0 1 4.1 17 Z"/>
+    <path style="fill:var(--icon-accent,#c8372d)" d="M10 17.8 L14 17.8 A1 1 0 0 1 15 18.8 L15 19.6 A1 1 0 0 1 14 20.6 L10 20.6 A1 1 0 0 1 9 19.6 L9 18.8 A1 1 0 0 1 10 17.8 Z"/>
   </g>
 </svg>

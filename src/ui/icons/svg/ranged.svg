@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- ranged: Ranged attack: a bow with a nocked arrow. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M22 12 L17.6 14.8 L17.6 9.2 Z"/>
-    <path style="stroke-width:2.5" d="M4.6 12 L2.4 9.4 L5.6 9.4 L7.6 12 L5.6 14.6 L2.4 14.6 Z"/>
-    <path style="fill:none;stroke-width:5.1" d="M7.4 2.6 C13.8 6 13.8 18 7.4 21.4"/>
-    <path style="fill:none;stroke-width:3.5" d="M7.4 2.6 L4.6 12 L7.4 21.4"/>
-    <path style="fill:none;stroke-width:4.2" d="M5 12 L18.2 12"/>
+  <!-- ranged: Ranged attack: a bow with a red arrow on the string. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5.6" d="M9 2.8 Q20.5 12 9 21.2"/>
+    <path style="fill:none;stroke-width:4.2" d="M9 2.8 L9 21.2"/>
+    <path style="fill:none;stroke-width:5" d="M3 12 L18.5 12"/>
+    <path d="M22 12 L17.6 15.1 L17.6 8.9 Z"/>
+    <path style="fill:none;stroke-width:4.8" d="M2.8 9.4 L5.4 12 L2.8 14.6"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M22 12 L17.6 14.8 L17.6 9.2 Z"/>
-    <path d="M4.6 12 L2.4 9.4 L5.6 9.4 L7.6 12 L5.6 14.6 L2.4 14.6 Z"/>
-    <path style="fill:none;stroke-width:2.6" d="M7.4 2.6 C13.8 6 13.8 18 7.4 21.4"/>
-    <path style="fill:none;stroke-width:1" d="M7.4 2.6 L4.6 12 L7.4 21.4"/>
-    <path style="fill:none;stroke-width:1.7" d="M5 12 L18.2 12"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:currentColor;stroke-width:2.6" d="M9 2.8 Q20.5 12 9 21.2"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:1.2" d="M9 2.8 L9 21.2"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:2" d="M3 12 L18.5 12"/>
+    <path style="fill:var(--icon-accent,#c8372d)" d="M22 12 L17.6 15.1 L17.6 8.9 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:1.8" d="M2.8 9.4 L5.4 12 L2.8 14.6"/>
   </g>
 </svg>

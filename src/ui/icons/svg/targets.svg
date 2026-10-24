@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- targets: Number of targets: a crosshair. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M10.3 12 A1.7 1.7 0 1 0 13.7 12 A1.7 1.7 0 1 0 10.3 12 Z"/>
-    <path style="fill:none;stroke-width:4.8" d="M5.6 12 A6.4 6.4 0 1 0 18.4 12 A6.4 6.4 0 1 0 5.6 12 Z"/>
-    <path style="fill:none;stroke-width:4.9" d="M12 2.2 L12 7.4"/>
-    <path style="fill:none;stroke-width:4.9" d="M12 16.6 L12 21.8"/>
-    <path style="fill:none;stroke-width:4.9" d="M2.2 12 L7.4 12"/>
-    <path style="fill:none;stroke-width:4.9" d="M16.6 12 L21.8 12"/>
+  <!-- targets: Target count: three red crosshairs. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:4.9" d="M9 6.6 A3 3 0 1 0 15 6.6 A3 3 0 1 0 9 6.6 Z"/>
+    <path d="M10.9 6.6 A1.1 1.1 0 1 0 13.1 6.6 A1.1 1.1 0 1 0 10.9 6.6 Z"/>
+    <path style="fill:none;stroke-width:4.9" d="M3.4 16.8 A3 3 0 1 0 9.4 16.8 A3 3 0 1 0 3.4 16.8 Z"/>
+    <path d="M5.3 16.8 A1.1 1.1 0 1 0 7.5 16.8 A1.1 1.1 0 1 0 5.3 16.8 Z"/>
+    <path style="fill:none;stroke-width:4.9" d="M14.6 16.8 A3 3 0 1 0 20.6 16.8 A3 3 0 1 0 14.6 16.8 Z"/>
+    <path d="M16.5 16.8 A1.1 1.1 0 1 0 18.7 16.8 A1.1 1.1 0 1 0 16.5 16.8 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M10.3 12 A1.7 1.7 0 1 0 13.7 12 A1.7 1.7 0 1 0 10.3 12 Z"/>
-    <path style="fill:none;stroke-width:2.3" d="M5.6 12 A6.4 6.4 0 1 0 18.4 12 A6.4 6.4 0 1 0 5.6 12 Z"/>
-    <path style="fill:none;stroke-width:2.4" d="M12 2.2 L12 7.4"/>
-    <path style="fill:none;stroke-width:2.4" d="M12 16.6 L12 21.8"/>
-    <path style="fill:none;stroke-width:2.4" d="M2.2 12 L7.4 12"/>
-    <path style="fill:none;stroke-width:2.4" d="M16.6 12 L21.8 12"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:1.9" d="M9 6.6 A3 3 0 1 0 15 6.6 A3 3 0 1 0 9 6.6 Z"/>
+    <path style="fill:currentColor" d="M10.9 6.6 A1.1 1.1 0 1 0 13.1 6.6 A1.1 1.1 0 1 0 10.9 6.6 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:1.9" d="M3.4 16.8 A3 3 0 1 0 9.4 16.8 A3 3 0 1 0 3.4 16.8 Z"/>
+    <path style="fill:currentColor" d="M5.3 16.8 A1.1 1.1 0 1 0 7.5 16.8 A1.1 1.1 0 1 0 5.3 16.8 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:1.9" d="M14.6 16.8 A3 3 0 1 0 20.6 16.8 A3 3 0 1 0 14.6 16.8 Z"/>
+    <path style="fill:currentColor" d="M16.5 16.8 A1.1 1.1 0 1 0 18.7 16.8 A1.1 1.1 0 1 0 16.5 16.8 Z"/>
   </g>
 </svg>

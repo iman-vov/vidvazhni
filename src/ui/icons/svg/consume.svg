@@ -1,17 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- consume: Consume an element: four sparks drawn into a hollow orb. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M12 5.6 L9.4 2 L14.6 2 Z"/>
-    <path style="stroke-width:2.5" d="M12 18.4 L14.6 22 L9.4 22 Z"/>
-    <path style="stroke-width:2.5" d="M5.6 12 L2 14.6 L2 9.4 Z"/>
-    <path style="stroke-width:2.5" d="M18.4 12 L22 9.4 L22 14.6 Z"/>
-    <path style="fill:none;stroke-width:4.7" d="M7.4 12 A4.6 4.6 0 1 0 16.6 12 A4.6 4.6 0 1 0 7.4 12 Z"/>
+  <!-- consume: Consume: a teal orb drawing four arrows in. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:4.3" d="M7.4 12 A4.6 4.6 0 1 0 16.6 12 A4.6 4.6 0 1 0 7.4 12 Z"/>
+    <path d="M18.3 12 L21.9 9.2 L21.9 14.8 Z"/>
+    <path d="M12 18.3 L14.8 21.9 L9.2 21.9 Z"/>
+    <path d="M5.7 12 L2.1 14.8 L2.1 9.2 Z"/>
+    <path d="M12 5.7 L9.2 2.1 L14.8 2.1 Z"/>
+    <path style="fill:none;stroke-width:4.8" d="M21.8 12 L20.6 12"/>
+    <path style="fill:none;stroke-width:4.8" d="M12 21.8 L12 20.6"/>
+    <path style="fill:none;stroke-width:4.8" d="M2.2 12 L3.4 12"/>
+    <path style="fill:none;stroke-width:4.8" d="M12 2.2 L12 3.4"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M12 5.6 L9.4 2 L14.6 2 Z"/>
-    <path d="M12 18.4 L14.6 22 L9.4 22 Z"/>
-    <path d="M5.6 12 L2 14.6 L2 9.4 Z"/>
-    <path d="M18.4 12 L22 9.4 L22 14.6 Z"/>
-    <path style="fill:none;stroke-width:2.2" d="M7.4 12 A4.6 4.6 0 1 0 16.6 12 A4.6 4.6 0 1 0 7.4 12 Z"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:var(--icon-accent,#1d8c9c);stroke:currentColor;stroke-width:1.3" d="M7.4 12 A4.6 4.6 0 1 0 16.6 12 A4.6 4.6 0 1 0 7.4 12 Z"/>
+    <path style="fill:currentColor" d="M18.3 12 L21.9 9.2 L21.9 14.8 Z"/>
+    <path style="fill:currentColor" d="M12 18.3 L14.8 21.9 L9.2 21.9 Z"/>
+    <path style="fill:currentColor" d="M5.7 12 L2.1 14.8 L2.1 9.2 Z"/>
+    <path style="fill:currentColor" d="M12 5.7 L9.2 2.1 L14.8 2.1 Z"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:1.8" d="M21.8 12 L20.6 12"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:1.8" d="M12 21.8 L12 20.6"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:1.8" d="M2.2 12 L3.4 12"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:1.8" d="M12 2.2 L12 3.4"/>
   </g>
 </svg>

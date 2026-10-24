@@ -1,15 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- teleport: Teleport: two portals and a leap between them. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M17.6 16 L14.8 11.6 L20.4 11.6 Z"/>
-    <path style="fill:none;stroke-width:4.3" d="M2.4 18.8 A4 1.8 0 1 0 10.4 18.8 A4 1.8 0 1 0 2.4 18.8 Z"/>
-    <path style="fill:none;stroke-width:4.3" d="M13.6 18.8 A4 1.8 0 1 0 21.6 18.8 A4 1.8 0 1 0 13.6 18.8 Z"/>
-    <path style="fill:none;stroke-width:4.7" d="M6.4 15.6 C6.4 7.6 9.4 4.6 12 4.6 C14.6 4.6 17.6 7.6 17.6 12"/>
+  <!-- teleport: Teleport: an arrow from one teal portal to another. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5" d="M2.8 12 A2.6 7.4 0 1 0 8 12 A2.6 7.4 0 1 0 2.8 12 Z"/>
+    <path style="fill:none;stroke-width:5" d="M16 12 A2.6 7.4 0 1 0 21.2 12 A2.6 7.4 0 1 0 16 12 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M17.6 16 L14.8 11.6 L20.4 11.6 Z"/>
-    <path style="fill:none;stroke-width:1.8" d="M2.4 18.8 A4 1.8 0 1 0 10.4 18.8 A4 1.8 0 1 0 2.4 18.8 Z"/>
-    <path style="fill:none;stroke-width:1.8" d="M13.6 18.8 A4 1.8 0 1 0 21.6 18.8 A4 1.8 0 1 0 13.6 18.8 Z"/>
-    <path style="fill:none;stroke-width:2.2" d="M6.4 15.6 C6.4 7.6 9.4 4.6 12 4.6 C14.6 4.6 17.6 7.6 17.6 12"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:var(--icon-accent,#1d8c9c);stroke-width:2" d="M2.8 12 A2.6 7.4 0 1 0 8 12 A2.6 7.4 0 1 0 2.8 12 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#1d8c9c);stroke-width:2" d="M16 12 A2.6 7.4 0 1 0 21.2 12 A2.6 7.4 0 1 0 16 12 Z"/>
+  </g>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5.4" d="M7 12 L14 12"/>
+    <path d="M17 12 L13 15 L13 9 Z"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:currentColor;stroke-width:2.4" d="M7 12 L14 12"/>
+    <path style="fill:currentColor" d="M17 12 L13 15 L13 9 Z"/>
   </g>
 </svg>

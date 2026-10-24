@@ -1,13 +1,25 @@
-/* Base look of the game's icons. Colours: the body follows `color`, the outline and details follow
-   --icon-line (warm dark brown by default). */
+/* Base look of the game's icons (art/ui-mockups/icon-sheet/CHOICE.md): a dark-navy body (`color`,
+   set through --icon-ink), one accent per icon (--icon-accent, its own colour by default) and a light
+   halo around the shapes (--icon-halo), so the same icon reads on parchment and on the dark HUD.
+   `.vi-on-dark` (or `.icons-on-dark` on a container) swaps to a light body with a dark halo.
+   To let an icon follow the surrounding text colour, set `--icon-ink: currentColor` on its parent. */
 
 .vi {
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: -0.22em;
   overflow: visible;
+  color: var(--icon-ink, #1f2a44);
 }
 
+.vi-on-dark,
+.icons-on-dark .vi {
+  --icon-ink: #f3ecdc;
+  --icon-halo: #141c2e;
+}
+
+/* Bare silhouette (the gallery checks that every icon is told apart by shape). */
 .vi-mono {
-  --icon-line: currentColor;
+  --icon-accent: currentColor;
+  --icon-halo: transparent;
 }

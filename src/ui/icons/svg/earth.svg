@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- earth: Earth: two rocky peaks. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M2 20.6 L8.4 7.6 L11.6 13 L15 5.6 L22 20.6 Z"/>
+  <!-- earth: Earth: two rocks with gold tops. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M2 21.5 L4 14 L9 10 L13.2 13 L14 21.5 Z"/>
+    <path d="M11.5 21.5 L13 12 L17 8 L21 11 L22 21.5 Z"/>
+    <path d="M4 14 L9 10 L10.2 13.2 L5.8 15.8 Z"/>
+    <path d="M13 12 L17 8 L18.6 11.8 L14.6 13.4 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M2 20.6 L8.4 7.6 L11.6 13 L15 5.6 L22 20.6 Z"/>
-  </g>
-  <g style="fill:none;stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:1.2" d="M15 5.6 L13.6 10 L15.8 11.4"/>
-    <path style="stroke-width:1.2" d="M8.4 7.6 L7.6 12.6"/>
-    <path style="stroke-width:1.2" d="M5.6 17.4 H18.4"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M2 21.5 L4 14 L9 10 L13.2 13 L14 21.5 Z"/>
+    <path style="fill:currentColor" d="M11.5 21.5 L13 12 L17 8 L21 11 L22 21.5 Z"/>
+    <path style="fill:var(--icon-accent,#d39b22)" d="M4 14 L9 10 L10.2 13.2 L5.8 15.8 Z"/>
+    <path style="fill:var(--icon-accent,#d39b22)" d="M13 12 L17 8 L18.6 11.8 L14.6 13.4 Z"/>
+    <path style="fill:none;stroke:var(--icon-halo,#fbf5e6);stroke-width:1" d="M7 21.5 L8.5 17 M17 21.5 L18 16.5"/>
   </g>
 </svg>

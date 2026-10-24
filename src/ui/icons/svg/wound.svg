@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- wound: Wound: three claw slashes. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M10.8 2.1 Q4.55 7.7 2.8 15.9 Q6.35 8.74 10.8 2.1 Z"/>
-    <path style="stroke-width:2.5" d="M16 5.1 Q9.75 10.7 8 18.9 Q11.55 11.74 16 5.1 Z"/>
-    <path style="stroke-width:2.5" d="M21.2 8.1 Q14.95 13.7 13.2 21.9 Q16.75 14.74 21.2 8.1 Z"/>
+  <!-- wound: Wound: a plaster with a red lightning scratch. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path transform="rotate(-35 12 12)" d="M6.2 8.4 L17.8 8.4 A3.6 3.6 0 0 1 21.4 12 L21.4 12 A3.6 3.6 0 0 1 17.8 15.6 L6.2 15.6 A3.6 3.6 0 0 1 2.6 12 L2.6 12 A3.6 3.6 0 0 1 6.2 8.4 Z"/>
+    <path d="M13.2 8.6 L10 12.6 L12 12.6 L10.8 15.6 L14 11.4 L12 11.4 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M10.8 2.1 Q4.55 7.7 2.8 15.9 Q6.35 8.74 10.8 2.1 Z"/>
-    <path d="M16 5.1 Q9.75 10.7 8 18.9 Q11.55 11.74 16 5.1 Z"/>
-    <path d="M21.2 8.1 Q14.95 13.7 13.2 21.9 Q16.75 14.74 21.2 8.1 Z"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path transform="rotate(-35 12 12)" style="fill:currentColor" d="M6.2 8.4 L17.8 8.4 A3.6 3.6 0 0 1 21.4 12 L21.4 12 A3.6 3.6 0 0 1 17.8 15.6 L6.2 15.6 A3.6 3.6 0 0 1 2.6 12 L2.6 12 A3.6 3.6 0 0 1 6.2 8.4 Z"/>
+    <path transform="rotate(-35 12 12)" style="fill:var(--icon-halo,#fbf5e6)" d="M9.8 9.4 L14.2 9.4 A1 1 0 0 1 15.2 10.4 L15.2 13.6 A1 1 0 0 1 14.2 14.6 L9.8 14.6 A1 1 0 0 1 8.8 13.6 L8.8 10.4 A1 1 0 0 1 9.8 9.4 Z"/>
+    <path transform="rotate(-35 12 12)" style="fill:var(--icon-halo,#fbf5e6)" d="M4.9 12 A0.7 0.7 0 1 0 6.3 12 A0.7 0.7 0 1 0 4.9 12 Z M17.7 12 A0.7 0.7 0 1 0 19.1 12 A0.7 0.7 0 1 0 17.7 12 Z"/>
+    <path style="fill:var(--icon-accent,#c8372d)" d="M13.2 8.6 L10 12.6 L12 12.6 L10.8 15.6 L14 11.4 L12 11.4 Z"/>
   </g>
 </svg>

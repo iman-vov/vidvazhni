@@ -21,20 +21,26 @@ describe('icon set', () => {
       'poison', 'wound', 'immobilize', 'disarm', 'stun', 'muddle', 'invisible', 'strengthen',
       'fire', 'ice', 'air', 'earth', 'light', 'dark', 'orb-fire', 'orb-earth', 'orb-air',
       'door', 'trap', 'chest', 'coin', 'hp',
+      'dice', 'reroll', 'gold', 'objective-flag', 'escort', 'defend-point', 'lever',
     ];
     for (const n of need) expect(isIconName(n), n).toBe(true);
     expect(ICON_GROUPS.conditions).toHaveLength(8);
   });
 
-  it('files follow the style contract: 24×24, currentColor body, one accent through --icon-line', () => {
+  it('files follow the style contract: 24×24, currentColor body, a halo and at most one accent', () => {
+    const accents = new Set(['#c8372d', '#2e9a4b', '#1d8c9c', '#d39b22']);
     for (const name of ICON_NAMES) {
       const svg = read(name);
       expect(svg, name).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 24 24">/);
       expect(svg, name).toContain('currentColor');
-      const colours = svg.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) ?? [];
-      // The only literal colour is the fallback of var(--icon-line, …).
-      expect(new Set(colours), name).toEqual(new Set(['#3a2414']));
-      expect(svg.match(/var\(--[\w-]+/g)?.every((v) => v === 'var(--icon-line'), name).toBe(true);
+      expect(svg, name).toContain('var(--icon-halo,#fbf5e6)');
+      // Literal colours are only the fallbacks of var(--icon-halo, …) and var(--icon-accent, …).
+      const accent = new Set([...svg.matchAll(/var\(--icon-accent,(#[0-9a-f]{6})\)/g)].map((m) => m[1]));
+      expect(accent.size, name).toBeLessThanOrEqual(1);
+      for (const c of accent) expect(accents.has(c as string), `${name} ${c}`).toBe(true);
+      const colours = new Set(svg.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) ?? []);
+      expect(colours, name).toEqual(new Set(['#fbf5e6', ...accent]));
+      expect(svg.match(/var\(--[\w-]+/g)?.every((v) => v === 'var(--icon-halo' || v === 'var(--icon-accent'), name).toBe(true);
       expect(svg, name).not.toMatch(/<(text|image|script|use)\b/);
     }
   });

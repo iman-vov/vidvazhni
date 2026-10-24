@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- any: Any element: a hexagon split into six. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M20.31 16.8 L12 21.6 L3.69 16.8 L3.69 7.2 L12 2.4 L20.31 7.2 Z"/>
+  <!-- any: Any element: a six-pointed star with a teal heart. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M12 2 L14.8 7.15 L20.66 7 L17.6 12 L20.66 17 L14.8 16.85 L12 22 L9.2 16.85 L3.34 17 L6.4 12 L3.34 7 L9.2 7.15 Z"/>
+    <path d="M9 12 A3 3 0 1 0 15 12 A3 3 0 1 0 9 12 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M20.31 16.8 L12 21.6 L3.69 16.8 L3.69 7.2 L12 2.4 L20.31 7.2 Z"/>
-  </g>
-  <g style="fill:none;stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:1.2" d="M12 2.4 V21.6 M3.7 7.2 L20.3 16.8 M3.7 16.8 L20.3 7.2"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M12 2 L14.8 7.15 L20.66 7 L17.6 12 L20.66 17 L14.8 16.85 L12 22 L9.2 16.85 L3.34 17 L6.4 12 L3.34 7 L9.2 7.15 Z"/>
+    <path style="fill:var(--icon-accent,#1d8c9c)" d="M9 12 A3 3 0 1 0 15 12 A3 3 0 1 0 9 12 Z"/>
   </g>
 </svg>

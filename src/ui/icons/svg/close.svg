@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <!-- close: Close: a cross. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="fill:none;stroke-width:5.5" d="M5.6 5.6 L18.4 18.4"/>
-    <path style="fill:none;stroke-width:5.5" d="M18.4 5.6 L5.6 18.4"/>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:6.2" d="M5.5 5.5 L18.5 18.5 M18.5 5.5 L5.5 18.5"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path style="fill:none;stroke-width:3" d="M5.6 5.6 L18.4 18.4"/>
-    <path style="fill:none;stroke-width:3" d="M18.4 5.6 L5.6 18.4"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:currentColor;stroke-width:3.2" d="M5.5 5.5 L18.5 18.5 M18.5 5.5 L5.5 18.5"/>
   </g>
 </svg>

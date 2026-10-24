@@ -1,18 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- area: Area: three hexes. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M13.2 8 L10.9 11.98 L6.3 11.98 L4 8 L6.3 4.02 L10.9 4.02 Z"/>
-    <path style="stroke-width:2.5" d="M13.2 15.97 L10.9 19.95 L6.3 19.95 L4 15.97 L6.3 11.99 L10.9 11.99 Z"/>
-    <path style="stroke-width:2.5" d="M20.1 11.98 L17.8 15.96 L13.2 15.96 L10.9 11.98 L13.2 8 L17.8 8 Z"/>
+  <!-- area: Area: three hexes, the hit one red. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M8.4 4.3 L11.95 6.35 L11.95 10.45 L8.4 12.5 L4.85 10.45 L4.85 6.35 Z"/>
+    <path d="M15.6 4.3 L19.15 6.35 L19.15 10.45 L15.6 12.5 L12.05 10.45 L12.05 6.35 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M13.2 8 L10.9 11.98 L6.3 11.98 L4 8 L6.3 4.02 L10.9 4.02 Z"/>
-    <path d="M13.2 15.97 L10.9 19.95 L6.3 19.95 L4 15.97 L6.3 11.99 L10.9 11.99 Z"/>
-    <path d="M20.1 11.98 L17.8 15.96 L13.2 15.96 L10.9 11.98 L13.2 8 L17.8 8 Z"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M8.4 4.3 L11.95 6.35 L11.95 10.45 L8.4 12.5 L4.85 10.45 L4.85 6.35 Z"/>
+    <path style="fill:currentColor" d="M15.6 4.3 L19.15 6.35 L19.15 10.45 L15.6 12.5 L12.05 10.45 L12.05 6.35 Z"/>
   </g>
-  <g style="fill:none;stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:1.1" d="M13.2 8 L10.9 11.98 L6.3 11.98 L4 8 L6.3 4.02 L10.9 4.02 Z"/>
-    <path style="stroke-width:1.1" d="M13.2 15.97 L10.9 19.95 L6.3 19.95 L4 15.97 L6.3 11.99 L10.9 11.99 Z"/>
-    <path style="stroke-width:1.1" d="M20.1 11.98 L17.8 15.96 L13.2 15.96 L10.9 11.98 L13.2 8 L17.8 8 Z"/>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M12 10.5 L15.55 12.55 L15.55 16.65 L12 18.7 L8.45 16.65 L8.45 12.55 Z"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:var(--icon-accent,#c8372d)" d="M12 10.5 L15.55 12.55 L15.55 16.65 L12 18.7 L8.45 16.65 L8.45 12.55 Z"/>
   </g>
 </svg>

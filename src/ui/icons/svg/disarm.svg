@@ -1,17 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- disarm: Disarm: a sword snapped in two. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M18.63 2.15 L19.03 5.47 L16.59 9.37 L16.13 7.67 L14.09 8.28 L13.46 6.47 L15.47 3.25 Z"/>
-    <path style="stroke-width:2.5" d="M9.9 10.8 L11.4 12 L12.8 10.4 L14.1 11.6 L14.1 15.2 L9.9 15.2 Z"/>
-    <path style="stroke-width:2.5" d="M10.5 20.4 A1.5 1.5 0 1 0 13.5 20.4 A1.5 1.5 0 1 0 10.5 20.4 Z"/>
-    <path style="fill:none;stroke-width:5.1" d="M6.2 16 L17.8 16"/>
-    <path style="fill:none;stroke-width:4.9" d="M12 16.6 L12 19.4"/>
+  <!-- disarm: Disarm: a sword dropping from an open hand, red arrow down. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M2 6.6 C4 3.6 8 2.6 11 3.6 L16 4.6 C17.2 4.9 17 6.3 15.8 6.3 L12 6.1 L13.5 7.6 C14 8.4 13 9.1 12.2 8.6 L9.5 7.1 C7 6.7 4.5 7.6 2.5 9.1 Z"/>
+    <path d="M8.03 15.9 L13.67 20.75 L16.8 21.4 L15.69 18.4 L10.05 13.55 Z"/>
+    <path style="fill:none;stroke-width:5.4" d="M6.91 16.59 L10.56 12.35"/>
+    <path style="fill:none;stroke-width:5.3" d="M6.31 12.38 L8.74 14.47"/>
+    <path d="M4.1 11.86 A1.6 1.6 0 1 0 7.3 11.86 A1.6 1.6 0 1 0 4.1 11.86 Z"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M18.63 2.15 L19.03 5.47 L16.59 9.37 L16.13 7.67 L14.09 8.28 L13.46 6.47 L15.47 3.25 Z"/>
-    <path d="M9.9 10.8 L11.4 12 L12.8 10.4 L14.1 11.6 L14.1 15.2 L9.9 15.2 Z"/>
-    <path d="M10.5 20.4 A1.5 1.5 0 1 0 13.5 20.4 A1.5 1.5 0 1 0 10.5 20.4 Z"/>
-    <path style="fill:none;stroke-width:2.6" d="M6.2 16 L17.8 16"/>
-    <path style="fill:none;stroke-width:2.4" d="M12 16.6 L12 19.4"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:currentColor" d="M2 6.6 C4 3.6 8 2.6 11 3.6 L16 4.6 C17.2 4.9 17 6.3 15.8 6.3 L12 6.1 L13.5 7.6 C14 8.4 13 9.1 12.2 8.6 L9.5 7.1 C7 6.7 4.5 7.6 2.5 9.1 Z"/>
+    <path style="fill:currentColor" d="M8.03 15.9 L13.67 20.75 L16.8 21.4 L15.69 18.4 L10.05 13.55 Z"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:2.4" d="M6.91 16.59 L10.56 12.35"/>
+    <path style="fill:none;stroke:currentColor;stroke-width:2.3" d="M6.31 12.38 L8.74 14.47"/>
+    <path style="fill:currentColor" d="M4.1 11.86 A1.6 1.6 0 1 0 7.3 11.86 A1.6 1.6 0 1 0 4.1 11.86 Z"/>
+    <path style="fill:none;stroke:var(--icon-halo,#fbf5e6);stroke-width:1" d="M9.95 15.51 L14.37 19.31"/>
+  </g>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5" d="M20 4 L20 10"/>
+    <path d="M20 13.4 L17.1 9.6 L22.9 9.6 Z"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:2" d="M20 4 L20 10"/>
+    <path style="fill:var(--icon-accent,#c8372d)" d="M20 13.4 L17.1 9.6 L22.9 9.6 Z"/>
   </g>
 </svg>

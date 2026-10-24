@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- range: Range: one arrow in flight with two speed lines. -->
-  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
-    <path style="stroke-width:2.5" d="M21.4 2.6 L19.21 8.89 L15.11 4.79 Z"/>
-    <path style="stroke-width:2.5" d="M5.6 18.4 L2.4 17.6 L2.8 14.6 L7.4 16.6 Z"/>
-    <path style="stroke-width:2.5" d="M5.6 18.4 L6.4 21.6 L9.4 21.2 L7.4 16.6 Z"/>
-    <path style="fill:none;stroke-width:4.4" d="M4.6 19.4 L17.6 6.4"/>
-    <path style="fill:none;stroke-width:4.3" d="M2.6 10 L7 5.6"/>
-    <path style="fill:none;stroke-width:4.3" d="M14 21.4 L18.4 17"/>
+  <!-- range: Range: a red arrow flying past distance marks. -->
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5.2" d="M8 6.5 L8 17.5 M11.5 6.5 L11.5 17.5 M15 6.5 L15 17.5"/>
   </g>
-  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
-    <path d="M21.4 2.6 L19.21 8.89 L15.11 4.79 Z"/>
-    <path d="M5.6 18.4 L2.4 17.6 L2.8 14.6 L7.4 16.6 Z"/>
-    <path d="M5.6 18.4 L6.4 21.6 L9.4 21.2 L7.4 16.6 Z"/>
-    <path style="fill:none;stroke-width:1.9" d="M4.6 19.4 L17.6 6.4"/>
-    <path style="fill:none;stroke-width:1.8" d="M2.6 10 L7 5.6"/>
-    <path style="fill:none;stroke-width:1.8" d="M14 21.4 L18.4 17"/>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:currentColor;stroke-width:2.2" d="M8 6.5 L8 17.5 M11.5 6.5 L11.5 17.5 M15 6.5 L15 17.5"/>
+  </g>
+  <g style="fill:var(--icon-halo,#fbf5e6);stroke:var(--icon-halo,#fbf5e6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5.2" d="M2.6 12 L18 12"/>
+    <path d="M22 12 L17.4 15.4 L17.4 8.6 Z"/>
+    <path style="fill:none;stroke-width:4.8" d="M2.6 9 L5 12 L2.6 15"/>
+  </g>
+  <g style="stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:2.2" d="M2.6 12 L18 12"/>
+    <path style="fill:var(--icon-accent,#c8372d)" d="M22 12 L17.4 15.4 L17.4 8.6 Z"/>
+    <path style="fill:none;stroke:var(--icon-accent,#c8372d);stroke-width:1.8" d="M2.6 9 L5 12 L2.6 15"/>
   </g>
 </svg>
