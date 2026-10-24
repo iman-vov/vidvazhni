@@ -4,6 +4,7 @@
 import type { Action, GameSetup } from '../rules/state';
 import { CAMPAIGN_VERSION, type CampaignState } from '../rules/campaign';
 import type { GameMeta, PlayerInfo } from './game';
+import type { StoryMode } from './story';
 
 /** A synchronous string key–value store (localStorage, or memory in tests). */
 export interface KeyValueStore {
@@ -92,12 +93,15 @@ export interface SavedCampaign {
   campaign: CampaignState;
   /** Names for `CampaignHero.playerId`. */
   players: PlayerInfo[];
+  /** «Сюжет» for this campaign; absent (older saves) = the device setting. */
+  story?: StoryMode;
   savedAt: number;
 }
 
 export interface CampaignStorage {
   load(): SavedCampaign | null;
-  save(campaign: CampaignState, players: PlayerInfo[]): void;
+  /** Without `story` the saved one is kept. */
+  save(campaign: CampaignState, players: PlayerInfo[], story?: StoryMode): void;
   clear(): void;
 }
 
@@ -111,7 +115,10 @@ export function campaignStorage(kv: KeyValueStore = localStore): CampaignStorage
       const ok = c?.app === 'vidvazhni' && c.version === CAMPAIGN_VERSION && c.campaign?.version === CAMPAIGN_VERSION && Array.isArray(c.campaign.heroes) && Array.isArray(c.players);
       return ok ? c : null;
     },
-    save: (campaign, players) => kv.set(CAMPAIGN_KEY, JSON.stringify({ app: 'vidvazhni', version: CAMPAIGN_VERSION, campaign, players, savedAt: Date.now() } satisfies SavedCampaign)),
+    save(campaign, players, story) {
+      story ??= readJson<SavedCampaign>(kv, CAMPAIGN_KEY)?.story;
+      kv.set(CAMPAIGN_KEY, JSON.stringify({ app: 'vidvazhni', version: CAMPAIGN_VERSION, campaign, players, ...(story ? { story } : {}), savedAt: Date.now() } satisfies SavedCampaign));
+    },
     clear: () => kv.remove(CAMPAIGN_KEY),
   };
 }

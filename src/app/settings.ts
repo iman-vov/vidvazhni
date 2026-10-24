@@ -2,6 +2,7 @@
 // owned by ui/i18n.ts and render/quality.ts and only re-exported for the settings screen.
 
 import { FULL_FORK, type Variants } from '../rules/variants';
+import { STORY_MODES, type StoryMode } from './story';
 import { localStore, readJson, type KeyValueStore } from './storage';
 
 /** 0 = off, 1 = explanations, 2 = monster intents, 3 = advice (placeholder in phase 2). */
@@ -22,12 +23,14 @@ export interface Settings {
   hints: Record<string, HintLevel>;
   /** Rules for new games: the fork by default; Settings → «Правила» switches mechanics off. */
   variants: Variants;
+  /** «Сюжет»: every line, a short version or none (a campaign keeps its own, see SavedCampaign). */
+  story: StoryMode;
 }
 
 const KEY = 'vidvazhni.settings';
 
 export function defaultSettings(): Settings {
-  return { volume: { music: 0.6, sound: 0.8, voice: 0.8 }, speed: 1, hints: {}, variants: { ...FULL_FORK } };
+  return { volume: { music: 0.6, sound: 0.8, voice: 0.8 }, speed: 1, hints: {}, variants: { ...FULL_FORK }, story: 'full' };
 }
 
 export class SettingsStore {
@@ -37,7 +40,7 @@ export class SettingsStore {
   constructor(private readonly kv: KeyValueStore = localStore) {
     const stored = readJson<Partial<Settings>>(kv, KEY);
     const d = defaultSettings();
-    this.value = { volume: { ...d.volume, ...stored?.volume }, speed: stored?.speed === 2 ? 2 : 1, hints: { ...stored?.hints }, variants: { ...FULL_FORK, ...stored?.variants } };
+    this.value = { volume: { ...d.volume, ...stored?.volume }, speed: stored?.speed === 2 ? 2 : 1, hints: { ...stored?.hints }, variants: { ...FULL_FORK, ...stored?.variants }, story: STORY_MODES.includes(stored?.story as StoryMode) ? (stored?.story as StoryMode) : 'full' };
   }
 
   get(): Settings {

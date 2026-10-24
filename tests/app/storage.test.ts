@@ -22,6 +22,16 @@ describe('campaignStorage', () => {
     expect(store.load()).toBeNull();
   });
 
+  it('keeps the campaign «Сюжет» across saves without one', () => {
+    const kv = memoryStore();
+    const store = campaignStorage(kv);
+    store.save(state(), players);
+    expect(store.load()?.story).toBeUndefined();
+    store.save(state(), players, 'short');
+    store.save(state(), players);
+    expect(store.load()?.story).toBe('short');
+  });
+
   it('ignores another version and broken JSON', () => {
     const kv = memoryStore();
     const store = campaignStorage(kv);

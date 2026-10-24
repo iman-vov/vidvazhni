@@ -1,11 +1,12 @@
 // Settings: language, graphics quality, music / sound / voice volume (stored; no audio yet) and the
-// hint level per hero. Used as a screen from the main menu and inside the in-game menu.
+// hint level per hero, and «Сюжет» (full / short / off). Used as a screen from the main menu and inside the in-game menu.
 
 import { getGraphicsQuality, GRAPHICS_QUALITIES, setGraphicsQuality, type GraphicsQuality } from '../../render/quality';
 import { h } from '../../ui/dom';
 import { getLang, LANGS, setLang, t } from '../../ui/i18n';
 import { BASE_RULES, FULL_FORK, VARIANT_ORDER, type Variants } from '../../rules/variants';
 import { HINT_LEVELS, settings, type Volumes } from '../settings';
+import { STORY_MODES, type StoryMode } from '../story';
 
 const CLASS_ORDER = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
 
@@ -14,6 +15,9 @@ export interface SettingsPanelOptions {
   heroes?: string[];
   onQuality?: (q: GraphicsQuality) => void;
   onSpeed?: (speed: number) => void;
+  /** The current campaign's «Сюжет» (it is saved with the campaign); absent = the device setting. */
+  story?: () => StoryMode;
+  onStory?: (mode: StoryMode) => void;
 }
 
 export function settingsPanel(o: SettingsPanelOptions = {}): HTMLElement {
@@ -75,6 +79,29 @@ export function settingsPanel(o: SettingsPanelOptions = {}): HTMLElement {
             ),
           ),
         ),
+      ),
+      field(
+        t('settings.story'),
+        h(
+          'div',
+          { class: 'gseg', role: 'group' },
+          STORY_MODES.map((m) =>
+            h(
+              'button',
+              {
+                class: 'gbtn gbtn-chip',
+                'aria-pressed': String((o.story?.() ?? s.story) === m),
+                onclick: () => {
+                  settings.update({ story: m });
+                  o.onStory?.(m);
+                  render();
+                },
+              },
+              t(`settings.story.${m}`),
+            ),
+          ),
+        ),
+        t('settings.story.text'),
       ),
       (['music', 'sound', 'voice'] as (keyof Volumes)[]).map((k) =>
         field(
