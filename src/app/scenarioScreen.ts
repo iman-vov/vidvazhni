@@ -13,6 +13,7 @@ import { hexKey, type Hex } from '../rules/hex';
 import { objectiveStatus } from '../rules/objectives';
 import * as queries from '../rules/queries';
 import { attackPrompts, eventsSoon, forecastInitiative, initiativePrompts, orbBonusPreview, previewAttack, usableItems, type InitiativePrompt } from '../rules/queries';
+import { itemDef } from '../rules/items';
 import { behaviourCard, monsterInitiative } from '../rules/round';
 import type { Action, CardId, FigureId, GameEvent, GameState, HeroState, MonsterState, StepChoice } from '../rules/state';
 import { figureSteps } from '../rules/turn';
@@ -96,6 +97,10 @@ interface Ui {
   chosen: StepChoice | null;
   confirmEnd: boolean;
   avoidPick: CardId[];
+  /** Heroes who chose «Короткий відпочинок» on the card choice: they rest at the end of the round. */
+  restPlan: FigureId[];
+  /** Items chosen on the card choice, used at the start of the hero's turn. */
+  itemPlan: { heroId: FigureId; itemId: string }[];
   /** «Ухилитися» with this dice item (the damage prompt's toggle). */
   dodgeItem: string | null;
   leftOpen: boolean;
@@ -117,9 +122,6 @@ interface Ui {
 }
 
 const TOAST_MS = 6000;
-/** End of round: a short rest is asked only of heroes with this many cards in hand or fewer (two
- *  more rounds' worth otherwise); the others say «Не зараз» by themselves. */
-const SHORT_REST_HAND = 3;
 const MODIFIER_MS = 1100;
 const LOG_LINES = 60;
 
@@ -142,6 +144,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     chosen: null,
     confirmEnd: false,
     avoidPick: [],
+    restPlan: [],
+    itemPlan: [],
     dodgeItem: null,
     leftOpen: !narrow,
     rightOpen: false,
@@ -347,7 +351,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (next && hintLevel(next) >= 1) {
       const kind = s.pending?.kind;
       if (kind === 'avoidDamage') showHint({ key: 'avoidDamage', title: t('ui.avoidDamage'), text: t('game.hint.avoidDamage') });
-      if (kind === 'endOfRound' && restAsked().length) showHint({ key: 'shortRest', title: t('ui.shortRest'), text: t('game.hint.shortRest') });
       if (kind === 'longRestLoss') showHint({ key: 'longRest', title: t('ui.longRest'), text: t('game.hint.longRest') });
     }
     const started = [...events].reverse().find((e) => e.type === 'turnStarted' && s.figures[e.figureId]?.kind === 'hero');
@@ -510,12 +513,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (disposed) return;
     sync();
     const s = game.state;
-    // Heroes with a hand big enough skip the short rest without a prompt (one at a time: each
-    // answer re-renders).
+    // The short rest is chosen on the card choice screen, so the end of the round answers for
+    // every hero without a prompt (one at a time: each answer re-renders).
     const p = s.pending;
     if (p?.kind === 'endOfRound' && !ui.busy) {
-      const skip = p.heroIds.find((id) => !restAsked().includes(id));
-      if (skip && act({ type: 'shortRest', heroId: skip, rest: false })) return;
+      const id = p.heroIds[0];
+      if (id) {
+        const rest = ui.restPlan.includes(id);
+        ui.restPlan = ui.restPlan.filter((x) => x !== id);
+        if (act({ type: 'shortRest', heroId: id, rest })) return;
+      }
+    }
+    // Items chosen on the card choice: used as the hero's turn starts.
+    if (p?.kind === 'heroTurn' && !ui.busy && !s.half) {
+      const plan = ui.itemPlan.find((x) => x.heroId === p.heroId);
+      if (plan) {
+        ui.itemPlan = ui.itemPlan.filter((x) => x !== plan);
+        const use = game.legalOf('useItem').find((a) => a.heroId === plan.heroId && a.itemId === plan.itemId && !a.targetId && !a.shift);
+        if (use && act(use)) return;
+      }
     }
     stepInfo = null;
     if (s.pending?.kind === 'stepChoice' && !ui.busy) {
@@ -832,10 +848,42 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         artButton('check', t('game.ready'), () => actPrivate(heroId, { type: 'chooseHand', heroId, cards: [...ui.handPick] }), { cls: 'is-go', disabled: ui.handPick.length !== need }),
       );
     } else {
+      // Rest and items are chosen here as buttons, not asked after the turn: a short rest happens at
+      // the end of this round, a chosen item is used as the hero's turn starts.
       const canRest = hero.discard.length >= 2;
-      const rest = artButton('rest', t('ui.longRest'), () => ((ui.longRest = !ui.longRest), render()), { cls: ui.longRest ? 'is-on' : '', disabled: !canRest });
-      rest.setAttribute('aria-pressed', String(ui.longRest));
-      if (!canRest) rest.title = t('game.longRest.no');
+      const longRest = artButton('rest', t('ui.longRest'), () => ((ui.longRest = !ui.longRest), (ui.restPlan = ui.restPlan.filter((x) => x !== heroId)), render()), { cls: `is-small${ui.longRest ? ' is-on' : ''}`, disabled: !canRest });
+      longRest.setAttribute('aria-pressed', String(ui.longRest));
+      if (!canRest) longRest.title = t('game.longRest.no');
+      const planned = ui.restPlan.includes(heroId);
+      const shortRest = artButton(
+        'rest',
+        t('ui.shortRest'),
+        () => {
+          ui.restPlan = planned ? ui.restPlan.filter((x) => x !== heroId) : [...ui.restPlan, heroId];
+          if (!planned) ui.longRest = false;
+          playUi('cardPick');
+          render();
+        },
+        { cls: `is-small${planned ? ' is-on' : ''}`, note: t('game.select.restAtEnd') },
+      );
+      shortRest.setAttribute('aria-pressed', String(planned));
+      shortRest.title = t('game.shortRest.text');
+      const items = startItems(hero).map((itemId) => {
+        const on = ui.itemPlan.some((x) => x.heroId === heroId && x.itemId === itemId);
+        const b = artButton(
+          'item',
+          t('game.itemUse', { item: t(`item.${itemId}`) }),
+          () => {
+            ui.itemPlan = on ? ui.itemPlan.filter((x) => !(x.heroId === heroId && x.itemId === itemId)) : [...ui.itemPlan, { heroId, itemId }];
+            playUi('cardPick');
+            render();
+          },
+          { cls: `is-small${on ? ' is-on' : ''}`, note: t('game.select.itemAtStart') },
+        );
+        b.setAttribute('aria-pressed', String(on));
+        return b;
+      });
+      const rest = h('div', { class: 'gsel-tools' }, shortRest, longRest, ...items);
       const ready = ui.longRest || (a && b && ui.leading);
       // Two slots: the leading card (its initiative counts) and the second one; tap a slot card to put it back.
       const lead = ui.longRest ? null : (ui.leading ?? a ?? null);
@@ -920,6 +968,18 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (!action) return;
     game.setIntents(heroId, ui.intents);
     actPrivate(heroId, action);
+  }
+
+  /** Ready items worth using as the turn starts (heal, shield, a condition, an element); step
+   *  items (dagger, boots, rope) are offered during their step, dice and initiative items in
+   *  their own windows. */
+  function startItems(hero: HeroState): string[] {
+    return (hero.items ?? [])
+      .filter((it) => {
+        const def = itemDef({ c: content }, it.id);
+        return it.state === 'ready' && def && def.use !== 'passive' && def.effect.length > 0 && def.effect.every((st) => st.type !== 'special');
+      })
+      .map((it) => it.id);
   }
 
   /** A private choice: remembers whose it was before the screen re-renders, so the next hero of
@@ -1284,22 +1344,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     );
   }
 
-  /** Heroes asked about a short rest this round: offered by the engine and short of cards. */
-  function restAsked(): FigureId[] {
-    const p = game.state.pending;
-    if (p?.kind !== 'endOfRound') return [];
-    return p.heroIds.filter((id) => {
-      const hero = game.state.figures[id];
-      return hero?.kind === 'hero' && hero.hand.length <= SHORT_REST_HAND;
-    });
-  }
-
-  /** One prompt for every hero still asked; «Не зараз — усім» answers for all of them at once. */
+  /** The end of the round answers for every hero (render, ui.restPlan); this prompt is left only as
+   *  a fallback. «Не зараз — усім» answers for all of them at once. */
   function shortRestPanel(): HTMLElement {
     const s = game.state;
     const p = s.pending;
     if (p?.kind !== 'endOfRound') return h('div');
-    const asked = restAsked();
+    const asked = p.heroIds;
     return h(
       'div',
       { class: 'gsheet' },

@@ -1207,6 +1207,8 @@
   "game.select.back": "До карт",
   "game.select.who": "Карти раунду: кожен торкається свого героя, у будь-якому порядку.",
   "game.select.peek": "Поле",
+  "game.select.restAtEnd": "у кінці раунду",
+  "game.select.itemAtStart": "на початку ходу",
   "game.select.hint3": "Обери ще {n}: торкнись карти. Довгий дотик — пояснення.",
   "game.figure.more": "Більше",
   "game.figure.cards": "Карти раунду",

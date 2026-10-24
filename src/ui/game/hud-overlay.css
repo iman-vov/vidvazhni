@@ -285,6 +285,26 @@ body.game {
   line-height: 1.05;
 }
 
+/* Short rest, long rest and items: buttons chosen with the cards, stacked left of the slots. */
+.gsel-tools {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.gsel-foot .gsel-tools .ubtn {
+  width: min(230px, 26vw);
+  --ubtn-h: 44px;
+  font-size: 15px;
+}
+
+.gsel-foot .gsel-tools .ubtn small {
+  font-size: 12px;
+}
+
 .gsel-foot .ubtn:only-of-type {
   margin-left: auto;
 }
@@ -522,5 +542,40 @@ body.game {
     width: 34px;
     height: 34px;
     padding: 0;
+  }
+}
+
+/* Portrait phones: rest and item buttons in one row above the slots, «Готово» below them. */
+@media (max-width: 600px) {
+  .gsel-foot {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .gsel-tools {
+    flex: 1 1 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .gsel-foot .gsel-tools .ubtn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .gsel-slot {
+    width: 130px;
+  }
+
+  .gsel-foot .ubtn.is-go,
+  .gsel-foot .gsel-sum {
+    flex: 1 1 100%;
+  }
+
+  .gsel-foot .gsel-sum {
+    display: none;
   }
 }

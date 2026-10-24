@@ -1207,6 +1207,8 @@
   "game.select.back": "Zu den Karten",
   "game.select.who": "Karten für die Runde: Jeder tippt auf seinen Helden, in beliebiger Reihenfolge.",
   "game.select.peek": "Spielfeld",
+  "game.select.restAtEnd": "am Rundenende",
+  "game.select.itemAtStart": "zu Zugbeginn",
   "game.select.hint3": "Wähle noch {n}: Karte antippen. Lang drücken erklärt sie.",
   "game.figure.more": "Mehr",
   "game.figure.cards": "Karten der Runde",
