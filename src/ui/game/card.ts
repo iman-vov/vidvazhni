@@ -9,6 +9,7 @@ import type { GameState, HeroState } from '../../rules/state';
 import { h } from '../dom';
 import { t } from '../i18n';
 import { icon } from './icons';
+import { rich } from '../icons';
 import { bonusText, cardName, hasMomentumMark, playedCard, stepParts } from './text';
 
 export type Half = 'top' | 'bottom';
@@ -65,7 +66,7 @@ export function cardView(o: CardOptions): HTMLElement {
               'div',
               { class: `gbonus${bonus.available ? ' is-on' : ''}${bonus.now ? ' is-now' : ''}`, title: t(bonus.now ? 'game.bonus.now' : bonus.available ? 'game.bonus.later' : 'game.bonus.no') },
               icon(bonus.element === 'any' ? 'any' : bonus.element),
-              bonusText(bonus.stepType, bonus.value, bonus.boosted),
+              rich(bonusText(bonus.stepType, bonus.value, bonus.boosted)),
             )
           : null,
       );

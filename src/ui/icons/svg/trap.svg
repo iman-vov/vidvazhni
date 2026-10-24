@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- trap: Trap: a toothed jaw ring seen from above. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M18.66 13.37 L14.25 13.3 L16.52 17.08 Z"/>
+    <path style="stroke-width:2.5" d="M14.14 18.45 L12 14.6 L9.86 18.45 Z"/>
+    <path style="stroke-width:2.5" d="M7.48 17.08 L9.75 13.3 L5.34 13.37 Z"/>
+    <path style="stroke-width:2.5" d="M5.34 10.63 L9.75 10.7 L7.48 6.92 Z"/>
+    <path style="stroke-width:2.5" d="M9.86 5.55 L12 9.4 L14.14 5.55 Z"/>
+    <path style="stroke-width:2.5" d="M16.52 6.92 L14.25 10.7 L18.66 10.63 Z"/>
+    <path style="fill:none;stroke-width:4.7" d="M4.4 12 A7.6 7.6 0 1 0 19.6 12 A7.6 7.6 0 1 0 4.4 12 Z"/>
+    <path style="fill:none;stroke-width:5.9" d="M1.8 12 L3.6 12"/>
+    <path style="fill:none;stroke-width:5.9" d="M20.4 12 L22.2 12"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M18.66 13.37 L14.25 13.3 L16.52 17.08 Z"/>
+    <path d="M14.14 18.45 L12 14.6 L9.86 18.45 Z"/>
+    <path d="M7.48 17.08 L9.75 13.3 L5.34 13.37 Z"/>
+    <path d="M5.34 10.63 L9.75 10.7 L7.48 6.92 Z"/>
+    <path d="M9.86 5.55 L12 9.4 L14.14 5.55 Z"/>
+    <path d="M16.52 6.92 L14.25 10.7 L18.66 10.63 Z"/>
+    <path style="fill:none;stroke-width:2.2" d="M4.4 12 A7.6 7.6 0 1 0 19.6 12 A7.6 7.6 0 1 0 4.4 12 Z"/>
+    <path style="fill:none;stroke-width:3.4" d="M1.8 12 L3.6 12"/>
+    <path style="fill:none;stroke-width:3.4" d="M20.4 12 L22.2 12"/>
+  </g>
+</svg>

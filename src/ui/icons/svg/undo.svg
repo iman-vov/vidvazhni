@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- undo: Undo: a U-turn arrow. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M2.6 7 L8.6 3.4 L8.6 10.6 Z"/>
+    <path style="fill:none;stroke-width:5.1" d="M8.8 7 H14.4 C18 7 20.6 9.6 20.6 13 C20.6 16.4 18 19 14.4 19 H6.4"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M2.6 7 L8.6 3.4 L8.6 10.6 Z"/>
+    <path style="fill:none;stroke-width:2.6" d="M8.8 7 H14.4 C18 7 20.6 9.6 20.6 13 C20.6 16.4 18 19 14.4 19 H6.4"/>
+  </g>
+</svg>

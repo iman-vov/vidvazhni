@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- stun: Stun: stars circling on a halo. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M4.4 7.4 L5.28 9.59 L7.63 9.75 L5.83 11.26 L6.4 13.55 L4.4 12.3 L2.4 13.55 L2.97 11.26 L1.17 9.75 L3.52 9.59 Z"/>
+    <path style="stroke-width:2.5" d="M17.2 4.4 L18.2 6.82 L20.81 7.03 L18.82 8.73 L19.43 11.27 L17.2 9.9 L14.97 11.27 L15.58 8.73 L13.59 7.03 L16.2 6.82 Z"/>
+    <path style="stroke-width:2.5" d="M12 14.4 L12.76 16.35 L14.85 16.47 L13.24 17.8 L13.76 19.83 L12 18.7 L10.24 19.83 L10.76 17.8 L9.15 16.47 L11.24 16.35 Z"/>
+    <path style="fill:none;stroke-width:4.5" d="M3 13.2 A9 3.8 0 1 0 21 13.2 A9 3.8 0 1 0 3 13.2 Z"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M4.4 7.4 L5.28 9.59 L7.63 9.75 L5.83 11.26 L6.4 13.55 L4.4 12.3 L2.4 13.55 L2.97 11.26 L1.17 9.75 L3.52 9.59 Z"/>
+    <path d="M17.2 4.4 L18.2 6.82 L20.81 7.03 L18.82 8.73 L19.43 11.27 L17.2 9.9 L14.97 11.27 L15.58 8.73 L13.59 7.03 L16.2 6.82 Z"/>
+    <path d="M12 14.4 L12.76 16.35 L14.85 16.47 L13.24 17.8 L13.76 19.83 L12 18.7 L10.24 19.83 L10.76 17.8 L9.15 16.47 L11.24 16.35 Z"/>
+    <path style="fill:none;stroke-width:2" d="M3 13.2 A9 3.8 0 1 0 21 13.2 A9 3.8 0 1 0 3 13.2 Z"/>
+  </g>
+</svg>

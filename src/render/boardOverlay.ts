@@ -5,24 +5,24 @@
 
 import * as THREE from 'three';
 import type { ConditionId } from '../rules/content';
+import type { IconName } from '../ui/icons/names';
+import { iconInner, iconSvg } from '../ui/icons/svg';
 
-/** Condition icons differ by shape, not only colour (style guide). 24×24 viewBox. */
+/** Condition icons (the game's set, src/ui/icons) differ by shape, not only colour (style guide). */
 export const CONDITION_ICONS: Record<ConditionId, { color: string; svg: string }> = {
-  poison: { color: '#4fb04a', svg: '<path d="M12 2 C12 2 5 10.5 5 15 a7 7 0 0 0 14 0 C19 10.5 12 2 12 2Z"/>' },
-  wound: { color: '#c0504d', svg: '<path d="M12 21 L3.5 12.5 A5 5 0 0 1 12 6 A5 5 0 0 1 20.5 12.5Z"/><path d="M12 6 L10 11 L14 13 L11.5 20" fill="none" stroke="#fff" stroke-width="1.6"/>' },
-  immobilize: { color: '#5b7da8', svg: '<rect x="2.5" y="8" width="10" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="11.5" y="8" width="10" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>' },
-  disarm: { color: '#b07a3a', svg: '<path d="M5 19 L17 7 L19 3 L15 5 L3 17Z"/><path d="M4 4 L20 20" stroke="#fff" stroke-width="2.4"/>' },
-  stun: { color: '#e6c229', svg: '<path d="M12 1 L14.5 9.5 L23 12 L14.5 14.5 L12 23 L9.5 14.5 L1 12 L9.5 9.5Z"/>' },
-  muddle: { color: '#9b6ad1', svg: '<path d="M12 12 m0 -1.5 a1.5 1.5 0 1 1 -1.5 1.5 a3.5 3.5 0 1 1 3.5 3.5 a5.5 5.5 0 1 1 5.5 -5.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' },
-  invisible: { color: '#a7b4c6', svg: '<path d="M2 12 C6 5 18 5 22 12 C18 19 6 19 2 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="3 2.4"/><circle cx="12" cy="12" r="3"/>' },
-  strengthen: { color: '#e0582b', svg: '<path d="M12 2 L21 12 H15.5 V22 H8.5 V12 H3Z"/>' },
+  poison: { color: '#4fb04a', svg: iconInner('poison') },
+  wound: { color: '#c0504d', svg: iconInner('wound') },
+  immobilize: { color: '#5b7da8', svg: iconInner('immobilize') },
+  disarm: { color: '#b07a3a', svg: iconInner('disarm') },
+  stun: { color: '#e6c229', svg: iconInner('stun') },
+  muddle: { color: '#9b6ad1', svg: iconInner('muddle') },
+  invisible: { color: '#a7b4c6', svg: iconInner('invisible') },
+  strengthen: { color: '#e0582b', svg: iconInner('strengthen') },
 };
-
-const SHIELD_SVG = '<path d="M12 2 L20 5 V11 C20 16.5 16.5 20.5 12 22 C7.5 20.5 4 16.5 4 11 V5Z"/>';
 
 export function conditionIconSvg(c: ConditionId, size = 18): string {
   const icon = CONDITION_ICONS[c];
-  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="currentColor" style="color:${icon.color}" aria-hidden="true">${icon.svg}</svg>`;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="color:${icon.color}" aria-hidden="true">${icon.svg}</svg>`;
 }
 
 const CSS = `
@@ -105,12 +105,13 @@ export class BoardOverlay {
     item.el.remove();
   }
 
-  /** Floating text that rises and fades (damage, heal, «промах», ×2, coins). */
-  float(text: string, cls: string, anchor: () => THREE.Vector3 | null, seconds: number): void {
+  /** Floating text that rises and fades (damage, heal, «промах», ×2, coins), optionally after an icon. */
+  float(text: string, cls: string, anchor: () => THREE.Vector3 | null, seconds: number, icon?: IconName): void {
     const el = document.createElement('div');
     el.className = `bv-float ${cls}`;
     const span = document.createElement('span');
     span.textContent = text;
+    if (icon) span.insertAdjacentHTML('afterbegin', `${iconSvg(icon, { size: '0.9em' })} `);
     el.appendChild(span);
     this.add(el, anchor, seconds);
   }
@@ -214,7 +215,7 @@ export class FigureBadge {
     if (shield > 0) {
       const span = document.createElement('span');
       span.className = 'shield';
-      span.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="#8fb0e8">${SHIELD_SVG}</svg>${shield}`;
+      span.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" style="color:#8fb0e8" aria-hidden="true">${iconInner('shield')}</svg>${shield}`;
       if (pop && !old.has(`shield:${shield}`)) span.classList.add('pop');
       this.conds.appendChild(span);
     }

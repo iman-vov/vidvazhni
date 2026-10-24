@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- orb-fire: Fork orb: fire inside an orb ring. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:4.3" d="M2.4 12 A9.6 9.6 0 1 0 21.6 12 A9.6 9.6 0 1 0 2.4 12 Z"/>
+    <path transform="translate(4.2 4.2) scale(0.65)" style="stroke-width:3.85" d="M12 2 C13.2 5.6 18.8 8.4 18.8 14.2 C18.8 18.4 15.8 21.6 12 21.6 C8.2 21.6 5.2 18.4 5.2 14.6 C5.2 11.6 6.8 9.4 8.4 7.8 C8.6 10.2 9.6 11.6 10.8 12 C10.2 8.4 10.6 5 12 2 Z"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:1.8" d="M2.4 12 A9.6 9.6 0 1 0 21.6 12 A9.6 9.6 0 1 0 2.4 12 Z"/>
+    <path transform="translate(4.2 4.2) scale(0.65)" d="M12 2 C13.2 5.6 18.8 8.4 18.8 14.2 C18.8 18.4 15.8 21.6 12 21.6 C8.2 21.6 5.2 18.4 5.2 14.6 C5.2 11.6 6.8 9.4 8.4 7.8 C8.6 10.2 9.6 11.6 10.8 12 C10.2 8.4 10.6 5 12 2 Z"/>
+  </g>
+  <g style="fill:none;stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path transform="translate(4.2 4.2) scale(0.65)" style="stroke-width:1.85" d="M12 20.4 C10.2 20.4 9.4 19 9.4 17.8 C9.4 16.4 10.6 15.2 11.6 13.8 C12 15.4 14.6 16 14.6 18 C14.6 19.4 13.4 20.4 12 20.4 Z"/>
+  </g>
+</svg>

@@ -210,7 +210,7 @@ function hexText(h: [number, number]): string {
 /** Short description of a step choice, for the list of all choices. */
 export function choiceText(choice: StepChoice, s: GameState, orbs: boolean): string {
   const parts: string[] = [];
-  if (choice.path) parts.push(`→ ${hexText(choice.path[choice.path.length - 1] as [number, number])} (${choice.path.length})`);
+  if (choice.path) parts.push(`{icon:arrow} ${hexText(choice.path[choice.path.length - 1] as [number, number])} (${choice.path.length})`);
   if (choice.targets) parts.push(choice.targets.map((id) => figureName(id, s)).join(' + '));
   if (choice.hex) parts.push(`${t('debug.hex')} ${hexText(choice.hex)}`);
   if (choice.direction !== undefined) parts.push(`${t('debug.direction')} ${choice.direction}`);
@@ -253,7 +253,7 @@ export function eventText(e: GameEvent, s: GameState): string | null {
     case 'intentsDrawn':
       return t('debug.ev.intentsDrawn', { name: t(`monster.${e.typeId}`), cards: e.cards.map((id) => behaviourCardName(id, e.typeId)).join(', ') });
     case 'cardsRevealed':
-      return t('debug.ev.cardsRevealed', { order: e.order.map((o) => `${entryName(o, s)} ${o.initiative}`).join(' → ') });
+      return t('debug.ev.cardsRevealed', { order: e.order.map((o) => `${entryName(o, s)} ${o.initiative}`).join(' {icon:arrow} ') });
     case 'turnStarted':
       return t('log.turnStarted', { name: n(e.figureId) });
     case 'turnEnded':

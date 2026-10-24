@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- menu: Menu: three bars. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:5.3" d="M4 6 L20 6"/>
+    <path style="fill:none;stroke-width:5.3" d="M4 12 L20 12"/>
+    <path style="fill:none;stroke-width:5.3" d="M4 18 L20 18"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:2.8" d="M4 6 L20 6"/>
+    <path style="fill:none;stroke-width:2.8" d="M4 12 L20 12"/>
+    <path style="fill:none;stroke-width:2.8" d="M4 18 L20 18"/>
+  </g>
+</svg>

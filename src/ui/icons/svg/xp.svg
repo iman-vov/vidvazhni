@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- xp: Experience: a five-point star. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M12 2.8 L14.59 9.24 L21.51 9.71 L16.18 14.16 L17.88 20.89 L12 17.2 L6.12 20.89 L7.82 14.16 L2.49 9.71 L9.41 9.24 Z"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M12 2.8 L14.59 9.24 L21.51 9.71 L16.18 14.16 L17.88 20.89 L12 17.2 L6.12 20.89 L7.82 14.16 L2.49 9.71 L9.41 9.24 Z"/>
+  </g>
+  <g style="fill:none;stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:1.1" d="M12 8.4 L13.18 11.18 L16.18 11.44 L13.9 13.42 L14.59 16.36 L12 14.8 L9.41 16.36 L10.1 13.42 L7.82 11.44 L10.82 11.18 Z"/>
+  </g>
+</svg>

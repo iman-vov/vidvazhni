@@ -9,7 +9,10 @@ import './ui/game/game.css';
 const board = document.getElementById('board');
 const overlay = document.getElementById('overlay');
 const debug = new URLSearchParams(location.search).has('debug');
-if (board && overlay) {
+// `?icons`: the icon gallery for review (dev server only).
+const gallery = import.meta.env.DEV && new URLSearchParams(location.search).has('icons');
+if (gallery) void import('./ui/icons/gallery').then((m) => m.mountIconGallery());
+else if (board && overlay) {
   if (debug) mountDebug(board, overlay);
   else mountApp(board, overlay);
 }

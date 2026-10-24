@@ -9,7 +9,7 @@ import { MOMENTUM_MAX } from '../../rules/variants';
 import type { IntentId } from '../../app/game';
 import { h } from '../dom';
 import { t } from '../i18n';
-import { icon } from './icons';
+import { icon, type IconName } from './icons';
 import { onPress } from './press';
 import { cardName, className, conditionName, elementName, figureName, monsterTypeName } from './text';
 
@@ -46,8 +46,8 @@ export function intentIcons(list: IntentId[]): HTMLElement | null {
   );
 }
 
-export function intentIcon(id: IntentId): string {
-  return { attack: 'attack', heal: 'heal', approach: 'approach', hold: 'hold', rest: 'rest', early: 'early', late: 'late' }[id];
+export function intentIcon(id: IntentId): IconName {
+  return ({ attack: 'attack', heal: 'heal', approach: 'approach', hold: 'hold', rest: 'rest', early: 'early', late: 'late' } as const)[id];
 }
 
 // ─── Initiative bar ─────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ export function initiativeBar(o: InitiativeBarOptions): HTMLElement {
     for (const typeId of typesShown(s)) {
       const deck = s.behaviourDecks[typeId];
       const inis = s.variants.threeIntents && deck?.intents.length ? deck.intents.map((c) => String(monsterIni(o.content, typeId, c))) : [];
-      entries.push(monsterEntry(o, typeId, inis.length ? inis.join(' · ') : '?', {}));
+      entries.push(monsterEntry(o, typeId, inis.length ? inis.join(' · ') : icon('initiative', '', t('ui.initiative')), {}));
     }
   } else {
     const current = s.phase === 'turns' ? s.turnIndex : s.turnOrder.length;
@@ -105,7 +105,7 @@ function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | null
   if (st.current) cls.push('is-current');
   if (st.done) cls.push('is-done');
   if (f?.downed || f?.exhausted) cls.push('is-out');
-  const iniText = ini === null ? (st.chosen ? '✓' : '?') : f?.selection?.kind === 'longRest' ? '99' : String(ini);
+  const iniText = ini === null ? (st.chosen ? icon('check', '', t('game.ready')) : icon('initiative', '', t('ui.initiative'))) : f?.selection?.kind === 'longRest' ? '99' : String(ini);
   return h(
     'span',
     { class: cls.join(' ') },
@@ -117,7 +117,7 @@ function heroEntry(o: InitiativeBarOptions, heroId: FigureId, ini: number | null
   );
 }
 
-function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string, st: { current?: boolean; done?: boolean; intent?: boolean }): HTMLElement {
+function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string | HTMLElement, st: { current?: boolean; done?: boolean; intent?: boolean }): HTMLElement {
   const cls = ['gini', 'is-monster'];
   if (st.current) cls.push('is-current');
   if (st.done) cls.push('is-done');
@@ -129,7 +129,7 @@ function monsterEntry(o: InitiativeBarOptions, typeId: string, ini: string, st: 
     icon('monster'),
     h('b', null, ini),
     h('span', { class: 'gini-name' }, monsterTypeName(typeId)),
-    focus.length ? h('span', { class: 'gini-focus', title: t('game.hint.focus') }, '→ ', [...new Set(focus)].map((id) => figureName(id)).join(', ')) : null,
+    focus.length ? h('span', { class: 'gini-focus', title: t('game.hint.focus') }, icon('arrow'), ' ', [...new Set(focus)].map((id) => figureName(id)).join(', ')) : null,
   );
   el.addEventListener('click', () => o.onMonster(typeId));
   return el;
@@ -276,7 +276,7 @@ function heroBlock(o: HeroPanelOptions, hero: HeroState, expanded: boolean): HTM
   return h('section', { class: `ghero${expanded ? ' is-open' : ''}${hero.exhausted ? ' is-out' : ''}`, style: { borderColor: o.colorOf(hero.id) } }, body);
 }
 
-function stat(iconName: string, label: string, value: number): HTMLElement {
+function stat(iconName: IconName, label: string, value: number): HTMLElement {
   return h('span', { class: 'gstat', title: label }, icon(iconName), h('b', null, value));
 }
 

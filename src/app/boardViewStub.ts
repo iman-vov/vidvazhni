@@ -64,10 +64,10 @@ export function createBoardViewStub(container: HTMLElement, _opts: BoardViewOpti
     const b = board as Board;
     const extra: BoardToken[] = [];
     const damage = hl.expectedDamage ?? {};
-    const shown = tokens.map((tk) => (tk.id in damage ? { ...tk, label: `${tk.label} ⚔${damage[tk.id]}` } : tk));
+    const shown = tokens.map((tk) => (tk.id in damage ? { ...tk, label: `${tk.label} (${damage[tk.id]})` } : tk));
     if (hl.path?.length && !hl.area?.length) {
       const end = hl.path[hl.path.length - 1] as Hex;
-      extra.push({ id: 'path:end', q: end[0], r: end[1], color: PATH_COLOR, label: `→ ${hl.path.length}` });
+      extra.push({ id: 'path:end', q: end[0], r: end[1], color: PATH_COLOR, label: `${t('stat.move')} ${hl.path.length}` });
     }
     b.setTokens([...shown, ...extra]);
     if (hl.area?.length) b.setHighlights(hl.area, HL.area);

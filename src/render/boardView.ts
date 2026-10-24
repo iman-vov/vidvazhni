@@ -22,6 +22,7 @@ import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
 import { listModels } from './models';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
+import { iconSvg } from '../ui/icons/svg';
 
 const BACKGROUND = '#1b1d27';
 
@@ -805,7 +806,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const head = () => t.headPoint();
     if (step.label === 'miss') overlay.float(LABELS[lang].miss, 'miss', head, TIMING.floatLabel);
     else if (step.label === 'x2') overlay.float('×2', 'x2', () => t.headPoint().add(new THREE.Vector3(0, 0.35, 0)), TIMING.floatLabel);
-    if (step.shield > 0 && step.label !== 'miss') overlay.float(`🛡 ${step.shield}`, 'shield', () => t.headPoint().add(new THREE.Vector3(0.45, 0.1, 0)), TIMING.floatLabel);
+    if (step.shield > 0 && step.label !== 'miss') overlay.float(`${step.shield}`, 'shield', () => t.headPoint().add(new THREE.Vector3(0.45, 0.1, 0)), TIMING.floatLabel, 'shield');
     if (step.label !== 'miss' && step.damage > 0) await hitReaction(t, a);
     else if (step.label !== 'miss') await effects.puff(t.chestPoint(), '#a9c6ff', { count: 5, size: 0.35, additive: true, seconds: 0.45, rise: 0.2 });
     await lungeDone;
@@ -910,7 +911,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       } else if (p) tiles.removeProp(pick.key);
       if (coins > 0) await effects.coin(from, hero.chestPoint(), TIMING.loot * 0.7);
     }
-    if (coins > 0) overlay.float(`+${coins} ●`, 'coin', label, TIMING.floatLabel);
+    if (coins > 0) overlay.float(`+${coins}`, 'coin', label, TIMING.floatLabel, 'coin');
   }
 
   async function orb(step: Extract<AnimStep, { kind: 'orb' }>, ctx: JobCtx): Promise<void> {
@@ -1027,7 +1028,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       if (!fv) continue;
       const el = document.createElement('div');
       el.className = 'bv-exp';
-      el.textContent = `⚔ ${mark.expectedDamage}`;
+      el.innerHTML = `${iconSvg('attack')} ${mark.expectedDamage}`;
       highlightLabels.push(overlay.add(el, () => (fv.root.visible ? fv.headPoint().add(new THREE.Vector3(0, 0.42, 0)) : null)));
     }
     requestRender();

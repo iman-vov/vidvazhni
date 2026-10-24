@@ -22,6 +22,8 @@ import { createBoardView } from './boardView';
 import { listModels } from './models';
 import { GRAPHICS_QUALITIES, getGraphicsQuality, type GraphicsQuality } from './quality';
 import type { BoardHighlights } from './view';
+import type { IconName } from '../ui/icons/names';
+import { iconSvg } from '../ui/icons/svg';
 
 const params = new URLSearchParams(location.search);
 const view = document.getElementById('view')!;
@@ -233,7 +235,7 @@ const BEATS: { name: string; run: (s: GameState) => Beat }[] = [
     },
   },
   {
-    name: 'Пройда: стрибок на двері → льох',
+    name: 'Пройда: стрибок на двері, далі льох',
     run: (s) => {
       const id = has('rogue') ? H('rogue') : H('warden');
       const b = new Beat(s).turn(id);
@@ -417,19 +419,20 @@ function lineTo(a: Hex, b: Hex): Hex[] {
 let current = 'готово';
 let lastTap = '';
 
-function button(label: string, onClick: () => void): HTMLButtonElement {
+function button(label: string, onClick: () => void, icon?: IconName): HTMLButtonElement {
   const b = document.createElement('button');
   b.textContent = label;
+  if (icon) b.insertAdjacentHTML('afterbegin', `${iconSvg(icon)} `);
   b.addEventListener('click', onClick);
   panel.appendChild(b);
   return b;
 }
 
-button('▶ Сценарій', () => void playAll());
+button('Сценарій', () => void playAll(), 'right');
 button('Крок', () => {
   if (!busy) void playBeat();
 });
-button('⏭ Пропустити', () => board.skip());
+button('Пропустити', () => board.skip(), 'skip');
 const speedButton = button(`${board.speed}×`, () => {
   board.setSpeed(board.speed === 1 ? 2 : 1);
   speedButton.textContent = `${board.speed}×`;
@@ -452,14 +455,14 @@ const botButton = button('Рушій', () => {
   botButton.setAttribute('aria-pressed', String(botOn));
   if (botOn) void botLoop();
 });
-button('↺ Скинути', () => {
+button('Скинути', () => {
   board.skip();
   botOn = false;
   beatIndex = 0;
   state = createGame(setup, content);
   board.sync(state, content);
   current = 'готово';
-});
+}, 'undo');
 
 board.onHexTap((h) => (lastTap = `hex ${hexKey(h)}`));
 board.onFigureTap((id) => (lastTap = `tap ${id}`));

@@ -14,6 +14,7 @@ import type { Action, Figure, GameSetup, GameState, HeroState, MonsterState, Pen
 import { hexToWorld } from '../../render/hexLayout';
 import { h } from '../dom';
 import { getLang, LANGS, onLangChange, setLang, t } from '../i18n';
+import { icon, rich } from '../icons';
 import { BoardView, heroColor } from './boardView';
 import {
   actionText,
@@ -41,7 +42,6 @@ const HL_MOVE = '#4fb3ff';
 const HL_TARGET = '#ff6b5b';
 const HL_HEX = '#ffc457';
 const HL_AREA = '#ff9f43';
-const ARROWS = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 interface UiState {
   heroId: string | null;
@@ -230,7 +230,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
         hl = { hexes, color: HL_TARGET };
         for (const id of ui.sel.targets) {
           const f = s.figures[id];
-          if (f) labels[id] = `✔ ${tokenLabel(f)}`;
+          if (f) labels[id] = `[${tokenLabel(f)}]`;
         }
       } else if (m.mode === 'area') hl = m.areaPreview.length ? { hexes: m.areaPreview, color: HL_AREA } : { hexes: m.highlights, color: HL_HEX };
       else if (m.mode === 'hex') hl = { hexes: m.highlights, color: HL_HEX };
@@ -238,7 +238,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
         for (const f of Object.values(s.figures)) {
           if (f.kind !== 'monster' || (m.mode === 'targets' && !m.targetIds.includes(f.id))) continue;
           const p = queries.previewAttack(s, s.half.heroId, f.id, session?.content);
-          if (p) labels[f.id] = `${labels[f.id] ?? tokenLabel(f)} ⚔${p.damage}${p.advantage ? '+' : ''}${p.disadvantage ? '−' : ''}`;
+          if (p) labels[f.id] = `${labels[f.id] ?? tokenLabel(f)} (${p.damage}${p.advantage ? '+' : ''}${p.disadvantage ? '−' : ''})`;
         }
       }
     }
@@ -289,7 +289,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
     const collapse = h(
       'button',
       { class: 'dbg-btn dbg-collapse', 'aria-expanded': String(!ui.collapsed.left), onclick: () => ((ui.collapsed.left = !ui.collapsed.left), render()) },
-      ui.collapsed.left ? '»' : '«',
+      icon(ui.collapsed.left ? 'right' : 'left', { title: false }),
     );
     if (ui.collapsed.left) return h('aside', { class: 'dbg-left is-collapsed', id: 'dbg-left' }, collapse);
     return h(
@@ -359,7 +359,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
             },
           },
           figureName(hero.id),
-          pendingIds.includes(hero.id) ? ' •' : '',
+          pendingIds.includes(hero.id) ? icon('hint', { title: false }) : '',
           h('small', null, `${hero.hp}/${hero.maxHp}`),
         ),
       ),
@@ -443,9 +443,9 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
 
   function bonusLine(s: GameState, b: OrbBonusView): HTMLElement {
     const el = b.element === 'any' ? t(s.variants.orbs ? 'orb.any.acc' : 'element.any.acc') : elementName(b.element, s.variants.orbs);
-    const numbers = b.value !== undefined && b.boosted !== undefined && b.value !== b.boosted ? ` ${b.value} → ${b.boosted}` : '';
+    const numbers = b.value !== undefined && b.boosted !== undefined && b.value !== b.boosted ? [` ${b.value} `, icon('arrow', { title: false }), ` ${b.boosted}`] : '';
     const when = b.now ? t('debug.orbHint.now') : b.available ? t('debug.orbHint.from', { names: b.from.map((id) => entryNameById(id, s)).join(', ') }) : t('debug.orbHint.no');
-    return h('span', { class: `dbg-orb-hint${b.available ? ' is-on' : ''}` }, `${b.half === 'top' ? '▲' : '▼'} ${el}${numbers}: ${when}`);
+    return h('span', { class: `dbg-orb-hint${b.available ? ' is-on' : ''}` }, icon(b.half === 'top' ? 'up' : 'down', { title: false }), ` ${el}`, numbers, `: ${when}`);
   }
 
   function entryNameById(id: string, s: GameState): string {
@@ -459,9 +459,9 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
     const idx = ui.pick.indexOf(cardId);
     const isLeading = ui.leading === cardId;
     const body = [
-      h('span', { class: 'dbg-card-head' }, h('b', null, cardName(cardId)), view ? h('span', { class: 'dbg-ini-badge' }, view.initiative) : null, view?.momentum ? h('span', { title: t('ui.momentum') }, '⚡') : null),
-      view ? h('span', { class: 'dbg-card-half' }, h('i', null, '▲ '), halfText(view.top, s.variants.orbs)) : null,
-      view ? h('span', { class: 'dbg-card-half' }, h('i', null, '▼ '), halfText(view.bottom, s.variants.orbs)) : null,
+      h('span', { class: 'dbg-card-head' }, h('b', null, cardName(cardId)), view ? h('span', { class: 'dbg-ini-badge' }, view.initiative) : null, view?.momentum ? h('span', { title: t('ui.momentum') }, icon('momentum', { title: false })) : null),
+      view ? h('span', { class: 'dbg-card-half' }, h('i', null, icon('up', { title: false }), ' '), halfText(view.top, s.variants.orbs)) : null,
+      view ? h('span', { class: 'dbg-card-half' }, h('i', null, icon('down', { title: false }), ' '), halfText(view.bottom, s.variants.orbs)) : null,
       bonuses.filter((b) => b.cardId === cardId).map((b) => bonusLine(s, b)),
       idx >= 0 && s.pending?.kind === 'selectCards' ? h('span', { class: 'dbg-tag' }, isLeading ? t('debug.leadingTag') : t('debug.pickedTag')) : null,
     ];
@@ -576,7 +576,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
     const collapse = h(
       'button',
       { class: 'dbg-btn dbg-collapse', 'aria-expanded': String(!ui.collapsed.right), onclick: () => ((ui.collapsed.right = !ui.collapsed.right), render()) },
-      ui.collapsed.right ? '«' : '»',
+      icon(ui.collapsed.right ? 'left' : 'right', { title: false }),
     );
     if (ui.collapsed.right) return h('aside', { class: 'dbg-right is-collapsed', id: 'dbg-right' }, collapse);
     return h(
@@ -610,7 +610,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
         title: extra.title,
         onclick: () => action && act(action),
       },
-      label,
+      rich(label),
     );
   }
 
@@ -661,8 +661,8 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
                 'div',
                 { class: `dbg-card is-static${played ? ' is-used' : ''}` },
                 h('span', { class: 'dbg-card-head' }, h('b', null, cardName(cardId)), view ? h('span', { class: 'dbg-ini-badge' }, view.initiative) : null),
-                view ? h('span', { class: 'dbg-card-half' }, h('i', null, '▲ '), halfText(view.top, s.variants.orbs)) : null,
-                view ? h('span', { class: 'dbg-card-half' }, h('i', null, '▼ '), halfText(view.bottom, s.variants.orbs)) : null,
+                view ? h('span', { class: 'dbg-card-half' }, h('i', null, icon('up', { title: false }), ' '), halfText(view.top, s.variants.orbs)) : null,
+                view ? h('span', { class: 'dbg-card-half' }, h('i', null, icon('down', { title: false }), ' '), halfText(view.bottom, s.variants.orbs)) : null,
                 h('div', { class: 'dbg-row' }, btn(t('ui.playTop'), find('top', false), { primary: true }), btn(t('ui.playBottom'), find('bottom', false), { primary: true })),
                 h('div', { class: 'dbg-row' }, btn(t('ui.basicAttack'), find('top', true)), btn(t('ui.basicMove'), find('bottom', true))),
               ),
@@ -791,7 +791,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
       const label = (id: string) => {
         const f = s.figures[id];
         const p = attack && session ? queries.previewAttack(s, attack, id, session.content) : null;
-        return `${figureName(id, s)}${f ? ` (${f.hp}/${f.maxHp})` : ''}${p ? ` ⚔${p.damage}` : ''}`;
+        return rich(`${figureName(id, s)}${f ? ` (${f.hp}/${f.maxHp})` : ''}${p ? ` {icon:attack}${p.damage}` : ''}`);
       };
       out.push(
         h(
@@ -848,7 +848,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
       out.push(h('div', { class: 'dbg-row' }, btn(t('ui.confirm'), m.ready ? { type: 'resolveStep', choice: m.ready } : null, { primary: true })));
     }
     if (m.mode === 'plain') {
-      out.push(h('div', { class: 'dbg-col' }, m.choices.map((c) => h('button', { class: 'dbg-btn dbg-primary', onclick: () => resolve(c) }, choiceText(c, s, s.variants.orbs)))));
+      out.push(h('div', { class: 'dbg-col' }, m.choices.map((c) => h('button', { class: 'dbg-btn dbg-primary', onclick: () => resolve(c) }, rich(choiceText(c, s, s.variants.orbs))))));
     }
     out.push(h('div', { class: 'dbg-row' }, btn(t('ui.skip'), legalOf('skipStep')[0] ?? null)));
     const all = legalOf('resolveStep');
@@ -858,7 +858,7 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
           'details',
           { class: 'dbg-all' },
           h('summary', null, t('debug.allChoices', { n: all.length })),
-          h('div', { class: 'dbg-col' }, all.map((a) => h('button', { class: 'dbg-btn dbg-small', onclick: () => resolve(a.choice) }, choiceText(a.choice, s, s.variants.orbs)))),
+          h('div', { class: 'dbg-col' }, all.map((a) => h('button', { class: 'dbg-btn dbg-small', onclick: () => resolve(a.choice) }, rich(choiceText(a.choice, s, s.variants.orbs))))),
         ),
       );
     }
@@ -900,8 +900,8 @@ export function mountDebug(boardEl: HTMLElement, overlay: HTMLElement): void {
           return h(
             'div',
             { class: 'dbg-log-entry' },
-            h('div', { class: 'dbg-log-head' }, action ? `#${e.action + 1} ${actionLabel(action, e.state, e.actorId)}` : t('debug.setupDone')),
-            lines.map((l) => h('div', null, l)),
+            h('div', { class: 'dbg-log-head' }, action ? rich(`#${e.action + 1} ${actionLabel(action, e.state, e.actorId)}`) : t('debug.setupDone')),
+            lines.map((l) => h('div', null, rich(l))),
           );
         }),
       ),
@@ -998,7 +998,7 @@ function stat(label: string, value: string | number): HTMLElement {
 }
 
 /** Arrow pointing from the performer (or the anchor) to the middle of the area for rotation `d`. */
-function areaArrow(s: GameState, info: { step: { type: string } } | null, anchor: Hex | null, d: number): string {
+function areaArrow(s: GameState, info: { step: { type: string } } | null, anchor: Hex | null, d: number): SVGSVGElement {
   const step = info?.step as { type: string; area?: AreaShape; consume?: { area?: AreaShape } } | undefined;
   const area = step?.area ?? step?.consume?.area;
   const actor = s.half ? s.figures[s.half.heroId] : undefined;
@@ -1015,10 +1015,12 @@ function areaArrow(s: GameState, info: { step: { type: string } } | null, anchor
   return directionArrow(null, x, z);
 }
 
-function directionArrow(dir: Hex | null, wx = 0, wz = 0): string {
+function directionArrow(dir: Hex | null, wx = 0, wz = 0): SVGSVGElement {
   const { x, z } = dir ? hexToWorld(dir[0], dir[1]) : { x: wx, z: wz };
   const angle = Math.atan2(z, x); // screen: +x right, +z down
   const i = Math.round(((angle + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8;
-  return ARROWS[i] as string;
+  const arrow = icon('arrow', { title: false });
+  arrow.style.transform = `rotate(${i * 45}deg)`;
+  return arrow;
 }
 

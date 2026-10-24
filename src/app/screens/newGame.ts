@@ -144,9 +144,9 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
         h(
           'div',
           { class: 'grow' },
-          h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.players.less'), disabled: draft.players.length <= 1, onclick: () => setPlayers(draft.players.length - 1) }, '−'),
+          h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.players.less'), disabled: draft.players.length <= 1, onclick: () => setPlayers(draft.players.length - 1) }, icon('remove-player')),
           h('b', { class: 'gcount' }, draft.players.length),
-          h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.players.more'), disabled: draft.players.length >= MAX_PLAYERS, onclick: () => setPlayers(draft.players.length + 1) }, '+'),
+          h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('menu.players.more'), disabled: draft.players.length >= MAX_PLAYERS, onclick: () => setPlayers(draft.players.length + 1) }, icon('add-player')),
           draft.players.map((p, i) =>
             h('input', {
               class: 'ginput',

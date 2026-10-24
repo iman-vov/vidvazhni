@@ -20,7 +20,9 @@ import { h } from '../ui/dom';
 import { onLangChange, t } from '../ui/i18n';
 import { cardView, type Half } from '../ui/game/card';
 import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
-import { icon } from '../ui/game/icons';
+import { icon, type IconName } from '../ui/game/icons';
+import { rich } from '../ui/icons';
+import { isIconName } from '../ui/icons/names';
 import { elementsPanel, heroPanel, initiativeBar, intentIcon, intentIcons, statusRow } from '../ui/game/panels';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
@@ -507,7 +509,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function renderRight(): void {
     const s = game.state;
-    const log = h('div', { class: 'glog', 'aria-label': t('ui.log') }, h('small', null, t('ui.log')), [...ui.log].reverse().slice(0, 30).map((l) => h('div', null, l)));
+    const log = h('div', { class: 'glog', 'aria-label': t('ui.log') }, h('small', null, t('ui.log')), [...ui.log].reverse().slice(0, 30).map((l) => h('div', null, rich(l))));
     right.replaceChildren(elementsPanel({ s, open: ui.rightOpen, log, explain, onToggle: () => ((ui.rightOpen = !ui.rightOpen), render()) }));
   }
 
@@ -823,7 +825,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             h(
               'button',
               { class: 'gbtn gbtn-chip', 'aria-pressed': String(k === m.elementKey), onclick: () => ((ui.sel = { ...ui.sel, elementKey: k }), (ui.chosen = null), render()) },
-              k.split('+').map((e) => icon(e)),
+              k.split('+').map((e) => (isIconName(e) ? icon(e) : null)),
               k.split('+').map((e) => elementName(e as never, s.variants.orbs)).join(' + '),
             ),
           ),
@@ -838,7 +840,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         if (target) {
           for (const pr of attackPrompts(s, content, hero.id, target)) {
             const a = legalUse.find((x) => x.itemId === pr.itemId);
-            if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), t('game.itemPrompt', { item: t(pr.nameKey), value: pr.value, boosted: pr.boosted })));
+            if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), rich(t('game.itemPrompt', { item: t(pr.nameKey), value: pr.value, boosted: pr.boosted }))));
           }
         }
       } else if (m.mode === 'path') {
@@ -868,10 +870,10 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     return out;
   }
 
-  function plainChoiceLabel(c: StepChoice): (HTMLElement | string)[] {
+  function plainChoiceLabel(c: StepChoice): (Element | string)[] {
     const orbs = game.state.variants.orbs;
     if (c.element) return [icon(c.element), elementName(c.element, orbs)];
-    if (c.elements) return [c.elements.map((e) => elementName(e, orbs)).join(' → ')];
+    if (c.elements) return c.elements.flatMap((e, i) => (i ? [icon('arrow'), elementName(e, orbs)] : [elementName(e, orbs)]));
     return [icon('check'), c.consume ? t('game.doWithConsume') : t('game.do')];
   }
 
@@ -1009,7 +1011,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           { class: 'gmodifier', onclick: () => (skipModifiers = true) },
           h('div', { class: `gmod-card${m.label === '×2' ? ' is-crit' : ''}${m.label === t('game.modifier.miss') ? ' is-miss' : ''}` }, m.label),
           m.drawn.length > 1 ? h('small', null, t('game.modifier.drawn', { cards: m.drawn.join(' / ') })) : null,
-          h('p', null, t('game.modifier.line', { attacker: m.attacker, target: m.target, base: m.base, damage: m.damage })),
+          h('p', null, rich(t('game.modifier.line', { attacker: m.attacker, target: m.target, base: m.base, damage: m.damage }))),
           m.shield ? h('small', null, t('game.modifier.shield', { shield: m.shield })) : null,
         ),
       );
@@ -1267,8 +1269,8 @@ function phaseKey(s: GameState): string {
   return s.phase;
 }
 
-function stepIconOf(step: Step): string {
+function stepIconOf(step: Step): IconName {
   if (step.type === 'move') return step.jump ? 'jump' : 'move';
-  if (step.type === 'attack') return step.range ? 'range' : 'attack';
-  return ['heal', 'shield', 'retaliate', 'provoke', 'push', 'pull', 'loot', 'summon', 'trap', 'teleport'].includes(step.type) ? step.type : 'special';
+  if (step.type === 'attack') return step.range ? 'ranged' : 'attack';
+  return ['heal', 'shield', 'retaliate', 'provoke', 'push', 'pull', 'loot', 'summon', 'trap', 'teleport'].includes(step.type) ? (step.type as IconName) : 'special';
 }

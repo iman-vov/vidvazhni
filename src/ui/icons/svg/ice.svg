@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- ice: Ice: a snowflake. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L12 2.6"/>
+    <path style="fill:none;stroke-width:4" d="M12 5.8 L10.26 3.87"/>
+    <path style="fill:none;stroke-width:4" d="M12 5.8 L13.74 3.87"/>
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L20.14 7.3"/>
+    <path style="fill:none;stroke-width:4" d="M17.37 8.9 L18.17 6.43"/>
+    <path style="fill:none;stroke-width:4" d="M17.37 8.9 L19.91 9.44"/>
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L20.14 16.7"/>
+    <path style="fill:none;stroke-width:4" d="M17.37 15.1 L19.91 14.56"/>
+    <path style="fill:none;stroke-width:4" d="M17.37 15.1 L18.17 17.57"/>
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L12 21.4"/>
+    <path style="fill:none;stroke-width:4" d="M12 18.2 L13.74 20.13"/>
+    <path style="fill:none;stroke-width:4" d="M12 18.2 L10.26 20.13"/>
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L3.86 16.7"/>
+    <path style="fill:none;stroke-width:4" d="M6.63 15.1 L5.83 17.57"/>
+    <path style="fill:none;stroke-width:4" d="M6.63 15.1 L4.09 14.56"/>
+    <path style="fill:none;stroke-width:4.4" d="M12 12 L3.86 7.3"/>
+    <path style="fill:none;stroke-width:4" d="M6.63 8.9 L4.09 9.44"/>
+    <path style="fill:none;stroke-width:4" d="M6.63 8.9 L5.83 6.43"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L12 2.6"/>
+    <path style="fill:none;stroke-width:1.5" d="M12 5.8 L10.26 3.87"/>
+    <path style="fill:none;stroke-width:1.5" d="M12 5.8 L13.74 3.87"/>
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L20.14 7.3"/>
+    <path style="fill:none;stroke-width:1.5" d="M17.37 8.9 L18.17 6.43"/>
+    <path style="fill:none;stroke-width:1.5" d="M17.37 8.9 L19.91 9.44"/>
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L20.14 16.7"/>
+    <path style="fill:none;stroke-width:1.5" d="M17.37 15.1 L19.91 14.56"/>
+    <path style="fill:none;stroke-width:1.5" d="M17.37 15.1 L18.17 17.57"/>
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L12 21.4"/>
+    <path style="fill:none;stroke-width:1.5" d="M12 18.2 L13.74 20.13"/>
+    <path style="fill:none;stroke-width:1.5" d="M12 18.2 L10.26 20.13"/>
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L3.86 16.7"/>
+    <path style="fill:none;stroke-width:1.5" d="M6.63 15.1 L5.83 17.57"/>
+    <path style="fill:none;stroke-width:1.5" d="M6.63 15.1 L4.09 14.56"/>
+    <path style="fill:none;stroke-width:1.9" d="M12 12 L3.86 7.3"/>
+    <path style="fill:none;stroke-width:1.5" d="M6.63 8.9 L4.09 9.44"/>
+    <path style="fill:none;stroke-width:1.5" d="M6.63 8.9 L5.83 6.43"/>
+  </g>
+</svg>

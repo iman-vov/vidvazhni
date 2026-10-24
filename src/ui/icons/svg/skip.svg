@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- skip: Skip: two triangles against a bar. -->
+  <g style="fill:var(--icon-line,#3a2414);stroke:var(--icon-line,#3a2414);stroke-linecap:round;stroke-linejoin:round">
+    <path style="stroke-width:2.5" d="M2.8 5 L10.6 12 L2.8 19 Z"/>
+    <path style="stroke-width:2.5" d="M10.6 5 L18.4 12 L10.6 19 Z"/>
+    <path style="fill:none;stroke-width:4.9" d="M20.6 5 L20.6 19"/>
+  </g>
+  <g style="fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linecap:round;stroke-linejoin:round">
+    <path d="M2.8 5 L10.6 12 L2.8 19 Z"/>
+    <path d="M10.6 5 L18.4 12 L10.6 19 Z"/>
+    <path style="fill:none;stroke-width:2.4" d="M20.6 5 L20.6 19"/>
+  </g>
+</svg>

@@ -7,6 +7,7 @@ import type { LoadedContent } from '../../rules/load';
 import type { FigureId, GameState } from '../../rules/state';
 import type { Variants } from '../../rules/variants';
 import { stepText } from '../debug/format';
+import type { IconName } from '../icons/names';
 import { has, t } from '../i18n';
 
 export function className(classId: string): string {
@@ -60,7 +61,7 @@ export function hasMomentumMark(content: LoadedContent, classId: string, cardId:
 }
 
 export interface StepParts {
-  icon: string;
+  icon: IconName;
   /** The step without its consume bonus and XP. */
   main: string;
   /** «Поглинути Вогонь: +2 Атака», or empty. */
@@ -69,7 +70,7 @@ export interface StepParts {
   xp: number;
 }
 
-const STEP_ICONS: Record<string, string> = {
+const STEP_ICONS: Record<string, IconName> = {
   move: 'move',
   attack: 'attack',
   heal: 'heal',
@@ -88,10 +89,10 @@ const STEP_ICONS: Record<string, string> = {
   special: 'special',
 };
 
-export function stepIconName(step: Step): string {
+export function stepIconName(step: Step): IconName {
   if (step.type === 'move' && step.jump) return 'jump';
   if (step.type === 'move' && step.fly) return 'fly';
-  if (step.type === 'attack' && step.range) return 'range';
+  if (step.type === 'attack' && step.range) return 'ranged';
   if (step.type === 'condition') return step.condition;
   if (step.type === 'infuse') return step.element;
   return STEP_ICONS[step.type] ?? 'special';

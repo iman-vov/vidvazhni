@@ -17,6 +17,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
 import { attachToBone, attachWeapon, listModels, loadModel, MODEL_CACHE, prefetchModels, type Model } from './models';
 import { GRAPHICS_QUALITIES, type GraphicsQuality } from './quality';
+import type { IconName } from '../ui/icons/names';
+import { iconSvg } from '../ui/icons/svg';
 
 // Same look as render/board.ts so the check shows the model as it will appear in the game.
 const BACKGROUND = '#1d2433';
@@ -81,9 +83,10 @@ function resize(): void {
 }
 window.addEventListener('resize', resize);
 
-function button(label: string, onClick: () => void): HTMLButtonElement {
+function button(label: string, onClick: () => void, icon?: IconName): HTMLButtonElement {
   const b = document.createElement('button');
   b.textContent = label;
+  if (icon) b.insertAdjacentHTML('afterbegin', `${iconSvg(icon)} `);
   b.addEventListener('click', onClick);
   panel.appendChild(b);
   return b;
@@ -167,10 +170,10 @@ async function main(): Promise<void> {
       }),
     );
   }
-  button('▶ всі', () => {
+  button('всі', () => {
     cycling = true;
     start(names[0]!);
-  });
+  }, 'right');
   button('камера', () => {
     close = !close;
     placeCamera();

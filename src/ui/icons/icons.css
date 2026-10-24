@@ -1,0 +1,13 @@
+/* Base look of the game's icons. Colours: the body follows `color`, the outline and details follow
+   --icon-line (warm dark brown by default). */
+
+.vi {
+  display: inline-block;
+  flex: 0 0 auto;
+  vertical-align: -0.22em;
+  overflow: visible;
+}
+
+.vi-mono {
+  --icon-line: currentColor;
+}
