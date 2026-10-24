@@ -902,5 +902,6 @@
   "icon.gear": "Einstellungen",
   "menu.campaign": "Kampagne",
   "menu.campaign.soon": "Die Kampagne kommt in der nächsten Phase: Stadt, Laden, Heldenstufen.",
-  "menu.version": "Version {version}"
+  "menu.version": "Version {version}",
+  "game.undo": "Rückgängig"
 }

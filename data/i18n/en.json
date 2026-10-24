@@ -902,5 +902,6 @@
   "icon.gear": "Settings",
   "menu.campaign": "Campaign",
   "menu.campaign.soon": "The campaign comes in the next phase: town, shop, hero levels.",
-  "menu.version": "version {version}"
+  "menu.version": "version {version}",
+  "game.undo": "Undo"
 }

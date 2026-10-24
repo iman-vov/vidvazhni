@@ -2,12 +2,12 @@
 // Cut-outs (logos, the button base) get a clean alpha: a black background is keyed out by brightness
 // and the colour is un-premultiplied, so no dark fringe stays on the soft edges; nearly opaque and
 // nearly empty pixels are snapped, the image is trimmed and resized. Opaque art (backgrounds) is only
-// resized. Output: WebP in src/ui/game/assets/ plus manifest.json (sizes and the button's 9-slice
+// resized; round portraits are cropped from the concept art. Output: WebP in src/ui/game/assets/ plus manifest.json (sizes and the button's 9-slice
 // insets for CSS border-image). Swap art by changing JOBS below and running the script again.
 //
 // `--preview <dir>` also writes each cut-out composited on a light and a dark background.
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import sharp from 'sharp';
@@ -23,6 +23,31 @@ const JOBS = [
   { id: 'logo-en', src: 'art/ui-mockups/logos/en/v2.png', kind: 'cutout', width: 1200 },
   { id: 'logo-de', src: 'art/ui-mockups/logos/de/v1.png', kind: 'cutout', width: 1200 },
 ];
+
+/** Round portraits (initiative ribbon, hero panel): heroes, summons and bosses from portrait.png,
+ *  monsters cropped from front.png. Crop = [view, centre x, centre y, size] as fractions of the source. */
+const PORTRAIT_PX = 160;
+const PORTRAITS = {
+  warden: ['portrait', 0.5, 0.4, 0.8],
+  'wind-archer': ['portrait', 0.5, 0.4, 0.8],
+  herbalist: ['portrait', 0.5, 0.4, 0.8],
+  rogue: ['portrait', 0.5, 0.4, 0.8],
+  elementalist: ['portrait', 0.5, 0.4, 0.8],
+  tinker: ['portrait', 0.5, 0.4, 0.8],
+  'tinker-button': ['portrait', 0.5, 0.45, 0.85],
+  'bog-miller': ['portrait', 0.5, 0.4, 0.8],
+  shadowhand: ['portrait', 0.5, 0.4, 0.8],
+  'cellar-rat': ['front', 0.73, 0.36, 0.42],
+  gremlin: ['front', 0.5, 0.21, 0.4],
+  'grey-wolf': ['front', 0.42, 0.25, 0.42],
+  'bandit-brute': ['front', 0.5, 0.17, 0.34],
+  'bandit-crossbow': ['front', 0.5, 0.17, 0.34],
+  'gloom-cultist': ['front', 0.5, 0.18, 0.36],
+  'stone-sentinel': ['front', 0.5, 0.2, 0.4],
+  'shadow-wraith': ['front', 0.55, 0.3, 0.5],
+  'bog-slime': ['front', 0.5, 0.55, 0.7],
+  thornling: ['front', 0.5, 0.3, 0.5],
+};
 
 /** Brightness (max channel) below LO is background, above HI fully opaque. */
 const KEY_LO = 10;
@@ -111,7 +136,35 @@ async function run() {
     manifest[job.id] = { src: job.src, ...entry };
     console.log(`${job.id}: ${entry.width}×${entry.height}, ${(entry.bytes / 1024).toFixed(0)} KB${entry.keyed ? ', keyed' : ''}${entry.slice ? `, slice ${JSON.stringify(entry.slice)}` : ''}`);
   }
+  manifest.portraits = await portraits();
   writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+}
+
+async function portraits() {
+  const dir = join(OUT, 'portraits');
+  mkdirSync(dir, { recursive: true });
+  const done = [];
+  const sheet = [];
+  for (const [id, [view, cx, cy, size]] of Object.entries(PORTRAITS)) {
+    const src = join(ROOT, 'art/concepts', id, `${view}.png`);
+    if (!existsSync(src)) continue;
+    const meta = await sharp(src).metadata();
+    const side = Math.round(size * Math.min(meta.width, meta.height));
+    const left = Math.max(0, Math.min(meta.width - side, Math.round(cx * meta.width - side / 2)));
+    const top = Math.max(0, Math.min(meta.height - side, Math.round(cy * meta.height - side / 2)));
+    const webp = await sharp(src).extract({ left, top, width: side, height: side }).resize(PORTRAIT_PX, PORTRAIT_PX).webp({ quality: 82 }).toBuffer();
+    writeFileSync(join(dir, `${id}.webp`), webp);
+    done.push(id);
+    sheet.push(webp);
+  }
+  if (previewDir && sheet.length) {
+    await sharp({ create: { width: PORTRAIT_PX * sheet.length, height: PORTRAIT_PX, channels: 3, background: '#1d2433' } })
+      .composite(sheet.map((input, i) => ({ input, left: i * PORTRAIT_PX, top: 0 })))
+      .png()
+      .toFile(join(previewDir, 'portraits.png'));
+  }
+  console.log(`portraits: ${done.length} (${done.join(', ')})`);
+  return done;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

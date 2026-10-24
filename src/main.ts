@@ -5,6 +5,7 @@ import { mountApp } from './app/app';
 import { prefetchModels } from './render/models';
 import { mountDebug } from './ui/debug/app';
 import './ui/game/game.css';
+import './ui/game/hud.css';
 
 const board = document.getElementById('board');
 const overlay = document.getElementById('overlay');

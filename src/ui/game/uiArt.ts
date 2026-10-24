@@ -28,3 +28,17 @@ export function installUiArt(): void {
   root.setProperty('--ubtn-slice', `${b.slice.top} ${b.slice.right} ${b.slice.bottom} ${b.slice.left}`);
   root.setProperty('--ubtn-side', String(+(b.slice.left / b.height).toFixed(3)));
 }
+
+const PORTRAITS = import.meta.glob<string>('./assets/portraits/*.webp', { eager: true, query: '?url', import: 'default' });
+
+/** Round portrait of a hero class, summon or monster type (`warden`, `cellar-rat`), if there is one. */
+export function portraitUrl(id: string): string | undefined {
+  return PORTRAITS[`./assets/portraits/${id}.webp`];
+}
+
+/** Portrait id of a figure id (`hero:warden` → `warden`, `monster:gremlin:2` → `gremlin`). */
+export function portraitOf(figureId: string): string | undefined {
+  const [kind, a] = figureId.split(':');
+  if (!a) return undefined;
+  return portraitUrl(kind === 'summon' ? a.replace('.', '-') : a);
+}

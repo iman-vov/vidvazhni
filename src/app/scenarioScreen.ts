@@ -23,7 +23,7 @@ import { eventLine, ruleHints, type RuleHint } from '../ui/game/events';
 import { icon, type IconName } from '../ui/game/icons';
 import { rich } from '../ui/icons';
 import { isIconName } from '../ui/icons/names';
-import { elementsPanel, heroPanel, initiativeBar, intentIcon, intentIcons, statusRow } from '../ui/game/panels';
+import { elementsRow, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow } from '../ui/game/panels';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
 import { heroColor } from './boardViewStub';
@@ -77,6 +77,7 @@ interface Ui {
   confirmEnd: boolean;
   avoidPick: CardId[];
   leftOpen: boolean;
+  /** The event log drawer under the elements row. */
   rightOpen: boolean;
   focusHero: FigureId | null;
   modal: 'menu' | 'settings' | 'intro' | 'monster' | 'revive' | null;
@@ -111,7 +112,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     confirmEnd: false,
     avoidPick: [],
     leftOpen: !narrow,
-    rightOpen: !narrow,
+    rightOpen: false,
     focusHero: null,
     modal: game.actions.length === 0 ? 'intro' : null,
     monsterInfo: null,
@@ -436,7 +437,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       stepInfo = { step: s.pending.step, heroId: s.pending.heroId, model };
     }
     document.body.classList.toggle('g-left-closed', !ui.leftOpen);
-    document.body.classList.toggle('g-right-closed', !ui.rightOpen);
     renderTop();
     renderLeft();
     renderRight();
@@ -451,25 +451,25 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const fcCard = ui.pressCard ?? ui.leading;
     const forecast = hero && fcCard && s.pending?.kind === 'selectCards' && !ui.longRest ? forecastInitiative(s, content, hero, fcCard) : null;
     top.replaceChildren(
+      h('div', { class: 'gplate gtop-name' }, icon('light'), h('b', null, t(`scenario.${s.scenarioId}`))),
       h(
         'div',
-        { class: 'gtop-round' },
-        h('b', null, t('ui.round', { round: s.round })),
-        h('small', null, t(`game.phase.${phaseKey(s)}`)),
+        { class: 'gplate gtop-ribbon' },
+        initiativeBar({
+          s,
+          content,
+          colorOf,
+          intentsOf: (id) => game.intentsOf(id),
+          forecast,
+          monsterFocus: monsterFocus(),
+          onMonster: openMonster,
+        }),
       ),
-      initiativeBar({
-        s,
-        content,
-        colorOf,
-        intentsOf: (id) => game.intentsOf(id),
-        forecast,
-        monsterFocus: monsterFocus(),
-        onMonster: openMonster,
-      }),
+      h('div', { class: 'gplate gtop-round' }, h('b', null, t('ui.round', { round: s.round })), h('small', null, t(`game.phase.${phaseKey(s)}`))),
       h(
         'div',
         { class: 'gtop-tools' },
-        game.canUndo() && !ui.busy && turnHero() ? h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('ui.undo'), title: t('ui.undo'), onclick: () => act({ type: 'undo' }) }, icon('undo')) : null,
+        h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('ui.log'), 'aria-expanded': String(ui.rightOpen), title: t('ui.log'), onclick: () => ((ui.rightOpen = !ui.rightOpen), renderRight()) }, icon('discard')),
         h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('game.menu'), onclick: () => ((ui.modal = 'menu'), render()) }, icon('menu')),
       ),
     );
@@ -510,8 +510,15 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function renderRight(): void {
     const s = game.state;
-    const log = h('div', { class: 'glog', 'aria-label': t('ui.log') }, h('small', null, t('ui.log')), [...ui.log].reverse().slice(0, 30).map((l) => h('div', null, rich(l))));
-    right.replaceChildren(elementsPanel({ s, open: ui.rightOpen, log, explain, onToggle: () => ((ui.rightOpen = !ui.rightOpen), render()) }));
+    const log = ui.rightOpen
+      ? h(
+          'div',
+          { class: 'glog', 'aria-label': t('ui.log') },
+          h('div', { class: 'glog-head' }, h('b', null, t('ui.log')), h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('ui.cancel'), onclick: () => ((ui.rightOpen = false), renderRight()) }, icon('close'))),
+          [...ui.log].reverse().slice(0, 40).map((l) => h('div', null, rich(l))),
+        )
+      : null;
+    right.replaceChildren(elementsRow({ s, explain }), ...(log ? [log] : []));
   }
 
   // ─── Bottom: hand, turn controls, prompts ────────────────────────────────
@@ -557,13 +564,13 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   /** Card selection for one hero: the hand strip, intent tokens, long rest, confirm. */
+  /** Card selection for one hero: the whole hand as a fan (tap selects, long press enlarges), the
+   *  intent tokens, long rest bottom left, «Готово» bottom right. */
   function selectPanel(heroId: FigureId): HTMLElement {
     const s = game.state;
     const hero = s.figures[heroId] as HeroState;
     const bonuses = orbBonusPreview(s, content, heroId);
-    const strip = h(
-      'div',
-      { class: 'ghand', role: 'list' },
+    const fan = handFan(
       hero.hand.map((cardId) => {
         const picked = ui.pick.includes(cardId) && !ui.longRest;
         const el = cardView({
@@ -571,12 +578,12 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           content,
           hero,
           cardId,
+          accent: colorOf(heroId),
           bonuses: bonuses.filter((b) => b.cardId === cardId),
           picked,
           leading: picked && ui.leading === cardId,
           footer: picked && ui.leading !== cardId ? h('button', { class: 'gbtn gbtn-small gcard-lead', onclick: (e: Event) => (e.stopPropagation(), (ui.leading = cardId), render()) }, icon('initiative'), t('game.makeLeading')) : null,
         });
-        el.setAttribute('role', 'listitem');
         onPress(el, {
           tap: () => togglePick(cardId),
           down: () => {
@@ -599,11 +606,12 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const ready = ui.longRest || (a && b && ui.leading);
     const leadCard = ui.leading ? playedCard(content, hero.classId, ui.leading, s.variants) : undefined;
     const canRest = hero.discard.length >= 2;
-    const side = h(
+    const info = h(
       'div',
-      { class: 'gside' },
-      h('div', { class: 'gside-who' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId))),
-      h('p', { class: 'gside-hint' }, ui.longRest ? t('game.longRest.text') : ui.pick.length < 2 ? t('game.select.hint', { n: 2 - ui.pick.length }) : t('game.select.leading', { card: cardName(ui.leading ?? ''), initiative: leadCard?.initiative ?? '' })),
+      { class: 'gselect-info' },
+      h('b', null, figureName(heroId)),
+      h('small', null, playerName(heroId)),
+      h('span', { class: 'gside-hint' }, ui.longRest ? t('game.longRest.text') : ui.pick.length < 2 ? t('game.select.hint', { n: 2 - ui.pick.length }) : t('game.select.leading', { card: cardName(ui.leading ?? ''), initiative: leadCard?.initiative ?? '' })),
       // Phones: the intent tokens open from a button instead of taking a row.
       h(
         'button',
@@ -611,15 +619,26 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ui.intents.length ? ui.intents.map((i) => icon(intentIcon(i))) : icon('approach'),
         t('game.intents.short'),
       ),
-      h(
-        'button',
-        { class: 'gbtn gbtn-toggle', 'aria-pressed': String(ui.longRest), disabled: !canRest, title: canRest ? '' : t('game.longRest.no'), onclick: () => ((ui.longRest = !ui.longRest), render()) },
-        icon('rest'),
-        t('ui.longRest'),
-      ),
-      h('button', { class: 'gbtn gbtn-primary', disabled: !ready, onclick: () => confirmSelection(heroId) }, icon('check'), t('game.ready')),
     );
-    return h('div', { class: 'gpanel-select' }, intentsRow(), h('div', { class: 'gpanel-row' }, strip, side));
+    const rest = artButton('rest', t('ui.longRest'), () => ((ui.longRest = !ui.longRest), render()), { cls: `gb-left${ui.longRest ? ' is-on' : ''}`, disabled: !canRest });
+    rest.setAttribute('aria-pressed', String(ui.longRest));
+    if (!canRest) rest.title = t('game.longRest.no');
+    return h('div', { class: 'gpanel-select' }, intentsRow(), info, fan, rest, artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'gb-right is-go', disabled: !ready }));
+  }
+
+  /** Cards laid out as a fan: each card gets its offset from the middle (`--k`, `--k2`). */
+  function handFan(cards: HTMLElement[]): HTMLElement {
+    const n = cards.length;
+    cards.forEach((el, i) => {
+      const k = i - (n - 1) / 2;
+      el.style.setProperty('--k', String(k));
+      el.style.setProperty('--k2', String(k * k));
+      el.style.zIndex = String(i + 1);
+      el.setAttribute('role', 'listitem');
+    });
+    const fan = h('div', { class: 'gfan', role: 'list' }, cards);
+    fan.style.setProperty('--n', String(n));
+    return fan;
   }
 
   function intentsRow(): HTMLElement {
@@ -675,11 +694,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const cls = content.heroes[hero.classId];
     const all = cls ? cls.cards.filter((c) => c.level <= Math.max(1, hero.level)).map((c) => c.id) : [];
     const need = cls?.handSize ?? 0;
-    const strip = h(
-      'div',
-      { class: 'ghand' },
+    const fan = handFan(
       all.map((cardId) => {
-        const el = cardView({ s, content, hero, cardId, picked: ui.handPick.includes(cardId) });
+        const el = cardView({ s, content, hero, cardId, accent: colorOf(heroId), picked: ui.handPick.includes(cardId) });
         onPress(el, {
           tap: () => {
             ui.handPick = ui.handPick.includes(cardId) ? ui.handPick.filter((c) => c !== cardId) : ui.handPick.length < need ? [...ui.handPick, cardId] : ui.handPick;
@@ -693,27 +710,19 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         return el;
       }),
     );
-    const side = h(
+    const info = h('div', { class: 'gselect-info' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId)), h('span', { class: 'gside-hint' }, t('game.chooseHand', { n: need, picked: ui.handPick.length })));
+    return h(
       'div',
-      { class: 'gside' },
-      h('div', { class: 'gside-who' }, h('b', null, figureName(heroId)), h('small', null, playerName(heroId))),
-      h('p', { class: 'gside-hint' }, t('game.chooseHand', { n: need, picked: ui.handPick.length })),
-      h(
-        'button',
-        {
-          class: 'gbtn gbtn-primary',
-          disabled: ui.handPick.length !== need,
-          onclick: () => actPrivate(heroId, { type: 'chooseHand', heroId, cards: [...ui.handPick] }),
-        },
-        icon('check'),
-        t('game.ready'),
-      ),
+      { class: 'gpanel-select is-hand' },
+      info,
+      fan,
+      artButton('check', t('game.ready'), () => actPrivate(heroId, { type: 'chooseHand', heroId, cards: [...ui.handPick] }), { cls: 'gb-right is-go', disabled: ui.handPick.length !== need }),
     );
-    return h('div', { class: 'gpanel-select' }, h('div', { class: 'gpanel-row' }, strip, side));
   }
 
-  /** The hero's turn: the two chosen cards with playable halves, basic actions, Порив, revive,
-   *  items, and the step controls while a half is being played. */
+  /** The hero's turn: only the two chosen cards, big and upright, each half a button; the step
+   *  controls on the left, Порив / revive / items on the right, «Скасувати» bottom left and
+   *  «Завершити хід» bottom right. */
   function turnPanel(hero: HeroState): HTMLElement {
     const s = game.state;
     const p = s.pending;
@@ -733,6 +742,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         content,
         hero,
         cardId,
+        accent: colorOf(hero.id),
         bonuses: bonuses.filter((b) => b.cardId === cardId),
         playedHalves: [...played, ...inProgress],
         playable,
@@ -759,45 +769,79 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       });
       return el;
     });
-    const side = h('div', { class: 'gside' }, h('div', { class: 'gside-who' }, h('b', null, figureName(hero.id)), h('small', null, playerName(hero.id))));
-    if (p?.kind === 'stepChoice') side.append(...stepControls(hero));
-    else side.append(...turnControls(hero));
-    return h('div', { class: 'gpanel-turn' }, h('div', { class: 'gpanel-row' }, h('div', { class: 'ghand is-turn' }, cardEls), side));
+    const leftBox = h('div', { class: 'gturn-box gturn-left' }, h('div', { class: 'gside-who' }, h('b', null, figureName(hero.id)), h('small', null, playerName(hero.id))));
+    if (p?.kind === 'stepChoice') leftBox.append(...stepControls(hero));
+    else leftBox.append(turnHint(hero));
+    const extras = extraControls(hero);
+    const undo = artButton('undo', t('game.undo'), () => act({ type: 'undo' }), { cls: 'gb-left is-stop', disabled: !game.canUndo() });
+    return h(
+      'div',
+      { class: 'gpanel-turn' },
+      h('div', { class: 'gturn-cards' }, cardEls),
+      leftBox,
+      extras.length ? h('div', { class: 'gturn-box gturn-right' }, extras) : null,
+      undo,
+      endTurnButton(hero),
+    );
   }
 
-  function turnControls(hero: HeroState): HTMLElement[] {
+  function turnHint(hero: HeroState): HTMLElement {
+    const halvesLeft = 2 - hero.playedThisTurn.length;
+    return h('p', { class: 'gside-hint' }, halvesLeft === 2 ? t('game.turn.hint') : halvesLeft === 1 ? t('game.turn.hintOne') : t('game.turn.hintDone'));
+  }
+
+  /** «Завершити хід», asking once more while halves are left unplayed. */
+  function endTurnButton(hero: HeroState): HTMLElement {
+    const end = game.state.pending?.kind === 'heroTurn' ? game.legalOf('endTurn').find((a) => a.heroId === hero.id) : undefined;
+    const halvesLeft = 2 - hero.playedThisTurn.length;
+    const careful = halvesLeft > 0 && !ui.confirmEnd;
+    return artButton(
+      'check',
+      ui.confirmEnd ? t('game.endTurn.sure') : t('ui.endTurn'),
+      () => {
+        if (!end) return;
+        if (careful) {
+          ui.confirmEnd = true;
+          renderBottom();
+        } else act(end);
+      },
+      { cls: `gb-right is-go${halvesLeft === 0 ? ' is-ready' : ''}`, disabled: !end },
+    );
+  }
+
+  /** Порив, revive, advice and the item prompts («Кинджал: Атака 3 → 4?»). */
+  function extraControls(hero: HeroState): HTMLElement[] {
+    const s = game.state;
     const out: HTMLElement[] = [];
     const surge = game.legalOf('surge').find((a) => a.heroId === hero.id);
     if (surge) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(surge) }, icon('momentum'), t('ui.useSurge')));
     const revive = game.legalOf('reviveAlly').filter((a) => a.heroId === hero.id);
     if (revive.length) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => ((ui.modal = 'revive'), render()) }, icon('revive'), t('ui.revive')));
-    if (hintLevel(hero.id) >= 3) out.push(h('button', { class: 'gbtn', onclick: () => toast(t('game.advice'), t('game.advice.soon'), 'hint') }, icon('hint'), t('game.advice')));
-    const end = game.legalOf('endTurn').find((a) => a.heroId === hero.id);
-    const halvesLeft = 2 - hero.playedThisTurn.length;
-    if (end) {
-      const careful = halvesLeft > 0 && !ui.confirmEnd;
-      out.push(
-        h(
-          'button',
-          {
-            class: `gbtn${halvesLeft === 0 ? ' gbtn-primary' : ''}`,
-            onclick: () => {
-              if (careful) {
-                ui.confirmEnd = true;
-                renderBottom();
-              } else act(end);
-            },
-          },
-          icon('check'),
-          ui.confirmEnd ? t('game.endTurn.sure') : t('ui.endTurn'),
-        ),
-      );
+    const info = stepInfo;
+    // Fork «Предмети-кнопки»: items worth using on this attack or move.
+    if (s.variants.itemPrompts && info && s.pending?.kind === 'stepChoice') {
+      const m = info.model;
+      const legalUse = game.legalOf('useItem').filter((a) => a.heroId === hero.id);
+      if (m.mode === 'targets' && info.step.type === 'attack') {
+        const target = ui.sel.targets[0] ?? m.targetIds[0];
+        if (target) {
+          for (const pr of attackPrompts(s, content, hero.id, target)) {
+            const a = legalUse.find((x) => x.itemId === pr.itemId);
+            if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), rich(t('game.itemPrompt', { item: t(pr.nameKey), value: pr.value, boosted: pr.boosted }))));
+          }
+        }
+      } else if (m.mode === 'path') {
+        for (const it of usableItems(s, content, hero.id, 'move')) {
+          const a = legalUse.find((x) => x.itemId === it.itemId);
+          if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), t('game.itemUse', { item: t(it.nameKey) })));
+        }
+      }
     }
-    out.push(h('p', { class: 'gside-hint' }, halvesLeft === 2 ? t('game.turn.hint') : halvesLeft === 1 ? t('game.turn.hintOne') : t('game.turn.hintDone')));
+    if (hintLevel(hero.id) >= 3) out.push(h('button', { class: 'gbtn', onclick: () => toast(t('game.advice'), t('game.advice.soon'), 'hint') }, icon('hint'), t('game.advice')));
     return out;
   }
 
-  function stepControls(hero: HeroState): HTMLElement[] {
+  function stepControls(_hero: HeroState): HTMLElement[] {
     const s = game.state;
     const info = stepInfo;
     const out: HTMLElement[] = [];
@@ -833,24 +877,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         ),
       );
     }
-    // Fork «Предмети-кнопки»: items worth using on this attack or move.
-    if (s.variants.itemPrompts) {
-      const legalUse = game.legalOf('useItem').filter((a) => a.heroId === hero.id);
-      if (m.mode === 'targets' && info.step.type === 'attack') {
-        const target = ui.sel.targets[0] ?? m.targetIds[0];
-        if (target) {
-          for (const pr of attackPrompts(s, content, hero.id, target)) {
-            const a = legalUse.find((x) => x.itemId === pr.itemId);
-            if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), rich(t('game.itemPrompt', { item: t(pr.nameKey), value: pr.value, boosted: pr.boosted }))));
-          }
-        }
-      } else if (m.mode === 'path') {
-        for (const it of usableItems(s, content, hero.id, 'move')) {
-          const a = legalUse.find((x) => x.itemId === it.itemId);
-          if (a) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(a, true) }, icon('item'), t('game.itemUse', { item: t(it.nameKey) })));
-        }
-      }
-    }
     if (m.mode === 'area' && m.directions.length > 1) {
       const cur = ui.sel.direction ?? m.directions[0] ?? 0;
       const next = m.directions[(m.directions.indexOf(cur) + 1) % m.directions.length] ?? cur;
@@ -865,9 +891,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       out.push(h('button', { class: 'gbtn gbtn-primary', disabled: !ready, onclick: () => ready && resolve(ready) }, icon('check'), label));
     }
     const skip = game.legalOf('skipStep')[0];
-    out.push(h('div', { class: 'grow' }, skip ? h('button', { class: 'gbtn', onclick: () => act(skip) }, icon('skip'), t('ui.skip')) : null, game.canUndo() ? h('button', { class: 'gbtn', onclick: () => act({ type: 'undo' }) }, icon('undo'), t('ui.undo')) : null));
-    const surge = game.legalOf('surge').find((a) => a.heroId === hero.id);
-    if (surge) out.push(h('button', { class: 'gbtn gbtn-glow', onclick: () => act(surge) }, icon('momentum'), t('ui.useSurge')));
+    if (skip) out.push(h('button', { class: 'gbtn', onclick: () => act(skip) }, icon('skip'), t('ui.skip')));
     return out;
   }
 
@@ -1044,7 +1068,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     return h(
       'button',
       { class: 'gcurtain', onclick: () => ((ui.revealed = heroId), render()) },
-      h('div', { class: 'gcurtain-box' }, h('small', null, t('game.curtain.pass')), h('div', { class: 'gcurtain-name', style: { color: colorOf(heroId) } }, player?.name || figureName(heroId)), player?.name ? h('div', { class: 'gcurtain-hero' }, figureName(heroId)) : null, h('p', null, what), h('div', { class: 'gcurtain-tap' }, t('game.curtain.tap'))),
+      h('div', { class: 'gcurtain-box' }, portrait(heroId, colorOf(heroId), 'lg'), h('small', null, t('game.curtain.pass')), h('div', { class: 'gcurtain-name', style: { color: colorOf(heroId) } }, player?.name || figureName(heroId)), player?.name ? h('div', { class: 'gcurtain-hero' }, figureName(heroId)) : null, h('p', null, what), h('div', { class: 'gcurtain-tap' }, t('game.curtain.tap'))),
       chosen.length
         ? h(
             'div',

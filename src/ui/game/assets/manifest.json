@@ -38,5 +38,26 @@
     "height": 463,
     "bytes": 155514,
     "keyed": false
-  }
+  },
+  "portraits": [
+    "warden",
+    "wind-archer",
+    "herbalist",
+    "rogue",
+    "elementalist",
+    "tinker",
+    "tinker-button",
+    "bog-miller",
+    "shadowhand",
+    "cellar-rat",
+    "gremlin",
+    "grey-wolf",
+    "bandit-brute",
+    "bandit-crossbow",
+    "gloom-cultist",
+    "stone-sentinel",
+    "shadow-wraith",
+    "bog-slime",
+    "thornling"
+  ]
 }

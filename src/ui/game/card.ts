@@ -31,6 +31,8 @@ export interface CardOptions {
   /** A small extra row under the card (basic action buttons). */
   footer?: HTMLElement | null;
   big?: boolean;
+  /** The hero's colour: frame accent and the illustration placeholder. */
+  accent?: string;
 }
 
 export function cardView(o: CardOptions): HTMLElement {
@@ -41,6 +43,9 @@ export function cardView(o: CardOptions): HTMLElement {
   if (o.picked) classes.push('is-picked');
   if (o.leading) classes.push('is-leading');
   if (!card) return h('div', { class: classes.join(' ') }, cardName(o.cardId));
+  // Until card art exists: the class colour with the icon of the card's main action.
+  const main = card.top.steps[0] ?? card.bottom.steps[0];
+  const art = h('div', { class: 'gcard-art', 'aria-hidden': 'true' }, main ? icon(stepParts(main, orbs).icon) : null);
   const momentum = hasMomentumMark(o.content, o.hero.classId, o.cardId, o.s.variants);
   const head = h(
     'div',
@@ -90,13 +95,16 @@ export function cardView(o: CardOptions): HTMLElement {
     }
     return h('div', { class: cls }, lines, marks);
   };
-  return h(
+  const el = h(
     'div',
     { class: classes.join(' '), 'data-card': o.cardId },
     head,
+    art,
     half('top', card.top),
     h('div', { class: 'gcard-divider' }),
     half('bottom', card.bottom),
     o.footer ?? null,
   );
+  if (o.accent) el.style.setProperty('--accent', o.accent);
+  return el;
 }

@@ -902,5 +902,6 @@
   "icon.gear": "Налаштування",
   "menu.campaign": "Кампанія",
   "menu.campaign.soon": "Кампанія з'явиться в наступній фазі: місто, крамниця, рівні героїв.",
-  "menu.version": "версія {version}"
+  "menu.version": "версія {version}",
+  "game.undo": "Скасувати"
 }
