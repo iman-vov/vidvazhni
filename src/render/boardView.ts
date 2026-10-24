@@ -173,8 +173,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   // Ambient occlusion, colour grade and vignette (medium and high); low renders straight through.
   const post = new BoardPost(renderer, scene, camera.camera);
 
-  // «Reset view»: shown while the camera is away from home. On a board too big for a comfortable
-  // home view it also offers «Уся мапа» (the overview) while at home.
+  // Camera buttons at the right edge: turn ⟲ ⟳, zoom + −, and «Reset view», which is shown while the
+  // camera is away from home. On a board too big for a comfortable home view it also offers «Уся мапа»
+  // (the overview) while at home.
   let resetButton: HTMLButtonElement | null = null;
   let resetShows: 'home' | 'overview' | null = null;
   if (opts.resetButton !== false) {
