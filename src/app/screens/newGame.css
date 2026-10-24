@@ -120,8 +120,9 @@
   padding: 10px 8px 12px;
   border-radius: 16px;
   border: 1px solid var(--ng-line);
+  border-top: 4px solid var(--hero, var(--ng-gold));
   background:
-    radial-gradient(circle at 50% 38%, rgba(255, 196, 92, 0.32), transparent 62%),
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--hero, #ffc45c) 45%, transparent), transparent 62%),
     linear-gradient(180deg, rgba(36, 66, 104, 0.9), rgba(12, 25, 45, 0.94));
   box-shadow: inset 0 0 0 1px rgba(246, 217, 138, 0.14), 0 8px 18px rgba(0, 0, 0, 0.4);
   color: var(--ng-ink);
@@ -262,6 +263,7 @@
 /* ─── The chosen hero ─── */
 
 .gnew-detail {
+  border-top: 4px solid var(--hero, var(--ng-line)) !important;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
   gap: 18px;
@@ -276,7 +278,7 @@
   gap: 4px;
   padding: 8px;
   border-radius: 14px;
-  background: radial-gradient(circle at 50% 30%, rgba(255, 196, 92, 0.28), transparent 70%);
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--hero, #ffc45c) 40%, transparent), transparent 70%);
 }
 
 .gnew-detail-hero h2 {
@@ -454,13 +456,13 @@
 .gnew-member-hero .gnew-bust {
   width: 112px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, rgba(255, 196, 92, 0.45), rgba(10, 20, 38, 0.6) 70%);
-  border: 2px solid var(--ng-gold);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--hero, #ffc45c) 55%, transparent), rgba(10, 20, 38, 0.6) 70%);
+  border: 3px solid var(--hero, var(--ng-gold));
   overflow: hidden;
 }
 
 .gnew-member-hero.is-second .gnew-bust {
-  border-color: #c9a2ff;
+  box-shadow: 0 0 0 2px #c9a2ff;
 }
 
 /* ─── Tablet portrait and phones ─── */

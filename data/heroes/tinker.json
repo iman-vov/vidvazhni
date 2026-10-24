@@ -1,6 +1,7 @@
 {
   "id": "tinker",
   "complexity": "complex",
+  "color": "#A65E2E",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 10,
   "classElement": "fire",

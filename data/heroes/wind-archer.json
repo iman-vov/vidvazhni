@@ -1,6 +1,7 @@
 {
   "id": "wind-archer",
   "complexity": "medium",
+  "color": "#2FA36B",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 9,
   "classElement": "air",

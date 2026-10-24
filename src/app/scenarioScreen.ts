@@ -350,8 +350,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   }
 
   function colorOf(heroId: FigureId): string {
-    const ids = game.heroes().map((x) => x.id);
-    return heroColor(Math.max(0, ids.indexOf(heroId)));
+    const f = game.state.figures[heroId];
+    return heroColor(f?.kind === 'hero' ? f.classId : '');
   }
 
   function playerName(heroId: FigureId): string {

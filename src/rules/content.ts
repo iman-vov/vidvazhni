@@ -166,6 +166,8 @@ export interface HeroCard {
 export interface HeroClass {
   id: string; // warden, wind-archer, herbalist, rogue, elementalist, tinker
   complexity: 'simple' | 'medium' | 'complex';
+  /** The class colour (art/prompts/ui/card-frames.md): portraits, frames, board tokens. */
+  color: string;
   hpByLevel: number[]; // index 0 = level 1
   handSize: number;
   /** Base: the element the class perk infuses. */

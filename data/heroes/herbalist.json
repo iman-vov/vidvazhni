@@ -1,6 +1,7 @@
 {
   "id": "herbalist",
   "complexity": "medium",
+  "color": "#E0B040",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 10,
   "classElement": "light",

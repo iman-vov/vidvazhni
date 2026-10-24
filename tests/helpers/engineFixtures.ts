@@ -41,6 +41,7 @@ export function heroClass(id: string, cards: HeroCard[], extra: Partial<HeroClas
   return {
     id,
     complexity: 'simple',
+    color: '#3B6FB6',
     hpByLevel: [10, 12, 14],
     handSize: cards.length,
     classElement: 'earth',

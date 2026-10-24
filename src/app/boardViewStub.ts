@@ -9,10 +9,11 @@ import type { BoardHighlights, BoardView, BoardViewOptions } from '../render/vie
 import type { GraphicsQuality } from '../render/quality';
 import type { Content } from '../rules/content';
 import { hexKey, parseHexKey, type Hex } from '../rules/hex';
+import { loadContent } from '../rules/load';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { t } from '../ui/i18n';
 
-const HERO_COLORS = ['#3d8bfd', '#2fbf71', '#b46cff', '#f0a030'];
+const FALLBACK_HERO_COLOR = '#3d8bfd';
 const MONSTER_COLOR = '#d9534f';
 const ELITE_COLOR = '#f2c94c';
 const SUMMON_COLOR = '#3cc8c8';
@@ -26,8 +27,9 @@ const HL = { reachable: '#4fb3ff', targets: '#ff6b5b', area: '#ff9f43', path: '#
 const STEP_MS = 110;
 const HIT_MS = 380;
 
-export function heroColor(index: number): string {
-  return HERO_COLORS[index % HERO_COLORS.length] as string;
+/** The hero class's own colour (data/heroes/<id>.json). */
+export function heroColor(classId: string): string {
+  return loadContent().heroes[classId]?.color ?? FALLBACK_HERO_COLOR;
 }
 
 export function createBoardViewStub(container: HTMLElement, _opts: BoardViewOptions = {}): BoardView {
@@ -177,13 +179,10 @@ function figureAt(s: GameState, hex: Hex): Figure | undefined {
 function buildTokens(s: GameState): BoardToken[] {
   const out: BoardToken[] = [];
   const occupied = new Set<string>();
-  const heroIds = Object.values(s.figures)
-    .filter((f) => f.kind === 'hero')
-    .map((f) => f.id);
   for (const f of Object.values(s.figures)) {
     if (f.kind === 'hero' && f.exhausted) continue;
     occupied.add(hexKey(f.hex));
-    out.push({ id: f.id, q: f.hex[0], r: f.hex[1], color: colorOf(f, heroIds), label: tokenLabel(f) });
+    out.push({ id: f.id, q: f.hex[0], r: f.hex[1], color: colorOf(f), label: tokenLabel(f) });
   }
   for (const [k, tile] of Object.entries(s.board.tiles)) {
     if (occupied.has(k)) continue;
@@ -200,8 +199,8 @@ function buildTokens(s: GameState): BoardToken[] {
   return out;
 }
 
-function colorOf(f: Figure, heroIds: string[]): string {
-  if (f.kind === 'hero') return f.downed ? DOWNED_COLOR : heroColor(heroIds.indexOf(f.id));
+function colorOf(f: Figure): string {
+  if (f.kind === 'hero') return f.downed ? DOWNED_COLOR : heroColor(f.classId);
   if (f.kind === 'summon') return SUMMON_COLOR;
   return f.rank === 'normal' ? MONSTER_COLOR : ELITE_COLOR;
 }

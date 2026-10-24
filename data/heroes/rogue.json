@@ -1,6 +1,7 @@
 {
   "id": "rogue",
   "complexity": "medium",
+  "color": "#7E4FC4",
   "hpByLevel": [8, 9, 11, 12, 14],
   "handSize": 9,
   "classElement": "dark",

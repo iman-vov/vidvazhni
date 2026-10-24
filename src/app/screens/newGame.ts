@@ -12,6 +12,7 @@ import { t } from '../../ui/i18n';
 import { cardKeywords, cardView, compactCard } from '../../ui/game/card';
 import { icon } from '../../ui/game/icons';
 import { heroBustUrl } from '../../ui/game/uiArt';
+import { heroColor } from '../boardViewStub';
 import type { PlayerInfo } from '../game';
 import { settings } from '../settings';
 import { localStore, readJson } from '../storage';
@@ -264,7 +265,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
               draft.picks
                 .filter((x) => x.playerId === p.id)
                 .sort((a, b) => a.slot - b.slot)
-                .map((x) => h('span', { class: `gnew-member-hero${x.slot === 1 ? ' is-second' : ''}` }, bust(x.classId), t(`class.${x.classId}`))),
+                .map((x) => h('span', { class: `gnew-member-hero${x.slot === 1 ? ' is-second' : ''}`, style: `--hero: ${heroColor(x.classId)}` }, bust(x.classId), t(`class.${x.classId}`))),
             ),
           ),
         ),
@@ -332,7 +333,7 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
         const owner = o.taken.get(id);
         return h(
           'button',
-          { class: 'gnew-tile', role: 'radio', 'aria-checked': String(id === o.chosen), disabled: !!owner, onclick: () => o.onChoose(id) },
+          { class: 'gnew-tile', role: 'radio', 'aria-checked': String(id === o.chosen), disabled: !!owner, style: `--hero: ${heroColor(id)}`, onclick: () => o.onChoose(id) },
           bust(id),
           h('b', null, t(`class.${id}`)),
           h('span', null, t(`class.${id}.role`)),
@@ -343,7 +344,7 @@ export function heroStep(o: HeroStepOptions): HTMLElement {
     chosen
       ? h(
           'section',
-          { class: 'gsection gnew-detail' },
+          { class: 'gsection gnew-detail', style: `--hero: ${chosen.color}` },
           h(
             'div',
             { class: 'gnew-detail-hero' },

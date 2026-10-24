@@ -1,6 +1,7 @@
 {
   "id": "warden",
   "complexity": "simple",
+  "color": "#3B6FB6",
   "hpByLevel": [10, 12, 14, 16, 18],
   "handSize": 10,
   "classElement": "earth",
