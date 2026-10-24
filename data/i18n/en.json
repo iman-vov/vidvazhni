@@ -1185,6 +1185,7 @@
   "game.ev.shieldBlocked": "{name}: shield −{shield}",
   "game.ev.shieldShort": "shield −{shield}",
   "game.select.back": "Back to the cards",
+  "game.select.who": "Cards for the round: each player taps their own hero, in any order.",
   "game.select.peek": "Board",
   "game.select.hint3": "Pick {n} more: tap a card. Long press explains it.",
   "game.figure.more": "More",

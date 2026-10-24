@@ -414,11 +414,28 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     return game.playerOf(heroId)?.name ?? '';
   }
 
-  /** The hero who must make a private choice now (hand or cards), if any. */
+  /** The hero who makes a private choice now, if any: the hand before the scenario goes hero by
+   *  hero; the round's cards are chosen by whoever tapped their own hero, in any order. */
   function privateHero(): FigureId | null {
     const p = game.state.pending;
-    if (p?.kind === 'selectCards' || p?.kind === 'chooseHandBeforeScenario') return p.heroIds[0] ?? null;
+    if (p?.kind === 'chooseHandBeforeScenario') return p.heroIds[0] ?? null;
+    if (p?.kind === 'selectCards') return ui.revealed && p.heroIds.includes(ui.revealed) ? ui.revealed : null;
     return null;
+  }
+
+  /** Round card choice: a player tapped their hero (banner or ribbon) and sees that hero's hand. */
+  function revealHero(heroId: FigureId | null): void {
+    const p = game.state.pending;
+    if (heroId && (p?.kind !== 'selectCards' || !p.heroIds.includes(heroId))) return;
+    ui.revealed = heroId;
+    ui.pick = [];
+    ui.leading = null;
+    ui.longRest = false;
+    ui.intents = game.intentsOf(heroId ?? '');
+    ui.pressCard = null;
+    ui.enlarged = null;
+    ui.intentsOpen = false;
+    render();
   }
 
   /** The hero whose turn it is (heroTurn / stepChoice). */
@@ -599,7 +616,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           forecast,
           rolling: forecast ? null : rolling,
           monsterFocus: monsterFocus(),
-          onPick: (tg) => openFigure(tg, true),
+          onPick: (tg) => (s.pending?.kind === 'selectCards' && tg.figureId && s.pending.heroIds.includes(tg.figureId) ? revealHero(tg.figureId) : openFigure(tg, true)),
           onHover: (tg) => (tg ? openFigure(tg, false) : closeHoverFigure()),
         }),
       ),
@@ -778,6 +795,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             icon(ui.intentsOpen ? 'up' : 'down'),
           ),
       h('button', { class: 'gbtn', title: t('game.select.peek'), onclick: () => ((ui.peek = true), render()) }, icon('hint'), t('game.select.peek')),
+      // Round cards: back to the board, so another player can choose first.
+      choosingHand ? null : h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('game.close'), title: t('game.close'), onclick: () => revealHero(null) }, icon('close')),
     );
     const intents =
       !choosingHand && ui.intentsOpen
@@ -1342,6 +1361,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const parts: HTMLElement[] = [];
     const next = privateHero();
     if (next && !ui.revealed && !ui.busy && ui.modal !== 'intro') parts.push(curtain(next));
+    if (s.pending?.kind === 'selectCards' && !next && !ui.busy && ui.modal !== 'intro') parts.push(pickBanner());
     if (ui.modal === 'intro') parts.push(introModal());
     if (ui.modal === 'menu') parts.push(menuModal());
     if (ui.modal === 'settings') parts.push(modalBox(t('ui.settings'), settingsPanel({ heroes: game.heroes().map((x) => x.classId), onQuality: (q) => board.setQuality(q), onSpeed: (n) => board.setSpeed?.(n), story: o.storyMode, onStory: o.onStoryMode }), () => ((ui.modal = 'menu'), render())));
@@ -1464,6 +1484,33 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
           : h('p', { class: 'gside-hint' }, why),
       ],
       close,
+    );
+  }
+
+  /** Round card choice without a curtain: a short note over the board and a button per hero still
+   *  to choose; each player taps their own (or their portrait in the ribbon), in any order. */
+  function pickBanner(): HTMLElement {
+    const s = game.state;
+    const p = s.pending;
+    const waiting = p?.kind === 'selectCards' ? p.heroIds : [];
+    return h(
+      'div',
+      { class: 'gpick gplate', role: 'group', 'aria-label': t('game.select.who') },
+      h('p', { class: 'gpick-text' }, icon('hand'), t('game.select.who')),
+      h(
+        'div',
+        { class: 'gpick-heroes' },
+        game.heroes().map((x) => {
+          const ready = !waiting.includes(x.id);
+          return h(
+            'button',
+            { class: `gbtn gpick-hero${ready ? ' is-ready' : ''}`, disabled: ready, style: `--hero: ${colorOf(x.id)}`, onclick: () => revealHero(x.id) },
+            portrait(x.id, colorOf(x.id), 'md'),
+            h('span', { class: 'gpick-who' }, h('b', null, figureName(x.id)), h('small', null, playerName(x.id))),
+            ready ? (intentIcons(game.intentsOf(x.id)) ?? icon('check')) : null,
+          );
+        }),
+      ),
     );
   }
 
