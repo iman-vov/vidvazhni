@@ -27,6 +27,7 @@ import { Ambient, type DustVolume, type FireSpot, type FogPatch, type LightBeam 
 import { atmosphereFor } from './atmosphere';
 import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
+import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
@@ -463,15 +464,30 @@ export class BoardEnvironment {
     const geo = new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2).translate(field.minX + field.size / 2, 0, field.minZ + field.size / 2);
     // One continuous floor: the location's hex surface (seamless, world UVs) runs from under the
     // grid to the walls; locations without one keep their own ground texture, tinted.
-    const floor = def.surface ? surfaceTexture(def.surface, this.quality, textureUrl, () => this.onChange()) : null;
+    // Its relief comes from the painted surface (relief.ts): normals, cavities and wear on medium and
+    // high (parallax too on high); on low the light is baked into the colour instead.
+    const low = this.quality === 'low';
+    const token = this.buildToken;
+    let relief: THREE.DataTexture | null = null;
+    const onDraw = (canvas: HTMLCanvasElement) => {
+      if (token !== this.buildToken) return;
+      const r = reliefFromCanvas(canvas);
+      if (low) return bakeReliefLight(canvas, r);
+      relief?.dispose();
+      relief = reliefTexture(r);
+      this.uniforms.uEnvRelief.value = relief;
+      this.uniforms.uEnvReliefStrength.value = 1.6;
+    };
+    const floor = def.surface ? surfaceTexture(def.surface, this.quality, textureUrl, () => this.onChange(), onDraw) : null;
     const fallback = floor ?? noiseTexture(def.ground.tint);
     // Low quality: Lambert shading for everything around the board (the ground covers the screen).
-    const mat = this.quality === 'low' ? new THREE.MeshLambertMaterial({ map: fallback, color: '#ffffff' }) : new THREE.MeshStandardMaterial({ map: fallback, color: '#ffffff', roughness: 0.95, metalness: 0 });
+    const mat = low ? new THREE.MeshLambertMaterial({ map: fallback, color: '#ffffff' }) : new THREE.MeshStandardMaterial({ map: fallback, color: '#ffffff', roughness: 0.95, metalness: 0 });
+    if (floor && !low) mat.defines = { ENV_RELIEF: '', ...(this.quality === 'high' ? { ENV_PARALLAX: '' } : {}) };
     patchMaterial(mat, this.uniforms, 'ground');
+    this.disposables.push({ dispose: () => relief?.dispose() });
     this.disposables.push(geo, mat, fallback);
     const url = !floor && def.ground.texture ? textureUrl(def.ground.texture, this.quality) : undefined;
     if (url) {
-      const token = this.buildToken;
       new THREE.TextureLoader().load(url, (tex) => {
         if (token !== this.buildToken) {
           tex.dispose();

@@ -270,9 +270,10 @@ export type TextureUrl = (name: string, quality: GraphicsQuality) => string | un
 
 /**
  * The surface's texture: a canvas painted at once (flat fallback colour under a painter), redrawn
- * with the base texture under the painting when that loads; `onChange` fires then.
+ * with the base texture under the painting when that loads; `onChange` fires then. `onDraw` sees
+ * the canvas after each painting, before it is uploaded (the environment derives the floor's relief).
  */
-export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: TextureUrl, onChange: () => void): THREE.Texture {
+export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: TextureUrl, onChange: () => void, onDraw?: (canvas: HTMLCanvasElement) => void): THREE.Texture {
   const def = SURFACES[id];
   const size = quality === 'low' ? 256 : 512;
   const canvas = document.createElement('canvas');
@@ -288,6 +289,7 @@ export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: Tex
     ctx.fillRect(0, 0, size, size);
     if (base) ctx.drawImage(base, 0, 0, size, size);
     def.paint?.(ctx, size, seeded(seed));
+    onDraw?.(canvas);
     tex.needsUpdate = true;
   };
   draw(null);

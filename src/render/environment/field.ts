@@ -121,6 +121,9 @@ export interface EnvUniforms {
   uEnvCentreZ: { value: number };
   uEnvVeil: { value: number };
   uEnvTexScale: { value: number };
+  /** The floor's relief (relief.ts): normal u, v, height, cavity; used where ENV_RELIEF is defined. */
+  uEnvRelief: { value: THREE.Texture | null };
+  uEnvReliefStrength: { value: number };
 }
 
 export function createUniforms(): EnvUniforms {
@@ -133,6 +136,8 @@ export function createUniforms(): EnvUniforms {
     uEnvCentreZ: { value: 0 },
     uEnvVeil: { value: 0.8 },
     uEnvTexScale: { value: 1 / 2.6 },
+    uEnvRelief: { value: null },
+    uEnvReliefStrength: { value: 1 },
   };
 }
 
@@ -170,18 +175,54 @@ export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode
       uniform float uEnvCentreZ;
       uniform float uEnvVeil;
       uniform float uEnvTexScale;
-      vec4 envField() { return texture2D(uEnvField, (vEnvWorld.xz - uEnvRect.xy) * uEnvRect.zw); }`;
+      vec4 envField() { return texture2D(uEnvField, (vEnvWorld.xz - uEnvRect.xy) * uEnvRect.zw); }
+      #ifdef ENV_RELIEF
+      uniform sampler2D uEnvRelief;
+      uniform float uEnvReliefStrength;
+      #endif`;
     let frag = shader.fragmentShader.replace('#include <common>', head);
     if (mode === 'ground') {
       frag = frag.replace(
         '#include <map_fragment>',
         `vec4 envG = envField();
+        vec2 envUv = vEnvWorld.xz * uEnvTexScale;
+        #ifdef ENV_RELIEF
+        #ifdef ENV_PARALLAX
+        // One-step parallax: raised stone shifts toward the eye, joints away from it.
+        vec3 envEye = normalize(cameraPosition - vEnvWorld);
+        float envH = texture2D(uEnvRelief, envUv).b;
+        envUv += envEye.xz / max(envEye.y, 0.35) * (envH - 0.5) * 0.05 * uEnvTexScale;
+        #endif
+        vec4 envR = texture2D(uEnvRelief, envUv);
+        #endif
         #ifdef USE_MAP
-        diffuseColor *= texture2D(map, vEnvWorld.xz * uEnvTexScale);
+        diffuseColor *= texture2D(map, envUv);
+        #endif
+        #ifdef ENV_RELIEF
+        diffuseColor.rgb *= mix(1.0, envR.a, 0.85);
         #endif
         diffuseColor.rgb *= 1.0 - envG.a * 0.7;
         diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.5, 0.58, 0.62), envG.b);`,
       );
+      // Relief: the floor's normal (texture u along world X, v along world Z) and wear: high,
+      // open stone polished by feet, joints and the feet of the walls matt.
+      frag = frag
+        .replace(
+          '#include <roughnessmap_fragment>',
+          `#include <roughnessmap_fragment>
+          #ifdef ENV_RELIEF
+          roughnessFactor = clamp(roughnessFactor * mix(1.08, 0.62, smoothstep(0.45, 0.85, envR.b) * envR.a * (1.0 - envG.a * 1.4)), 0.25, 1.0);
+          #endif`,
+        )
+        .replace(
+          '#include <normal_fragment_maps>',
+          `#include <normal_fragment_maps>
+          #ifdef ENV_RELIEF
+          vec2 envNt = (envR.rg * 2.0 - 1.0) * uEnvReliefStrength;
+          vec3 envNw = normalize(vec3(envNt.x, sqrt(max(0.0, 1.0 - dot(envNt, envNt))), envNt.y));
+          normal = normalize((viewMatrix * vec4(envNw, 0.0)).xyz);
+          #endif`,
+        );
     } else if (mode === 'water') {
       frag = frag.replace(
         '#include <map_fragment>',
