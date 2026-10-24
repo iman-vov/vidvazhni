@@ -148,6 +148,287 @@
         ]
       },
       "bottom": { "steps": [{ "type": "move", "value": 3 }, { "type": "infuse", "element": "earth" }] }
+    },
+    {
+      "id": "elementalist.unstable-orb",
+      "level": 2,
+      "initiative": 33,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "targetAll": "adjacentEnemies"
+          },
+          {
+            "type": "infuse",
+            "element": "any",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.frost-ward",
+      "level": 2,
+      "initiative": 22,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round",
+            "xp": 1
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "consume": {
+              "element": "earth",
+              "conditions": [
+                "immobilize"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "elementalist.chain-lightning",
+      "level": 3,
+      "initiative": 57,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "targets": 3,
+            "xp": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.wild-surge",
+      "level": 3,
+      "initiative": 42,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "xp": 1
+          },
+          {
+            "type": "infuse",
+            "element": "any"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2,
+            "jump": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "elementalist.fire-wall",
+      "level": 4,
+      "initiative": 66,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "area": {
+              "shape": "line",
+              "length": 4,
+              "fromSelf": true
+            },
+            "xp": 2,
+            "consume": {
+              "element": "fire",
+              "conditions": [
+                "wound"
+              ]
+            }
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.whirlwind",
+      "level": 4,
+      "initiative": 28,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "targetAll": "adjacentEnemies",
+            "push": 2,
+            "xp": 1,
+            "consume": {
+              "element": "air",
+              "add": {
+                "push": 1
+              }
+            }
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3,
+            "fly": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "elementalist.meteor",
+      "level": 5,
+      "initiative": 85,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "range": 4,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "xp": 2,
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              },
+              "conditions": [
+                "wound"
+              ]
+            }
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.elemental-harmony",
+      "level": 5,
+      "initiative": 38,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "alliesInRadius",
+            "radius": 2,
+            "xp": 2,
+            "consume": {
+              "element": "earth",
+              "then": [
+                {
+                  "type": "shield",
+                  "value": 1,
+                  "target": "adjacentAllies",
+                  "duration": "round"
+                }
+              ]
+            }
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "any"
+          }
+        ]
+      }
     }
   ]
 }
