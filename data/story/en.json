@@ -341,6 +341,350 @@
         ]
       },
       "epilogue": { "id": "s5.epilogue", "speaker": "marta", "text": "Get some rest. They say something goes bump in the Gray Mountains at night." }
+    },
+    "s6": {
+      "intro": [
+        { "id": "s6.intro.1", "speaker": "narrator", "text": "The rumbling from the Grey Mountains carries all the way to the Fat Goose. And on the doorstep stands a girl in a hood far too big for her." },
+        { "id": "s6.intro.2", "speaker": "lina", "text": "Dad and the miners went to the mine to see what was humming. Three days ago. And nobody came back." },
+        { "id": "s6.intro.3", "speaker": "marta", "text": "You heard her, Bravehearts. Take bread for everyone, and some for the miners too." },
+        { "id": "s6.intro.4", "speaker": "marta", "text": "The tunnel is shorter, but the ceiling there is old. Where it cracks, don't stand. And run for the lift." },
+        {
+          "id": "s6.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Down into the tunnel!",
+          "variants": {
+            "warden": "I'll go first. If the ceiling falls, let it fall on my shield.",
+            "wind-archer": "No wind under the ground. I'll have to listen to the stones.",
+            "herbalist": "Don't worry, Lina. We'll find your dad.",
+            "rogue": "Dark, cramped and smells of rats. Almost like home.",
+            "elementalist": "The ground here hums like a drum. I wonder why?",
+            "tinker": "Old supports. Bolt, don't touch a single beam."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s6.crack",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s6.crack.1", "speaker": "narrator", "text": "Something cracked overhead, and sand trickled from the ceiling. The crack shows where the rocks will fall." }
+          ]
+        },
+        {
+          "id": "s6.gallery",
+          "trigger": { "on": "doorOpened", "arg": "s6.gallery" },
+          "lines": [
+            { "id": "s6.gallery.1", "speaker": "narrator", "text": "The ore gallery stretches far into the dark. Black moths watch the party from the walls." }
+          ]
+        },
+        {
+          "id": "s6.flip",
+          "trigger": { "on": "doorOpened", "arg": "s6.cart-niche" },
+          "lines": [
+            { "id": "s6.flip.1", "speaker": "flip", "text": "Hey! I'm stuck in the cart! Will you pull me out? I'll give back everything I stole. Well, almost everything." },
+            { "id": "s6.flip.2", "speaker": "rogue", "text": "A fellow thief? Fine, I'll pull you out. But you're not getting the frying pan." }
+          ]
+        },
+        {
+          "id": "s6.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s6.first-moth.1", "speaker": "narrator", "text": "The moth fluttered and crumbled into grey dust. Just like the ones that flew from Shadowhand." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s6.win.1", "speaker": "narrator", "text": "The party dashed onto the lift, and behind them the gallery came down with a roar." },
+          { "id": "s6.win.2", "speaker": "narrator", "text": "In the chest lies Theo's helmet. Someone has scratched one word on it: \"Forge\"." },
+          { "id": "s6.win.3", "speaker": "narrator", "text": "The lift rope has been gnawed through, but nearby a path leads down to Copperdale." },
+          {
+            "id": "s6.win.4", "speaker": "hero", "pick": "random",
+            "text": "Now to the miners.",
+            "variants": {
+              "warden": "I'll carry the helmet. We'll give it back to Theo ourselves.",
+              "wind-archer": "Chimney smoke down below. Someone's there.",
+              "herbalist": "The helmet is whole. So Theo is whole too.",
+              "rogue": "Who writes that on a helmet? Someone who was very scared.",
+              "elementalist": "A forge under the mountains? I've read about one. A giant worked there.",
+              "tinker": "That rope was chewed. Small, sharp teeth. Gremlins."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s6.lose.1", "speaker": "marta", "text": "The ceiling fell, but you're safe, and that's what matters. Rest, then try again." },
+          { "id": "s6.lose.2", "speaker": "marta", "text": "No dawdling in the tunnel. Run for the lift and leave the fighting for later." }
+        ]
+      },
+      "epilogue": { "id": "s6.epilogue", "speaker": "marta", "text": "Lina is peeling potatoes for me and asks about her dad every minute. Hurry to Copperdale." }
+    },
+    "s7": {
+      "intro": [
+        { "id": "s7.intro.1", "speaker": "narrator", "text": "Lina told us about a path over the pass. Only goats go that way, her dad used to say." },
+        { "id": "s7.intro.2", "speaker": "marta", "text": "Well, there are no goats among you. But there is a shepherd heading to Copperdale too. Take him there safely." },
+        { "id": "s7.intro.3", "speaker": "marta", "text": "And you, sweetheart, stay here with me. You'll peel potatoes and boss the cat around." },
+        { "id": "s7.intro.4", "speaker": "lina", "text": "Tell Dad I'm waiting. And that the cat listens to me." },
+        {
+          "id": "s7.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Up to the pass!",
+          "variants": {
+            "warden": "The shepherd walks behind me. Anyone who bothers him deals with my shield.",
+            "wind-archer": "These are my mountains. I know where the wind blows hardest.",
+            "herbalist": "Thyme grows on the pass. I'll pick some for Marta.",
+            "rogue": "I'm holding my hat with both hands. I suggest you do the same.",
+            "elementalist": "Wind! Finally an element I'm on first-name terms with.",
+            "tinker": "Bolt, hold on to my leg. You'll be the first to blow away."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s7.ledge",
+          "trigger": { "on": "doorOpened", "arg": "s7.ledge" },
+          "lines": [
+            { "id": "s7.ledge.1", "speaker": "narrator", "text": "A pole with pennants stands on the ledge. Whichever way they flap, that's where the next gust will blow." },
+            { "id": "s7.ledge.2", "speaker": "wind-archer", "text": "Stay close to the rock. On the edge the wind knocks even goats off their feet." }
+          ]
+        },
+        {
+          "id": "s7.first-ram",
+          "trigger": { "on": "monsterKilled", "arg": "mountain-ram" },
+          "lines": [
+            { "id": "s7.first-ram.1", "speaker": "narrator", "text": "The ram shook its head, the fog drifted out of its wool, and it wandered off to graze. The shepherd is delighted: it's his ram." }
+          ]
+        },
+        {
+          "id": "s7.outpost",
+          "trigger": { "on": "doorOpened", "arg": "s7.outpost" },
+          "lines": [
+            { "id": "s7.outpost.1", "speaker": "narrator", "text": "At the old outpost, bandits are sharing out their loot. The lookout is already reaching for his horn." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s7.win.1", "speaker": "narrator", "text": "The shepherd reached the outpost safe and sound. His rams are as gentle as lambs again." },
+          { "id": "s7.win.2", "speaker": "narrator", "text": "He gives the party a sack of warm wool. In Alba they'll sew sheepskin coats from it." },
+          { "id": "s7.win.3", "speaker": "narrator", "text": "From the outpost you can see Copperdale: the bandits' campfire on the square and purple lanterns by the storehouses." },
+          {
+            "id": "s7.win.4", "speaker": "hero", "pick": "random",
+            "text": "Now down to the village.",
+            "variants": {
+              "warden": "The shepherd is safe. The miners are next.",
+              "wind-archer": "I told you: in the mountains you listen to the wind.",
+              "herbalist": "Purple lanterns? Those are cultists. Theo is there.",
+              "rogue": "A bandit is muttering about a forge that works by itself. At night. With no smith.",
+              "elementalist": "A forge without a smith? That's magic! Or a ghost. Or both.",
+              "tinker": "Warm wool for a cold wind. A fair trade."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s7.lose.1", "speaker": "marta", "text": "It was the wind that beat you, not the bandits. Rest now, the shepherd will wait." },
+          { "id": "s7.lose.2", "speaker": "marta", "text": "Stay by the shepherd. He only walks on when one of you is close." }
+        ]
+      },
+      "epilogue": { "id": "s7.epilogue", "speaker": "marta", "text": "Lina already bosses the cat better than I do. Now it's the miners' turn." }
+    },
+    "s8": {
+      "intro": [
+        { "id": "s8.intro.1", "speaker": "narrator", "text": "Copperdale lay asleep under the snow. Only the campfire crackled on the square, and purple hoods walked by the storehouses." },
+        { "id": "s8.intro.2", "speaker": "marta", "text": "The miners are locked in cages. Knock the locks off all three and let them run home." },
+        { "id": "s8.intro.3", "speaker": "marta", "text": "Theo must be in the mine office. Lina asked me to tell him she's waiting for him at supper." },
+        {
+          "id": "s8.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Let's open the cages!",
+          "variants": {
+            "warden": "We'll open the cages and politely ask the bandits to leave.",
+            "wind-archer": "I count three cages. And a lot of hoods.",
+            "herbalist": "The miners are frozen. I brought hot tea for everyone.",
+            "rogue": "Locks on cages? Oh, that's my favourite.",
+            "elementalist": "I'll be needing the bandits' campfire. Thank you, bandits.",
+            "tinker": "These locks are rusty. One good hit and they'll spring open."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s8.bell",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s8.bell.1", "speaker": "narrator", "text": "The crossbowman by the fire keeps eyeing the bell. If it rings, another brute will come running." }
+          ]
+        },
+        {
+          "id": "s8.north",
+          "trigger": { "on": "doorOpened", "arg": "s8.storeroom-north" },
+          "lines": [
+            { "id": "s8.north.1", "speaker": "narrator", "text": "A cage of miners stands in the storehouse. They wave to the party with frozen hands." }
+          ]
+        },
+        {
+          "id": "s8.office",
+          "trigger": { "on": "doorOpened", "arg": "s8.office" },
+          "lines": [
+            { "id": "s8.office.1", "speaker": "theo", "text": "Who's there? Bravehearts from Alba? Then Lina found you!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s8.win.1", "speaker": "theo", "text": "Thank you, Bravehearts. Down below is the Old Forge, and in it Hammerfist, our smith giant." },
+          { "id": "s8.win.2", "speaker": "theo", "text": "He slept for a hundred years. Now he forges something black, and the moths fly to him like to a lamp." },
+          { "id": "s8.win.3", "speaker": "theo", "text": "Take my lantern. It's dark as a sack down there. I'll leave it at the entrance to the depths." },
+          {
+            "id": "s8.win.4", "speaker": "hero", "pick": "random",
+            "text": "Everyone is free!",
+            "variants": {
+              "warden": "All the miners are free. Now we can take a breather.",
+              "wind-archer": "Moths fly to the light. Worth remembering.",
+              "herbalist": "Theo, drink some tea. And no mines until spring.",
+              "rogue": "Three locks, three cages. Not one broken finger.",
+              "elementalist": "A smith giant? I want to see him. From a distance.",
+              "tinker": "Lovely lantern. Brass, glass, a good wick."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s8.lose.1", "speaker": "marta", "text": "The cages are still locked, but the miners are holding on. Come back, they're waiting." },
+          { "id": "s8.lose.2", "speaker": "marta", "text": "Don't fight everyone in sight. Break the cage locks while the bandits stand there gaping." }
+        ]
+      },
+      "epilogue": { "id": "s8.epilogue", "speaker": "marta", "text": "Lina threw her arms around her dad's neck and won't let go. She says she knew you'd manage." }
+    },
+    "s9": {
+      "intro": [
+        { "id": "s9.intro.1", "speaker": "narrator", "text": "The deeper you go, the quieter it gets. At the entrance to the lower tunnels stands Theo's lantern, just as he promised." },
+        { "id": "s9.intro.2", "speaker": "marta", "text": "Carry the lantern to the forge gate. Whoever gets tired and falls will drop it, so pick it up." },
+        { "id": "s9.intro.3", "speaker": "marta", "text": "And remember: in the dark you only see someone who's right next to you." },
+        {
+          "id": "s9.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Stay in the light.",
+          "variants": {
+            "warden": "Whoever carries the lantern walks behind me. I'll shield you.",
+            "wind-archer": "No use shooting into the dark. I'll move closer.",
+            "herbalist": "It smells of moss and cold water here. Take my arm.",
+            "rogue": "Finally the dark is on my side. Well, almost.",
+            "elementalist": "I can light the way with fire. Not for long, but bright.",
+            "tinker": "I've turned up the lantern's wick so it burns longer."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s9.lake",
+          "trigger": { "on": "doorOpened", "arg": "s9.lake" },
+          "lines": [
+            { "id": "s9.lake.1", "speaker": "narrator", "text": "The underground lake is black and still. The water is cold, and wading through it is slow." }
+          ]
+        },
+        {
+          "id": "s9.moths",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s9.moths.1", "speaker": "narrator", "text": "Black moths swarm out of the dark toward the lantern's light. The brighter the light, the more of them." }
+          ]
+        },
+        {
+          "id": "s9.gate",
+          "trigger": { "on": "doorOpened", "arg": "s9.gate" },
+          "lines": [
+            { "id": "s9.gate.1", "speaker": "narrator", "text": "Two cold braziers stand by the gate. Light them, and the dark will retreat." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s9.win.1", "speaker": "narrator", "text": "The lantern touched the seal, and it blazed up. The heavy doors creaked open." },
+          { "id": "s9.win.2", "speaker": "narrator", "text": "From inside comes a boom, boom, boom. And a slow, sleepy voice." },
+          { "id": "s9.win.3", "speaker": "hammerfist", "text": "Who brings light? Light must be forged into darkness." },
+          {
+            "id": "s9.win.4", "speaker": "hero", "pick": "random",
+            "text": "He's in there.",
+            "variants": {
+              "warden": "He's not evil. He's just very tired.",
+              "wind-archer": "Each boom is slower. The giant is falling asleep on his feet.",
+              "herbalist": "A voice like a grandpa who hasn't slept all week.",
+              "rogue": "Forge light into darkness? Sounds like a bad idea.",
+              "elementalist": "You can't forge light into darkness! Well, that's what the books say.",
+              "tinker": "Hear how he strikes? A master. A true master."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s9.lose.1", "speaker": "marta", "text": "The dark outwitted you. Never mind, the lantern is fine. Try again." },
+          { "id": "s9.lose.2", "speaker": "marta", "text": "Don't run ahead without light. Stay near the lantern and light the braziers." }
+        ]
+      },
+      "epilogue": { "id": "s9.epilogue", "speaker": "marta", "text": "A smith who forges darkness? That's not neighbourly. Let's go and have a word." }
+    },
+    "s10": {
+      "intro": [
+        { "id": "s10.intro.1", "speaker": "narrator", "text": "The foundry is hot and cramped. Further on, in the Furnace Hall, something booms, and the floor shakes." },
+        { "id": "s10.intro.2", "speaker": "marta", "text": "While the Dark Lantern is whole, the giant is almost impossible to hurt. And the furnaces call the moths, so smash those too." },
+        { "id": "s10.intro.3", "speaker": "marta", "text": "He's no villain, he's been bewitched. Wake him up, don't hurt his feelings." },
+        {
+          "id": "s10.intro.4", "speaker": "hero", "pick": "random",
+          "text": "To the Furnace!",
+          "variants": {
+            "warden": "Stone against the town hall door. Let's see who's tougher.",
+            "wind-archer": "A lantern on an anvil. One arrow, then another.",
+            "herbalist": "He's asleep on his feet. We'll wake him gently.",
+            "rogue": "I wouldn't even steal the Dark Lantern. Just smash it.",
+            "elementalist": "The furnace is full of fire. And fire listens to me.",
+            "tinker": "What an anvil! Shame about the bad work on it."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s10.hall",
+          "trigger": { "on": "doorOpened", "arg": "s10.forge-hall" },
+          "lines": [
+            { "id": "s10.hall.1", "speaker": "narrator", "text": "The Dark Lantern stands on the anvil, and above it towers Hammerfist, made of stone and copper." },
+            { "id": "s10.hall.2", "speaker": "hammerfist", "text": "Don't disturb me. The Dark Lantern is almost done." }
+          ]
+        },
+        {
+          "id": "s10.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s10.first-moth.1", "speaker": "narrator", "text": "The moth above the furnace turned pale and flew up toward the air shaft." }
+          ]
+        },
+        {
+          "id": "s10.half",
+          "trigger": { "on": "bossHalfHp", "arg": "hammerfist" },
+          "lines": [
+            { "id": "s10.half.1", "speaker": "narrator", "text": "The furnace in the giant's chest blazed hot, and new moths fluttered out of it." },
+            { "id": "s10.half.2", "speaker": "hammerfist", "text": "Hot. Very hot. Keep it down!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s10.win.1", "speaker": "narrator", "text": "The Dark Lantern shattered, and the black moths turned white. One by one they flew up toward the light of the Guardian Lantern." },
+          { "id": "s10.win.2", "speaker": "narrator", "text": "The giant sat down on the floor and rubbed his eyes." },
+          { "id": "s10.win.3", "speaker": "hammerfist", "text": "Oh. Was I forging at night again? Sorry about the noise." },
+          {
+            "id": "s10.win.4", "speaker": "hero", "pick": "random",
+            "text": "He's awake!",
+            "variants": {
+              "warden": "No harm done. We make noise at night sometimes too.",
+              "wind-archer": "The moths are turning white. I told you they weren't evil.",
+              "herbalist": "Here's some mint tea. It helps you sleep.",
+              "rogue": "Nice hammer you've got. No, I don't want to borrow it. Well, maybe a little.",
+              "elementalist": "White moths! I've never seen that, not even in books!",
+              "tinker": "Will you show me your tools? I'll show you Bolt."
+            }
+          },
+          { "id": "s10.win.5", "speaker": "narrator", "text": "But one black moth never turned white. It flew north, to where there is more snow than sky." }
+        ],
+        "defeat": [
+          { "id": "s10.lose.1", "speaker": "marta", "text": "Hammerfist is as solid as a cliff. Rest, and next time smash the Dark Lantern first." },
+          { "id": "s10.lose.2", "speaker": "marta", "text": "Don't stand by the furnace, it burns. And smash the furnaces while they're calling moths." }
+        ]
+      },
+      "epilogue": { "id": "s10.epilogue", "speaker": "marta", "text": "Now we have a smith giant too. Maybe he can at least make nails for the roof." }
     }
   }
 }

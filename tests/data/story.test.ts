@@ -28,22 +28,12 @@ const shape = (story: Story) => ({
   beats: Object.values(story.scenarios).flatMap((s) => s.beats.map((b) => [b.id, b.trigger])),
 });
 
-/** Act II (docs/design/act2.md) is written in uk first; de and en follow in their own step. */
-const UNTRANSLATED = ['s6', 's7', 's8', 's9', 's10'];
-
 describe('story texts', () => {
-  const full = read('uk');
-  const uk: Story = {
-    scenarios: Object.fromEntries(Object.entries(full.scenarios).filter(([id]) => !UNTRANSLATED.includes(id))),
-  };
+  const uk = read('uk');
   for (const lang of ['de', 'en']) {
     const story = read(lang);
     it(`${lang} matches uk in ids, speakers, picks, variants and triggers`, () => {
       expect(shape(story)).toEqual(shape(uk));
-    });
-    it(`${lang} has none of the scenarios still waiting for translation`, () => {
-      for (const id of UNTRANSLATED) expect(full.scenarios[id], id).toBeDefined();
-      expect(Object.keys(story.scenarios).filter((id) => UNTRANSLATED.includes(id))).toEqual([]);
     });
     it(`${lang} has no Ukrainian leftovers`, () => {
       const texts = lines(story).flatMap((l) => [l.text, ...Object.values(l.variants ?? {})]);

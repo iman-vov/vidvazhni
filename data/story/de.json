@@ -341,6 +341,350 @@
         ]
       },
       "epilogue": { "id": "s5.epilogue", "speaker": "marta", "text": "Ruht euch aus. Man sagt, in den Grauen Bergen rumpelt es nachts." }
+    },
+    "s6": {
+      "intro": [
+        { "id": "s6.intro.1", "speaker": "narrator", "text": "Das Grollen aus den Grauen Bergen hört man bis ins Wirtshaus „Zur satten Gans“. Und auf der Schwelle steht ein Mädchen mit einer viel zu großen Kapuze." },
+        { "id": "s6.intro.2", "speaker": "lina", "text": "Papa ist mit den Bergleuten in die Mine gegangen, um nachzusehen, was da brummt. Vor drei Tagen. Und keiner ist zurückgekommen." },
+        { "id": "s6.intro.3", "speaker": "marta", "text": "Ihr habt es gehört, ihr Mutherzen. Nehmt Brot für alle mit, und noch welches für die Bergleute." },
+        { "id": "s6.intro.4", "speaker": "marta", "text": "Durch den Stollen geht es schneller, aber die Decke ist alt. Wo es knackt, bleibt nicht stehen, und lauft zum Aufzug." },
+        {
+          "id": "s6.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Runter in den Stollen!",
+          "variants": {
+            "warden": "Ich gehe vor. Wenn die Decke fällt, dann auf meinen Schild.",
+            "wind-archer": "Unter der Erde gibt es keinen Wind. Ich muss auf die Steine hören.",
+            "herbalist": "Keine Sorge, Lina. Wir finden deinen Papa.",
+            "rogue": "Dunkel, eng und es riecht nach Ratten. Fast wie zu Hause.",
+            "elementalist": "Der Boden brummt hier wie eine Trommel. Warum wohl?",
+            "tinker": "Alte Stützbalken. Bolt, fass keinen einzigen an."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s6.crack",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s6.crack.1", "speaker": "narrator", "text": "Über den Köpfen knackt es, und Sand rieselt von der Decke. Der Riss zeigt, wo die Steine fallen werden." }
+          ]
+        },
+        {
+          "id": "s6.gallery",
+          "trigger": { "on": "doorOpened", "arg": "s6.gallery" },
+          "lines": [
+            { "id": "s6.gallery.1", "speaker": "narrator", "text": "Der Erzgang zieht sich weit ins Dunkel. Von den Wänden schauen schwarze Falter auf die Gruppe." }
+          ]
+        },
+        {
+          "id": "s6.flip",
+          "trigger": { "on": "doorOpened", "arg": "s6.cart-niche" },
+          "lines": [
+            { "id": "s6.flip.1", "speaker": "flip", "text": "He! Ich stecke im Wagen fest! Zieht ihr mich raus? Ich gebe alles zurück, was ich geklaut hab. Na ja, fast alles." },
+            { "id": "s6.flip.2", "speaker": "rogue", "text": "Ein Kollege vom Fach? Gut, ich zieh dich raus. Aber die Pfanne kriegst du nicht." }
+          ]
+        },
+        {
+          "id": "s6.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s6.first-moth.1", "speaker": "narrator", "text": "Der Falter flattert und zerfällt zu grauem Staub. Genau solche sind von Schattenhand davongeflogen." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s6.win.1", "speaker": "narrator", "text": "Die Gruppe springt auf den Aufzug, und hinter ihr stürzt der Gang donnernd ein." },
+          { "id": "s6.win.2", "speaker": "narrator", "text": "In der Truhe liegt Theos Helm. Jemand hat ein einziges Wort hineingeritzt: „Schmiede“." },
+          { "id": "s6.win.3", "speaker": "narrator", "text": "Das Seil des Aufzugs ist durchgenagt, aber daneben führt ein Pfad hinunter nach Kupfertal." },
+          {
+            "id": "s6.win.4", "speaker": "hero", "pick": "random",
+            "text": "Jetzt zu den Bergleuten.",
+            "variants": {
+              "warden": "Den Helm trage ich. Den geben wir Theo selbst zurück.",
+              "wind-archer": "Unten raucht ein Schornstein. Da ist jemand.",
+              "herbalist": "Der Helm ist heil. Dann ist Theo auch heil.",
+              "rogue": "Wer schreibt so was auf einen Helm? Jemand, der große Angst hatte.",
+              "elementalist": "Eine Schmiede unter den Bergen? Davon habe ich gelesen. Dort schmiedete ein Riese.",
+              "tinker": "Das Seil wurde durchgebissen. Kleine, spitze Zähne. Gremlins."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s6.lose.1", "speaker": "marta", "text": "Die Decke ist eingestürzt, aber ihr seid heil, und das ist die Hauptsache. Ruht euch aus und versucht es noch mal." },
+          { "id": "s6.lose.2", "speaker": "marta", "text": "Im Stollen darf man nicht trödeln. Lauft zum Aufzug und lasst das Kämpfen für später." }
+        ]
+      },
+      "epilogue": { "id": "s6.epilogue", "speaker": "marta", "text": "Lina schält bei mir Kartoffeln und fragt jede Minute nach ihrem Papa. Beeilt euch nach Kupfertal." }
+    },
+    "s7": {
+      "intro": [
+        { "id": "s7.intro.1", "speaker": "narrator", "text": "Lina hat von einem Pfad über den Pass erzählt. Da gehen nur Ziegen, hat ihr Papa gesagt." },
+        { "id": "s7.intro.2", "speaker": "marta", "text": "Nun, Ziegen seid ihr keine. Aber ein Hirte will auch nach Kupfertal. Bringt ihn sicher hin." },
+        { "id": "s7.intro.3", "speaker": "marta", "text": "Und du, mein Schatz, bleibst bei mir. Du schälst Kartoffeln und kommandierst die Katze." },
+        { "id": "s7.intro.4", "speaker": "lina", "text": "Sagt Papa, dass ich warte. Und dass die Katze auf mich hört." },
+        {
+          "id": "s7.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Hinauf zum Pass!",
+          "variants": {
+            "warden": "Der Hirte geht hinter mir. Wer ihn anrührt, bekommt es mit meinem Schild zu tun.",
+            "wind-archer": "Das sind meine Berge. Ich weiß, wo der Wind am stärksten bläst.",
+            "herbalist": "Auf dem Pass wächst Thymian. Ich pflücke etwas für Marta.",
+            "rogue": "Ich halte meinen Hut mit beiden Händen fest. Das rate ich euch auch.",
+            "elementalist": "Wind! Endlich ein Element, mit dem ich per Du bin.",
+            "tinker": "Bolt, halt dich an meinem Bein fest. Dich weht es als Ersten weg."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s7.ledge",
+          "trigger": { "on": "doorOpened", "arg": "s7.ledge" },
+          "lines": [
+            { "id": "s7.ledge.1", "speaker": "narrator", "text": "Auf dem Felsband steht ein Pfahl mit Wimpeln. Wohin sie flattern, dahin bläst die nächste Böe." },
+            { "id": "s7.ledge.2", "speaker": "wind-archer", "text": "Bleibt dicht am Fels. Am Rand wirft der Wind sogar Ziegen um." }
+          ]
+        },
+        {
+          "id": "s7.first-ram",
+          "trigger": { "on": "monsterKilled", "arg": "mountain-ram" },
+          "lines": [
+            { "id": "s7.first-ram.1", "speaker": "narrator", "text": "Der Widder schüttelt den Kopf, der Nebel weht aus seiner Wolle, und er trottet davon, um zu grasen. Der Hirte freut sich: Das ist ja sein Widder." }
+          ]
+        },
+        {
+          "id": "s7.outpost",
+          "trigger": { "on": "doorOpened", "arg": "s7.outpost" },
+          "lines": [
+            { "id": "s7.outpost.1", "speaker": "narrator", "text": "Auf dem alten Posten teilen Räuber ihre Beute. Der Späher greift schon nach seinem Horn." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s7.win.1", "speaker": "narrator", "text": "Der Hirte hat den Posten heil erreicht. Seine Widder sind wieder brav wie Lämmer." },
+          { "id": "s7.win.2", "speaker": "narrator", "text": "Er schenkt der Gruppe einen Sack warme Wolle. In Alba näht man daraus Wollmäntel." },
+          { "id": "s7.win.3", "speaker": "narrator", "text": "Vom Posten aus sieht man Kupfertal: das Räuberfeuer auf dem Platz und violette Laternen bei den Vorratshäusern." },
+          {
+            "id": "s7.win.4", "speaker": "hero", "pick": "random",
+            "text": "Jetzt hinunter ins Dorf.",
+            "variants": {
+              "warden": "Der Hirte ist heil. Jetzt die Bergleute.",
+              "wind-archer": "Ich hab's euch gesagt: In den Bergen hört man auf den Wind.",
+              "herbalist": "Violette Laternen? Das sind Kultisten. Theo ist dort.",
+              "rogue": "Ein Räuber murmelt von einer Schmiede, die von selbst schmiedet. Nachts. Ohne Schmied.",
+              "elementalist": "Eine Schmiede ohne Schmied? Das ist Zauberei! Oder ein Geist. Oder beides.",
+              "tinker": "Warme Wolle gegen kalten Wind. Ein fairer Tausch."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s7.lose.1", "speaker": "marta", "text": "Euch hat der Wind besiegt, nicht die Räuber. Ruht euch aus, der Hirte wartet." },
+          { "id": "s7.lose.2", "speaker": "marta", "text": "Bleibt beim Hirten. Er geht nur weiter, wenn einer von euch in der Nähe ist." }
+        ]
+      },
+      "epilogue": { "id": "s7.epilogue", "speaker": "marta", "text": "Lina kommandiert die Katze schon besser als ich. Jetzt sind die Bergleute dran." }
+    },
+    "s8": {
+      "intro": [
+        { "id": "s8.intro.1", "speaker": "narrator", "text": "Kupfertal schlief unter dem Schnee. Nur auf dem Platz knisterte ein Feuer, und bei den Vorratshäusern liefen violette Kapuzen umher." },
+        { "id": "s8.intro.2", "speaker": "marta", "text": "Die Bergleute sitzen in Käfigen. Schlagt die Schlösser von allen dreien ab, und lasst sie nach Hause laufen." },
+        { "id": "s8.intro.3", "speaker": "marta", "text": "Theo muss im Grubenkontor sein. Lina lässt ausrichten, dass sie mit dem Abendessen auf ihn wartet." },
+        {
+          "id": "s8.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Machen wir die Käfige auf!",
+          "variants": {
+            "warden": "Wir öffnen die Käfige und bitten die Räuber höflich zu gehen.",
+            "wind-archer": "Ich zähle drei Käfige. Und viele Kapuzen.",
+            "herbalist": "Die Bergleute frieren. Ich habe heißen Tee für alle dabei.",
+            "rogue": "Schlösser an Käfigen? Oh, das mag ich am liebsten.",
+            "elementalist": "Das Räuberfeuer kann ich gut gebrauchen. Danke, Räuber.",
+            "tinker": "Diese Schlösser sind rostig. Ein guter Schlag, und sie springen auf."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s8.bell",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s8.bell.1", "speaker": "narrator", "text": "Der Armbrustschütze am Feuer schielt zur Glocke. Wenn sie läutet, kommt noch ein Schläger angerannt." }
+          ]
+        },
+        {
+          "id": "s8.north",
+          "trigger": { "on": "doorOpened", "arg": "s8.storeroom-north" },
+          "lines": [
+            { "id": "s8.north.1", "speaker": "narrator", "text": "Im Vorratshaus steht ein Käfig mit Bergleuten. Sie winken der Gruppe mit erfrorenen Händen." }
+          ]
+        },
+        {
+          "id": "s8.office",
+          "trigger": { "on": "doorOpened", "arg": "s8.office" },
+          "lines": [
+            { "id": "s8.office.1", "speaker": "theo", "text": "Wer ist da? Mutherzen aus Alba? Dann hat Lina euch gefunden!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s8.win.1", "speaker": "theo", "text": "Danke, ihr Mutherzen. Tief unten liegt die Alte Schmiede, und darin Hammerfaust, unser Schmiederiese." },
+          { "id": "s8.win.2", "speaker": "theo", "text": "Hundert Jahre hat er geschlafen. Jetzt schmiedet er etwas Schwarzes, und die Falter fliegen zu ihm wie zu einer Lampe." },
+          { "id": "s8.win.3", "speaker": "theo", "text": "Nehmt meine Laterne. Da unten ist es dunkel wie im Sack. Ich stelle sie euch an den Eingang zur Tiefe." },
+          {
+            "id": "s8.win.4", "speaker": "hero", "pick": "random",
+            "text": "Alle sind frei!",
+            "variants": {
+              "warden": "Alle Bergleute sind frei. Jetzt dürfen wir verschnaufen.",
+              "wind-archer": "Falter fliegen zum Licht. Das sollten wir uns merken.",
+              "herbalist": "Theo, trinken Sie Tee. Und keine Mine bis zum Frühling.",
+              "rogue": "Drei Schlösser, drei Käfige. Kein einziger gebrochener Finger.",
+              "elementalist": "Ein Schmiederiese? Den will ich sehen. Aus der Ferne.",
+              "tinker": "Schöne Laterne. Messing, Glas, ein guter Docht."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s8.lose.1", "speaker": "marta", "text": "Die Käfige sind noch zu, aber die Bergleute halten durch. Kommt zurück, sie warten." },
+          { "id": "s8.lose.2", "speaker": "marta", "text": "Kämpft nicht gegen alle. Schlagt die Käfigschlösser auf, solange die Räuber Maulaffen feilhalten." }
+        ]
+      },
+      "epilogue": { "id": "s8.epilogue", "speaker": "marta", "text": "Lina ist ihrem Papa um den Hals gefallen und lässt ihn nicht mehr los. Sie sagt, sie wusste, dass ihr es schafft." }
+    },
+    "s9": {
+      "intro": [
+        { "id": "s9.intro.1", "speaker": "narrator", "text": "Je tiefer, desto stiller. Am Eingang zu den unteren Stollen steht Theos Laterne, wie versprochen." },
+        { "id": "s9.intro.2", "speaker": "marta", "text": "Tragt die Laterne zum Tor der Schmiede. Wer müde wird und fällt, lässt sie fallen, also hebt sie auf." },
+        { "id": "s9.intro.3", "speaker": "marta", "text": "Und denkt daran: Im Dunkeln sieht man nur, wer ganz nah ist." },
+        {
+          "id": "s9.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Bleibt im Licht.",
+          "variants": {
+            "warden": "Wer die Laterne trägt, geht hinter mir. Ich decke dich.",
+            "wind-archer": "Ins Dunkle zu schießen bringt nichts. Ich gehe näher ran.",
+            "herbalist": "Hier riecht es nach Moos und kaltem Wasser. Hakt euch bei mir unter.",
+            "rogue": "Endlich ist die Dunkelheit auf meiner Seite. Na ja, fast.",
+            "elementalist": "Ich kann mit Feuer leuchten. Nicht lange, aber hell.",
+            "tinker": "Ich habe den Docht der Laterne nachgestellt, damit sie länger brennt."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s9.lake",
+          "trigger": { "on": "doorOpened", "arg": "s9.lake" },
+          "lines": [
+            { "id": "s9.lake.1", "speaker": "narrator", "text": "Der unterirdische See ist schwarz und still. Das Wasser ist kalt, und man kommt darin nur langsam voran." }
+          ]
+        },
+        {
+          "id": "s9.moths",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s9.moths.1", "speaker": "narrator", "text": "Aus dem Dunkel fliegen schwarze Falter zum Licht der Laterne. Je heller das Licht, desto mehr sind es." }
+          ]
+        },
+        {
+          "id": "s9.gate",
+          "trigger": { "on": "doorOpened", "arg": "s9.gate" },
+          "lines": [
+            { "id": "s9.gate.1", "speaker": "narrator", "text": "Am Tor stehen zwei erloschene Feuerschalen. Zündet sie an, und die Dunkelheit weicht zurück." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s9.win.1", "speaker": "narrator", "text": "Die Laterne berührt das Siegel, und es flammt auf. Knarrend gehen die schweren Torflügel auf." },
+          { "id": "s9.win.2", "speaker": "narrator", "text": "Von drinnen hört man: Bumm, bumm, bumm. Und eine langsame, schläfrige Stimme." },
+          { "id": "s9.win.3", "speaker": "hammerfist", "text": "Wer bringt Licht? Licht muss man zu Dunkelheit umschmieden." },
+          {
+            "id": "s9.win.4", "speaker": "hero", "pick": "random",
+            "text": "Er ist da drin.",
+            "variants": {
+              "warden": "Er ist nicht böse. Er ist nur sehr müde.",
+              "wind-archer": "Jedes Bumm wird langsamer. Der Riese schläft im Stehen ein.",
+              "herbalist": "Eine Stimme wie von einem Opa, der eine ganze Woche nicht geschlafen hat.",
+              "rogue": "Licht umschmieden? Klingt nach einer schlechten Idee.",
+              "elementalist": "Licht kann man nicht zu Dunkelheit schmieden! Na ja, so steht es in den Büchern.",
+              "tinker": "Hört ihr, wie er schlägt? Ein Meister. Ein wahrer Meister."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s9.lose.1", "speaker": "marta", "text": "Die Dunkelheit hat euch überlistet. Macht nichts, die Laterne ist heil. Versucht es noch mal." },
+          { "id": "s9.lose.2", "speaker": "marta", "text": "Lauft nicht ohne Licht voraus. Bleibt bei der Laterne und zündet die Feuerschalen an." }
+        ]
+      },
+      "epilogue": { "id": "s9.epilogue", "speaker": "marta", "text": "Ein Schmied, der Dunkelheit schmiedet? Das gehört sich nicht unter Nachbarn. Gehen wir mal mit ihm reden." }
+    },
+    "s10": {
+      "intro": [
+        { "id": "s10.intro.1", "speaker": "narrator", "text": "In der Gießerei ist es heiß und eng. Weiter hinten, in der Essenhalle, wummert etwas, und der Boden bebt." },
+        { "id": "s10.intro.2", "speaker": "marta", "text": "Solange die Dunkle Laterne heil ist, kommt man dem Riesen kaum bei. Und die Essen rufen Falter, also schlagt auch die kaputt." },
+        { "id": "s10.intro.3", "speaker": "marta", "text": "Er ist kein Bösewicht, man hat ihn verzaubert. Weckt ihn auf, aber kränkt ihn nicht." },
+        {
+          "id": "s10.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Zur Esse!",
+          "variants": {
+            "warden": "Stein gegen die Rathaustür. Mal sehen, wer härter ist.",
+            "wind-archer": "Eine Laterne auf dem Amboss. Ein Pfeil, und noch einer.",
+            "herbalist": "Er schläft im Stehen. Wir wecken ihn sanft.",
+            "rogue": "Die Dunkle Laterne würde ich nicht mal klauen. Nur zerschlagen.",
+            "elementalist": "Die Esse ist voller Feuer. Und das Feuer hört auf mich.",
+            "tinker": "Was für ein Amboss! Schade um die schlechte Arbeit darauf."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s10.hall",
+          "trigger": { "on": "doorOpened", "arg": "s10.forge-hall" },
+          "lines": [
+            { "id": "s10.hall.1", "speaker": "narrator", "text": "Auf dem Amboss steht die Dunkle Laterne, und darüber ragt Hammerfaust aus Stein und Kupfer auf." },
+            { "id": "s10.hall.2", "speaker": "hammerfist", "text": "Stört nicht. Die Dunkle Laterne ist fast fertig." }
+          ]
+        },
+        {
+          "id": "s10.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s10.first-moth.1", "speaker": "narrator", "text": "Der Falter über der Esse wird blass und fliegt hinauf zum Luftschacht." }
+          ]
+        },
+        {
+          "id": "s10.half",
+          "trigger": { "on": "bossHalfHp", "arg": "hammerfist" },
+          "lines": [
+            { "id": "s10.half.1", "speaker": "narrator", "text": "Die Esse in der Brust des Riesen glüht auf, und neue Falter flattern heraus." },
+            { "id": "s10.half.2", "speaker": "hammerfist", "text": "Heiß. Sehr heiß. Seid leiser!" }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s10.win.1", "speaker": "narrator", "text": "Die Dunkle Laterne zerspringt, und die schwarzen Falter werden weiß. Einer nach dem anderen fliegen sie hinauf zum Licht der Schutzlaterne." },
+          { "id": "s10.win.2", "speaker": "narrator", "text": "Der Riese setzt sich auf den Boden und reibt sich die Augen." },
+          { "id": "s10.win.3", "speaker": "hammerfist", "text": "Oh. Hab ich etwa wieder nachts geschmiedet? Entschuldigt den Lärm." },
+          {
+            "id": "s10.win.4", "speaker": "hero", "pick": "random",
+            "text": "Er ist wach!",
+            "variants": {
+              "warden": "Schon gut. Wir sind nachts auch manchmal laut.",
+              "wind-archer": "Die Falter werden weiß. Ich hab doch gesagt, dass sie nicht böse sind.",
+              "herbalist": "Hier, ein Minztee. Der hilft gegen Schlaflosigkeit.",
+              "rogue": "Schöner Hammer. Nein, ich will ihn nicht ausleihen. Na ja, vielleicht ein bisschen.",
+              "elementalist": "Weiße Falter! So was habe ich nicht mal in Büchern gesehen!",
+              "tinker": "Zeigst du mir dein Werkzeug? Dafür zeige ich dir Bolt."
+            }
+          },
+          { "id": "s10.win.5", "speaker": "narrator", "text": "Doch ein schwarzer Falter wurde nicht weiß. Er flog nach Norden, dorthin, wo es mehr Schnee als Himmel gibt." }
+        ],
+        "defeat": [
+          { "id": "s10.lose.1", "speaker": "marta", "text": "Hammerfaust ist fest wie ein Fels. Ruht euch aus, und schlagt nächstes Mal zuerst die Dunkle Laterne kaputt." },
+          { "id": "s10.lose.2", "speaker": "marta", "text": "Steht nicht an der Esse, da ist es glühend heiß. Und schlagt die Essen kaputt, solange sie Falter rufen." }
+        ]
+      },
+      "epilogue": { "id": "s10.epilogue", "speaker": "marta", "text": "Jetzt haben wir auch noch einen Schmiederiesen. Soll er uns wenigstens Nägel fürs Dach schmieden." }
     }
   }
 }
