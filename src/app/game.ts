@@ -2,6 +2,7 @@
 // rules engine, keeps the action log and autosaves after each action. No DOM here, so it is
 // tested in node; the scenario screen listens to it and hands the events to the board.
 
+import type { ScenarioResult } from '../rules/campaign';
 import { apply, createGame } from '../rules/engine';
 import { coinValue } from '../rules/effects/context';
 import { loadContent, type LoadedContent } from '../rules/load';
@@ -29,6 +30,10 @@ export interface GameMeta {
   intentsRound: number;
   /** Rule explanations already shown (hint level 1), e.g. `condition.poison`. */
   seenHints: string[];
+  /** A campaign mission: the end goes back to the camp with the result. */
+  campaign?: boolean;
+  /** Start time (ms): the id of the result the camp counts once. */
+  startedAt?: number;
 }
 
 export interface ActResult {
@@ -70,8 +75,8 @@ export class GameController {
   }
 
   /** A new game; saved at once so «continue» finds it. */
-  static start(setup: GameSetup, players: PlayerInfo[], storage: GameStorage | null, content?: LoadedContent): GameController {
-    const g = new GameController(setup, { players, intents: {}, intentsRound: 1, seenHints: [] }, storage, content);
+  static start(setup: GameSetup, players: PlayerInfo[], storage: GameStorage | null, content?: LoadedContent, extra: { campaign?: boolean } = {}): GameController {
+    const g = new GameController(setup, { players, intents: {}, intentsRound: 1, seenHints: [], startedAt: Date.now(), ...extra }, storage, content);
     g.save();
     return g;
   }
@@ -177,6 +182,17 @@ export class GameController {
     const won = this.state.phase === 'won';
     const goldEach = won ? (this.content.scenarios[this.state.scenarioId]?.reward.goldEach ?? 0) + secondaryGold(this.content, this.state) : 0;
     return this.heroes().map((h) => ({ heroId: h.id, xp: h.xp, coins: h.coins, gold: h.coins * coinValue(this.state.level) + goldEach }));
+  }
+
+  /** What the camp counts (`applyScenarioResult`); the id is the game's start time. */
+  scenarioResult(): ScenarioResult {
+    return {
+      id: String(this.meta.startedAt ?? this.setup.seed),
+      scenarioId: this.setup.scenarioId,
+      won: this.state.phase === 'won',
+      heroes: this.rewards().map((r) => ({ classId: (this.state.figures[r.heroId] as HeroState).classId, xp: r.xp, gold: r.gold })),
+      foundItems: this.foundItems(),
+    };
   }
 
   toSaved(): SavedGame {

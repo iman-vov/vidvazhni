@@ -47,6 +47,8 @@ export interface NewGameOptions {
   onBack: () => void;
   /** Hot-seat (default): «pass the device» between players. Network play turns it off. */
   handoff?: boolean;
+  /** A new campaign: no scenario choice (it starts with s1 from the camp), the party goes to the camp. */
+  campaign?: boolean;
 }
 
 function defaultDraft(): Draft {
@@ -144,7 +146,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     const heroes = [...draft.picks].sort((a, b) => playerIndex(a.playerId) - playerIndex(b.playerId) || a.slot - b.slot);
     o.onStart(
       {
-        scenarioId: draft.scenarioId,
+        scenarioId: o.campaign ? 's1' : draft.scenarioId,
         seed: Math.floor(Math.random() * 1_000_000_000),
         heroes: heroes.map((x) => ({ classId: x.classId, playerId: x.playerId, level: 1 })),
         difficulty: draft.difficulty,
@@ -157,17 +159,19 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
   function setupStep(): HTMLElement[] {
     const c = o.content;
     return [
-      section(
-        t('ui.scenario'),
-        h(
-          'div',
-          { class: 'gseg' },
-          Object.values(c.scenarios).map((sc) =>
-            h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(sc.id === draft.scenarioId), onclick: () => ((draft.scenarioId = sc.id), render()) }, `${sc.number}. ${t(`scenario.${sc.id}`)}`),
+      o.campaign
+        ? section(t('campaign.new'), h('p', { class: 'gside-hint' }, t('campaign.new.text', { scenario: t('scenario.s1') })))
+        : section(
+            t('ui.scenario'),
+            h(
+              'div',
+              { class: 'gseg' },
+              Object.values(c.scenarios).map((sc) =>
+                h('button', { class: 'gbtn gbtn-chip', 'aria-pressed': String(sc.id === draft.scenarioId), onclick: () => ((draft.scenarioId = sc.id), render()) }, `${sc.number}. ${t(`scenario.${sc.id}`)}`),
+              ),
+            ),
+            h('p', { class: 'gside-hint' }, t(`scenario.${draft.scenarioId}.goal`)),
           ),
-        ),
-        h('p', { class: 'gside-hint' }, t(`scenario.${draft.scenarioId}.goal`)),
-      ),
       section(
         t('menu.players'),
         h(
@@ -253,7 +257,7 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
     return [
       section(
         t('newGame.party'),
-        h('p', { class: 'gside-hint' }, `${t(`scenario.${draft.scenarioId}`)} · ${t(`ui.difficulty.${draft.difficulty}`)}`),
+        h('p', { class: 'gside-hint' }, `${o.campaign ? t('campaign.new') : t(`scenario.${draft.scenarioId}`)} · ${t(`ui.difficulty.${draft.difficulty}`)}`),
         h(
           'div',
           { class: 'gnew-party' },
@@ -270,12 +274,16 @@ export function newGameScreen(o: NewGameOptions): HTMLElement {
           ),
         ),
       ),
-      h('footer', { class: 'gpage-foot' }, artButton('play', t('menu.start'), start, { cls: 'is-go', disabled: draft.players.some((_, i) => !pickOf(i, 0)) })),
+      h(
+        'footer',
+        { class: 'gpage-foot' },
+        artButton(o.campaign ? 'map' : 'play', o.campaign ? t('campaign.toCamp') : t('menu.start'), start, { cls: 'is-go', disabled: draft.players.some((_, i) => !pickOf(i, 0)) }),
+      ),
     ];
   }
 
   function title(): string {
-    if (step.kind === 'setup') return t('ui.newGame');
+    if (step.kind === 'setup') return o.campaign ? t('campaign.new') : t('ui.newGame');
     if (step.kind === 'party') return t('newGame.party.title');
     if (step.kind === 'handoff') return t('newGame.handoff.title');
     return step.slot === 1 ? t('newGame.second.title', { name: nameOf(step.player) }) : t('newGame.choose', { name: nameOf(step.player) });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GameController, MAX_INTENTS, toggleIntent, type PlayerInfo } from '../../src/app/game';
 import { SettingsStore } from '../../src/app/settings';
 import { gameStorage, memoryStore, GAME_KEY } from '../../src/app/storage';
+import { applyScenarioResult, newCampaign } from '../../src/rules/campaign';
 import { loadContent } from '../../src/rules/load';
 import type { Action, GameSetup } from '../../src/rules/state';
 import { BASE_RULES } from '../../src/rules/variants';
@@ -75,6 +76,18 @@ describe('GameController', () => {
       expect(r.xp).toBeGreaterThanOrEqual(6);
       expect(r.gold).toBe(r.coins * 2 + (content.scenarios.s1?.reward.goldEach ?? 0));
     }
+  });
+
+  it('gives the camp a scenario result that counts once', () => {
+    const meta = { players, intents: {}, intentsRound: 1, seenHints: [], campaign: true, startedAt: 777 };
+    const g = GameController.restore({ app: 'vidvazhni', version: 1, setup: baseWin.setup as GameSetup, actions: baseWin.actions as Action[], meta, savedAt: 0 }, null, content);
+    const r = g.scenarioResult();
+    expect(r).toMatchObject({ id: '777', scenarioId: 's1', won: true });
+    expect(r.heroes.map((x) => x.classId)).toEqual(['warden', 'wind-archer']);
+    const camp = newCampaign(content, { players: ['p1', 'p2'], heroes: [{ classId: 'warden', playerId: 'p1' }, { classId: 'wind-archer', playerId: 'p2' }] });
+    const once = applyScenarioResult(content, camp, r);
+    expect(once.ok && once.state.completed).toEqual(['s1']);
+    expect(once.ok && applyScenarioResult(content, once.state, r).ok).toBe(false);
   });
 
   it('replays the scenario-1 win played through the game UI (full fork, items, Порив)', () => {

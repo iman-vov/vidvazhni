@@ -9,7 +9,7 @@ import { h } from '../../ui/dom';
 import { getLang, t } from '../../ui/i18n';
 import { icon, type IconName } from '../../ui/icons';
 import { installUiArt, logoOf } from '../../ui/game/uiArt';
-import type { SavedGame } from '../storage';
+import type { SavedCampaign, SavedGame } from '../storage';
 
 export interface MenuOptions {
   content: LoadedContent;
@@ -17,6 +17,9 @@ export interface MenuOptions {
   onContinue: () => void;
   onNewGame: () => void;
   onSettings: () => void;
+  /** The campaign: the camp of a saved one, or a new one. */
+  campaign: SavedCampaign | null;
+  onCampaign: () => void;
   /** Rules reference and tutorial (src/app/help, src/app/tutorial): one row of two buttons. */
   onHelp?: () => void;
   onTutorial?: () => void;
@@ -43,8 +46,7 @@ export function menuBackdrop(dim = false): HTMLElement {
 export function menuScreen(o: MenuOptions): HTMLElement {
   installUiArt();
   const logo = logoOf(getLang());
-  const notice = h('p', { class: 'mmenu-notice', role: 'status' });
-  const campaign = artButton('map', t('menu.campaign'), () => (notice.textContent = t('menu.campaign.soon')), { cls: 'is-soon' });
+  const campaign = artButton('map', t('menu.campaign'), o.onCampaign, { note: o.campaign ? campaignSummary(o.campaign) : t('menu.campaign.new') });
   return h(
     'div',
     { class: 'mmenu' },
@@ -63,7 +65,6 @@ export function menuScreen(o: MenuOptions): HTMLElement {
           ? h('div', { class: 'mmenu-pair' }, o.onTutorial ? artButton('play', t('tutorial.menu'), o.onTutorial) : null, o.onHelp ? artButton('hint', t('help.menu'), o.onHelp) : null)
           : null,
         artButton('gear', t('ui.settings'), o.onSettings),
-        notice,
       ),
     ),
     h('a', { class: 'mmenu-debug', href: '?debug' }, t('ui.debug')),
@@ -80,4 +81,10 @@ function savedSummary(saved: SavedGame, content: LoadedContent): string {
     round = '';
   }
   return [t(`scenario.${saved.setup.scenarioId}`), round, heroes].filter(Boolean).join(' · ');
+}
+
+/** «Вартовий, Лучниця · виграно: 2» for the campaign button. */
+function campaignSummary(saved: SavedCampaign): string {
+  const heroes = saved.campaign.heroes.map((x) => t(`class.${x.classId}`)).join(', ');
+  return [heroes, t('menu.campaign.won', { n: saved.campaign.completed.length })].join(' · ');
 }

@@ -1,6 +1,7 @@
 // The game app: main menu → new game → scenario → scenario end, plus settings. One board is
 // created when the first scenario opens and kept for later ones.
 
+import { applyScenarioResult, newCampaign } from '../rules/campaign';
 import { loadContent } from '../rules/load';
 import type { GameSetup } from '../rules/state';
 import type { BoardView } from '../render/view';
@@ -11,21 +12,22 @@ import { icon } from '../ui/game/icons';
 import { createGameBoard } from './board';
 import { GameController, type PlayerInfo } from './game';
 import { mountScenario } from './scenarioScreen';
+import { campScreen } from './screens/camp';
 import { endScreen } from './screens/end';
 import { menuBackdrop, menuScreen } from './screens/menu';
 import { newGameScreen } from './screens/newGame';
 import { settingsPanel } from './screens/settings';
 import { settings } from './settings';
-import { gameStorage, type GameStorage } from './storage';
+import { campaignStorage, gameStorage, type CampaignStorage, type GameStorage } from './storage';
 import { helpBrowser, openHelpModal, type HelpRules } from './help/helpView';
 import { installKeywordLinks } from './help/keywords';
 import { mountCoach } from './tutorial/coach';
 import { isTutorial, tutorialContent, tutorialPlayers, tutorialSetup, tutorialStorage } from './tutorial/scenario';
 import { saveTutorialProgress, shouldOfferTutorial, tutorialEnd, tutorialOffer } from './tutorial/screens';
 
-type Screen = 'menu' | 'newGame' | 'settings' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
+type Screen = 'menu' | 'newGame' | 'newCampaign' | 'camp' | 'settings' | 'scenario' | 'end' | 'help' | 'tutorialOffer' | 'tutorialEnd';
 
-export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage()): void {
+export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
   let screen: Screen = 'menu';
   let game: GameController | null = null;
@@ -63,8 +65,25 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
     go('scenario');
   }
 
-  function startNew(setup: GameSetup, players: PlayerInfo[]): void {
-    void openScenario(GameController.start(setup, players, storage, content));
+  function startNew(setup: GameSetup, players: PlayerInfo[], campaign = false): void {
+    void openScenario(GameController.start(setup, players, storage, content, { campaign }));
+  }
+
+  /** The party from the New Game steps becomes a campaign; the camp comes before s1. */
+  function startCampaign(setup: GameSetup, players: PlayerInfo[]): void {
+    const state = newCampaign(content, { players: players.map((p) => p.id), heroes: setup.heroes, difficulty: setup.difficulty, firstScenario: setup.scenarioId });
+    campaigns.save(state, players);
+    go('camp');
+  }
+
+  /** «До табору»: the result goes into the saved campaign (once per game). */
+  function backToCamp(): void {
+    const saved = campaigns.load();
+    if (game && saved) {
+      const r = applyScenarioResult(content, saved.campaign, game.scenarioResult());
+      if (r.ok) campaigns.save(r.state, saved.players);
+    }
+    go('camp');
   }
 
   /** Resumes an unfinished tutorial unless `fresh`. */
@@ -91,6 +110,8 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
             onContinue: continueSaved,
             onNewGame: () => go(shouldOfferTutorial() ? 'tutorialOffer' : 'newGame'),
             onSettings: () => go('settings'),
+            campaign: campaigns.load(),
+            onCampaign: () => go(campaigns.load() ? 'camp' : 'newCampaign'),
             onHelp: () => go('help'),
             onTutorial: () => startTutorial(),
           }),
@@ -108,6 +129,24 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
       case 'newGame':
         overlay.replaceChildren(newGameScreen({ content, onStart: startNew, onBack: () => go('menu') }));
         break;
+      case 'newCampaign':
+        overlay.replaceChildren(newGameScreen({ content, campaign: true, onStart: startCampaign, onBack: () => go('menu') }));
+        break;
+      case 'camp': {
+        const saved = campaigns.load();
+        if (!saved) return go('menu');
+        overlay.replaceChildren(
+          campScreen({
+            content,
+            saved,
+            onSave: (state) => campaigns.save(state, saved.players),
+            onMission: (setup) => startNew(setup, saved.players, true),
+            onNewCampaign: () => (campaigns.clear(), go('newCampaign')),
+            onMenu: () => go('menu'),
+          }),
+        );
+        break;
+      }
       case 'settings':
         overlay.replaceChildren(
           h(
@@ -157,6 +196,7 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
         overlay.replaceChildren(
           endScreen({
             game,
+            onCamp: game.meta.campaign && campaigns.load() ? backToCamp : undefined,
             onMenu: () => go('menu'),
             onAgain: () => {
               const g = game as GameController;

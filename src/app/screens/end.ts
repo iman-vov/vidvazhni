@@ -1,7 +1,9 @@
-// Scenario end: victory or defeat, XP and gold per hero, and «Як було?» (easy / just right / hard
-// plus a comment), stored on the device.
+// Scenario end: victory or defeat, XP and gold per hero, found items, and «Як було?» (easy / just right / hard
+// plus a comment), stored on the device. A campaign mission ends with [До табору] only, which counts
+// the result in the campaign.
 
 import { h } from '../../ui/dom';
+import { itemNameKey } from '../../rules/items';
 import { t } from '../../ui/i18n';
 import { icon } from '../../ui/game/icons';
 import { figureName } from '../../ui/game/text';
@@ -13,6 +15,8 @@ export interface EndOptions {
   game: GameController;
   onMenu: () => void;
   onAgain: () => void;
+  /** A campaign mission: [До табору] (`applyScenarioResult`) instead of «again» and «menu». */
+  onCamp?: () => void;
 }
 
 export function endScreen(o: EndOptions): HTMLElement {
@@ -22,6 +26,7 @@ export function endScreen(o: EndOptions): HTMLElement {
   let rating: FeedbackRating | null = null;
   let comment = '';
   let sent = false;
+  const found = g.foundItems();
   const root = h('div', { class: `gpage is-art gend-screen ${won ? 'is-win' : 'is-loss'}` });
 
   function send(): void {
@@ -57,6 +62,7 @@ export function endScreen(o: EndOptions): HTMLElement {
           g.rewards().map((r) => h('tr', null, h('td', null, figureName(r.heroId)), h('td', null, icon('xp'), r.xp), h('td', null, icon('coin'), r.coins), h('td', null, r.gold))),
         ),
       ),
+      found.length ? h('p', { class: 'gend-found' }, icon('chest'), ' ', t('game.end.found', { items: found.map((id) => t(itemNameKey(id))).join(', ') })) : '',
       h(
         'section',
         { class: 'gsection gfeedback' },
@@ -73,7 +79,13 @@ export function endScreen(o: EndOptions): HTMLElement {
               h('button', { class: 'gbtn', disabled: !rating, onclick: send }, t('game.feedback.send')),
             ],
       ),
-      h('footer', { class: 'gpage-foot' }, artButton('compass', t('game.end.again'), o.onAgain, { cls: 'is-small' }), artButton('play', t('game.toMenu'), o.onMenu)),
+      h(
+        'footer',
+        { class: 'gpage-foot' },
+        o.onCamp
+          ? artButton('map', t('campaign.toCamp'), o.onCamp, { cls: 'is-go' })
+          : [artButton('compass', t('game.end.again'), o.onAgain, { cls: 'is-small' }), artButton('play', t('game.toMenu'), o.onMenu)],
+      ),
     );
   }
 
