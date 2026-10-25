@@ -296,5 +296,93 @@
     "use": "spent",
     "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }],
     "upgrade": { "price": 50, "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
+  },
+  {
+    "id": "hedgehog-vest",
+    "slot": "body",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 5,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "retaliate", "value": 2, "duration": "round" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "retaliate", "value": 2, "duration": "round" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "shepherd-cloak",
+    "slot": "body",
+    "rarity": "common",
+    "price": 25,
+    "unlockedAfter": 7,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "provoke", "radius": 2 }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "provoke", "radius": 2 }, { "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "forge-apron",
+    "slot": "body",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 10,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "fire" }, { "type": "shield", "value": 2, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 35, "effect": [{ "type": "infuse", "element": "fire" }, { "type": "shield", "value": 2, "target": "self", "duration": "round" }, { "type": "retaliate", "value": 1, "duration": "round" }] }
+  },
+  {
+    "id": "turtle-shell",
+    "slot": "body",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 13,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": { "uses": 2 } }],
+    "upgrade": { "price": 30, "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": { "uses": 3 } }] }
+  },
+  {
+    "id": "frog-socks",
+    "slot": "legs",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 5,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 1 } }, { "type": "special", "name": "jumpOnMove" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 2 } }, { "type": "special", "name": "jumpOnMove" }] }
+  },
+  {
+    "id": "kick-boots",
+    "slot": "legs",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 6,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "push", "value": 1, "target": "adjacentEnemies" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "push", "value": 2, "target": "adjacentEnemies" }] }
+  },
+  {
+    "id": "wind-runners",
+    "slot": "legs",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 16,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "air" }, { "type": "special", "name": "moveBonus", "params": { "value": 2 } }],
+    "upgrade": { "price": 30, "effect": [{ "type": "infuse", "element": "air" }, { "type": "special", "name": "moveBonus", "params": { "value": 3 } }] }
+  },
+  {
+    "id": "seven-league-boots",
+    "slot": "legs",
+    "rarity": "legendary",
+    "price": 50,
+    "unlockedAfter": 14,
+    "source": { "type": "secret", "at": "s14" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 3 } }, { "type": "special", "name": "jumpOnMove" }],
+    "upgrade": { "price": 50, "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 4 } }, { "type": "special", "name": "jumpOnMove" }] }
   }
 ]
