@@ -31,6 +31,7 @@ import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SP
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
+import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
 import { buildScatter, planScatter, scatterProfile } from './scatter';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
@@ -165,8 +166,6 @@ export class BoardEnvironment {
   private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
   private placements: Placement[] = [];
-  /** Hexes with an obstacle, door, object or trap: the small-things layer keeps off them. */
-  private busy = new Set<HexKey>();
   private kitParts = new Map<string, Part[]>();
   /** Prop models that loaded for pieces of this location, by piece id. */
   private propProtos = new Map<string, PropPrototype>();
@@ -176,6 +175,11 @@ export class BoardEnvironment {
   private obstacleGeometries: THREE.BufferGeometry[] = [];
   /** Which set piece stands on each scenario obstacle hex (see `obstacles` in the location data). */
   private obstacleLooks = new Map<HexKey, string>();
+  /** Clusters of things standing on obstacle hexes, and set pieces across touching ones (obstacles.ts). */
+  private obstaclePlans = new Map<HexKey, ClusterPlan>();
+  /** Hexes with an obstacle, door, object or trap: the small-things layer keeps off them. */
+  private busy = new Set<HexKey>();
+  private clusterShadow: THREE.MeshBasicMaterial | null = null;
   private partitionLines: Partition[] = [];
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
@@ -198,6 +202,10 @@ export class BoardEnvironment {
     this.scenarioId = scenario.id;
     this.def = withRoomEdges(environmentFor(scenario.id), scenario);
     this.obstacleLooks = assignObstacleLooks(scenario, this.def);
+    this.obstaclePlans = planObstacles(scenario, this.def, (model, k) => {
+      const look = this.obstacleLooks.get(k) ?? model;
+      return OBSTACLE_PIECES[look]?.piece ?? look;
+    });
     this.layout = buildLayout(scenario);
     this.busy = busyHexes(scenario);
     this.partitionLines = scenarioPartitions(this.layout, scenario);
@@ -276,6 +284,7 @@ export class BoardEnvironment {
 
   /** The set piece shown on an obstacle hex: the location's pick for that hex, else the model. */
   obstacleLook(model: string, hex: HexKey): string {
+    if (this.obstaclePlans.has(hex)) return `cluster:${hex}`;
     return this.obstacleLooks.get(hex) ?? model;
   }
 
@@ -283,6 +292,7 @@ export class BoardEnvironment {
    *  object (`brazier:lit`, `lever:down`, `millstone`) in the location's colours, standing on its
    *  own origin; null for what the tile layer draws itself. */
   makeObstacle(model: string): THREE.Object3D | null {
+    if (model.startsWith('cluster:')) return this.makeCluster(model.slice(8));
     const spec = OBSTACLE_PIECES[model] ?? (pieceMeta(model)?.kind === 'prop' ? { piece: model, scale: 1 } : undefined);
     if (!spec || !this.def) return null;
     const group = this.makePiece(spec.piece);
@@ -290,6 +300,35 @@ export class BoardEnvironment {
     group.name = `obstacle:${spec.piece}`;
     group.scale.setScalar(spec.scale);
     return group;
+  }
+
+  /** The cluster on an obstacle hex (obstacles.ts), on the hex centre. */
+  private makeCluster(hex: HexKey): THREE.Object3D | null {
+    const plan = this.obstaclePlans.get(hex);
+    if (!plan || !this.def) return null;
+    const token = this.loadToken;
+    const quality = this.quality;
+    this.clusterShadow ??= new THREE.MeshBasicMaterial({ map: blobShadowTexture(), color: '#000000', transparent: true, opacity: 0.5, depthWrite: false });
+    const blobMaterial = this.clusterShadow;
+    return buildCluster(plan, {
+      makePiece: (piece) => this.makePiece(piece),
+      propSpec: (piece, height) => (this.def?.propModels?.[piece] ? propModelFor(this.def, [piece], this.available, height) : null),
+      loadProp: (spec) => loadPropPrototype(spec, quality).then((proto) => (proto ? proto.object.clone() : null)),
+      material: (key) => this.material(key),
+      shadow: (radius) => {
+        const geometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+        this.obstacleGeometries.push(geometry);
+        const blob = new THREE.Mesh(geometry, blobMaterial);
+        blob.scale.setScalar(radius * 2.3);
+        blob.renderOrder = 1;
+        blob.name = 'contact-shadow';
+        return blob;
+      },
+      track: (g) => this.obstacleGeometries.push(g),
+      alive: () => token === this.loadToken,
+      litter: quality === 'low' ? 0.5 : 1,
+      onChange: () => this.onChange(),
+    });
   }
 
   /** A piece in the location's colours standing on its own origin, one mesh per part (so a door

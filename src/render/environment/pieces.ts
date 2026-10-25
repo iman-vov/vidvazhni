@@ -1473,7 +1473,108 @@ const PIECES: Record<string, PieceDef> = {
       b.cyl('woodDark', 0.02, 0.02, 0.7, 5, [-0.3, 0.05, 0.2], [0.2, 0, -1.25], true);
     },
   },
+
+  // Set pieces of obstacle clusters that span two hexes (obstacles.ts), along X.
+  'long-table': {
+    kind: 'prop',
+    height: 0.75,
+    radius: 0.8,
+    build: (b) => {
+      // Planks of slightly different shades, two trestles, a cloth runner, a jug and a mug.
+      for (let i = 0; i < 4; i++) b.box(i % 2 ? 'woodLight' : 'wood', [1.56, 0.07, 0.16], [0.01 * (i % 2), 0.68, -0.25 + i * 0.165], [0, 0.004 * (i - 1.5), 0]);
+      for (const x of [-0.58, 0.58]) {
+        b.box('woodDark', [0.08, 0.62, 0.5], [x, 0.31, 0], [0, 0, 0]);
+        b.box('woodDark', [0.1, 0.06, 0.6], [x, 0.03, 0]);
+      }
+      b.box('woodDark', [1.1, 0.06, 0.06], [0, 0.2, 0]);
+      b.box('cloth', [0.7, 0.012, 0.24], [0.15, 0.72, -0.02], [0, 0.05, 0], true);
+      b.cyl('clothDark', 0.07, 0.06, 0.18, 7, [-0.42, 0.715, 0.08], [0, 0, 0], true);
+      b.cyl('wood', 0.04, 0.035, 0.08, 6, [0.35, 0.715, 0.12], [0, 0, 0], true);
+      b.cyl('wood', 0.04, 0.035, 0.08, 6, [0.5, 0.715, -0.14], [0, 0, 0], true);
+    },
+  },
+  wagon: {
+    kind: 'prop',
+    height: 0.8,
+    radius: 0.8,
+    build: (b) => {
+      // A farm cart with its shafts down to the floor, a wheel off and leaning on it.
+      b.box('wood', [1.1, 0.06, 0.62], [0, 0.36, 0]);
+      for (const z of [-0.31, 0.31]) b.box('woodDark', [1.1, 0.22, 0.04], [0, 0.48, z]);
+      for (const x of [-0.55, 0.55]) b.box('woodDark', [0.04, 0.22, 0.62], [x, 0.48, 0]);
+      b.box('woodDark', [0.08, 0.08, 0.66], [0.1, 0.3, 0]);
+      b.add(new THREE.TorusGeometry(0.28, 0.035, 4, 12), 'woodDark', [0.1, 0.28, 0.36]);
+      for (let i = 0; i < 4; i++) b.box('wood', [0.5, 0.03, 0.03], [0.1, 0.28, 0.36], [0, 0, (i * Math.PI) / 4], true);
+      // The far wheel is off: it lies flat on the floor, half under the bed, the axle propped on a block.
+      b.add(new THREE.TorusGeometry(0.28, 0.035, 4, 12), 'woodDark', [0.15, 0.035, -0.42], [Math.PI / 2, 0, 0]);
+      b.box('woodDark', [0.16, 0.26, 0.16], [0.1, 0.13, -0.24]);
+      for (const z of [-0.2, 0.2]) b.box('woodDark', [0.75, 0.05, 0.05], [-0.88, 0.2, z], [0, 0, 0.42]);
+      b.box('straw', [0.5, 0.08, 0.4], [0.2, 0.43, 0.02], [0, 0.2, 0], true);
+    },
+  },
+
+  // Floor litter beside obstacle clusters (obstacles.ts): flat, never in the way of anything.
+  chips: { kind: 'prop', height: 0.03, radius: 0.18, build: (b) => litter(b, 'woodLight', 'wood', 7, 0.18, [0.07, 0.012, 0.035]) },
+  splinters: { kind: 'prop', height: 0.03, radius: 0.22, build: (b) => litter(b, 'wood', 'woodDark', 5, 0.2, [0.16, 0.012, 0.02]) },
+  straw: { kind: 'prop', height: 0.03, radius: 0.22, build: (b) => litter(b, 'straw', 'straw', 12, 0.2, [0.14, 0.008, 0.012]) },
+  'broken-boards': {
+    kind: 'prop',
+    height: 0.05,
+    radius: 0.3,
+    build: (b) => {
+      b.box('wood', [0.46, 0.025, 0.09], [0, 0.013, 0], [0, 0.2, 0]);
+      b.box('woodDark', [0.3, 0.025, 0.08], [0.06, 0.035, 0.1], [0.06, -0.5, 0.04]);
+      b.box('woodLight', [0.12, 0.02, 0.05], [-0.22, 0.01, 0.12], [0, 1.1, 0], true);
+    },
+  },
+  grain: {
+    kind: 'prop',
+    height: 0.02,
+    radius: 0.24,
+    build: (b) => {
+      b.add(new THREE.CircleGeometry(0.2, 9).rotateX(-Math.PI / 2), 'straw', [0, 0.006, 0], [0, 0, 0], [1.3, 1, 0.8]);
+      b.add(new THREE.CircleGeometry(0.09, 7).rotateX(-Math.PI / 2), 'cloth', [0.2, 0.008, 0.07]);
+      litter(b, 'straw', 'cloth', 6, 0.3, [0.02, 0.012, 0.02]);
+    },
+  },
+  pebbles: { kind: 'prop', height: 0.05, radius: 0.22, build: (b) => stones(b, 'rock', 'rockDark', 6, 0.2, 0.035) },
+  'coal-bits': { kind: 'prop', height: 0.05, radius: 0.2, build: (b) => stones(b, 'rockDark', 'shadow', 7, 0.18, 0.03) },
+  'ore-bits': { kind: 'prop', height: 0.05, radius: 0.2, build: (b) => stones(b, 'rockDark', 'ore', 6, 0.18, 0.032) },
+  twigs: { kind: 'prop', height: 0.03, radius: 0.24, build: (b) => litter(b, 'bark', 'woodDark', 6, 0.22, [0.2, 0.014, 0.014]) },
+  leaves: {
+    kind: 'prop',
+    height: 0.02,
+    radius: 0.24,
+    build: (b) => {
+      for (let i = 0; i < 9; i++) {
+        const a = i * 2.4;
+        const d = 0.04 + ((i * 37) % 10) * 0.018;
+        const mat: MaterialKey = i % 3 === 0 ? 'leafWarm' : i % 3 === 1 ? 'leaf' : 'leafDark';
+        b.add(new THREE.CircleGeometry(0.035, 5).rotateX(-Math.PI / 2), mat, [Math.cos(a) * d, 0.006 + i * 0.0005, Math.sin(a) * d], [0, a, 0], [1.6, 1, 1]);
+      }
+    },
+  },
 };
+
+/** Thin flat bits (chips, straw, twigs) scattered in a disc of `radius`, lying on the floor. */
+function litter(b: Builder, a: MaterialKey, c: MaterialKey, n: number, radius: number, size: V3): void {
+  for (let i = 0; i < n; i++) {
+    const ang = i * 2.39996;
+    const d = radius * Math.sqrt((i + 0.5) / n) * (0.8 + ((i * 53) % 7) * 0.05);
+    const s = 0.7 + ((i * 29) % 6) * 0.1;
+    b.box(i % 3 ? a : c, [size[0] * s, size[1], size[2] * s], [Math.cos(ang) * d, size[1] / 2 + 0.002, Math.sin(ang) * d], [0, ang * 1.7, 0], i >= n * 0.7);
+  }
+}
+
+/** Small stones scattered in a disc, half sunk in the floor. */
+function stones(b: Builder, a: MaterialKey, c: MaterialKey, n: number, radius: number, size: number): void {
+  for (let i = 0; i < n; i++) {
+    const ang = i * 2.39996 + 0.4;
+    const d = radius * Math.sqrt((i + 0.5) / n);
+    const s = size * (0.6 + ((i * 31) % 7) * 0.1);
+    b.rock(i % 3 ? a : c, s, [Math.cos(ang) * d, s * 0.3, Math.sin(ang) * d], [1.2, 0.6, 1], [i, i * 0.7, 0], i >= n * 0.7);
+  }
+}
 
 export function pieceIds(): string[] {
   return Object.keys(PIECES);
