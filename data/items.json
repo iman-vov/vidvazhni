@@ -384,5 +384,116 @@
     "use": "spent",
     "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 3 } }, { "type": "special", "name": "jumpOnMove" }],
     "upgrade": { "price": 50, "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 4 } }, { "type": "special", "name": "jumpOnMove" }] }
+  },
+  {
+    "id": "torch",
+    "slot": "hand",
+    "rarity": "common",
+    "price": 15,
+    "unlockedAfter": 2,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "fire" }, { "type": "condition", "condition": "wound", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 15, "effect": [{ "type": "infuse", "element": "fire" }, { "type": "condition", "condition": "wound", "target": "adjacentEnemies" }, { "type": "condition", "condition": "muddle", "target": "adjacentEnemies" }] }
+  },
+  {
+    "id": "frying-pan",
+    "slot": "hand",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 8,
+    "source": { "type": "chest", "at": "s8" },
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }, { "type": "condition", "condition": "muddle", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }, { "type": "condition", "condition": "muddle", "target": "adjacentEnemies" }] }
+  },
+  {
+    "id": "magnet",
+    "slot": "hand",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 17,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "condition", "condition": "disarm", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 30, "effect": [{ "type": "condition", "condition": "disarm", "target": "adjacentEnemies" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "gear-shield",
+    "slot": "hand",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 17,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }, { "type": "retaliate", "value": 1, "duration": "round" }],
+    "upgrade": { "price": 30, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }, { "type": "retaliate", "value": 1, "duration": "round" }] }
+  },
+  {
+    "id": "lumo-lantern",
+    "slot": "hand",
+    "rarity": "legendary",
+    "price": 60,
+    "unlockedAfter": 19,
+    "source": { "type": "secret", "at": "s19" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "light" }, { "type": "heal", "value": 2, "target": "alliesInRadius", "radius": 2 }],
+    "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "heal", "value": 2, "target": "alliesInRadius", "radius": 2 }],
+    "upgrade": { "price": 60, "effect": [{ "type": "infuse", "element": "light" }, { "type": "heal", "value": 3, "target": "alliesInRadius", "radius": 2 }], "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "heal", "value": 3, "target": "alliesInRadius", "radius": 2 }] }
+  },
+  {
+    "id": "broom",
+    "slot": "twoHands",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 6,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "push", "value": 1, "target": "adjacentEnemies" }, { "type": "loot", "range": 1 }],
+    "upgrade": { "price": 20, "effect": [{ "type": "push", "value": 2, "target": "adjacentEnemies" }, { "type": "loot", "range": 1 }] }
+  },
+  {
+    "id": "door-shield",
+    "slot": "twoHands",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 6,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 2, "target": "alliesInRadius", "duration": "round", "range": 1 }],
+    "upgrade": { "price": 35, "effect": [{ "type": "shield", "value": 2, "target": "alliesInRadius", "duration": "round", "range": 1 }, { "type": "retaliate", "value": 1, "duration": "round" }] }
+  },
+  {
+    "id": "fishing-rod",
+    "slot": "twoHands",
+    "rarity": "common",
+    "price": 25,
+    "unlockedAfter": 7,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "loot", "range": 2 }],
+    "upgrade": { "price": 25, "effect": [{ "type": "loot", "range": 3 }] }
+  },
+  {
+    "id": "herbal-staff",
+    "slot": "twoHands",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 8,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "heal", "value": 2, "target": "alliesInRadius", "radius": 2, "removeNegative": 1 }],
+    "upgrade": { "price": 35, "effect": [{ "type": "heal", "value": 3, "target": "alliesInRadius", "radius": 2, "removeNegative": 1 }] }
+  },
+  {
+    "id": "courage-drum",
+    "slot": "twoHands",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 9,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "condition", "condition": "strengthen", "target": "alliesInRadius", "radius": 1 }],
+    "upgrade": { "price": 35, "effect": [{ "type": "condition", "condition": "strengthen", "target": "alliesInRadius", "radius": 2 }] }
   }
 ]
