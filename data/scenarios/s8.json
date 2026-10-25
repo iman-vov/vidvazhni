@@ -41,9 +41,15 @@
     {
       "id": "s8.storeroom-north",
       "kind": "indoor",
+      "surface": "planks",
       "hexes": [
         [7, -3], [7, -2], [7, -1], [8, -4], [8, -3], [8, -2], [9, -4], [9, -3],
         [9, -2], [10, -5], [10, -4], [10, -3]
+      ],
+      "obstacles": [
+        { "hex": [7, -1], "model": "crate" },
+        { "hex": [8, -2], "model": "crate" },
+        { "hex": [9, -2], "model": "barrel" }
       ],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [9, -3], "by": { "2": "normal", "3": "elite", "4": "elite" } },
@@ -55,9 +61,15 @@
     {
       "id": "s8.storeroom-south",
       "kind": "indoor",
+      "surface": "planks",
       "hexes": [
         [7, 1], [7, 2], [7, 3], [8, 0], [8, 1], [8, 2], [9, 0], [9, 1],
         [9, 2], [10, -1], [10, 0], [10, 1], [11, 0]
+      ],
+      "obstacles": [
+        { "hex": [10, -1], "model": "barrel" },
+        { "hex": [9, 0], "model": "barrel" },
+        { "hex": [7, 3], "model": "crate" }
       ],
       "doors": [{ "hex": [11, 0], "to": "s8.office", "key": "office-key" }],
       "spawns": [
@@ -70,12 +82,19 @@
     {
       "id": "s8.office",
       "kind": "indoor",
+      "surface": "planks",
       "hexes": [
         [12, -3], [12, -2], [12, -1], [12, 0], [13, -3], [13, -2], [13, -1], [13, 0],
         [14, -4], [14, -3], [14, -2], [14, -1], [15, -4], [15, -3], [15, -2], [15, -1],
         [16, -5], [16, -4], [16, -3], [16, -2]
       ],
-      "obstacles": [{ "hex": [14, -4], "model": "crate-stack" }],
+      "obstacles": [
+        { "hex": [14, -4], "model": "crate-stack" },
+        { "hex": [12, -3], "model": "table" },
+        { "hex": [13, -3], "model": "table" },
+        { "hex": [13, 0], "model": "crate" },
+        { "hex": [12, -2], "model": "barrel" }
+      ],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [15, -3], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "gloom-cultist", "hex": [15, -1], "by": { "4": "normal" } },
