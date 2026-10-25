@@ -4,26 +4,264 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5173", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
       "port": 5173
     },
     {
       "name": "lan",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5180", "--strictPort", "--host"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort",
+        "--host"
+      ],
       "port": 5180
     },
     {
       "name": "play",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "play"],
+      "runtimeArgs": [
+        "run",
+        "play"
+      ],
       "port": 5181
     },
     {
       "name": "icons",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5191", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5191",
+        "--strictPort"
+      ],
       "port": 5191
+    },
+    {
+      "name": "act2-env",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5193",
+        "--strictPort"
+      ],
+      "port": 5193
+    },
+    {
+      "name": "hud-fix",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5197",
+        "--strictPort"
+      ],
+      "port": 5197
+    },
+    {
+      "name": "life",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5195",
+        "--strictPort"
+      ],
+      "port": 5195
+    },
+    {
+      "name": "flow",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5197",
+        "--strictPort"
+      ],
+      "port": 5197
+    },
+    {
+      "name": "audio",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "hud-fix-play",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "preview",
+        "--outDir",
+        "C:/Users/Vova/AppData/Local/Temp/claude/C--Braves/a3a1fbb4-5979-4fd7-b428-38a9d6318069/scratchpad/dist",
+        "--port",
+        "5198",
+        "--strictPort"
+      ],
+      "port": 5198
+    },
+    {
+      "name": "premission",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5211",
+        "--strictPort"
+      ],
+      "port": 5211
+    },
+    {
+      "name": "fx",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5213",
+        "--strictPort"
+      ],
+      "port": 5213
+    },
+    {
+      "name": "act2-models",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5231",
+        "--strictPort"
+      ],
+      "port": 5231
+    },
+    {
+      "name": "obstacles",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5223",
+        "--strictPort"
+      ],
+      "port": 5223
+    },
+    {
+      "name": "forest",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5251",
+        "--strictPort"
+      ],
+      "port": 5251
+    },
+    {
+      "name": "shadows",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5261",
+        "--strictPort"
+      ],
+      "port": 5261
+    },
+    {
+      "name": "scatter",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5271",
+        "--strictPort"
+      ],
+      "port": 5271
+    },
+    {
+      "name": "forest-wt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "C:/Users/Vova/AppData/Local/Temp/claude/C--Braves/b0031821-6d24-40a9-b8ff-c19222fba77d/scratchpad/wt",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5252",
+        "--strictPort"
+      ],
+      "port": 5252
+    },
+    {
+      "name": "forest-base",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "C:/Users/Vova/AppData/Local/Temp/claude/C--Braves/b0031821-6d24-40a9-b8ff-c19222fba77d/scratchpad/wt0",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5253",
+        "--strictPort"
+      ],
+      "port": 5253
+    },
+    {
+      "name": "marsh",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5281",
+        "--strictPort"
+      ],
+      "port": 5281
     }
   ]
 }

@@ -351,8 +351,16 @@ export function patchSway(m: THREE.Material, spec: SwaySpec): void {
       transformed.xz += vec2(swD, swD * 0.7);`
     : // Plants: the tips bend most, in slow gusts that roll across the location.
       `float swH = min(max(transformed.y, 0.0), 1.3);
-      float swGust = 0.6 + 0.4 * sin(uWindTime * 0.37 + transformed.x * 0.11 + transformed.z * 0.07);
-      float swS = sin(uWindTime * 1.6 + transformed.x * 1.3 + transformed.z * 0.9) + 0.45 * sin(uWindTime * 2.7 + transformed.x * 2.9 - transformed.z * 2.1);
+      // Instanced plants: the phase follows where each one stands, so a stand does not sway in step.
+      vec2 swP = transformed.xz;
+      #ifdef USE_INSTANCING
+      swP += instanceMatrix[3].xz;
+      #endif
+      #ifdef USE_BATCHING
+      swP += batchingMatrix[3].xz;
+      #endif
+      float swGust = 0.6 + 0.4 * sin(uWindTime * 0.37 + swP.x * 0.11 + swP.y * 0.07);
+      float swS = sin(uWindTime * 1.6 + swP.x * 1.3 + swP.y * 0.9) + 0.45 * sin(uWindTime * 2.7 + swP.x * 2.9 - swP.y * 2.1);
       transformed.xz += vec2(0.83, 0.55) * swS * swGust * ${amp} * swH * swH;`;
   m.onBeforeCompile = (shader, renderer) => {
     prev.call(m, shader, renderer);

@@ -162,6 +162,9 @@ export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode
       '#include <begin_vertex>',
       `#include <begin_vertex>
       vec4 envW = vec4(transformed, 1.0);
+      #ifdef USE_BATCHING
+      envW = batchingMatrix * envW;
+      #endif
       #ifdef USE_INSTANCING
       envW = instanceMatrix * envW;
       #endif

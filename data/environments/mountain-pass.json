@@ -2,6 +2,7 @@
   "id": "mountain-pass",
   "scenarios": ["s7"],
   "edge": "cliff",
+  "season": "winter",
   "surface": "rock",
   "boundary": "rocks",
   "ground": { "texture": "cave-rock", "tint": "#5c6068", "scale": 3.0 },

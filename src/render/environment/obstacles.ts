@@ -593,6 +593,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
   root.matrixAutoUpdate = false;
   for (const it of plan.items) {
     const holder = new THREE.Group();
+    holder.name = `cluster-item:${it.piece}:${it.tip}`;
     holder.position.set(it.x, it.y, it.z);
     holder.rotation.y = it.rot;
     const tilt = new THREE.Group();

@@ -6,6 +6,9 @@
 
 import type { BoundaryKind, SurfaceId } from '../../rules/content';
 
+/** Time of year outdoors: what lies on the open floor (scatter.ts). Absent = the mixed look. */
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+
 /** How the edge of the map is closed: walls indoors, plants and rock outdoors. */
 export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave' | 'mine' | 'cliff' | 'forge';
 
@@ -60,6 +63,9 @@ export interface EnvironmentDef {
     /** A piece hung on the inner face of every n-th full wall segment (a torch in a bracket). */
     sconce?: { piece: string; every: number };
   };
+  /** Season of the outdoor rooms: fallen leaves in autumn, green tufts and flowers in summer,
+   *  snow patches and bare twigs in winter (scatter.ts). Absent = the mixed look. */
+  season?: Season;
   /** Colours of the procedural materials (see PALETTE_DEFAULTS in pieces.ts). */
   palette?: Record<string, string>;
   light: {

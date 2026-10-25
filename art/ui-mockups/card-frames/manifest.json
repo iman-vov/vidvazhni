@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "canvas": { "width": 750, "height": 1050, "scale": 1 },
+  "palette": "../ability-card/palette.json",
+  "heroes": [
+    { "id": "warden", "color": "#3B6FB6", "frame": "frame-warden.png", "back": "back-warden.png" },
+    { "id": "wind-archer", "color": "#2FA36B", "frame": "frame-wind-archer.png", "back": "back-wind-archer.png" },
+    { "id": "herbalist", "color": "#E0B040", "frame": "frame-herbalist.png", "back": "back-herbalist.png" },
+    { "id": "rogue", "color": "#7E4FC4", "frame": "frame-rogue.png", "back": "back-rogue.png" },
+    { "id": "elementalist", "color": "#C23B4E", "frame": "frame-elementalist.png", "back": "back-elementalist.png" },
+    { "id": "tinker", "color": "#A65E2E", "frame": "frame-tinker.png", "back": "back-tinker.png" }
+  ],
+  "zones": {
+    "title": { "x": 105, "y": 18, "width": 540, "height": 142, "transparent": false },
+    "upperAction": { "x": 104, "y": 190, "width": 542, "height": 300, "transparent": true },
+    "initiative": { "x": 328, "y": 499, "width": 94, "height": 94, "shape": "circle", "transparent": true },
+    "lowerAction": { "x": 104, "y": 602, "width": 542, "height": 350, "transparent": true }
+  },
+  "alpha": {
+    "frame": "transparent outside the rectangular frame and in upperAction, initiative, lowerAction zones",
+    "back": "transparent outside rounded rectangular silhouette; filled interior"
+  }
+}

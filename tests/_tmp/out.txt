@@ -1,0 +1,11 @@
+s2 {"forest-gap:door":2,"lantern-post:feature":1,"hut:feature":1,"stump:ring":6,"mushrooms:ring":16,"log:ring":11,"bush:ring":8,"fern:ring":19,"fern:outside":22,"rock:outside":12,"tall-grass:outside":17,"bramble:outside":3,"wild-oak-warm:outside":7,"wild-oak:outside":12,"wild-fir:outside":6,"wild-birch:outside":10,"brush:outside":35,"thorn-bush:outside":9,"log:outside":3,"stump:outside":4,"wild-oak-warm:far":10,"wild-fir:far":29,"wild-birch:far":12,"wild-oak:far":11,"thicket:edge":19,"tall-grass:edge":70,"wild-birch:edge":2,"bramble:edge":60,"brush:edge":40,"roots:edge":8,"mushrooms:edge":6,"wild-oak-warm:edge":7,"thorn-bush:edge":6,"thicket-thorn:edge":10,"rock:edge":13,"wild-oak:edge":5,"fern:edge":64,"wild-fir:edge":4,"log:edge":10,"stump:edge":4,"thicket-low:edge":3}
+s3 {"timber-window:edge":11,"timber-wall:edge":20,"wall-torch:edge":5,"timber-wall-low:edge":13,"timber-post:corner":8,"timber-post-low:corner":2,"reeds-bank:edge":60,"forest-gap:door":1,"reeds-low:edge":21,"lantern-post:feature":1,"mill-wheel:feature":1,"crate:ring":3,"reeds:ring":19,"post:ring":7,"log:ring":3,"lilies:ring":15,"sacks:ring":8,"sack:ring":2,"lilies:outside":39,"tall-grass:outside":60,"post:outside":9,"reeds:outside":18,"brush:outside":36,"wild-birch:outside":1,"log:outside":9,"rock:outside":9,"wild-fir:outside":2,"wild-fir:far":9,"reeds:far":9,"wild-dead:far":1,"wild-oak:far":13,"wild-birch:far":7}
+s7 {"cliff-wall-snow:edge":21,"cliff-wall:edge":42,"cliff-low:edge":31,"cliff-pillar:corner":13,"cliff-pillar-low:corner":6,"cliff-gap:door":1,"campfire:ring":1,"snow-rock:ring":27,"crate:ring":10,"sacks:ring":1,"snow-rock:outside":60,"wild-fir-snow:outside":41,"wild-fir:outside":4,"cairn:outside":22,"stalagmite-big:far":15,"wild-fir-snow:far":25,"wild-fir:far":6}
+wild-oak#0 18 2132
+wild-fir#0 8 243
+wild-birch#0 6 720
+wild-dead#0 8 440
+brush#0 8 492
+bramble#0 63 2282
+tall-grass#0 25 375
+wild-fir-snow#0 12 284

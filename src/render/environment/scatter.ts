@@ -1,51 +1,34 @@
-// The small-things layer: pebbles, grass tufts, flowers, twigs, candle stubs, bones, pottery
-// shards, ore chunks, straw, coal… scattered over the floor in loose natural clumps so a location
-// feels lived in. Each kind is a few tiny procedural meshes drawn as instanced meshes (one draw
-// call per kind and material), seeded by the scenario so they stay put between loads.
+// The small-things layer: pebbles, twigs, fallen leaves, pine cones, grass tufts, wood chips, plank
+// shards, straw, pottery shards and snow scattered over the floor so a location feels lived in.
+// The shapes are Blender models (the scatter kit); here they are placed, seeded by the scenario so
+// they stay put between loads, and drawn in one batch per material look.
 //
-// They never compete with the game: on playable hexes they keep to the rim (figures and tokens
-// stand in the middle), never on a hex with an obstacle, door or object, never in water, and they
-// stay a hand's width off walls, partitions and the props along the walls. Tall kinds (reeds) stay
-// off the playable hexes altogether. The amount follows the quality (low is sparse).
+// Two passes: clumps of the location's kinds (rich and bare patches by noise), and a light litter
+// on the free hexes (chips, a bit of plank, straw indoors; leaves, twigs, pebbles, tufts outdoors,
+// by season) so open floor is not bare. Pure decoration: nothing here is a rule.
+//
+// They never compete with the game: on playable hexes they keep to a band between the middle
+// (figures, tokens and coins stand there) and the hex outline, never on a hex with an obstacle,
+// door or object, never in water, and they stay a hand's width off walls, partitions and the props
+// along the walls. The amount follows the floor-detail setting (floorDetail.ts: off / few / many,
+// by quality until the player picks).
 
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { hexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
+import { floorDetail, type FloorDetail } from '../floorDetail';
 import type { GraphicsQuality } from '../quality';
 import { distanceToOutline, seededRandom, valueNoise, type EnvLayout } from './layout';
-import { pieceMeta, type MaterialKey } from './pieces';
+import { pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { Placement } from './plan';
-import type { EdgeStyle } from './types';
+import type { EdgeStyle, EnvironmentDef, Season } from './types';
 
-export type ScatterKind =
-  | 'pebbles'
-  | 'tuft'
-  | 'dry-tuft'
-  | 'flowers'
-  | 'mushrooms'
-  | 'glow-caps'
-  | 'twigs'
-  | 'leaves'
-  | 'moss'
-  | 'straw'
-  | 'grain'
-  | 'shards'
-  | 'bones'
-  | 'candle'
-  | 'droppings'
-  | 'ore'
-  | 'coal'
-  | 'scraps'
-  | 'snow'
-  | 'reeds'
-  | 'chips';
+export type ScatterKind = 'pebbles' | 'stick' | 'leaf-pile' | 'chips' | 'plank' | 'straw' | 'pine-cone' | 'snow' | 'tuft' | 'shards';
 
-/** A kind's look: its parts (palette material, geometry in a ~0.25 cell around the origin). */
+/** What placement needs to know of a kind (its shapes come from the Blender kit). */
 interface KindDef {
-  parts: () => { material: MaterialKey; geometry: THREE.BufferGeometry }[];
-  /** Tall enough to hide a token's edge: only on ring hexes, never on playable ones. */
-  ringOnly?: boolean;
+  /** How far its shapes reach across the floor from the origin, at scale 1. */
+  reach: number;
   /** Bends in the wind (plants): sideways reach per unit of height squared. */
   sway?: number;
   /** Footprint radius, for spacing. */
@@ -58,22 +41,27 @@ export interface ScatterProfile {
   kinds: [ScatterKind, number][];
 }
 
-const SHARE: Record<GraphicsQuality, number> = { low: 0.3, medium: 0.65, high: 1 };
+/** Share of the clumps, and of the free hexes that get litter (with up to how many bits). */
+const LEVEL: Record<FloorDetail, { clumps: number; litter: number; bits: number }> = {
+  off: { clumps: 0, litter: 0, bits: 0 },
+  few: { clumps: 0.3, litter: 0.3, bits: 1 },
+  many: { clumps: 1, litter: 0.6, bits: 2 },
+};
 /** The shapes are modelled at life size; this makes them read from the board camera. */
 const SIZE = 1.8;
 
 /** By location id; locations without an entry use their edge style. */
 export const SCATTER: Record<string, ScatterProfile> = {
-  cellar: { perHex: 2.4, kinds: [['straw', 4], ['pebbles', 2], ['shards', 2], ['bones', 1], ['candle', 2], ['droppings', 2], ['chips', 2], ['grain', 1]] },
-  'thorn-path': { perHex: 3.4, kinds: [['tuft', 5], ['flowers', 3], ['mushrooms', 2], ['twigs', 3], ['leaves', 4], ['pebbles', 2], ['moss', 2]] },
-  'flooded-mill': { perHex: 2.8, kinds: [['reeds', 3], ['tuft', 3], ['grain', 3], ['straw', 2], ['pebbles', 2], ['moss', 2], ['twigs', 1], ['flowers', 1]] },
-  watchtower: { perHex: 2.2, kinds: [['pebbles', 3], ['shards', 2], ['straw', 2], ['bones', 1], ['candle', 2], ['chips', 2], ['moss', 1]] },
-  'gloom-heart': { perHex: 2.4, kinds: [['pebbles', 4], ['glow-caps', 3], ['bones', 2], ['moss', 1], ['candle', 1], ['chips', 1]] },
-  'mine-tunnel': { perHex: 2.6, kinds: [['ore', 3], ['pebbles', 4], ['coal', 2], ['chips', 3], ['candle', 1], ['scraps', 1]] },
-  'mountain-pass': { perHex: 2.8, kinds: [['pebbles', 4], ['snow', 4], ['dry-tuft', 3], ['twigs', 1], ['moss', 1]] },
-  copperdale: { perHex: 2.4, kinds: [['straw', 3], ['pebbles', 3], ['snow', 2], ['shards', 2], ['chips', 2], ['grain', 1], ['droppings', 1]] },
-  'dark-depths': { perHex: 2.4, kinds: [['pebbles', 4], ['ore', 2], ['glow-caps', 2], ['bones', 1], ['chips', 1], ['coal', 1]] },
-  'old-forge': { perHex: 2.6, kinds: [['coal', 4], ['scraps', 3], ['ore', 2], ['pebbles', 2], ['chips', 2]] },
+  cellar: { perHex: 2.2, kinds: [['straw', 4], ['pebbles', 3], ['shards', 2], ['chips', 3], ['plank', 1]] },
+  'thorn-path': { perHex: 3, kinds: [['tuft', 5], ['leaf-pile', 4], ['stick', 3], ['pine-cone', 2], ['pebbles', 2]] },
+  'flooded-mill': { perHex: 2.6, kinds: [['tuft', 5], ['straw', 3], ['pebbles', 2], ['stick', 2], ['plank', 1]] },
+  watchtower: { perHex: 2.2, kinds: [['pebbles', 3], ['shards', 2], ['straw', 2], ['chips', 3], ['plank', 1]] },
+  'gloom-heart': { perHex: 2.2, kinds: [['pebbles', 5], ['shards', 1], ['chips', 1], ['stick', 1]] },
+  'mine-tunnel': { perHex: 2.4, kinds: [['pebbles', 6], ['chips', 3], ['plank', 1], ['shards', 1]] },
+  'mountain-pass': { perHex: 2.6, kinds: [['pebbles', 4], ['snow', 4], ['tuft', 2], ['stick', 1], ['pine-cone', 1]] },
+  copperdale: { perHex: 2.2, kinds: [['straw', 3], ['pebbles', 3], ['snow', 2], ['shards', 2], ['chips', 2], ['plank', 1]] },
+  'dark-depths': { perHex: 2.2, kinds: [['pebbles', 6], ['shards', 1], ['chips', 1]] },
+  'old-forge': { perHex: 2.4, kinds: [['pebbles', 4], ['chips', 3], ['plank', 1], ['shards', 1]] },
 };
 
 const BY_EDGE: Record<EdgeStyle, ScatterProfile> = {
@@ -88,173 +76,83 @@ const BY_EDGE: Record<EdgeStyle, ScatterProfile> = {
   forge: SCATTER['old-forge']!,
 };
 
-export function scatterProfile(id: string | undefined, edge: EdgeStyle): ScatterProfile {
-  return (id && SCATTER[id]) || BY_EDGE[edge];
-}
+const OUTDOOR: ReadonlySet<EdgeStyle> = new Set(['forest', 'shore', 'cliff']);
+const UNDERGROUND: ReadonlySet<EdgeStyle> = new Set(['cave', 'mine', 'forge']);
 
-// ─── Shapes ───────────────────────────────────────────────────────────────────
-
-const M = new THREE.Matrix4();
-const Q = new THREE.Quaternion();
-const E = new THREE.Euler();
-const V = new THREE.Vector3();
-const S = new THREE.Vector3();
-
-/** Places a template geometry (non-indexed copy) at a spot, turned and scaled. */
-function at(g: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx): THREE.BufferGeometry {
-  const c = g.index ? g.toNonIndexed() : g.clone();
-  c.applyMatrix4(M.compose(V.set(x, y, z), Q.setFromEuler(E.set(rx, ry, rz)), S.set(sx, sy, sz)));
-  return c;
-}
-
-/** Merges parts of one material and gives them a white vertex colour (the palette materials
- *  multiply by it), a little darker toward the ground. */
-function merge(list: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  for (const g of list) {
-    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+/** The location's clump kinds, turned to its season when it is outdoors (autumn: more fallen
+ *  leaves; winter: snow instead of leaves, less grass; spring and summer: green, hardly a leaf). */
+export function scatterProfile(id: string | undefined, edge: EdgeStyle, season?: Season): ScatterProfile {
+  const base = (id && SCATTER[id]) || BY_EDGE[edge];
+  if (!season || !OUTDOOR.has(edge)) return base;
+  const w = new Map<ScatterKind, number>();
+  const add = (k: ScatterKind, n: number) => n > 0 && w.set(k, (w.get(k) ?? 0) + n);
+  for (const [k, n] of base.kinds) {
+    if (season === 'autumn') add(k, k === 'leaf-pile' ? n * 2 : k === 'tuft' ? n * 0.6 : n);
+    else if (season === 'winter') add(k, k === 'leaf-pile' ? 0 : k === 'tuft' ? n * 0.4 : n);
+    else add(k, k === 'leaf-pile' ? (season === 'summer' ? n * 0.3 : 0) : k === 'tuft' ? n * 1.5 : n);
   }
-  const g = mergeGeometries(list)!;
-  for (const x of list) x.dispose();
-  const pos = g.getAttribute('position');
-  const col = new Float32Array(pos.count * 3);
-  for (let i = 0; i < pos.count; i++) {
-    const k = 0.78 + 0.22 * Math.min(1, Math.max(0, pos.getY(i) / 0.06));
-    col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = k;
-  }
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  g.computeVertexNormals();
-  return g;
+  if (season === 'winter') add('snow', 4);
+  return { perHex: base.perHex, kinds: [...w] };
 }
 
-const stone = () => new THREE.IcosahedronGeometry(1, 0);
-const blade = () => new THREE.ConeGeometry(1, 1, 3, 1).translate(0, 0.5, 0);
-const rod = () => new THREE.CylinderGeometry(1, 1, 1, 5, 1).translate(0, 0.5, 0);
-const disc = () => new THREE.CircleGeometry(1, 6).rotateX(-Math.PI / 2);
-
-function tuft(n: number, h: number, spread: number): THREE.BufferGeometry[] {
-  const out: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + i;
-    const r = spread * (0.3 + 0.7 * ((i * 0.618) % 1));
-    out.push(at(blade(), Math.cos(a) * r, 0, Math.sin(a) * r, Math.sin(a) * 0.35, a, -Math.cos(a) * 0.35, 0.012, h * (0.7 + 0.5 * ((i * 0.37) % 1)), 0.012));
-  }
-  return out;
-}
-
-const KINDS: Record<ScatterKind, KindDef> = {
-  pebbles: {
-    radius: 0.09,
-    parts: () => [
-      { material: 'rock', geometry: merge([at(stone(), 0, 0.012, 0, 0.3, 0.2, 0, 0.034, 0.02, 0.028), at(stone(), 0.06, 0.008, 0.03, 0, 1, 0.4, 0.022, 0.014, 0.02)]) },
-      { material: 'rockDark', geometry: merge([at(stone(), -0.05, 0.007, 0.04, 0.5, 0, 0.2, 0.02, 0.012, 0.017), at(stone(), 0.02, 0.006, -0.06, 0, 0.4, 0, 0.016, 0.01, 0.014)]) },
-    ],
-  },
-  tuft: { radius: 0.08, sway: 1.4, parts: () => [{ material: 'leaf', geometry: merge(tuft(6, 0.11, 0.035)) }, { material: 'leafDark', geometry: merge(tuft(4, 0.08, 0.05)) }] },
-  'dry-tuft': { radius: 0.08, sway: 1.2, parts: () => [{ material: 'straw', geometry: merge(tuft(6, 0.1, 0.04)) }, { material: 'reed', geometry: merge(tuft(3, 0.07, 0.03)) }] },
-  flowers: {
-    radius: 0.08,
-    sway: 1.4,
-    parts: () => [
-      { material: 'leaf', geometry: merge(tuft(4, 0.09, 0.03)) },
-      { material: 'berry', geometry: merge([at(stone(), 0.02, 0.09, 0.01, 0, 0, 0, 0.014), at(stone(), -0.03, 0.075, 0.02, 0, 0, 0, 0.012)]) },
-      { material: 'straw', geometry: merge([at(stone(), 0.01, 0.07, -0.03, 0, 0, 0, 0.012)]) },
-    ],
-  },
-  mushrooms: {
-    radius: 0.07,
-    parts: () => [
-      { material: 'cloth', geometry: merge([at(rod(), 0, 0, 0, 0, 0, 0.1, 0.008, 0.045, 0.008), at(rod(), 0.04, 0, 0.02, 0, 0, -0.15, 0.006, 0.03, 0.006)]) },
-      {
-        material: 'berry',
-        geometry: merge([at(new THREE.SphereGeometry(1, 7, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0.004, 0.044, 0, 0, 0, 0.1, 0.026, 0.016, 0.026), at(new THREE.SphereGeometry(1, 7, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0.044, 0.03, 0.02, 0, 0, -0.15, 0.018, 0.011, 0.018)]),
-      },
-    ],
-  },
-  'glow-caps': {
-    radius: 0.07,
-    parts: () => [
-      { material: 'rockDark', geometry: merge([at(rod(), 0, 0, 0, 0, 0, 0.1, 0.006, 0.035, 0.006), at(rod(), 0.035, 0, -0.02, 0, 0, -0.2, 0.005, 0.025, 0.005), at(rod(), -0.03, 0, 0.025, 0.2, 0, 0, 0.004, 0.02, 0.004)]) },
-      {
-        material: 'glowCold',
-        geometry: merge([
-          at(new THREE.SphereGeometry(1, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0.004, 0.034, 0, 0, 0, 0.1, 0.02, 0.012, 0.02),
-          at(new THREE.SphereGeometry(1, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0.04, 0.024, -0.02, 0, 0, -0.2, 0.014, 0.009, 0.014),
-          at(new THREE.SphereGeometry(1, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), -0.034, 0.02, 0.026, 0.2, 0, 0, 0.011, 0.007, 0.011),
-        ]),
-      },
-    ],
-  },
-  twigs: {
-    radius: 0.1,
-    parts: () => [{ material: 'bark', geometry: merge([at(rod(), -0.06, 0.006, 0, 0, 0.3, Math.PI / 2, 0.006, 0.14, 0.006), at(rod(), -0.01, 0.006, 0.04, 0, -0.9, Math.PI / 2, 0.004, 0.08, 0.004), at(rod(), 0.02, 0.005, -0.03, 0, 1.6, Math.PI / 2, 0.004, 0.06, 0.004)]) }],
-  },
-  leaves: {
-    radius: 0.1,
-    parts: () => [
-      { material: 'leafWarm', geometry: merge([at(disc(), 0, 0.004, 0, 0.1, 0.4, 0, 0.026, 1, 0.014), at(disc(), 0.06, 0.003, 0.04, -0.1, 1.4, 0, 0.022, 1, 0.012), at(disc(), -0.05, 0.003, -0.03, 0, 2.2, 0.1, 0.024, 1, 0.013)]) },
-      { material: 'leaf', geometry: merge([at(disc(), 0.02, 0.005, -0.06, 0, 0.9, 0.1, 0.022, 1, 0.012), at(disc(), -0.06, 0.004, 0.05, 0.1, 2.8, 0, 0.02, 1, 0.011)]) },
-    ],
-  },
-  moss: { radius: 0.12, parts: () => [{ material: 'moss', geometry: merge([at(stone(), 0, 0, 0, 0, 0, 0, 0.09, 0.012, 0.07), at(stone(), 0.07, 0, 0.05, 0, 0.7, 0, 0.05, 0.01, 0.04)]) }] },
-  straw: {
-    radius: 0.12,
-    parts: () => [
-      {
-        material: 'straw',
-        geometry: merge([0, 1, 2, 3, 4, 5, 6].map((i) => at(rod(), Math.cos(i * 2.4) * 0.05, 0.004, Math.sin(i * 2.4) * 0.05, 0, i * 0.9, Math.PI / 2, 0.003, 0.09 + (i % 3) * 0.03, 0.003))),
-      },
-    ],
-  },
-  grain: {
-    radius: 0.12,
-    parts: () => [
-      { material: 'cloth', geometry: merge([at(stone(), 0, 0, 0, 0, 0, 0, 0.1, 0.008, 0.07), at(stone(), 0.08, 0, 0.04, 0, 0.5, 0, 0.05, 0.006, 0.04)]) },
-      { material: 'straw', geometry: merge([0, 1, 2, 3, 4].map((i) => at(stone(), Math.cos(i * 1.7) * 0.07, 0.006, Math.sin(i * 1.7) * 0.05, 0, i, 0, 0.007, 0.005, 0.011))) },
-    ],
-  },
-  shards: {
-    radius: 0.09,
-    parts: () => [
-      { material: 'ore', geometry: merge([at(new THREE.CylinderGeometry(1, 1, 1, 6, 1, true, 0, 1.6), 0, 0.012, 0, 0.2, 0.3, Math.PI / 2, 0.04, 0.03, 0.04), at(new THREE.BoxGeometry(1, 1, 1), 0.05, 0.004, 0.03, 0, 0.7, 0.1, 0.03, 0.006, 0.022), at(new THREE.BoxGeometry(1, 1, 1), -0.04, 0.003, 0.04, 0, -0.4, 0, 0.022, 0.005, 0.016)]) },
-    ],
-  },
-  bones: {
-    radius: 0.09,
-    parts: () => [
-      {
-        material: 'cloth',
-        geometry: merge([at(rod(), -0.045, 0.008, 0, 0, 0.2, Math.PI / 2, 0.006, 0.09, 0.006), at(stone(), -0.05, 0.009, 0.01, 0, 0, 0, 0.011), at(stone(), 0.044, 0.009, -0.008, 0, 0, 0, 0.011), at(rod(), 0, 0.005, 0.04, 0, 1.3, Math.PI / 2, 0.004, 0.05, 0.004)]),
-      },
-    ],
-  },
-  candle: {
-    radius: 0.06,
-    parts: () => [
-      { material: 'cloth', geometry: merge([at(rod(), 0, 0, 0, 0, 0, 0, 0.012, 0.045, 0.012), at(rod(), 0.03, 0, 0.018, 0, 0, 0, 0.01, 0.028, 0.01), at(disc(), 0.01, 0.002, 0.008, 0, 0, 0, 0.035)]) },
-      { material: 'flame', geometry: merge([at(blade(), 0, 0.047, 0, 0, 0, 0, 0.006, 0.018, 0.006), at(blade(), 0.03, 0.03, 0.018, 0, 0, 0, 0.005, 0.015, 0.005)]) },
-    ],
-  },
-  droppings: { radius: 0.05, parts: () => [{ material: 'woodDark', geometry: merge([0, 1, 2, 3].map((i) => at(stone(), Math.cos(i * 2.1) * 0.025, 0.003, Math.sin(i * 2.1) * 0.02, 0, i, 0, 0.007, 0.004, 0.004))) }] },
-  ore: {
-    radius: 0.09,
-    parts: () => [
-      { material: 'ore', geometry: merge([at(new THREE.DodecahedronGeometry(1, 0), 0, 0.016, 0, 0.4, 0.3, 0, 0.03, 0.022, 0.026), at(new THREE.DodecahedronGeometry(1, 0), 0.05, 0.01, 0.03, 0, 1, 0.3, 0.018)]) },
-      { material: 'rockDark', geometry: merge([at(stone(), -0.04, 0.01, 0.03, 0.2, 0, 0, 0.024, 0.016, 0.02), at(stone(), 0.02, 0.008, -0.05, 0, 0.6, 0, 0.018, 0.012, 0.016)]) },
-    ],
-  },
-  coal: { radius: 0.09, parts: () => [{ material: 'shadow', geometry: merge([0, 1, 2, 3, 4].map((i) => at(new THREE.DodecahedronGeometry(1, 0), Math.cos(i * 2.3) * 0.04, 0.008, Math.sin(i * 2.3) * 0.035, i, i * 0.7, 0, 0.014 + (i % 2) * 0.006))) }] },
-  scraps: {
-    radius: 0.1,
-    parts: () => [
-      { material: 'iron', geometry: merge([at(new THREE.BoxGeometry(1, 1, 1), 0, 0.004, 0, 0, 0.5, 0.05, 0.07, 0.006, 0.018), at(new THREE.TorusGeometry(1, 0.25, 4, 8), 0.05, 0.006, 0.04, Math.PI / 2, 0, 0, 0.018), at(rod(), -0.04, 0.005, 0.04, 0, 1.2, Math.PI / 2, 0.004, 0.06, 0.004)]) },
-    ],
-  },
-  snow: { radius: 0.12, parts: () => [{ material: 'snow', geometry: merge([at(stone(), 0, 0, 0, 0, 0, 0, 0.1, 0.02, 0.07), at(stone(), 0.08, 0, 0.04, 0, 0.6, 0, 0.05, 0.014, 0.045), at(stone(), -0.06, 0, -0.03, 0, 1.2, 0, 0.04, 0.012, 0.035)]) }] },
-  reeds: { radius: 0.1, ringOnly: true, sway: 0.5, parts: () => [{ material: 'reed', geometry: merge(tuft(7, 0.3, 0.05)) }, { material: 'leafDark', geometry: merge(tuft(4, 0.2, 0.06)) }] },
-  chips: { radius: 0.08, parts: () => [{ material: 'woodLight', geometry: merge([0, 1, 2].map((i) => at(new THREE.BoxGeometry(1, 1, 1), Math.cos(i * 2.2) * 0.04, 0.003, Math.sin(i * 2.2) * 0.035, 0, i * 1.1, 0, 0.03, 0.005, 0.01))) }] },
+/** What lies on the free hexes, by the kind of room: indoors, underground, outdoors by season. */
+const LITTER: Record<'indoor' | 'underground' | Season | 'mixed', [ScatterKind, number][]> = {
+  indoor: [['chips', 4], ['plank', 1], ['straw', 2], ['shards', 1], ['pebbles', 2]],
+  underground: [['pebbles', 5], ['chips', 1]],
+  autumn: [['leaf-pile', 4], ['stick', 3], ['pine-cone', 1], ['pebbles', 2], ['tuft', 1]],
+  summer: [['tuft', 4], ['pebbles', 2], ['stick', 1], ['pine-cone', 1], ['leaf-pile', 1]],
+  spring: [['tuft', 5], ['pebbles', 2], ['stick', 1]],
+  winter: [['snow', 4], ['stick', 3], ['pebbles', 2], ['pine-cone', 1]],
+  mixed: [['tuft', 3], ['leaf-pile', 2], ['stick', 2], ['pebbles', 2]],
 };
 
+/** The litter kinds of a room by its edge (indoors, underground, outdoors in the season). */
+export function litterKinds(edge: EdgeStyle, season?: Season): [ScatterKind, number][] {
+  if (OUTDOOR.has(edge)) return LITTER[season ?? 'mixed'];
+  return UNDERGROUND.has(edge) ? LITTER.underground : LITTER.indoor;
+}
+
+// ─── Kinds ────────────────────────────────────────────────────────────────────
+//
+// The shapes are modelled in Blender (art/blender/scatter-kit/scatter_kit.py) and ship as one GLB,
+// assets/models/scatter-kit: each top-level node is `<kind>_<n>`, 4 variants per kind, at life
+// size around its origin, with materials named by palette key (rock, woodLight, leafWarm…). The
+// table below is what placement needs before the GLB has loaded: spacing radius and how far the
+// shapes reach across the floor (every variant stays inside its kind's reach).
+
+const KINDS: Record<ScatterKind, KindDef> = {
+  pebbles: { radius: 0.09, reach: 0.09 },
+  stick: { radius: 0.1, reach: 0.22 },
+  'leaf-pile': { radius: 0.09, reach: 0.09 },
+  chips: { radius: 0.08, reach: 0.07 },
+  plank: { radius: 0.1, reach: 0.11 },
+  straw: { radius: 0.12, reach: 0.17 },
+  'pine-cone': { radius: 0.06, reach: 0.06 },
+  snow: { radius: 0.12, reach: 0.14 },
+  tuft: { radius: 0.08, reach: 0.08, sway: 1.4 },
+  shards: { radius: 0.09, reach: 0.08 },
+};
+
+/** Model id of the Blender kit with every kind's variants. */
+export const SCATTER_KIT = 'scatter-kit';
+
+/** Variants a spot may pick from; the build uses `variant % <variants in the GLB>`. */
+const VARIANTS = 4;
+
+/** Kit node name of a kind's variant (1-based, as in Blender). */
+export function variantNode(kind: ScatterKind, n: number): string {
+  return `${kind}_${n + 1}`;
+}
+
+/** Every kind, for the kit's completeness check. */
+export const SCATTER_KINDS = Object.keys(KINDS) as ScatterKind[];
+
 // ─── Placement (pure) ─────────────────────────────────────────────────────────
+
+/** How far a kind's shapes reach across the floor from its origin, at scale 1. */
+export function kindReach(kind: ScatterKind): number {
+  return KINDS[kind].reach;
+}
 
 export interface ScatterSpot {
   kind: ScatterKind;
@@ -262,6 +160,10 @@ export interface ScatterSpot {
   z: number;
   rot: number;
   scale: number;
+  /** Which of the kind's modelled variants. */
+  variant: number;
+  /** Brightness of this one (a little lighter or darker, so repeats do not show). */
+  tint: number;
 }
 
 export interface ScatterInput {
@@ -274,11 +176,26 @@ export interface ScatterInput {
   placements: readonly Placement[];
   /** Thin walls between rooms, as polylines. */
   partitions: readonly { x: number; z: number }[][];
+  /** Off / few / many; default: the player's setting for the quality (floorDetail.ts). */
+  detail?: FloorDetail;
+  /** The location's edges and season, for the litter on free hexes (none without it). */
+  def?: Pick<EnvironmentDef, 'edge' | 'rooms' | 'season'>;
 }
 
-/** On a playable hex: how far from the centre a small thing may lie (figures stand in the middle). */
-export const RIM_MIN = 0.66;
-const RIM_MAX = 0.9;
+/** On a playable hex, how far from the middle a small thing may lie, as the distance toward the
+ *  nearest side (0.866 is the outline): figures, tokens and coins stand inside RIM_MIN. */
+export const RIM_MIN = 0.5;
+/** Clumps keep a little further out than the single litter bits. */
+const CLUMP_MIN = 0.56;
+/** How far toward the outline a piece's edge may reach (it is drawn at 0.866). */
+export const RIM_MAX = 0.8;
+const SQ3_2 = Math.sqrt(3) / 2;
+
+/** Distance from a flat-top hex's centre toward its nearest side (0 in the middle, 0.866 on the
+ *  outline): the hex-shaped counterpart of the radius. */
+export function hexRim(dx: number, dz: number): number {
+  return Math.max(Math.abs(dz), Math.abs(SQ3_2 * dx + 0.5 * dz), Math.abs(-SQ3_2 * dx + 0.5 * dz));
+}
 
 function segDistance(px: number, pz: number, a: { x: number; z: number }, b: { x: number; z: number }): number {
   const dx = b.x - a.x;
@@ -292,9 +209,10 @@ function segDistance(px: number, pz: number, a: { x: number; z: number }, b: { x
  *  rich and others bare. */
 export function planScatter(input: ScatterInput): ScatterSpot[] {
   const { layout, profile, busy, placements, partitions } = input;
+  const level = LEVEL[input.detail ?? floorDetail(input.quality)];
   const rnd = seededRandom(`scatter:${layout.scenarioId}`);
   const hexes = [...layout.footprint.keys(), ...[...layout.ring.keys()].filter((k) => !layout.clear.has(k))];
-  const target = Math.round(hexes.length * profile.perHex * SHARE[input.quality]);
+  const target = Math.round(hexes.length * profile.perHex * level.clumps);
   const total = profile.kinds.reduce((s, [, w]) => s + w, 0);
   const pickKind = (): ScatterKind => {
     let r = rnd() * total;
@@ -303,26 +221,25 @@ export function planScatter(input: ScatterInput): ScatterSpot[] {
   };
   const props = placements.map((p) => ({ x: p.x, z: p.z, r: (pieceMeta(p.piece)?.radius ?? 0.3) * (p.scale ?? 1) + 0.06 }));
   const out: ScatterSpot[] = [];
-  const ok = (kind: ScatterKind, x: number, z: number): boolean => {
-    const rad = KINDS[kind].radius * SIZE;
-    const def = KINDS[kind];
+  const ok = (kind: ScatterKind, x: number, z: number, scale: number, rimMin: number): boolean => {
+    const rad = KINDS[kind].radius * scale;
     const [q, r] = worldToHex(x, z);
     const k = hexKey([q, r]);
     const playable = layout.footprint.has(k);
     if (!playable && !layout.ring.has(k)) return false;
     if (layout.clear.has(k) || busy.has(k)) return false;
     if (playable) {
-      if (def.ringOnly) return false;
       const t = layout.terrain.get(k);
       if (t === 'water' || t === 'hazardous') return false;
       const c = hexToWorld(q, r);
-      const d = Math.hypot(x - c.x, z - c.z);
-      if (d < RIM_MIN || d > RIM_MAX) return false;
+      const d = hexRim(x - c.x, z - c.z);
+      // The whole shape stays inside the band: off the middle and short of the outline.
+      if (d < rimMin || d + kindReach(kind) * scale > RIM_MAX) return false;
     }
     if (distanceToOutline(layout, x, z) < 0.14 + rad) return false;
     for (const line of partitions) for (let i = 1; i < line.length; i++) if (segDistance(x, z, line[i - 1]!, line[i]!) < 0.16 + rad) return false;
     if (props.some((p) => Math.hypot(p.x - x, p.z - z) < p.r + rad)) return false;
-    if (out.some((o) => Math.hypot(o.x - x, o.z - z) < (KINDS[o.kind].radius * SIZE + rad) * 0.9)) return false;
+    if (out.some((o) => Math.hypot(o.x - x, o.z - z) < (KINDS[o.kind].radius * o.scale + rad) * 0.9)) return false;
     return true;
   };
   for (let tries = 0; out.length < target && tries < target * 12; tries++) {
@@ -342,8 +259,42 @@ export function planScatter(input: ScatterInput): ScatterSpot[] {
       const z = cz + Math.sin(a) * d;
       // Mostly the clump's kind, now and then a neighbour of another.
       const kk = rnd() < 0.75 ? kind : pickKind();
-      if (!ok(kk, x, z)) continue;
-      out.push({ kind: kk, x, z, rot: rnd() * Math.PI * 2, scale: (0.75 + rnd() * 0.55) * SIZE });
+      const scale = (0.75 + rnd() * 0.55) * SIZE;
+      const rot = rnd() * Math.PI * 2;
+      const tint = 0.86 + rnd() * 0.24;
+      const variant = Math.floor(rnd() * VARIANTS);
+      if (!ok(kk, x, z, scale, CLUMP_MIN)) continue;
+      out.push({ kind: kk, x, z, rot, scale, variant, tint });
+    }
+  }
+  // Litter: a bit or two on a share of the free hexes, so open floor is not bare. The hexes go in
+  // map order with their own seed, so a hex keeps its bits whatever the clumps did.
+  if (input.def && level.litter > 0) {
+    const def = input.def;
+    for (const [k, room] of layout.footprint) {
+      if (busy.has(k)) continue;
+      const lr = seededRandom(`litter:${layout.scenarioId}:${k}`);
+      if (lr() >= level.litter) continue;
+      const kinds = litterKinds(def.rooms?.[room]?.edge ?? def.edge, def.season);
+      const sum = kinds.reduce((s, [, w]) => s + w, 0);
+      const [q, r] = k.split(',').map(Number) as [number, number];
+      const c = hexToWorld(q, r);
+      const bits = level.bits > 1 && lr() < 0.4 ? 2 : 1;
+      for (let b = 0, tries = 0; b < bits && tries < 8; tries++) {
+        let pick = lr() * sum;
+        const kind = kinds.find(([, w]) => (pick -= w) <= 0)?.[0] ?? kinds[0]![0];
+        const a = lr() * Math.PI * 2;
+        const d = RIM_MIN + lr() * 0.22;
+        const x = c.x + Math.cos(a) * d;
+        const z = c.z + Math.sin(a) * d;
+        const scale = (0.85 + lr() * 0.3) * SIZE;
+        const rot = lr() * Math.PI * 2;
+        const tint = 0.86 + lr() * 0.24;
+        const variant = Math.floor(lr() * VARIANTS);
+        if (!ok(kind, x, z, scale, RIM_MIN)) continue;
+        out.push({ kind, x, z, rot, scale, variant, tint });
+        b++;
+      }
     }
   }
   return out;
@@ -356,41 +307,133 @@ export interface ScatterBuild {
   dispose(): void;
 }
 
-/** Instanced meshes for the spots: one per kind and part. `material` gives the palette material
- *  (with `sway` for plants). Nothing casts shadows; everything receives them. */
-export function buildScatter(spots: readonly ScatterSpot[], material: (key: MaterialKey, sway: number | null) => THREE.Material): ScatterBuild {
+/** The look of a batch: lit (bending in the wind by `sway`), or unlit (candle flames, glow caps). */
+export type ScatterLook = { unlit: true } | { unlit: false; sway: number | null };
+
+/** Height over which a piece goes from its darker foot to full colour. */
+const FOOT = 0.06;
+
+/** White materials with vertex colours: the palette colour is painted into the vertices, so every
+ *  kind and variant of a look shares one material and one draw call. */
+const PROTOS = new Map<string, THREE.Material>();
+export function scatterProto(quality: GraphicsQuality, unlit: boolean): THREE.Material {
+  const id = unlit ? 'unlit' : quality === 'low' ? 'lambert' : 'standard';
+  let m = PROTOS.get(id);
+  if (!m) {
+    m = unlit
+      ? new THREE.MeshBasicMaterial({ vertexColors: true })
+      : quality === 'low'
+        ? new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })
+        : new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9, metalness: 0 });
+    m.name = `scatter:${id}`;
+    PROTOS.set(id, m);
+  }
+  return m;
+}
+
+/** A kit part's geometry with its node matrix applied and the palette colour in its vertices, a
+ *  little darker toward the ground. */
+function painted(part: Part, colour: THREE.Color): THREE.BufferGeometry {
+  const g = part.geometry.clone().applyMatrix4(part.matrix);
+  for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+  const pos = g.getAttribute('position');
+  const col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const k = 0.78 + 0.22 * Math.min(1, Math.max(0, pos.getY(i) / FOOT));
+    col[i * 3] = colour.r * k;
+    col[i * 3 + 1] = colour.g * k;
+    col[i * 3 + 2] = colour.b * k;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+
+/**
+ * The spots drawn from the Blender kit (`kit`: node name → parts). One BatchedMesh per look (lit,
+ * each sway, unlit): every kind and variant of it in one draw call, culled per instance.
+ * `palette` gives a palette key's colour, `material` the board's material for a look (with fog
+ * and veil patched in). Nothing casts shadows on any quality (a centimetre-high bit has no
+ * visible shadow from the board camera, and the shadow pass would draw it again); everything
+ * receives them. Kinds missing from the kit are left out.
+ */
+export function buildScatter(
+  spots: readonly ScatterSpot[],
+  kit: ReadonlyMap<string, readonly Part[]>,
+  palette: (key: MaterialKey) => THREE.Color,
+  material: (look: ScatterLook) => THREE.Material,
+): ScatterBuild {
   const root = new THREE.Group();
   root.name = 'env:scatter';
-  const geometries: THREE.BufferGeometry[] = [];
-  const byKind = new Map<ScatterKind, ScatterSpot[]>();
-  for (const s of spots) {
-    let list = byKind.get(s.kind);
-    if (!list) byKind.set(s.kind, (list = []));
-    list.push(s);
+  // The kit's variants of each kind, painted, each part tagged with its look.
+  const variants = new Map<ScatterKind, { look: string; geometry: THREE.BufferGeometry }[][]>();
+  const looks = new Map<string, ScatterLook>();
+  const variantsOf = (kind: ScatterKind) => {
+    let list = variants.get(kind);
+    if (list) return list;
+    list = [];
+    const sway = KINDS[kind].sway ?? null;
+    for (let n = 0; n < VARIANTS; n++) {
+      const parts = kit.get(variantNode(kind, n));
+      if (!parts) continue;
+      list.push(
+        parts.map((part) => {
+          const key = (part.material as THREE.Material).name as MaterialKey;
+          const unlit = UNLIT.has(key);
+          const id = unlit ? 'unlit' : `lit:${sway ?? 0}`;
+          looks.set(id, unlit ? { unlit: true } : { unlit: false, sway });
+          return { look: id, geometry: painted(part, palette(key)) };
+        }),
+      );
+    }
+    variants.set(kind, list);
+    return list;
+  };
+  // Per look: its geometries (one per kind, variant and part) and the instances of each.
+  const batches = new Map<string, { geometries: THREE.BufferGeometry[]; instances: { geometry: number; spot: ScatterSpot }[] }>();
+  const geoIndex = new Map<THREE.BufferGeometry, number>();
+  for (const spot of spots) {
+    const list = variantsOf(spot.kind);
+    if (!list.length) continue;
+    for (const part of list[spot.variant % list.length]!) {
+      let batch = batches.get(part.look);
+      if (!batch) batches.set(part.look, (batch = { geometries: [], instances: [] }));
+      let gi = geoIndex.get(part.geometry);
+      if (gi === undefined) {
+        gi = batch.geometries.push(part.geometry) - 1;
+        geoIndex.set(part.geometry, gi);
+      }
+      batch.instances.push({ geometry: gi, spot });
+    }
   }
+  const owned = [...variants.values()].flat(2).map((v) => v.geometry);
+  const meshes: THREE.BatchedMesh[] = [];
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
   const p = new THREE.Vector3();
   const sc = new THREE.Vector3();
-  for (const [kind, list] of byKind) {
-    const def = KINDS[kind];
-    for (const part of def.parts()) {
-      geometries.push(part.geometry);
-      const mesh = new THREE.InstancedMesh(part.geometry, material(part.material, def.sway ?? null), list.length);
-      list.forEach((s, i) => mesh.setMatrixAt(i, m.compose(p.set(s.x, 0, s.z), q.setFromAxisAngle(up, s.rot), sc.setScalar(s.scale))));
-      mesh.instanceMatrix.needsUpdate = true;
-      mesh.computeBoundingSphere();
-      mesh.receiveShadow = true;
-      mesh.castShadow = false;
-      mesh.name = `env:scatter:${kind}`;
-      root.add(mesh);
+  const col = new THREE.Color();
+  for (const [id, batch] of batches) {
+    const vertices = batch.geometries.reduce((n, g) => n + g.getAttribute('position').count, 0);
+    const mesh = new THREE.BatchedMesh(batch.instances.length, vertices, 0, material(looks.get(id)!));
+    const ids = batch.geometries.map((g) => mesh.addGeometry(g));
+    for (const { geometry, spot } of batch.instances) {
+      const i = mesh.addInstance(ids[geometry]!);
+      mesh.setMatrixAt(i, m.compose(p.set(spot.x, 0, spot.z), q.setFromAxisAngle(up, spot.rot), sc.setScalar(spot.scale)));
+      mesh.setColorAt(i, col.setScalar(spot.tint));
     }
+    mesh.computeBoundingSphere();
+    mesh.receiveShadow = true;
+    mesh.castShadow = false;
+    mesh.name = `env:scatter:${id}`;
+    root.add(mesh);
+    meshes.push(mesh);
   }
   return {
     root,
     dispose() {
-      for (const g of geometries) g.dispose();
+      for (const mesh of meshes) mesh.dispose();
+      for (const g of owned) g.dispose();
     },
   };
 }

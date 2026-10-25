@@ -1,0 +1,53 @@
+{
+  "screen": "pause-menu",
+  "sourceScreen": "../v1.png",
+  "notes": {
+    "integration": "Runtime draws every label, scenario title, round number and icon. The supplied mockup deliberately contains no battlefield; the live board remains beneath the runtime dimmer.",
+    "style": "Flat matte slate #2C3A55, one shadow tone #1D273A, even dark outline #2B2A33 and thin solid gold #D8A93A. No gradients, bevels, glow or generated icons.",
+    "reuse": "panel.png and all three equally sized button states are shared with settings. Existing SVG icons are referenced by the game and are not copied or changed."
+  },
+  "assets": [
+    {
+      "file": "panel.png",
+      "size": [760, 840],
+      "transparent": true,
+      "purpose": "Empty central pause/settings container with a top runtime information well.",
+      "nineSlice": { "left": 48, "top": 48, "right": 48, "bottom": 48, "stretch": "Stretch only the plain slate centre; preserve outer corners, outer gold border and top information well." },
+      "runtimeZones": {
+        "scenarioTitle": [86, 82, 588, 40],
+        "round": [86, 126, 588, 34],
+        "buttons": [80, 202, 600, 112],
+        "buttonStrideY": 140
+      }
+    },
+    {
+      "file": "button-normal.png",
+      "size": [600, 112],
+      "transparent": true,
+      "purpose": "Empty standard large touch button base.",
+      "nineSlice": { "left": 28, "top": 24, "right": 28, "bottom": 24, "stretch": "Stretch the flat central slate only; preserve rounded corners and gold outline." },
+      "runtimeZones": { "label": [42, 27, 516, 58] }
+    },
+    {
+      "file": "button-pressed.png",
+      "size": [600, 112],
+      "transparent": true,
+      "purpose": "Pressed companion state for button-normal.png; inner face is inset and lowered by 3 px.",
+      "nineSlice": { "left": 28, "top": 24, "right": 28, "bottom": 24, "stretch": "Stretch the flat central slate only; preserve rounded corners and gold outline." },
+      "runtimeZones": { "label": [42, 30, 516, 58] }
+    },
+    {
+      "file": "button-disabled.png",
+      "size": [600, 112],
+      "transparent": true,
+      "purpose": "Disabled companion state for button-normal.png; muted slate and gold retain the same geometry.",
+      "nineSlice": { "left": 28, "top": 24, "right": 28, "bottom": 24, "stretch": "Stretch the flat central slate only; preserve rounded corners and muted outline." },
+      "runtimeZones": { "label": [42, 27, 516, 58] }
+    }
+  ],
+  "runtimeOverlay": {
+    "drawOrder": ["battlefield", "rgba(17,24,39,0.72) dimmer", "panel", "runtime text and existing SVG icons"],
+    "dimmer": { "color": "#111827", "opacity": 0.72, "source": "runtime; no battlefield image is supplied" }
+  },
+  "buttonOrder": ["continue", "rules-and-hints", "settings", "save-and-exit"]
+}
