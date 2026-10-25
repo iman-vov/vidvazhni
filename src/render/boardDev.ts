@@ -10,6 +10,7 @@
 //   &play=1                                     start the script at once
 //   ?board=s1…s10                               any scenario map with its environment, every room
 //                                               revealed (&reveal=0 keeps the start room only)
+//   &perf=1                                     where the draw calls and triangles go (perfStats.ts)
 //   &props=fixture                              prop models from tests/fixtures/props (a test barrel)
 //                                               where assets/models has none yet
 
@@ -28,6 +29,7 @@ import { GRAPHICS_QUALITIES, getGraphicsQuality, type GraphicsQuality } from './
 import type { BoardHighlights } from './view';
 import type { IconName } from '../ui/icons/names';
 import { iconSvg } from '../ui/icons/svg';
+import { formatPerf } from './perfStats';
 
 const params = new URLSearchParams(location.search);
 if (params.get('props') === 'fixture') {
@@ -593,8 +595,11 @@ setInterval(() => {
   if (st.fps > 0) maxFps = st.fps;
   info.textContent =
     `${current}  |  ${st.quality}, ${board.speed}×  |  fps ${st.fps || '—'} (last ${maxFps})  calls ${st.calls}  tris ${st.triangles}\n` +
-    `раунд ${state.round}, фаза ${state.phase}  |  ${lastTap}  |  env ${envLine()}`;
+    `раунд ${state.round}, фаза ${state.phase}  |  ${lastTap}  |  env ${envLine()}` +
+    (perfLine ? `\n${perfLine}` : '');
 }, 250);
+let perfLine = '';
+if (params.get('perf') === '1') setInterval(() => (perfLine = formatPerf(board.perf())), 2000);
 
 function envLine(): string {
   const e = board.environment();
@@ -633,7 +638,27 @@ async function modelsReady(timeoutMs = 8000): Promise<void> {
   }
 }
 
-Object.assign(window, { board, devBoard: { get state() { return state; }, content, playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
+/** For before/after screenshots (docs/art/perf): waits until the scene stops growing (kits arrive
+ *  after the models), draws a frame and has the dev server save it as docs/art/perf/<name>.jpg. */
+async function shot(name: string): Promise<string> {
+  await modelsReady();
+  let last = -1;
+  const start = performance.now();
+  for (let same = 0; same < 4 && performance.now() - start < 60000; ) {
+    await new Promise((r) => setTimeout(r, 1000));
+    const tris = board.perf().total.tris;
+    same = tris === last ? same + 1 : 0;
+    last = tris;
+  }
+  board.benchmark(1);
+  const canvas = [...document.querySelectorAll('canvas')].sort((a, b) => b.width * b.height - a.width * a.height)[0]!;
+  const res = await fetch(`${import.meta.env.BASE_URL}__bench/shot?name=${name}`, { method: 'POST', body: canvas.toDataURL('image/jpeg', 0.88) });
+  return res.text();
+}
+
+Object.assign(window, { board, devBoard: { shot, get state() { return state; }, content, perf: () => board.perf(), playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
+// dev/bench.html loads this page in a frame and measures it: no panel or info line on top.
+if (params.get('bench') === '1') panel.hidden = info.hidden = true;
 if (params.get('play') === '1') void playAll();
 // Screenshots of a moment: ?seek=<beat or "last">&t=<seconds into it> plays there and holds the frame.
 if (params.has('seek')) {

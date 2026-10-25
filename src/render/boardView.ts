@@ -31,6 +31,7 @@ import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
+import { capturePerf, type PerfBreakdown } from './perfStats';
 import { applyShadowFlags, bakeCaster, fitSunShadow, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
@@ -87,6 +88,10 @@ export interface BoardViewDebug {
   freeze(on: boolean): void;
   /** Renders `frames` frames back to back (waiting for the GPU) and returns ms per frame. */
   benchmark(frames: number): number;
+  /** Draws every animation frame while on, as if something were always moving (dev/bench.html). */
+  spin(on: boolean): void;
+  /** Draws one frame and says where its draw calls and triangles went (perfStats.ts). */
+  perf(): PerfBreakdown;
   /** What the environment around the board is built of. */
   environment(): EnvironmentStats;
   readonly scene: THREE.Scene;
@@ -326,6 +331,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   let settleUntil = 0;
   let playing = false;
   let frozen = false;
+  let spinning = false;
   let fpsFrames = 0;
   let fpsStart = 0;
   let fps = 0;
@@ -484,7 +490,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fpsStart = now;
     }
     // Frozen (screenshots of a moment): hold the last frame; advance() still draws.
-    const busy = !frozen && (anim.busy || camera.animating || playing || overlay.hasTimed || now < settleUntil);
+    const busy = !frozen && (spinning || anim.busy || camera.animating || playing || overlay.hasTimed || now < settleUntil);
     if (busy) frame = requestAnimationFrame(renderFrame);
     else {
       lastTime = 0;
@@ -1705,6 +1711,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         gl.finish();
       }
       return (performance.now() - t0) / n;
+    },
+    perf() {
+      const t = performance.now();
+      return capturePerf(renderer, scene, () => drawFrame(t, 0));
+    },
+    spin(on: boolean) {
+      spinning = on;
+      if (on) requestRender();
     },
     environment: () => environment.stats(),
     camera: () => camera.state,

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Бенчмарк дошки (dev)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1b1d27; color: #e8ecf4; font: 15px system-ui, sans-serif; overflow: hidden; }
+      [hidden] { display: none !important; }
+      #frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+      #bar { position: absolute; left: 10px; top: 10px; right: 10px; z-index: 2; pointer-events: none; font: 13px ui-monospace, monospace; }
+      #bar span { background: rgba(20, 22, 30, 0.8); padding: 4px 8px; border-radius: 6px; }
+      #start, #result { position: absolute; inset: 0; z-index: 3; overflow: auto; padding: 24px 16px; box-sizing: border-box; background: #1b1d27; }
+      #start { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+      #start input { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #56647a; background: #2a3346; color: inherit; min-width: 16em; }
+      button { font: inherit; min-height: 44px; padding: 6px 18px; border-radius: 10px; border: 1px solid #56647a; background: #2a3346; color: inherit; }
+      button.go { background: #ffc457; color: #1d2433; border-color: #ffc457; font-weight: 600; }
+      table { border-collapse: collapse; font: 13px ui-monospace, monospace; margin: 12px 0; }
+      th, td { padding: 4px 10px; border-bottom: 1px solid #343c50; text-align: right; }
+      th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+      td.bad { color: #ff8a7a; }
+      td.ok { color: #9fe39a; }
+      .muted { color: #9aa5ba; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only board benchmark: /vidvazhni/dev/bench.html. Not part of the production build.
+         ?boards=s0,s1,…  &qualities=low,medium,high  &warm=3  &secs=5  &device=ipad-air-m2  &auto=1 -->
+    <iframe id="frame" title="board"></iframe>
+    <div id="bar"></div>
+    <div id="start"></div>
+    <div id="result" hidden></div>
+    <script type="module" src="/src/render/benchDev.ts"></script>
+  </body>
+</html>
