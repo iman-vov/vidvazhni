@@ -899,6 +899,79 @@
         ]
       },
       "epilogue": { "id": "s13.epilogue", "speaker": "marta", "text": "Ein Glühwürmchen ist euch bis ins Gasthaus gefolgt. Jetzt sitzt es in einem Glas auf dem Regal und leuchtet dem Kater." }
+    },
+    "s14": {
+      "intro": [
+        { "id": "s14.intro.1", "speaker": "narrator", "text": "Die Karte des Glöckners führt zu einem alten Glockenturm. Er steht bis zum Gürtel im Wasser, und ganz oben hängen noch drei Glocken." },
+        { "id": "s14.intro.2", "speaker": "marta", "text": "Früher läutete der Glöckner in den Nebel, damit Verirrte den Heimweg fanden. Auf der Karte steht, in welcher Reihenfolge." },
+        { "id": "s14.intro.3", "speaker": "marta", "text": "Schlagt die Glocken richtig an, dann geht die Luke zum Dach auf. Aber trödelt nicht, das Wasser steigt." },
+        {
+          "id": "s14.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Hinauf zu den Glocken!",
+          "variants": {
+            "warden": "Läuten kann ich. Im Rathaus habe ich jeden Morgen den ganzen Platz geweckt.",
+            "wind-archer": "Hört ihr? Der Wind streift die Glocken, und sie summen ganz leise.",
+            "herbalist": "Das Wasser ist kalt. Wer nass wird, bekommt danach heißen Lindenblütentee.",
+            "rogue": "Glöckner, Karte, Schatz. Ich spüre, dass hier irgendwo ein Schatz ist.",
+            "elementalist": "Klang fliegt auch durch die Luft. Also sind Glocken fast mein Element.",
+            "tinker": "Ich schaue mir die Klöppel an. Hundert Jahre ohne Öl, die Armen."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s14.belfry",
+          "trigger": { "on": "doorOpened", "arg": "s14.belfry" },
+          "lines": [
+            { "id": "s14.belfry.1", "speaker": "narrator", "text": "In der Glockenstube stehen drei Glocken im Kreis. An der Wand ist dasselbe Bild wie auf der Karte." }
+          ]
+        },
+        {
+          "id": "s14.water",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s14.water.1", "speaker": "narrator", "text": "Platsch. Das Wasser in der Vorhalle steigt eine Stufe höher." }
+          ]
+        },
+        {
+          "id": "s14.whisper",
+          "trigger": { "on": "round", "arg": 6 },
+          "lines": [
+            { "id": "s14.whisper.1", "speaker": "mist-queen", "text": "Nicht läuten. Bitte. Ihr weckt den ganzen Sumpf, und der Nebel zieht ab." }
+          ]
+        },
+        {
+          "id": "s14.roof",
+          "trigger": { "on": "doorOpened", "arg": "s14.roof" },
+          "lines": [
+            { "id": "s14.roof.1", "speaker": "narrator", "text": "Die Luke geht auf, und frische Luft strömt aufs Dach. Neben der Wetterfahne steht die Truhe des Glöckners." },
+            { "id": "s14.roof.2", "speaker": "rogue", "text": "Der Schatz des Glöckners! Er würde selbst sagen: Nimm ihn, wenn du richtig läutest." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s14.win.1", "speaker": "narrator", "text": "Die Gruppe ist auf dem Dach. Die Glocken summen noch, und der Klang rollt weit über den Sumpf." },
+          { "id": "s14.win.2", "speaker": "narrator", "text": "Irgendwo tief im Nebel knackt es. Einer der Webstühle der Königin ist zerbrochen und verstummt." },
+          {
+            "id": "s14.win.3", "speaker": "hero", "pick": "random",
+            "text": "Der Sumpf ist aufgewacht.",
+            "variants": {
+              "warden": "Ein gutes Geläut. Wie im Rathaus vor dem Jahrmarkt.",
+              "wind-archer": "Die Reiher fliegen auf, die Frösche schweigen. Der ganze Sumpf hört zu.",
+              "herbalist": "Jetzt sitzt kein Verirrter mehr allein die ganze Nacht im Nebel.",
+              "rogue": "Ehrlich geläutet, ehrlich genommen. Der Glöckner wäre zufrieden.",
+              "elementalist": "Klang vertreibt Nebel! Das habe ich an der Akademie bestimmt nicht gelernt.",
+              "tinker": "Die Klöppel habe ich geölt, den Rest wussten die Glocken von selbst."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s14.lose.1", "speaker": "marta", "text": "Das Wasser war schneller. Macht nichts, wir trocknen uns am Ofen und versuchen es noch einmal." },
+          { "id": "s14.lose.2", "speaker": "marta", "text": "Schaut auf das Bild an der Wand, bevor ihr läutet. Ein falscher Ton weckt Schleime, und alles beginnt von vorn." }
+        ]
+      },
+      "epilogue": { "id": "s14.epilogue", "speaker": "marta", "text": "Das Glöckchen des Glöckners hängt jetzt über der Tür. Wer hereinkommt, läutet, und der Kater läuft schon zur Begrüßung." }
     }
   }
 }

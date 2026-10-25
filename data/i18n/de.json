@@ -1360,5 +1360,19 @@
   "event.s13.wave-all": "Falter kommen von allen drei Pfaden!",
   "event.s13.wave-cultist": "Ein Kultist bringt noch mehr Falter. Das ist die letzte Welle!",
   "event.s13.cocoon": "Der Kokon platzt und zerfällt zu schwarzem Staub.",
-  "event.s13.map": "In der Baumhöhle steht eine alte Truhe mit der Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf."
+  "event.s13.map": "In der Baumhöhle steht eine alte Truhe mit der Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf.",
+  "scenario.s14": "Der versunkene Glockenturm",
+  "scenario.s14.goal": "Die 3 Glocken in der Reihenfolge der Karte läuten und bis zum Ende der 12. Runde aufs Dach gelangen",
+  "scenario.s14.intro": "Die Karte des Glöckners führt zu einem alten Glockenturm mitten im Sumpf. Läutet die drei Glocken in der richtigen Reihenfolge, dann geht die Luke zum Dach auf. Doch das Wasser im Turm steigt.",
+  "scenario.s14.outro": "Die Glocken haben den Sumpf geweckt, und ein Webstuhl der Nebelkönigin ist zerbrochen. In der Truhe des Glöckners lag sein Glöckchen.",
+  "room.s14.porch": "A. Überflutete Vorhalle",
+  "room.s14.belfry": "B. Glockenstube",
+  "room.s14.stairs": "C. Wendeltreppe",
+  "room.s14.roof": "D. Dach",
+  "event.s14.bell-right": "Kling! Die Glocke klingt rein. Genau so.",
+  "event.s14.bell-wrong": "Bo-o-om! Falsche Glocke. Ein Schleim kriecht aus dem Wasser, und ihr müsst von vorn anfangen.",
+  "event.s14.hatch": "Alle drei Glocken klingen zusammen. Die Luke zum Dach ist offen!",
+  "event.s14.water-rises": "Das Wasser steigt! Die unterste Reihe steht unter Wasser.",
+  "event.s14.water-deep": "Unten ist es jetzt tief. Dort tretet ihr besser nicht hin.",
+  "event.s14.treasure": "In der Truhe des Glöckners liegen Münzen und ein kleines Glöckchen."
 }

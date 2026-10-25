@@ -899,6 +899,79 @@
         ]
       },
       "epilogue": { "id": "s13.epilogue", "speaker": "marta", "text": "One firefly followed you all the way to the inn. Now it sits in a jar on the shelf and glows for the cat." }
+    },
+    "s14": {
+      "intro": [
+        { "id": "s14.intro.1", "speaker": "narrator", "text": "The bell-ringer’s map led to an old bell tower. It stands waist-deep in water, and three bells still hang at the very top." },
+        { "id": "s14.intro.2", "speaker": "marta", "text": "Long ago the bell-ringer rang into the mist so lost folk could find their way home. The map shows the order." },
+        { "id": "s14.intro.3", "speaker": "marta", "text": "Ring the bells in the right order and the hatch to the roof will open. But don’t dawdle: the water is rising." },
+        {
+          "id": "s14.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Up to the bells!",
+          "variants": {
+            "warden": "I know how to ring bells. At the town hall I woke the whole square every morning.",
+            "wind-archer": "Hear that? The wind brushes the bells and they hum ever so softly.",
+            "herbalist": "The water’s cold. Whoever gets wet gets hot linden tea afterwards.",
+            "rogue": "Bell-ringer, map, treasure. I can feel there’s treasure here somewhere.",
+            "elementalist": "Sound travels through the air too. So bells are almost my element.",
+            "tinker": "I’ll look at the clappers. A hundred years without oil, poor things."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s14.belfry",
+          "trigger": { "on": "doorOpened", "arg": "s14.belfry" },
+          "lines": [
+            { "id": "s14.belfry.1", "speaker": "narrator", "text": "In the belfry three bells stand in a circle. The wall shows the same picture as the map." }
+          ]
+        },
+        {
+          "id": "s14.water",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s14.water.1", "speaker": "narrator", "text": "Splash. The water in the porch has risen one step higher." }
+          ]
+        },
+        {
+          "id": "s14.whisper",
+          "trigger": { "on": "round", "arg": 6 },
+          "lines": [
+            { "id": "s14.whisper.1", "speaker": "mist-queen", "text": "Don’t ring. Please. You’ll wake the whole marsh and the mist will lift." }
+          ]
+        },
+        {
+          "id": "s14.roof",
+          "trigger": { "on": "doorOpened", "arg": "s14.roof" },
+          "lines": [
+            { "id": "s14.roof.1", "speaker": "narrator", "text": "The hatch swung open and fresh air rushed across the roof. Beside the weathervane stands the bell-ringer’s chest." },
+            { "id": "s14.roof.2", "speaker": "rogue", "text": "The bell-ringer’s treasure! He’d say so himself: take it if you ring true." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s14.win.1", "speaker": "narrator", "text": "The party is on the roof. The bells are still humming, and the sound rolls far across the marsh." },
+          { "id": "s14.win.2", "speaker": "narrator", "text": "Somewhere deep in the mist something cracked. One of the Queen’s looms broke and fell silent." },
+          {
+            "id": "s14.win.3", "speaker": "hero", "pick": "random",
+            "text": "The marsh is awake.",
+            "variants": {
+              "warden": "A fine peal. Like the town hall before the fair.",
+              "wind-archer": "The herons took off and the frogs went quiet. The whole marsh is listening.",
+              "herbalist": "Now no lost soul will sit alone in the mist all night.",
+              "rogue": "Rung fair, taken fair. The bell-ringer would be pleased.",
+              "elementalist": "Sound clears the mist! They definitely didn’t teach me that at the academy.",
+              "tinker": "I oiled the clappers, and the bells knew the rest."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s14.lose.1", "speaker": "marta", "text": "The water was faster. Never mind, we’ll dry off by the stove and try again." },
+          { "id": "s14.lose.2", "speaker": "marta", "text": "Check the picture on the wall before you ring. A wrong bell wakes the slimes and starts it all over." }
+        ]
+      },
+      "epilogue": { "id": "s14.epilogue", "speaker": "marta", "text": "I hung the bell-ringer’s little bell over the door. Whoever comes in rings it, and the cat runs to say hello." }
     }
   }
 }

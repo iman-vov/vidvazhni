@@ -1360,5 +1360,19 @@
   "event.s13.wave-all": "Moths are coming down all three paths!",
   "event.s13.wave-cultist": "A cultist brings more moths. This is the last wave!",
   "event.s13.cocoon": "The cocoon cracks and crumbles into black dust.",
-  "event.s13.map": "In the hollow tree sits an old chest with a bell-ringer’s map. It shows a bell tower in the middle of the marsh."
+  "event.s13.map": "In the hollow tree sits an old chest with a bell-ringer’s map. It shows a bell tower in the middle of the marsh.",
+  "scenario.s14": "The Sunken Bell Tower",
+  "scenario.s14.goal": "Ring the 3 bells in the map’s order and reach the roof by the end of round 12",
+  "scenario.s14.intro": "The bell-ringer’s map leads to an old bell tower in the middle of the marsh. Ring the three bells in the right order and the hatch to the roof will open. But the water in the tower is rising.",
+  "scenario.s14.outro": "The bells woke the marsh, and one of the Mist Queen’s looms broke. The bell-ringer’s chest held his little bell.",
+  "room.s14.porch": "A. Flooded Porch",
+  "room.s14.belfry": "B. Belfry",
+  "room.s14.stairs": "C. Spiral Stairs",
+  "room.s14.roof": "D. Roof",
+  "event.s14.bell-right": "Ding! The bell rings clear. Just right.",
+  "event.s14.bell-wrong": "Bo-o-ong! Wrong bell. A slime crawls out of the water, and you have to start again.",
+  "event.s14.hatch": "All three bells sing together. The hatch to the roof is open!",
+  "event.s14.water-rises": "The water is rising! The bottom row is flooded.",
+  "event.s14.water-deep": "It’s deep down there now. Better not step in.",
+  "event.s14.treasure": "The bell-ringer’s chest holds coins and a little bell."
 }
