@@ -32,6 +32,7 @@ import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
+import { pieceBox } from './footprint';
 import { buildScatter, planScatter, scatterProfile } from './scatter';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
@@ -169,6 +170,9 @@ export class BoardEnvironment {
   private kitParts = new Map<string, Part[]>();
   /** Prop models that loaded for pieces of this location, by piece id. */
   private propProtos = new Map<string, PropPrototype>();
+  /** Shrink of a prop model that is wider or deeper than its piece's floor box (footprint.ts), so
+   *  it takes no more room than placing allowed for. */
+  private propFit = new Map<string, number>();
   private readonly available = new Set(listModels());
   private blobTexture: THREE.Texture | null = null;
   private readonly veil = new Map<string, number>();
@@ -700,7 +704,8 @@ export class BoardEnvironment {
       if (proto) {
         let list = modelled.get(proto);
         if (!list) modelled.set(proto, (list = []));
-        list.push(place.clone());
+        const fit = this.propFit.get(p.piece) ?? 1;
+        list.push(fit < 1 ? place.clone().multiply(new THREE.Matrix4().makeScale(fit, fit, fit)) : place.clone());
       }
       // A prop model keeps only the glowing bits of its placeholder (candle flames).
       const parts = this.partsFor(p.piece, p.height, cache).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
@@ -814,7 +819,13 @@ export class BoardEnvironment {
     const quality = this.quality;
     void Promise.all([...wanted].map(async ([piece, spec]) => [piece, await loadPropPrototype(spec, quality)] as const)).then((loaded) => {
       if (token !== this.loadToken) return;
-      for (const [piece, proto] of loaded) if (proto) this.propProtos.set(piece, proto);
+      for (const [piece, proto] of loaded) {
+        if (!proto) continue;
+        this.propProtos.set(piece, proto);
+        const size = new THREE.Box3().setFromObject(proto.object).getSize(new THREE.Vector3());
+        const [x0, x1, z0, z1] = pieceBox(piece, this.def);
+        this.propFit.set(piece, Math.min(1, ((x1 - x0) * 1.04) / Math.max(size.x, 1e-3), ((z1 - z0) * 1.04) / Math.max(size.z, 1e-3)));
+      }
       if (this.propProtos.size) this.rebuild();
     });
   }

@@ -8,6 +8,7 @@ import { hexKey, parseHexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
 import type { GraphicsQuality } from '../quality';
 import { distanceToFootprint, hidesBoard, seededRandom, type EnvLayout, type OutlineEdge } from './layout';
+import { FootprintRegistry, pieceBox, placementFootprint, WALL_BACKED, wallSegments } from './footprint';
 import { pieceMeta } from './pieces';
 import { straightRuns } from './walls';
 import type { EdgeStyle, EnvironmentDef, Weighted } from './types';
@@ -65,6 +66,8 @@ export const DRESSING_SHARE: Record<GraphicsQuality, number> = { low: 0.4, mediu
 
 /** Pieces up to this height may stand anywhere, even in front of the board. */
 const LOW_PIECE = 0.65;
+/** How far two props' floor boxes may run into each other (a sack touching a barrel). */
+const OVERLAP_TOL = 0.04;
 /** Tallest piece beyond the edge on the camera's side of the board. */
 const NEAR_SIDE_HEIGHT = 0.8;
 
@@ -98,9 +101,63 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
   const altEvery = def.walls?.alt ?? 4;
 
   const free = (x: number, z: number, r: number) => taken.every((t) => (t.x - x) ** 2 + (t.z - z) ** 2 >= ((t.r + r) * 0.85) ** 2);
+  // Real floor boxes of everything standing in the ring, and the walls' inner faces (footprint.ts):
+  // nothing is put inside another piece or through a wall.
+  const reg = new FootprintRegistry();
   const put = (p: Placement, r: number) => {
     out.push(p);
     taken.push({ x: p.x, z: p.z, r });
+    const kind = pieceMeta(p.piece)?.kind;
+    if (!p.y && (kind === 'prop' || kind === 'feature' || kind === 'corner') && p.band !== 'far' && p.band !== 'outside') reg.add(placementFootprint(p, def), p.piece);
+  };
+  const fits = (p: Placement, wallMargin = 0.05) => {
+    const f = placementFootprint(p, def);
+    return (!!p.y || !reg.hits(f, OVERLAP_TOL, p.piece)) && !reg.nearWall(f, wallMargin);
+  };
+  /** A free piece moved a little toward `to` (the strip's middle) or sideways until it fits. */
+  const settle = (p: Placement, to: { x: number; z: number }): Placement | null => {
+    if (WALL_BACKED.has(p.piece)) return againstWall(p);
+    const dx = to.x - p.x;
+    const dz = to.z - p.z;
+    const d = Math.hypot(dx, dz) || 1;
+    for (const [k, side] of [[0, 0], [0.06, 0], [0.12, 0], [0.06, 0.1], [0.06, -0.1], [0.18, 0], [0.12, 0.18], [0.12, -0.18], [0.24, 0]] as const) {
+      const q = { ...p, x: p.x + (dx / d) * k - (dz / d) * side, z: p.z + (dz / d) * k + (dx / d) * side };
+      if (fits(q)) return q;
+    }
+    return null;
+  };
+  /** A rack, shelf or banner with its back flush on the nearest wall face, parallel to it, slid
+   *  along the wall until it clears the other pieces and both walls of a corner; null if nowhere. */
+  const againstWall = (p: Placement): Placement | null => {
+    let best: (typeof reg.walls)[number] | null = null;
+    let bestD = Infinity;
+    let bestT = 0;
+    for (const w of reg.walls) {
+      if (w.twoSided) continue;
+      const lx = w.bx - w.ax;
+      const lz = w.bz - w.az;
+      const l2 = lx * lx + lz * lz;
+      if (l2 < 1e-6) continue;
+      const t = Math.max(0, Math.min(1, ((p.x - w.ax) * lx + (p.z - w.az) * lz) / l2));
+      const d = Math.hypot(w.ax + lx * t - p.x, w.az + lz * t - p.z);
+      if (d < bestD) {
+        bestD = d;
+        best = w;
+        bestT = t;
+      }
+    }
+    if (!best || bestD > 1.1) return null;
+    const len = Math.hypot(best.bx - best.ax, best.bz - best.az);
+    const ux = (best.bx - best.ax) / len;
+    const uz = (best.bz - best.az) / len;
+    const back = -pieceBox(p.piece, def)[2] * p.scale + 0.012;
+    const rot = inward(best.nx, best.nz);
+    for (const slide of [0, 0.12, -0.12, 0.24, -0.24, 0.36, -0.36, 0.5, -0.5]) {
+      const t = bestT * len + slide;
+      const q = { ...p, rot, tilt: undefined, x: best.ax + ux * t - best.nx * back, z: best.az + uz * t - best.nz * back };
+      if (fits(q, 0.004)) return q;
+    }
+    return null;
   };
   // The partitions take their line: points along them keep props off.
   for (const line of partitions) {
@@ -113,6 +170,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
   }
 
   // ── Outline: walls or their outdoor stand-ins, doorways, corners.
+  const features: [string, OutlineEdge][] = [];
   const altCount = new Map<EdgeStyle, number>();
   const frameDue = new Map<EdgeStyle, number>();
   const sconce = def.walls?.sconce;
@@ -196,7 +254,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     if (e.door) {
       put({ piece: s.door, x: e.x, z: e.z, rot: inward(e.nx, e.nz), scale: 1, height: wallH, room: null, band: 'door' }, 0.1);
       const feature = e.door === 'entrance' ? def.entrance : def.exit;
-      if (feature) placeFeature(feature, e, put);
+      if (feature) features.push([feature, e]);
       return;
     }
     if (s.walled) {
@@ -235,6 +293,10 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     put({ piece, x: c.x + c.nx * 0.12, z: c.z + c.nz * 0.12, rot: inward(c.nx, c.nz), scale: s.walled ? 1 : 0.8 + rnd() * 0.5, height, room: edges[0]!.room, band: 'corner' }, 0.2);
   }
 
+  reg.walls.push(...wallSegments(out, partitions));
+  // Entrance and exit pieces once the walls and pillars stand: clear of both.
+  for (const [id, e] of features) placeFeature(id, e, put, fits);
+
   // ── Landmarks just beyond a room's far edge.
   for (const lm of def.landmarks ?? []) {
     const meta = pieceMeta(lm.piece);
@@ -267,7 +329,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
         if (anchored.has(k)) continue;
         const [q, r] = parseHexKey(k);
         const c = hexToWorld(q, r);
-        if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6) || !free(c.x, c.z, meta.radius)) continue;
+        if (hidesBoard(layout, c.x, c.z, meta.height, meta.radius * 0.6) || !free(c.x, c.z, meta.radius * 0.5)) continue;
         // The first one nearest the board's middle, the rest as far from the others as possible;
         // all of them rather behind the board than on the camera's side.
         const spread = chosen.length ? Math.min(...chosen.map((o) => Math.hypot(o.x - c.x, o.z - c.z))) : -Math.hypot(c.x - layout.centre.x, c.z - layout.centre.z);
@@ -287,14 +349,16 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
       const len = Math.hypot(nx, nz) || 1;
       nx /= len;
       nz /= len;
+      const p = settle({ piece, x: c.x + nx * 0.22, z: c.z + nz * 0.22, rot: inward(nx, nz), scale: 1, height: meta.height, room: layout.ring.get(best)!, band: 'ring' }, c);
+      if (!p) continue;
       chosen.push(c);
-      put({ piece, x: c.x + nx * 0.22, z: c.z + nz * 0.22, rot: inward(nx, nz), scale: 1, height: meta.height, room: layout.ring.get(best)!, band: 'ring' }, meta.radius);
+      put(p, meta.radius);
     }
   }
 
   // ── Ring strip, in groups: barrels together, a crate on a crate, a sack leaning on a barrel.
   if (def.dressing.sets?.length) {
-    placeSets(layout, def, rnd, share * density, anchored, put, free);
+    placeSets(layout, def, rnd, share * density, anchored, put, settle, fits);
   }
 
   // ── Ring strip: props against the walls (or along the forest edge).
@@ -331,9 +395,9 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
         if (!piece) continue;
         meta = pieceMeta(piece)!;
       }
-      if (!free(x, z, meta.radius)) continue;
       const rot = len > 1e-6 ? inward(nx, nz) + (rnd() - 0.5) * 0.35 : rnd() * Math.PI * 2;
-      put({ piece, x, z, rot, scale: 0.9 + rnd() * 0.2, height: meta.height, room: layout.ring.get(k)!, band: 'ring' }, meta.radius);
+      const p = settle({ piece, x, z, rot, scale: 0.9 + rnd() * 0.2, height: meta.height, room: layout.ring.get(k)!, band: 'ring' }, c);
+      if (p) put(p, meta.radius);
     }
   }
 
@@ -387,7 +451,8 @@ function placeSets(
   chance: number,
   used: Set<string>,
   put: (p: Placement, r: number) => void,
-  free: (x: number, z: number, r: number) => boolean,
+  settle: (p: Placement, to: { x: number; z: number }) => Placement | null,
+  fits: (p: Placement) => boolean,
 ): void {
   const sets = def.dressing.sets!;
   const total = sets.reduce((s, x) => s + x.weight, 0);
@@ -432,15 +497,22 @@ function placeSets(
       const height = standHeight(def, item.piece) * scale;
       const onHex = layout.footprint.has(hexKey(worldToHex(x, z)));
       const hides = below + height > LOW_PIECE && hidesBoard(layout, x, z, below + height, meta.radius * 0.6);
-      if (onHex || hides || (below === 0 && !free(x, z, meta.radius * 0.75))) {
+      if (onHex || hides) {
         tops.push(null);
         continue;
       }
       const rot = item.align ? base + (rnd() - 0.5) * 0.2 : rnd() * Math.PI * 2;
       const lean = item.tilt ? item.tilt * flip : below === 0 && rnd() < 0.25 ? (rnd() - 0.5) * 0.08 : 0;
-      const p: Placement = { piece: item.piece, x, z, rot, scale, height: meta.height, room: layout.ring.get(k)!, band: 'ring' };
-      if (below > 0) p.y = below;
-      if (lean) p.tilt = [0, lean];
+      const want: Placement = { piece: item.piece, x, z, rot, scale, height: meta.height, room: layout.ring.get(k)!, band: 'ring' };
+      if (below > 0) want.y = below;
+      if (lean) want.tilt = [0, lean];
+      // Nothing inside another piece or through the wall: nudged toward the strip's middle, a rack
+      // set flush on the wall, or left out.
+      const p = below > 0 ? (fits(want) ? want : null) : settle(want, c);
+      if (!p || layout.footprint.has(hexKey(worldToHex(p.x, p.z)))) {
+        tops.push(null);
+        continue;
+      }
       put(p, below > 0 ? 0 : meta.radius * 0.75);
       tops.push(below + height);
       placed++;
@@ -451,18 +523,28 @@ function placeSets(
 
 /** The entrance or exit piece beyond a doorway edge: stairs start right behind it, a lantern post
  *  stands beside the gap, a big piece (the forester's hut) stands well out. */
-function placeFeature(id: string, e: OutlineEdge, put: (p: Placement, r: number) => void): void {
+function placeFeature(id: string, e: OutlineEdge, put: (p: Placement, r: number) => void, fits: (p: Placement, wallMargin?: number) => boolean): void {
   const meta = pieceMeta(id);
   if (!meta) return;
   const rot = inward(e.nx, e.nz);
   if (id === 'stairs') {
-    put({ piece: id, x: e.x, z: e.z, rot, scale: 1, height: meta.height, room: null, band: 'feature' }, 0.3);
-    return;
+    // Starting behind the doorway's pillars (a short landing first), narrowed if it must be.
+    const tries = [0, 0.2, 0.36, 0.5].flatMap((back) => [1, 0.85].map((sx) => [back, sx] as const));
+    for (const [back, sx] of tries) {
+      const p: Placement = { piece: id, x: e.x + e.nx * back, z: e.z + e.nz * back, rot, scale: 1, sx, height: meta.height, room: null, band: 'feature' };
+      if (fits(p, -1) || back === 0.5) {
+        put(p, 0.3);
+        return;
+      }
+    }
   }
   const out = meta.radius >= 1 ? meta.radius + 1.0 : 0.35;
-  const side = meta.radius >= 1 ? 0 : 0.62;
-  put(
-    { piece: id, x: e.x + e.nx * out - e.nz * side, z: e.z + e.nz * out + e.nx * side, rot, scale: 1, height: meta.height, room: null, band: 'feature' },
-    meta.radius,
-  );
+  // A post beside the gap, out past the pillar on one side or the other.
+  for (const [o, side] of meta.radius >= 1 ? [[out, 0]] : [[out, 0.62], [out, -0.62], [out + 0.25, 0.75], [out + 0.25, -0.75], [out + 0.5, 0.5]]) {
+    const p: Placement = { piece: id, x: e.x + e.nx * o! - e.nz * side!, z: e.z + e.nz * o! + e.nx * side!, rot, scale: 1, height: meta.height, room: null, band: 'feature' };
+    if (fits(p, -1)) {
+      put(p, meta.radius);
+      return;
+    }
+  }
 }
