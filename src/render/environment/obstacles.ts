@@ -12,6 +12,7 @@ import type { ScenarioDef } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
 import { HEX_INNER, seededRandom } from './layout';
+import MODEL_BOUNDS from './modelBounds.json';
 import { PALETTE_DEFAULTS, pieceMeta, type MaterialKey, type Part } from './pieces';
 import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
@@ -46,12 +47,10 @@ export const HEIGHT: Record<string, number> = {
   'crate-stack': 0.95,
   'crate-broken': 0.42,
   table: 0.58,
-  'long-table': 0.6,
   stool: 0.38,
   sack: 0.42,
   sacks: 0.5,
   'keg-rack': 0.8,
-  wagon: 0.72,
   'obstacle-tree': 1.7,
   boulder: 0.66,
   'snow-rock': 0.58,
@@ -79,8 +78,6 @@ export const HEIGHT: Record<string, number> = {
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
  *  circle of the meta radius. */
 const FOOT: Record<string, [number, number, number, number]> = {
-  'long-table': [-0.8, 0.8, -0.34, 0.34],
-  wagon: [-1.2, 0.6, -0.7, 0.42],
   table: [-0.46, 0.46, -0.32, 0.32],
   log: [-0.68, 0.68, -0.19, 0.19],
   'timber-stack': [-0.5, 0.52, -0.24, 0.24],
@@ -179,7 +176,7 @@ const COMPOSITE: Record<string, Spec[]> = {
     S('barrel', { s: [0.85, 0.95], near: 2, tip: 'side' }),
     S('crate', { s: SMALL, near: 1, chance: 0.7 }),
   ],
-  'long-table': [S('long-table', { along: true }), S('stool', { near: 0 }), S('stool', { near: 0 }), S('stool', { near: 0, tip: 'side' }), S('barrel', { s: [0.62, 0.72], near: 0, chance: 0.6 })],
+  'long-table': [S('long-table', { along: true, s: [0.94, 1.04] }), S('chair', { near: 0, s: [0.94, 1.04] }), S('chair', { near: 0, s: [0.94, 1.04] }), S('chair', { near: 0, tip: 'side', s: [0.94, 1.04] }), S('chair', { near: 0, chance: 0.5, s: [0.94, 1.04] }), S('barrel', { s: [0.62, 0.72], near: 0, chance: 0.6 })],
   'crate-pile': [
     S('crate', { s: [1.08, 1.18] }),
     S('crate', { s: [0.62, 0.72], on: 0 }),
@@ -188,10 +185,11 @@ const COMPOSITE: Record<string, Spec[]> = {
     S('sacks', { near: 0 }),
     S('crate', { s: SMALL, near: 2, tip: 'lean' }),
   ],
-  wagon: [S('wagon', { along: true }), S('sacks', { near: 0 }), S('barrel', { s: [0.8, 0.9], near: 0 }), S('crate', { s: SMALL, near: 0, chance: 0.7 })],
+  wagon: [S('cart', { along: true, s: [0.94, 1.04] }), S('sacks', { near: 0 }), S('barrel', { s: [0.8, 0.9], near: 0 }), S('crate', { s: SMALL, near: 0, chance: 0.7 })],
   'trees-log': [S('obstacle-tree'), S('obstacle-tree', { s: [0.8, 0.92], near: 0 }), S('log', { near: 0, s: [1, 1.1] }), S('fern', { near: 1 }), S('mushrooms', { near: 2 })],
   outcrop: [S('boulder', { s: [1.2, 1.3] }), S('boulder', { s: [0.85, 0.95], near: 0 }), S('boulder', { s: [0.55, 0.65], near: 1 }), S('boulder', { s: [0.32, 0.4], near: 0 }), S('boulder', { s: [0.28, 0.36], near: 2 })],
-  yard: [S('hut', { centre: true }), S('wagon', { along: true }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.72, 0.82], near: 1 }), S('sacks', { s: [0.7, 0.8], near: 1 })],
+  // A cart is longer than a hex and the hut fills the other one: a woodpile, a barrel and sacks instead.
+  yard: [S('hut', { centre: true }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.72, 0.82], near: 1 }), S('sacks', { s: [0.7, 0.8], near: 2 }), S('crate', { s: SMALL, near: 1 })],
 };
 
 /** Which pieces may join a set piece with a neighbour, by family. */
@@ -287,15 +285,34 @@ interface Placed {
   box: [number, number, number, number];
 }
 
-function footprint(piece: string, scale: number, tip: ClusterItem['tip']): [number, number, number, number] {
+/** Set pieces modelled in Blender (assets/models/cluster-kit, art/blender/cluster-kit/cluster_kit.py):
+ *  `<kind>_<n>` nodes at life size, KIT_VARIANTS each, drawn from the kit with no stand-in. */
+export const CLUSTER_KIT = 'cluster-kit';
+const KIT_PIECES: ReadonlySet<string> = new Set(['long-table', 'chair', 'cart']);
+const KIT_VARIANTS = 4;
+const BOUNDS = MODEL_BOUNDS as Record<string, number[]>;
+
+/** A kit piece's variant bounds [minX, maxX, minY, maxY, minZ, maxZ] at scale 1 (tools/model-bounds.mjs). */
+function kitBounds(piece: string, variant = 0): number[] | undefined {
+  return BOUNDS[`${CLUSTER_KIT}#${piece}_${(variant % KIT_VARIANTS) + 1}`];
+}
+
+/** Height of a piece in a cluster at scale 1 (a kit piece's own, else the nominal one). */
+function heightOf(piece: string, variant?: number): number {
+  const kb = KIT_PIECES.has(piece) ? kitBounds(piece, variant) : undefined;
+  return kb ? kb[3]! : (HEIGHT[piece] ?? pieceMeta(piece)?.height ?? 1);
+}
+
+function footprint(piece: string, scale: number, tip: ClusterItem['tip'], variant?: number): [number, number, number, number] {
   const meta = pieceMeta(piece);
-  const k = (HEIGHT[piece] ?? meta?.height ?? 1) / (meta?.height ?? 1);
+  const kb = KIT_PIECES.has(piece) ? kitBounds(piece, variant) : undefined;
+  const k = kb ? 1 : (HEIGHT[piece] ?? meta?.height ?? 1) / (meta?.height ?? 1);
   const r = meta?.radius ?? 0.4;
-  const [x0, x1, z0, z1] = FOOT[piece] ?? [-r, r, -r, r];
+  const [x0, x1, z0, z1] = kb ? [kb[0]!, kb[1]!, kb[4]!, kb[5]!] : (FOOT[piece] ?? [-r, r, -r, r]);
   const s = k * scale;
   if (tip === 'side') {
     // Tipped over onto its side (about local X): its height now lies along Z, centred.
-    const h = (HEIGHT[piece] ?? meta?.height ?? 1) * scale;
+    const h = heightOf(piece, variant) * scale;
     const w = ((z1 - z0) * s) / 2;
     return [x0 * s, x1 * s, -Math.max(h / 2, w), Math.max(h / 2, w)];
   }
@@ -431,7 +448,7 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       const key = plans.has(k) ? k : group[0]!;
       const [q, r] = parseHexKey(key);
       const c = hexToWorld(q, r);
-      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: (HEIGHT[p.piece] ?? pieceMeta(p.piece)?.height ?? 1) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
+      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
     };
     // A stacked item goes with the hex of the one it stands on.
     for (const p of placed) toHex(p, 'items', p.spec.on !== undefined ? hexKey(worldToHex(placed[p.spec.on]!.x, placed[p.spec.on]!.z)) : undefined);
@@ -468,15 +485,16 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
     const tip: ClusterItem['tip'] = spec.tip ?? 'none';
     const lean = tip === 'lean' ? between(rnd, [0.14, 0.26]) : 0;
     const leanDir = rnd() * Math.PI * 2;
-    const box = footprint(spec.p, scale, tip);
-    const h = (HEIGHT[spec.p] ?? pieceMeta(spec.p)?.height ?? 1) * scale;
+    const variant = KIT_PIECES.has(spec.p) ? Math.floor(rnd() * KIT_VARIANTS) : undefined;
+    const box = footprint(spec.p, scale, tip, variant);
+    const h = heightOf(spec.p, variant) * scale;
     if (spec.on !== undefined) {
       const base = placed[placedIndex(placed, recipe, spec.on)];
       if (!base) continue;
-      const top = base.tip === 'side' ? (base.box[1] - base.box[0]) * 0.95 : (HEIGHT[base.piece] ?? 0.5) * base.scale * 0.97;
+      const top = base.tip === 'side' ? (base.box[1] - base.box[0]) * 0.95 : heightOf(base.piece, base.variant) * base.scale * 0.97;
       const a = rnd() * Math.PI * 2;
       const d = between(rnd, [0.03, 0.09]);
-      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot: base.rot + between(rnd, [-0.7, 0.7]), scale, tip, lean, leanDir, box });
+      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot: base.rot + between(rnd, [-0.7, 0.7]), scale, tip, lean, leanDir, box, variant });
       continue;
     }
     const target = spec.near !== undefined ? placed[placedIndex(placed, recipe, spec.near)] : undefined;
@@ -515,7 +533,7 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
         z = c.z + Math.sin(a) * d;
         if (!placed.length && centres.length === 1 && d < 0.12) continue;
       }
-      const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box };
+      const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box, variant };
       if (!outline(cand, strict ? 0.04 : 0.02).every((v) => regionHas(v.x, v.z))) continue;
       if (placed.some((p) => p.y === 0 && overlaps(p, cand, strict ? 0.02 : 0.08))) continue;
       // Tall things toward the camera side of the cluster (+Z), so they hide no free hex behind.
@@ -583,6 +601,8 @@ export interface ClusterContext {
   material(key: MaterialKey): THREE.Material;
   /** The Blender scatter kit's shapes by node name (`chips_1`…). */
   loadKit(): Promise<Map<string, Part[]>>;
+  /** The Blender cluster kit's set pieces by node name (`long-table_1`…). */
+  loadClusterKit(): Promise<Map<string, Part[]>>;
   /** Contact shadow under an item of a footprint radius. */
   shadow(radius: number): THREE.Object3D | null;
   /** Geometry to dispose with the location. */
@@ -613,15 +633,38 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
     const body = new THREE.Group();
     tilt.add(body);
     holder.add(tilt);
-    const placeholder = ctx.makePiece(it.piece);
+    const kitPiece = KIT_PIECES.has(it.piece);
+    const placeholder = kitPiece ? null : ctx.makePiece(it.piece);
     const meta = pieceMeta(it.piece);
     if (placeholder && meta) {
       placeholder.scale.setScalar(it.h / meta.height);
       body.add(placeholder);
     }
+    if (kitPiece) {
+      // A Blender kit piece at life size: shown once the kit has loaded, in the location's colours.
+      void ctx.loadClusterKit().then((kit) => {
+        const parts = kit.get(`${it.piece}_${((it.variant ?? 0) % KIT_VARIANTS) + 1}`);
+        if (!parts || !ctx.alive() || !body.parent) return;
+        const group = new THREE.Group();
+        for (const part of parts) {
+          const key = typeof part.material === 'string' ? part.material : part.material.name;
+          const g = part.geometry;
+          if (!g.getAttribute('color')) g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 3).fill(1), 3));
+          const mesh = new THREE.Mesh(g, ctx.material((key in PALETTE_DEFAULTS ? key : 'wood') as MaterialKey));
+          mesh.applyMatrix4(part.matrix);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          group.add(mesh);
+        }
+        group.scale.setScalar(it.scale);
+        body.add(group);
+        settle(tilt, it.tip === 'side');
+        ctx.onChange();
+      });
+    }
     settle(tilt, it.tip === 'side');
     if (it.y === 0) {
-      const box = footprint(it.piece, it.scale, it.tip);
+      const box = footprint(it.piece, it.scale, it.tip, it.variant);
       const blob = ctx.shadow(Math.max(box[1] - box[0], box[3] - box[2]) / 2);
       if (blob) {
         blob.position.set(it.x, 0.004, it.z);
@@ -630,7 +673,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
     }
     root.add(holder);
     const nominal = HEIGHT[it.piece] ?? meta?.height ?? 1;
-    const spec = ctx.propSpec(it.piece, nominal);
+    const spec = kitPiece ? null : ctx.propSpec(it.piece, nominal);
     if (spec) {
       void ctx.loadProp({ ...spec, height: nominal }).then((model) => {
         if (!model || !ctx.alive() || !body.parent) return;

@@ -331,6 +331,7 @@ export class BoardEnvironment {
       propSpec: (piece, height) => (this.def?.propModels?.[piece] ? propModelFor(this.def, [piece], this.available, height) : null),
       loadProp: (spec) => loadPropPrototype(spec, quality).then((proto) => (proto ? proto.object.clone() : null)),
       loadKit: () => loadLocationKit('scatter-kit', quality),
+      loadClusterKit: () => loadLocationKit('cluster-kit', quality),
       material: (key) => this.material(key),
       shadow: (radius) => {
         const geometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);

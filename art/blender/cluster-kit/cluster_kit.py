@@ -176,8 +176,11 @@ def _wheel(p, x, y, z, rot=(math.pi / 2, 0, 0), r=0.27):
     p._add('woodDark', verts, faces, m)
     for i in range(3):
         a = math.pi * i / 3
-        p._add('wood', [(-math.cos(a) * r, -math.sin(a) * r, -0.012), (math.cos(a) * r, math.sin(a) * r, -0.012), (math.cos(a) * r, math.sin(a) * r, 0.012), (-math.cos(a) * r, -math.sin(a) * r, 0.012)], [(0, 1, 2, 3), (3, 2, 1, 0)], m)
-    p._add('iron', [(math.cos(2 * math.pi * i / 6) * 0.05, math.sin(2 * math.pi * i / 6) * 0.05, 0.03) for i in range(6)], [tuple(range(6)), tuple(range(5, -1, -1))], m)
+        # Both sides of a flat part get their own vertices (bmesh refuses a face on the same ones twice).
+        sp = [(-math.cos(a) * r, -math.sin(a) * r, -0.012), (math.cos(a) * r, math.sin(a) * r, -0.012), (math.cos(a) * r, math.sin(a) * r, 0.012), (-math.cos(a) * r, -math.sin(a) * r, 0.012)]
+        p._add('wood', sp + sp, [(0, 1, 2, 3), (7, 6, 5, 4)], m)
+    hub = [(math.cos(2 * math.pi * i / 6) * 0.05, math.sin(2 * math.pi * i / 6) * 0.05, 0.03) for i in range(6)]
+    p._add('iron', hub + hub, [tuple(range(6)), tuple(range(11, 5, -1))], m)
 
 
 def _bed(p, sides=True):
