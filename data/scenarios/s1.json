@@ -39,7 +39,13 @@
         { "hex": [6, -3], "model": "barrel" },
         { "hex": [6, -2], "model": "barrel" },
         { "hex": [8, -2], "model": "barrel" },
-        { "hex": [8, -1], "model": "barrel" }
+        { "hex": [8, -1], "model": "barrel" },
+        { "hex": [10, -6], "model": "table" },
+        { "hex": [9, -5], "model": "table" },
+        { "hex": [4, 2], "model": "keg-rack" },
+        { "hex": [8, -5], "model": "crate" },
+        { "hex": [9, -3], "model": "table" },
+        { "hex": [9, -2], "model": "table" }
       ],
       "spawns": [
         { "monster": "gremlin", "hex": [9, -4], "by": { "2": "normal", "3": "normal", "4": "normal" } },
