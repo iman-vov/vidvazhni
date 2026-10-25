@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANGS, loadContent, loadTranslations } from '../../src/rules/load';
 import { checkScenario } from './crossref';
+import rawItems from '../../data/items.json';
 
 const content = loadContent();
 
@@ -16,7 +17,9 @@ describe('loadContent', () => {
       ['archer', 'boss.hammerfist', 'boss.miller', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
     );
     expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
-    expect(Object.keys(content.items)).toHaveLength(50);
+    // The catalog grows (docs/design/items.md): at least the 50 data items, each id once in data/items.json.
+    expect(Object.keys(content.items).length).toBeGreaterThanOrEqual(50);
+    expect(new Set(rawItems.map((it) => it.id)).size).toBe(rawItems.length);
     expect(Object.keys(content.battleGoals)).toHaveLength(8);
     expect(Object.keys(content.perks)).toHaveLength(6);
     expect(content.campaign.xpByLevel).toEqual([0, 15, 40, 65, 95, 140, 195]);
