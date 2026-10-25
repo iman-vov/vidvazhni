@@ -12,7 +12,7 @@ import type { ScenarioDef } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
 import { HEX_INNER, seededRandom } from './layout';
-import { buildPiece, pieceMeta, type MaterialKey } from './pieces';
+import { PALETTE_DEFAULTS, pieceMeta, type MaterialKey, type Part } from './pieces';
 import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
 export interface ClusterItem {
@@ -30,6 +30,8 @@ export interface ClusterItem {
   /** Lean angle and the direction it leans to (radians). */
   lean: number;
   leanDir: number;
+  /** Which of the kit's variants (litter). */
+  variant?: number;
 }
 
 export interface ClusterPlan {
@@ -223,28 +225,32 @@ const GOODS_SETS: Record<EdgeStyle, string[]> = {
 const FAMILY_SETS: Record<string, string[]> = { tree: ['trees-log'], rock: ['outcrop'], hut: ['yard'] };
 
 /** Litter on the floor by location look, and what certain things add. */
+// The litter shapes are the Blender scatter kit's (assets/models/scatter-kit, scatter_kit.py):
+// `<kind>_<n>` nodes, 4 variants each; how far each reaches across the floor at scale 1.
+const LITTER_REACH: Record<string, number> = { chips: 0.07, plank: 0.11, stick: 0.22, straw: 0.17, pebbles: 0.09, 'leaf-pile': 0.09, 'pine-cone': 0.06, shards: 0.08, snow: 0.14 };
+const LITTER_VARIANTS = 4;
 const LITTER: Record<EdgeStyle, string[]> = {
-  stone: ['chips', 'straw', 'splinters', 'broken-boards'],
-  tower: ['chips', 'splinters', 'straw', 'pebbles'],
-  timber: ['straw', 'grain', 'chips', 'splinters'],
-  shore: ['straw', 'twigs', 'grain'],
-  forest: ['leaves', 'twigs', 'pebbles'],
-  cliff: ['pebbles', 'twigs', 'pebbles'],
-  cave: ['pebbles', 'pebbles', 'ore-bits'],
-  mine: ['pebbles', 'ore-bits', 'chips'],
-  forge: ['coal-bits', 'pebbles', 'splinters'],
+  stone: ['chips', 'straw', 'stick', 'plank'],
+  tower: ['chips', 'stick', 'straw', 'pebbles'],
+  timber: ['straw', 'chips', 'stick', 'plank'],
+  shore: ['straw', 'stick', 'leaf-pile'],
+  forest: ['leaf-pile', 'stick', 'pine-cone', 'pebbles'],
+  cliff: ['pebbles', 'stick', 'snow'],
+  cave: ['pebbles', 'pebbles', 'shards'],
+  mine: ['pebbles', 'chips', 'stick'],
+  forge: ['pebbles', 'shards', 'stick'],
 };
 const LITTER_BY_PIECE: Record<string, string> = {
-  sacks: 'grain',
-  sack: 'grain',
-  'crate-broken': 'broken-boards',
-  'obstacle-tree': 'leaves',
-  'ore-pile': 'ore-bits',
-  'coal-pile': 'coal-bits',
+  sacks: 'straw',
+  sack: 'straw',
+  'crate-broken': 'plank',
+  'obstacle-tree': 'leaf-pile',
+  'ore-pile': 'pebbles',
+  'coal-pile': 'pebbles',
   'rubble-heap': 'pebbles',
   rubble: 'pebbles',
   'timber-stack': 'chips',
-  campfire: 'twigs',
+  campfire: 'stick',
 };
 
 /** Outward unit normals of a hex's six edges (the directions to its neighbours). */
@@ -275,6 +281,7 @@ interface Placed {
   tip: ClusterItem['tip'];
   lean: number;
   leanDir: number;
+  variant?: number;
   /** Footprint box in its own frame (scaled, after a tip onto its side). */
   box: [number, number, number, number];
 }
@@ -423,7 +430,7 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       const key = plans.has(k) ? k : group[0]!;
       const [q, r] = parseHexKey(key);
       const c = hexToWorld(q, r);
-      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: (HEIGHT[p.piece] ?? pieceMeta(p.piece)?.height ?? 1) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir });
+      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: (HEIGHT[p.piece] ?? pieceMeta(p.piece)?.height ?? 1) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
     };
     // A stacked item goes with the hex of the one it stands on.
     for (const p of placed) toHex(p, 'items', p.spec.on !== undefined ? hexKey(worldToHex(placed[p.spec.on]!.x, placed[p.spec.on]!.z)) : undefined);
@@ -536,9 +543,9 @@ function placeLitter(placed: Placed[], edge: EdgeStyle, playable: Set<HexKey>, b
   const count = 6 + Math.floor(rnd() * 3) + (placed.length > 4 ? 2 : 0);
   for (let i = 0, tries = 0; i < count && tries < 120; tries++) {
     const piece = kinds[Math.floor(rnd() * kinds.length)]!;
-    const meta = pieceMeta(piece);
-    const scale = between(rnd, piece === 'broken-boards' || piece === 'grain' ? [0.85, 1.1] : [1.1, 1.5]);
-    const r = (meta?.radius ?? 0.2) * scale;
+    const scale = between(rnd, [1.5, 2.2]);
+    const r = (LITTER_REACH[piece] ?? 0.1) * scale;
+    const variant = Math.floor(rnd() * LITTER_VARIANTS);
     const from = placed[Math.floor(rnd() * placed.length)]!;
     const a = rnd() * Math.PI * 2;
     const reach = (from.box[1] - from.box[0] + from.box[3] - from.box[2]) / 4;
@@ -556,7 +563,7 @@ function placeLitter(placed: Placed[], edge: EdgeStyle, playable: Set<HexKey>, b
     if (edgeDistance(x, z) < r + 0.03) continue;
     if (placed.some((p) => p.y === 0 && inside(p, x, z, -0.05))) continue;
     if (out.some((o) => Math.hypot(o.x - x, o.z - z) < 0.3)) continue;
-    out.push({ spec: { p: piece }, piece, x, z, y: 0, rot: rnd() * Math.PI * 2, scale, tip: 'none', lean: 0, leanDir: 0, box: [-r, r, -r, r] });
+    out.push({ spec: { p: piece }, piece, x, z, y: 0, rot: rnd() * Math.PI * 2, scale, tip: 'none', lean: 0, leanDir: 0, box: [-r, r, -r, r], variant });
     i++;
   }
   return out;
@@ -573,6 +580,8 @@ export interface ClusterContext {
   loadProp(spec: Required<PropModelSpec>): Promise<THREE.Object3D | null>;
   /** A palette material for litter. */
   material(key: MaterialKey): THREE.Material;
+  /** The Blender scatter kit's shapes by node name (`chips_1`…). */
+  loadKit(): Promise<Map<string, Part[]>>;
   /** Contact shadow under an item of a footprint radius. */
   shadow(radius: number): THREE.Object3D | null;
   /** Geometry to dispose with the location. */
@@ -593,6 +602,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
   root.matrixAutoUpdate = false;
   for (const it of plan.items) {
     const holder = new THREE.Group();
+    holder.name = `cluster-item:${it.piece}:${it.tip}`;
     holder.position.set(it.x, it.y, it.z);
     holder.rotation.y = it.rot;
     const tilt = new THREE.Group();
@@ -683,36 +693,41 @@ function settle(tilt: THREE.Object3D, centre: boolean): void {
   }
 }
 
-/** Litter of one hex merged into one mesh per material. */
+/** Litter of one hex from the Blender scatter kit, merged into one mesh per palette material once
+ *  the kit has loaded (nothing is drawn before). */
 function buildLitter(items: ClusterItem[], ctx: ClusterContext): THREE.Group | null {
   if (!items.length) return null;
-  const byMat = new Map<MaterialKey, THREE.BufferGeometry[]>();
-  const m = new THREE.Matrix4();
-  for (const it of items) {
-    const meta = pieceMeta(it.piece);
-    if (!meta) continue;
-    const place = new THREE.Matrix4().compose(new THREE.Vector3(it.x, 0, it.z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), it.rot), new THREE.Vector3(it.scale, 1, it.scale));
-    for (const part of buildPiece(it.piece, { height: meta.height })) {
-      if (typeof part.material !== 'string') continue;
-      const g = part.geometry.index ? part.geometry.toNonIndexed() : part.geometry;
-      g.applyMatrix4(m.multiplyMatrices(place, part.matrix));
-      for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
-      const list = byMat.get(part.material) ?? [];
-      list.push(g);
-      byMat.set(part.material, list);
-    }
-  }
   const group = new THREE.Group();
   group.name = 'obstacle-litter';
-  for (const [mat, list] of byMat) {
-    const merged = mergeGeometries(list);
-    for (const g of list) g.dispose();
-    if (!merged) continue;
-    merged.setAttribute('color', new THREE.BufferAttribute(new Float32Array(merged.getAttribute('position').count * 3).fill(1), 3));
-    ctx.track(merged);
-    const mesh = new THREE.Mesh(merged, ctx.material(mat));
-    mesh.receiveShadow = true;
-    group.add(mesh);
-  }
+  void ctx.loadKit().then((kit) => {
+    if (!ctx.alive() || !group.parent) return;
+    const byMat = new Map<string, THREE.BufferGeometry[]>();
+    const m = new THREE.Matrix4();
+    for (const it of items) {
+      const parts = kit.get(`${it.piece}_${((it.variant ?? 0) % LITTER_VARIANTS) + 1}`) ?? kit.get(`${it.piece}_1`);
+      if (!parts) continue;
+      const place = new THREE.Matrix4().compose(new THREE.Vector3(it.x, 0, it.z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), it.rot), new THREE.Vector3(it.scale, it.scale, it.scale));
+      for (const part of parts) {
+        const key = typeof part.material === 'string' ? part.material : part.material.name;
+        const g = part.geometry.index ? part.geometry.toNonIndexed() : part.geometry.clone();
+        g.applyMatrix4(m.multiplyMatrices(place, part.matrix));
+        for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+        const list = byMat.get(key) ?? [];
+        list.push(g);
+        byMat.set(key, list);
+      }
+    }
+    for (const [key, list] of byMat) {
+      const merged = mergeGeometries(list);
+      for (const g of list) g.dispose();
+      if (!merged) continue;
+      merged.setAttribute('color', new THREE.BufferAttribute(new Float32Array(merged.getAttribute('position').count * 3).fill(1), 3));
+      ctx.track(merged);
+      const mesh = new THREE.Mesh(merged, ctx.material((key in PALETTE_DEFAULTS ? key : 'wood') as MaterialKey));
+      mesh.receiveShadow = true;
+      group.add(mesh);
+    }
+    ctx.onChange();
+  });
   return group;
 }
