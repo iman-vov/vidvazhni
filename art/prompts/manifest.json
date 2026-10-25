@@ -2792,6 +2792,31 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "marsh-kit",
+      "nameUk": "Болото: купини очерету з рогозом, латаття, ряска, колоди, коріння, мулисті береги",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 78,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "src/render/environment/README.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/marsh-kit.blend",
+      "modelFile": "assets/models/marsh-kit/marsh-kit.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 24000
+      },
+      "textureMax": 256,
+      "attachTo": null
     }
   ]
 }
