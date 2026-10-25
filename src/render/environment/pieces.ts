@@ -37,7 +37,8 @@ export type MaterialKey =
   | 'glowCold'
   | 'ore'
   | 'snow'
-  | 'ember';
+  | 'ember'
+  | 'brick';
 
 /** Default colours; data/environments/<id>.json `palette` overrides any of them. */
 export const PALETTE_DEFAULTS: Record<MaterialKey, string> = {
@@ -71,6 +72,7 @@ export const PALETTE_DEFAULTS: Record<MaterialKey, string> = {
   ore: '#b8743a',
   snow: '#dfe6ee',
   ember: '#ff7a2a',
+  brick: '#8a4a36',
 };
 
 /** Unlit (they shine): flames, lit windows, glowing fungi. Crystals are lit but emissive. */
@@ -407,6 +409,91 @@ function hedge(b: Builder, h: number): void {
   b.blob('leafWarm', 0.26, [0.36, h * 0.4, -0.02], [1, h * 1.2, 0.85]);
   for (let i = 0; i < 6; i++) b.cone('woodDark', 0.025, 0.2, 4, [-0.4 + i * 0.16, h * (0.3 + (i % 3) * 0.2), ((i % 2) - 0.5) * 0.4], [((i % 2) - 0.5) * 1.6, 0, 0.3 * (i - 2.5)], true);
   for (let i = 0; i < 4; i++) b.blob('berry', 0.04, [-0.3 + i * 0.2, h * (0.6 + (i % 2) * 0.15), 0.22], [1, 1, 1], true);
+}
+
+// Dividers: one metre of a wall between rooms, centred on its line (local X along it), so a row of
+// them stands on the line from end to end. Each location picks one (index.ts DIVIDERS).
+
+/** Dressed stone both sides, a plinth and a cap. */
+function dividerStone(b: Builder, h: number, seed: number): void {
+  const t = 0.24;
+  b.box('stone', [WALL_LEN, h, t], [0, h / 2, 0]);
+  b.box('stoneDark', [WALL_LEN + 0.02, 0.16, t + 0.06], [0, 0.08, 0]);
+  b.box('stoneDark', [WALL_LEN + 0.04, 0.09, t + 0.07], [0, h + 0.045, 0]);
+  for (const side of [1, -1]) {
+    const rows = Math.max(1, Math.floor((h - 0.25) / 0.3));
+    for (let i = 0; i < rows; i++) {
+      const x = (((seed * 7 + i * 13 + (side > 0 ? 0 : 5)) % 10) / 10 - 0.5) * 0.6;
+      b.box('stoneLight', [0.26 + ((seed + i * 3) % 4) * 0.05, 0.2, 0.04], [x, 0.32 + i * 0.3, side * (t / 2 + 0.01)], [0, 0, 0], true);
+    }
+  }
+}
+
+/** Brick courses in a stretcher bond, mortar showing between them. */
+function dividerBrick(b: Builder, h: number): void {
+  const t = 0.22;
+  b.box('stoneDark', [WALL_LEN, h, t - 0.02], [0, h / 2, 0]);
+  const courses = Math.max(2, Math.round(h / 0.15));
+  const ch = h / courses;
+  for (let i = 0; i < courses; i++) {
+    const off = i % 2 ? 0.13 : 0;
+    for (let j = 0; j < 4; j++) {
+      const x0 = Math.max(-WALL_LEN / 2, -WALL_LEN / 2 + off + j * 0.265 - (off ? 0.265 : 0));
+      const x1 = Math.min(WALL_LEN / 2, x0 + 0.25);
+      if (x1 - x0 < 0.05) continue;
+      b.box('brick', [x1 - x0, ch - 0.025, t], [(x0 + x1) / 2, i * ch + ch / 2, 0], [0, 0, 0], i > 0 && j % 2 === 1);
+    }
+  }
+  b.box('stoneDark', [WALL_LEN + 0.03, 0.07, t + 0.05], [0, h + 0.035, 0]);
+}
+
+/** Upright planks between two posts and two rails (marsh huts, mine boarding). */
+function dividerPlanks(b: Builder, h: number): void {
+  for (let i = 0; i < 6; i++) {
+    const x = -0.44 + i * 0.176;
+    const hh = h - ((i * 37) % 4) * 0.03;
+    b.box(i % 2 ? 'wood' : 'woodLight', [0.165, hh, 0.06], [x, hh / 2, 0]);
+  }
+  for (const y of [0.25, h - 0.2]) b.box('woodDark', [WALL_LEN, 0.09, 0.06], [0, y, 0.06]);
+  b.box('woodDark', [0.12, h + 0.08, 0.12], [-0.5, (h + 0.08) / 2, 0]);
+}
+
+/** A palisade: a straight row of sharpened logs on a rail. */
+function dividerPalisade(b: Builder, h: number): void {
+  for (let i = 0; i < 6; i++) {
+    const x = -0.45 + i * 0.18;
+    const hh = h * (0.9 + ((i * 29) % 5) * 0.03);
+    b.cyl(i % 3 ? 'bark' : 'wood', 0.08, 0.085, hh, 7, [x, 0, ((i * 53) % 3) * 0.01 - 0.01]);
+    b.cone('woodLight', 0.08, 0.2, 7, [x, hh, 0]);
+  }
+  b.box('woodDark', [WALL_LEN, 0.08, 0.06], [0, h * 0.62, 0.09]);
+}
+
+/** A wattle fence: hazel rods woven between stakes. */
+function dividerWattle(b: Builder, h: number): void {
+  for (let i = 0; i < 4; i++) b.cyl('woodDark', 0.035, 0.04, h + 0.12, 6, [-0.48 + i * 0.32, 0, 0]);
+  const rows = Math.max(3, Math.round(h / 0.11));
+  for (let i = 0; i < rows; i++) {
+    const y = 0.08 + (i * (h - 0.1)) / rows;
+    b.cyl(i % 2 ? 'bark' : 'wood', 0.028, 0.028, WALL_LEN, 5, [0.53, y, (i % 2 ? 1 : -1) * 0.025], [0, 0, Math.PI / 2]);
+  }
+}
+
+/** A ridge of rock: big angular stones, the line of the wall clear at their top. */
+function dividerRockRidge(b: Builder, h: number, seed: number): void {
+  const stones: [number, number, number][] = [[-0.36, 0.3, 0.32], [0.04, 0.34, 0.36], [0.4, 0.28, 0.3], [-0.16, 0.62, 0.24], [0.24, 0.66, 0.22]];
+  stones.forEach(([x, y, r], i) => b.rock(i % 2 ? 'rock' : 'rockDark', r, [x, (y * h) / 0.9, 0], [1.1, 1.05, 0.78], [seed * 0.3 + i, i * 0.9, seed * 0.1]));
+}
+
+/** A dry-stone field fence: flat stones laid in courses, capped with stones on edge. */
+function dividerStoneFence(b: Builder, h: number): void {
+  const courses = Math.max(2, Math.round(h / 0.16));
+  for (let i = 0; i < courses; i++)
+    for (let j = 0; j < 3; j++) {
+      const x = -0.36 + j * 0.36 + (i % 2 ? 0.08 : -0.04);
+      b.box(i % 2 === j % 2 ? 'rock' : 'rockDark', [0.34, 0.15, 0.36 - i * 0.02], [Math.max(-0.36, Math.min(0.36, x)), 0.07 + i * (h - 0.1) / courses, 0], [0, (j - 1) * 0.08, 0]);
+    }
+  for (let j = 0; j < 5; j++) b.box(j % 2 ? 'rock' : 'rockDark', [0.1, 0.18, 0.26], [-0.42 + j * 0.21, h + 0.05, 0], [0, 0, (j % 2 ? 1 : -1) * 0.2], true);
 }
 
 /** Tumbled rocks along an edge; `n` stones. */
@@ -1087,6 +1174,13 @@ const PIECES: Record<string, PieceDef> = {
 
   // Boundaries between rooms on the board (centred on the hex edge, running along X, 1.06 long).
   'reed-fence': { kind: 'edge', height: 0.8, radius: 0.55, build: (b) => reedFence(b, 0.8) },
+  'divider-stone': { kind: 'edge', height: 1.1, radius: 0.55, build: (b) => dividerStone(b, 1.1, 4) },
+  'divider-brick': { kind: 'edge', height: 1.05, radius: 0.55, build: (b) => dividerBrick(b, 1.05) },
+  'divider-planks': { kind: 'edge', height: 1.0, radius: 0.55, build: (b) => dividerPlanks(b, 1.0) },
+  'divider-palisade': { kind: 'edge', height: 1.05, radius: 0.55, build: (b) => dividerPalisade(b, 1.05) },
+  'divider-wattle': { kind: 'edge', height: 0.75, radius: 0.55, build: (b) => dividerWattle(b, 0.75) },
+  'divider-rock-ridge': { kind: 'edge', height: 0.9, radius: 0.6, build: (b) => dividerRockRidge(b, 0.9, 7) },
+  'divider-stone-fence': { kind: 'edge', height: 0.9, radius: 0.55, build: (b) => dividerStoneFence(b, 0.9) },
   'thicket-hedge': { kind: 'edge', height: 0.75, radius: 0.55, build: (b) => hedge(b, 0.75) },
   'rock-pile': { kind: 'edge', height: 0.55, radius: 0.55, build: (b) => rockPile(b, 0.55, 11) },
   'log-wall': { kind: 'edge', height: 0.5, radius: 0.55, build: (b) => logWall(b) },

@@ -406,6 +406,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.propModel = (key, height) => environment.propModel(key, height);
   tiles.propGlow = (key, height) => environment.propGlow(key, height);
   tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);
+  tiles.dividerFactory = (rooms, frames) => environment.divider(rooms, frames);
   tiles.pieceFactory = (id) => environment.makePiece(id);
   // Blender kit pieces arrive after the first build: rebuild door bodies and obstacles with them.
   environment.onKit = () => {

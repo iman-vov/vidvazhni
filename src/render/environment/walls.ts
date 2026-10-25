@@ -3,7 +3,7 @@
 // doorway edges kept as they are), every run is pushed outward to its outermost outline vertex (so
 // it never cuts into the ring where props stand) and the runs meet where their lines cross.
 
-import { hexKey } from '../../rules/hex';
+import { distance, hexKey, parseHexKey } from '../../rules/hex';
 import type { EnvLayout } from './layout';
 
 export interface WallRun {
@@ -160,192 +160,252 @@ export function straightRuns(layout: Pick<EnvLayout, 'edges'>): WallRun[] {
 }
 
 export interface Partition {
-  /** Polyline in world XZ, end to end: from the outer wall (or a doorway) to the outer wall. */
+  /** A straight stretch in world XZ, end to end: from the outer wall (another wall, or a doorway)
+   *  to the outer wall (another wall, or a doorway). */
   points: { x: number; z: number }[];
   /** Rooms on either side (the partition shows once one of them is revealed). */
   rooms: string[];
-  /** Whether each end was carried on across the ring to the outer wall. */
+  /** Whether each end reaches the outer wall or another partition (not a doorway). */
   extended: [boolean, boolean];
-  /** Which ends may be carried on (default both); a doorway end stays where it is. */
-  open?: [boolean, boolean];
-  /** The doorway hex standing in this wall's line (a wall across a strip of left-out hexes). */
+  /** The doorway hex at one of this stretch's ends, standing in the wall's line. */
   door?: string;
 }
 
+type Pt = { x: number; z: number };
+
 const HEX_ANGLES = [0, 1, 2, 3, 4, 5].map((i) => (i * Math.PI) / 3);
 
-function hexCorners(c: { x: number; z: number }, size: number): { x: number; z: number }[] {
+function hexCorners(c: Pt, size: number): Pt[] {
   return HEX_ANGLES.map((a) => ({ x: c.x + Math.cos(a) * size, z: c.z + Math.sin(a) * size }));
 }
 
-/**
- * The thin walls between rooms as continuous polylines: the shared hex edges chained end to end
- * (they follow the hex rows exactly, so no hex is cut), collinear edges merged into one straight
- * stretch, and each end that reaches the edge of the map carried straight on across the ring to
- * the outer wall, so a partition closes the room off completely except at its doors.
- */
-export function partitions(
-  layout: Pick<EnvLayout, 'edges' | 'footprint'>,
-  walls: { a: [number, number]; b: [number, number]; rooms: string[] }[],
-  centre: (q: number, r: number) => { x: number; z: number },
-  hexAt: (x: number, z: number) => string,
-  hexSize: number,
-): Partition[] {
-  type Seg = { p: { x: number; z: number }; q: { x: number; z: number }; rooms: string[] };
-  const segs: Seg[] = [];
-  for (const w of walls) {
-    const ca = centre(w.a[0], w.a[1]);
-    const cb = centre(w.b[0], w.b[1]);
-    // The shared edge: the two corners of hex a nearest to hex b's centre.
-    const corners = hexCorners(ca, hexSize).sort((u, v) => Math.hypot(u.x - cb.x, u.z - cb.z) - Math.hypot(v.x - cb.x, v.z - cb.z));
-    segs.push({ p: corners[0]!, q: corners[1]!, rooms: w.rooms });
-  }
-  // Chain segments that share an end.
-  const used = new Set<number>();
-  const near = (u: { x: number; z: number }, v: { x: number; z: number }) => Math.hypot(u.x - v.x, u.z - v.z) < 0.02;
-  const out: Partition[] = [];
-  for (let s = 0; s < segs.length; s++) {
-    if (used.has(s)) continue;
-    used.add(s);
-    const pts = [segs[s]!.p, segs[s]!.q];
-    const rooms = new Set(segs[s]!.rooms);
-    for (let grew = true; grew; ) {
-      grew = false;
-      for (let i = 0; i < segs.length; i++) {
-        if (used.has(i)) continue;
-        const g = segs[i]!;
-        const head = pts[0]!;
-        const tail = pts[pts.length - 1]!;
-        let added = true;
-        if (near(g.p, tail)) pts.push(g.q);
-        else if (near(g.q, tail)) pts.push(g.p);
-        else if (near(g.p, head)) pts.unshift(g.q);
-        else if (near(g.q, head)) pts.unshift(g.p);
-        else added = false;
-        if (added) {
-          used.add(i);
-          g.rooms.forEach((r) => rooms.add(r));
-          grew = true;
-        }
-      }
-    }
-    out.push({ points: mergeCollinear(pts), rooms: [...rooms], extended: [false, false] });
-  }
-  extendToOuterWalls(layout, out, hexAt, hexSize);
-  return out;
-}
+/** How close (in hex sizes) a wall may come to a hex: touching its edge is fine, entering is not. */
+const EPS = 0.02;
+/** Rooms this close (in hexes) share open floor, so a wall has to stand between them. */
+const CONTACT = 3;
 
-/** Carries partition ends that touch the map's edge (a point next to a hex off the footprint) on
- *  to the outer wall, straight along their last stretch. */
-function extendToOuterWalls(layout: Pick<EnvLayout, 'edges' | 'footprint'>, out: Partition[], hexAt: (x: number, z: number) => string, hexSize: number): void {
-  const runs = straightRuns(layout).filter((r) => !r.door);
-  // A corner on the map's edge: one of the three hexes meeting there is not playable.
-  const offMap = (v: { x: number; z: number }) =>
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].some((i) => {
-      const a = (i * Math.PI) / 6;
-      return !layout.footprint.has(hexAt(v.x + Math.cos(a) * 0.3 * hexSize, v.z + Math.sin(a) * 0.3 * hexSize));
-    });
-  for (const part of out) {
-    for (const end of [0, 1] as const) {
-      const pts = part.points;
-      const tip = end === 0 ? pts[0]! : pts[pts.length - 1]!;
-      const prev = end === 0 ? pts[1]! : pts[pts.length - 2]!;
-      if ((part.open && !part.open[end]) || !offMap(tip)) continue;
-      let dx = tip.x - prev.x;
-      let dz = tip.z - prev.z;
-      const len = Math.hypot(dx, dz) || 1;
-      dx /= len;
-      dz /= len;
-      let best = Infinity;
-      for (const r of runs) {
-        const ex = r.bx - r.ax;
-        const ez = r.bz - r.az;
-        const den = dx * ez - dz * ex;
-        if (Math.abs(den) < 1e-6) continue;
-        const t = ((r.ax - tip.x) * ez - (r.az - tip.z) * ex) / den;
-        const u = ((r.ax - tip.x) * dz - (r.az - tip.z) * dx) / den;
-        if (t > 0.05 && t < 4 && u >= -0.05 && u <= 1.05) best = Math.min(best, t);
-      }
-      if (!Number.isFinite(best)) continue;
-      const p = { x: tip.x + dx * best, z: tip.z + dz * best };
-      if (end === 0) pts.unshift(p);
-      else pts.push(p);
-      part.extended[end] = true;
-      part.points = mergeCollinear(pts);
-    }
-  }
+/** A wall's line: through `p`, along unit `d`, `n` its normal; `o` = n·p. */
+interface Line {
+  d: Pt;
+  n: Pt;
+  o: number;
+  p: Pt;
+  rooms: Set<string>;
+  doors: Set<string>;
+  /** End points as distances along `d` from `p`. */
+  t0: number;
+  t1: number;
+  margin: number;
 }
 
 /**
- * Partitions where the map leaves a strip of hexes out between two rooms joined by a door (a
- * straight wall across hex rows takes that strip): the wall runs down the middle of the strip,
- * through the doorway, out to the outer walls. Strips that do not line up are left alone.
+ * The walls between rooms, as in Jaws of the Lion: each one straight line across the hex rows from
+ * outer wall to outer wall (or to another such wall), through the doorway hex that joins the rooms.
+ * The map leaves the hexes the line would cut out of the rooms (scenario data), so no playable hex
+ * is cut; a wall that cannot be laid without cutting one is not built (tests catch that).
+ * Every pair of rooms that share open floor (hexes within CONTACT) gets one, so no room opens onto
+ * another but at its doors. Walls that fall on the same line are one wall with several doorways.
  */
-export function gapPartitions(
+export function roomWalls(
   layout: Pick<EnvLayout, 'edges' | 'footprint'>,
   doors: { hex: [number, number]; room: string; to: string }[],
-  centre: (q: number, r: number) => { x: number; z: number },
-  hexAt: (x: number, z: number) => string,
+  centre: (q: number, r: number) => Pt,
   hexSize: number,
 ): Partition[] {
-  const roomOf = (q: number, r: number) => layout.footprint.get(hexKey([q, r]));
-  const around = (q: number, r: number): [number, number][] => [[q + 1, r], [q - 1, r], [q, r + 1], [q, r - 1], [q + 1, r - 1], [q - 1, r + 1]];
-  const out: Partition[] = [];
-  for (const d of doors) {
-    // Only rooms that touch nowhere but at the door have a strip between them.
-    const doorKey = hexKey(d.hex);
-    const touching = [...layout.footprint].some(([k, room]) => {
-      if (room !== d.room || k === doorKey) return false;
-      const [q, r] = k.split(',').map(Number) as [number, number];
-      return around(q, r).some(([nq, nr]) => roomOf(nq, nr) === d.to);
-    });
-    if (touching) continue;
-    const gap = new Map<string, [number, number]>();
-    for (const [k, room] of layout.footprint) {
-      if (room !== d.room) continue;
-      const [q, r] = k.split(',').map(Number) as [number, number];
-      for (const [nq, nr] of around(q, r)) {
-        if (roomOf(nq, nr) !== undefined) continue;
-        if (around(nq, nr).some(([aq, ar]) => roomOf(aq, ar) === d.to)) gap.set(`${nq},${nr}`, [nq, nr]);
-      }
-    }
-    if (gap.size < 2) continue;
-    const pts = [...gap.values(), d.hex].map(([q, r]) => centre(q, r));
-    let a = pts[0]!;
-    let b = pts[1]!;
-    let far = -1;
-    for (const p of pts) for (const q of pts) {
-      const dd = Math.hypot(p.x - q.x, p.z - q.z);
-      if (dd > far) {
-        far = dd;
-        a = p;
-        b = q;
-      }
-    }
-    const dx = (b.x - a.x) / far;
-    const dz = (b.z - a.z) / far;
-    if (pts.some((p) => Math.abs((p.x - a.x) * -dz + (p.z - a.z) * dx) > 0.1)) continue;
-    // The doorway hex is the opening: the wall stops at its edges on either side.
-    const c = centre(d.hex[0], d.hex[1]);
-    const t = (c.x - a.x) * dx + (c.z - a.z) * dz;
-    const half = (Math.sqrt(3) / 2) * hexSize;
-    const at = (u: number) => ({ x: a.x + dx * u, z: a.z + dz * u });
-    if (t - half > 0.05) out.push({ points: [a, at(t - half)], rooms: [d.room, d.to], extended: [false, false], open: [true, false], door: hexKey(d.hex) });
-    if (far - (t + half) > 0.05) out.push({ points: [at(t + half), b], rooms: [d.room, d.to], extended: [false, false], open: [false, true], door: hexKey(d.hex) });
+  const byRoom = new Map<string, [number, number][]>();
+  for (const [k, room] of layout.footprint) {
+    const list = byRoom.get(room) ?? [];
+    list.push(parseHexKey(k));
+    byRoom.set(room, list);
   }
-  extendToOuterWalls(layout, out, hexAt, hexSize);
-  return out;
-}
+  const corners = new Map<string, Pt[]>();
+  for (const k of layout.footprint.keys()) {
+    const [q, r] = parseHexKey(k);
+    corners.set(k, hexCorners(centre(q, r), hexSize));
+  }
+  const doorKeys = new Set(doors.map((d) => hexKey(d.hex)));
+  const rooms = [...byRoom.keys()].sort();
+  const pairs: { a: string; b: string; door: { hex: [number, number] } | null; near: [Pt, Pt] }[] = [];
+  for (let i = 0; i < rooms.length; i++)
+    for (let j = i + 1; j < rooms.length; j++) {
+      const a = rooms[i]!;
+      const b = rooms[j]!;
+      let best = Infinity;
+      let near: [Pt, Pt] | null = null;
+      for (const ha of byRoom.get(a)!)
+        for (const hb of byRoom.get(b)!) {
+          const dd = distance(ha, hb);
+          if (dd < best) {
+            best = dd;
+            near = [centre(ha[0], ha[1]), centre(hb[0], hb[1])];
+          }
+        }
+      if (best > CONTACT || !near) continue;
+      const door = doors.find((d) => (d.room === a && d.to === b) || (d.room === b && d.to === a)) ?? null;
+      pairs.push({ a, b, door, near });
+    }
 
-function mergeCollinear(pts: { x: number; z: number }[]): { x: number; z: number }[] {
-  const out = [pts[0]!];
-  for (let i = 1; i < pts.length - 1; i++) {
-    const a = out[out.length - 1]!;
-    const b = pts[i]!;
-    const c = pts[i + 1]!;
-    const cross = (b.x - a.x) * (c.z - b.z) - (b.z - a.z) * (c.x - b.x);
-    if (Math.abs(cross) > 1e-3) out.push(b);
+  const runs = straightRuns(layout);
+  const placed: Line[] = [];
+  const proj = (p: Pt, v: Pt) => p.x * v.x + p.z * v.z;
+  const onLine = (k: string, n: Pt, o: number) => {
+    const [q, r] = parseHexKey(k);
+    return Math.abs(proj(centre(q, r), n) - o) < EPS;
+  };
+  /** Distance along the ray from p (direction d) to the nearest outer wall run or placed wall. */
+  const reach = (p: Pt, d: Pt): number => {
+    let best = Infinity;
+    const segs: [Pt, Pt][] = [
+      ...runs.map((r): [Pt, Pt] => [{ x: r.ax, z: r.az }, { x: r.bx, z: r.bz }]),
+      ...placed.map((l): [Pt, Pt] => [{ x: l.p.x + l.d.x * l.t0, z: l.p.z + l.d.z * l.t0 }, { x: l.p.x + l.d.x * l.t1, z: l.p.z + l.d.z * l.t1 }]),
+    ];
+    for (const [a, b] of segs) {
+      const ex = b.x - a.x;
+      const ez = b.z - a.z;
+      const den = d.x * ez - d.z * ex;
+      if (Math.abs(den) < 1e-6) continue;
+      const t = ((a.x - p.x) * ez - (a.z - p.z) * ex) / den;
+      const u = ((a.x - p.x) * d.z - (a.z - p.z) * d.x) / den;
+      if (t > 1e-3 && u >= -0.01 && u <= 1.01) best = Math.min(best, t);
+    }
+    return best;
+  };
+  /** Whether the stretch [t0, t1] of the line goes into a playable hex (doorways on it aside). */
+  const cuts = (l: Pick<Line, 'd' | 'n' | 'o' | 'p' | 't0' | 't1'>): boolean => {
+    for (const [k, cs] of corners) {
+      if (doorKeys.has(k) && onLine(k, l.n, l.o)) continue;
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const c of cs) {
+        const s = proj(c, l.n) - l.o;
+        lo = Math.min(lo, s);
+        hi = Math.max(hi, s);
+      }
+      if (lo > -EPS || hi < EPS) continue;
+      let alo = Infinity;
+      let ahi = -Infinity;
+      for (const c of cs) {
+        const t = (c.x - l.p.x) * l.d.x + (c.z - l.p.z) * l.d.z;
+        alo = Math.min(alo, t);
+        ahi = Math.max(ahi, t);
+      }
+      if (Math.min(ahi, l.t1) - Math.max(alo, l.t0) > EPS) return true;
+    }
+    return false;
+  };
+  /** How far each room's hexes keep from the line, if a lies wholly on one side and b on the other. */
+  const sides = (a: string, b: string, n: Pt, o: number): number | null => {
+    const span = (room: string) => {
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const h of byRoom.get(room)!) {
+        const k = hexKey(h);
+        if (doorKeys.has(k) && onLine(k, n, o)) continue;
+        for (const c of corners.get(k)!) {
+          const s = proj(c, n) - o;
+          lo = Math.min(lo, s);
+          hi = Math.max(hi, s);
+        }
+      }
+      return { lo, hi };
+    };
+    const sa = span(a);
+    const sb = span(b);
+    if (sa.hi <= EPS && sb.lo >= -EPS) return Math.min(-sa.hi, sb.lo);
+    if (sb.hi <= EPS && sa.lo >= -EPS) return Math.min(-sb.hi, sa.lo);
+    return null;
+  };
+
+  const pending = [...pairs].sort((u, v) => Number(!!v.door) - Number(!!u.door));
+  for (let progress = true; progress && pending.length; ) {
+    progress = false;
+    for (let i = 0; i < pending.length; i++) {
+      const pair = pending[i]!;
+      let best: Line | null = null;
+      for (let k = 0; k < 6; k++) {
+        const ang = (k * Math.PI) / 6;
+        const d = { x: Math.cos(ang), z: Math.sin(ang) };
+        const n = { x: -d.z, z: d.x };
+        let o: number;
+        let p: Pt;
+        if (pair.door) {
+          p = centre(pair.door.hex[0], pair.door.hex[1]);
+          o = proj(p, n);
+        } else {
+          // Midway between the two rooms' hexes, at the point where they come nearest.
+          let ha = -Infinity;
+          let la = Infinity;
+          let hb = -Infinity;
+          let lb = Infinity;
+          for (const [room, set] of [[pair.a, 'a'], [pair.b, 'b']] as const)
+            for (const h of byRoom.get(room)!)
+              for (const c of corners.get(hexKey(h))!) {
+                const s = proj(c, n);
+                if (set === 'a') (ha = Math.max(ha, s)), (la = Math.min(la, s));
+                else (hb = Math.max(hb, s)), (lb = Math.min(lb, s));
+              }
+          if (ha < lb) o = (ha + lb) / 2;
+          else if (hb < la) o = (hb + la) / 2;
+          else continue;
+          const m = { x: (pair.near[0].x + pair.near[1].x) / 2, z: (pair.near[0].z + pair.near[1].z) / 2 };
+          const off = proj(m, n) - o;
+          p = { x: m.x - n.x * off, z: m.z - n.z * off };
+        }
+        const margin = sides(pair.a, pair.b, n, o);
+        if (margin === null) continue;
+        const along = (l: Line) => (p.x - l.p.x) * l.d.x + (p.z - l.p.z) * l.d.z;
+        const same = placed.find((l) => Math.abs(Math.abs(proj(l.d, d)) - 1) < 1e-6 && Math.abs(proj(l.p, n) - o) < EPS && along(l) > l.t0 && along(l) < l.t1);
+        if (same) {
+          // A wall already standing on this line is taken over (one wall, several doorways).
+          if (!best || margin + 100 > best.margin) best = { ...same, margin: margin + 100 };
+          continue;
+        }
+        const fwd = reach(p, d);
+        const back = reach(p, { x: -d.x, z: -d.z });
+        if (!Number.isFinite(fwd) || !Number.isFinite(back)) continue;
+        const line: Line = { d, n, o, p, rooms: new Set(), doors: new Set(), t0: -back, t1: fwd, margin };
+        if (cuts(line)) continue;
+        if (!best || margin > best.margin + 1e-6) best = line;
+      }
+      if (!best) continue;
+      let line = placed.find((l) => l.p === best!.p && l.d === best!.d);
+      if (!line) placed.push((line = best));
+      line.rooms.add(pair.a).add(pair.b);
+      if (pair.door) line.doors.add(hexKey(pair.door.hex));
+      pending.splice(i--, 1);
+      progress = true;
+    }
   }
-  out.push(pts[pts.length - 1]!);
+
+  // A doorway hex standing on a wall is an opening in it, whichever rooms it joins.
+  for (const l of placed) for (const k of doorKeys) if (onLine(k, l.n, l.o)) l.doors.add(k);
+
+  // Each wall in stretches between its doorways: a doorway hex is the opening, edge to edge.
+  const inradius = (Math.sqrt(3) / 2) * hexSize;
+  const out: Partition[] = [];
+  for (const l of placed) {
+    const ang = Math.atan2(l.d.z, l.d.x);
+    // Out along d to the hex's edge: the edge normals lie 30° off the corners.
+    const phi = (((ang % (Math.PI / 3)) + Math.PI / 3) % (Math.PI / 3)) - Math.PI / 6;
+    const half = inradius / Math.cos(phi);
+    const at = (t: number) => ({ x: l.p.x + l.d.x * t, z: l.p.z + l.d.z * t });
+    const cuts: { t: number; door: string }[] = [...l.doors]
+      .map((k) => {
+        const [q, r] = parseHexKey(k);
+        const c = centre(q, r);
+        return { t: (c.x - l.p.x) * l.d.x + (c.z - l.p.z) * l.d.z, door: k };
+      })
+      .filter((c) => c.t > l.t0 && c.t < l.t1)
+      .sort((u, v) => u.t - v.t);
+    const rooms = [...l.rooms];
+    let from = l.t0;
+    let fromDoor: string | undefined;
+    for (const c of cuts) {
+      if (c.t - half - from > 0.05) out.push({ points: [at(from), at(c.t - half)], rooms, extended: [fromDoor === undefined, false], door: c.door });
+      from = c.t + half;
+      fromDoor = c.door;
+    }
+    if (l.t1 - from > 0.05) out.push({ points: [at(from), at(l.t1)], rooms, extended: [fromDoor === undefined, true], ...(fromDoor ? { door: fromDoor } : {}) });
+  }
   return out;
 }

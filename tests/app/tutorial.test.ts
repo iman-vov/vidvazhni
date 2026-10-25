@@ -193,7 +193,7 @@ function towardsDoor(g: GameController): Action | null {
     const dist = (a: Action) => {
       const path = a.type === 'resolveStep' && 'path' in a.choice ? (a.choice.path as [number, number][]) : [];
       const end = path[path.length - 1] ?? [9, 9];
-      return Math.abs(end[0] - 2) + Math.abs(end[1] - 1) + Math.abs(end[0] + end[1] - 3);
+      return Math.abs(end[0] - 3) + Math.abs(end[1] - 1) + Math.abs(end[0] + end[1] - 4);
     };
     return [...moves].sort((a, b) => dist(a) - dist(b))[0] ?? null;
   }

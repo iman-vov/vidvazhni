@@ -12,6 +12,9 @@ export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cav
 /** A piece id with a relative weight, for random picks. */
 export type Weighted = [piece: string, weight: number];
 
+/** A wall between rooms that fits the location: masonry indoors, fences and hedges outside. */
+export type DividerStyle = 'stone' | 'brick' | 'planks' | 'palisade' | 'wattle' | 'hedge' | 'rock-ridge' | 'stone-fence' | 'reed-fence';
+
 export interface EnvironmentDef {
   /** Location id, same as the environment concept: cellar, thorn-path, flooded-mill, watchtower, gloom-heart. */
   id: string;
@@ -21,6 +24,8 @@ export interface EnvironmentDef {
   edge: EdgeStyle;
   /** Per-room edge, where a room differs (the mill hall has timber walls inside an outdoor yard). */
   rooms?: Record<string, { edge: EdgeStyle }>;
+  /** What the straight walls between rooms are built as (default by location, index.ts DIVIDERS). */
+  divider?: DividerStyle;
   ground: {
     /** Texture in assets/textures (name without size and extension). */
     texture?: string;

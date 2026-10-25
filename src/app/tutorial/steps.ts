@@ -196,7 +196,7 @@ export const TIPS: readonly CoachStep[] = [
     params: button('ui.longRest'),
   },
   { id: 'longRestLoss', when: (c) => pending(c)?.kind === 'longRestLoss', done: (c) => c.acked.has('longRestLoss'), target: () => ({ selector: SEL.bottom }) },
-  { id: 'openDoor', when: (c) => ownTurn(c) && noMonsters(c) && cellarClosed(c), done: (c) => c.acked.has('openDoor') || !cellarClosed(c), target: () => ({ hex: [2, 1] }) },
+  { id: 'openDoor', when: (c) => ownTurn(c) && noMonsters(c) && cellarClosed(c), done: (c) => c.acked.has('openDoor') || !cellarClosed(c), target: () => ({ hex: [3, 1] }) },
   { id: 'door', info: true, when: (c) => c.events.some((e) => e.type === 'roomRevealed' && e.roomId !== 's0.yard'), done: (c) => c.acked.has('door') },
   { id: 'loot', info: true, when: (c) => c.events.some((e) => e.type === 'looted' && (e.coins > 0 || !!e.chest)), done: (c) => c.acked.has('loot') },
 ];

@@ -13,7 +13,7 @@ import type { BoundaryKind, ScenarioDef } from '../../rules/content';
 import { hexKey, parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
-import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
+import { HEX_SIZE, hexToWorld } from '../hexLayout';
 import { surfaceTexture } from '../surfaces';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
@@ -29,11 +29,11 @@ import { buildAtmosphere, type AtmosphereBuild } from './decals';
 import { Morok } from './morok';
 import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SPIN, Spinner, swayFor, tickLife, type SwaySpec } from './life';
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
-import { gapPartitions, partitions, type Partition } from './walls';
+import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { buildScatter, planScatter, scatterProfile } from './scatter';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
-import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
+import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
 export type { EnvironmentDef, PropModelSpec } from './types';
 export { environmentFor, ENVIRONMENTS } from './data';
@@ -58,6 +58,46 @@ const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
 /** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
+/** The wall between rooms per divider style (pieces.ts ids, replaceable by an art kit like the rest). */
+export const DIVIDER_PIECES: Record<DividerStyle, string> = {
+  stone: 'divider-stone',
+  brick: 'divider-brick',
+  planks: 'divider-planks',
+  palisade: 'divider-palisade',
+  wattle: 'divider-wattle',
+  hedge: 'thicket-hedge',
+  'rock-ridge': 'divider-rock-ridge',
+  'stone-fence': 'divider-stone-fence',
+  'reed-fence': 'reed-fence',
+};
+/** Divider per location, where its file does not name one. */
+const DIVIDERS: Record<string, DividerStyle> = {
+  cellar: 'brick',
+  watchtower: 'stone',
+  'thorn-path': 'palisade',
+  'flooded-mill': 'reed-fence',
+  'gloom-heart': 'rock-ridge',
+  'mine-tunnel': 'planks',
+  'mountain-pass': 'stone-fence',
+  copperdale: 'wattle',
+  'dark-depths': 'rock-ridge',
+  'old-forge': 'brick',
+};
+/** Divider by edge style, for a location not listed and for a room with an edge of its own. */
+const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick' };
+const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge']);
+
+/**
+ * What the wall between these rooms is built as: the location's divider, unless one of the rooms
+ * has an indoor edge of its own inside an outdoor location (the mill hall) — then that room's.
+ */
+export function dividerFor(def: Pick<EnvironmentDef, 'id' | 'edge' | 'rooms' | 'divider'>, rooms: readonly string[]): DividerStyle {
+  const own = def.divider ?? DIVIDERS[def.id] ?? EDGE_DIVIDER[def.edge];
+  if (INDOOR_EDGES.has(def.edge)) return own;
+  const indoor = rooms.map((r) => def.rooms?.[r]?.edge).find((e): e is EdgeStyle => !!e && INDOOR_EDGES.has(e));
+  return indoor ? EDGE_DIVIDER[indoor] : own;
+}
+
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
   barrel: { piece: 'barrel', scale: 1.04 },
   crate: { piece: 'crate', scale: 1.3 },
@@ -286,11 +326,21 @@ export class BoardEnvironment {
    * model that exists, the model replaces it, instanced, once it loads. `dispose()` frees it.
    */
   boundary(kind: Exclude<BoundaryKind, 'walls'>, frames: THREE.Matrix4[], low: boolean): THREE.Object3D & { dispose(): void } {
-    const piece = BOUNDARY_PIECES[kind];
+    return this.pieceRow(BOUNDARY_PIECES[kind], frames, low, `boundary:${kind}${low ? ':low' : ''}`);
+  }
+
+  /** The straight wall between these rooms as the location's divider (dividerFor), one piece per
+   *  frame (frames along the wall's line, a metre or so each). */
+  divider(rooms: readonly string[], frames: THREE.Matrix4[]): THREE.Object3D & { dispose(): void } {
+    const style = this.def ? dividerFor(this.def, rooms) : 'stone';
+    return this.pieceRow(DIVIDER_PIECES[style], frames, false, `divider:${style}`);
+  }
+
+  private pieceRow(piece: string, frames: THREE.Matrix4[], low: boolean, name: string): THREE.Object3D & { dispose(): void } {
     const meta = pieceMeta(piece)!;
     const owned: { dispose(): void }[] = [];
     const group = Object.assign(new THREE.Group(), { dispose: () => owned.forEach((d) => d.dispose()) });
-    group.name = `boundary:${kind}${low ? ':low' : ''}`;
+    group.name = name;
     const squash = new THREE.Matrix4().makeScale(1, low ? 0.45 : 1, 1);
     const groups = new Map<MaterialKey | THREE.Material, THREE.BufferGeometry[]>();
     const full = new THREE.Matrix4();
@@ -976,7 +1026,7 @@ export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): Envir
   return Object.keys(rooms).length ? { ...def, rooms: { ...rooms, ...def.rooms } } : def;
 }
 
-/** The scenario's walls between rooms as partitions over the location's outline. */
+/** The scenario's walls between rooms: straight lines through the doorways (walls.ts). */
 /** Hexes that have something on them in the scenario data (obstacles, doors, objects, traps…). */
 export function busyHexes(scenario: ScenarioDef): Set<HexKey> {
   const out = new Set<HexKey>();
@@ -993,13 +1043,8 @@ export function busyHexes(scenario: ScenarioDef): Set<HexKey> {
 }
 
 export function scenarioPartitions(layout: EnvLayout, scenario: ScenarioDef): Partition[] {
-  const walls = scenario.rooms.flatMap((room) =>
-    (room.walls ?? []).map(([a, b]) => ({ a, b, rooms: [...new Set([room.id, layout.footprint.get(hexKey(a)), layout.footprint.get(hexKey(b))].filter((r): r is string => !!r))] })),
-  );
-  const centre = (q: number, r: number) => hexToWorld(q, r);
-  const at = (x: number, z: number) => hexKey(worldToHex(x, z));
   const doors = scenario.rooms.flatMap((room) => (room.doors ?? []).map((d) => ({ hex: d.hex, room: room.id, to: d.to })));
-  return [...partitions(layout, walls, centre, at, HEX_SIZE), ...gapPartitions(layout, doors, centre, at, HEX_SIZE)];
+  return roomWalls(layout, doors, (q, r) => hexToWorld(q, r), HEX_SIZE);
 }
 
 /**

@@ -30,6 +30,7 @@
         "additionalProperties": false
       }
     },
+    "divider": { "enum": ["stone", "brick", "planks", "palisade", "wattle", "hedge", "rock-ridge", "stone-fence", "reed-fence"] },
     "ground": {
       "type": "object",
       "properties": {

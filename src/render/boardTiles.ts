@@ -313,6 +313,8 @@ export class TileLayer {
   private defaultBoundary: BoundaryKind = 'walls';
   /** Natural boundaries (reeds, thicket, rocks, logs) on edge frames, from the environment. */
   boundaryFactory: ((kind: Exclude<BoundaryKind, 'walls'>, frames: THREE.Matrix4[], low: boolean) => THREE.Object3D & { dispose(): void }) | null = null;
+  /** Builds the wall between rooms (a partition's line) as the location's divider. */
+  dividerFactory: ((rooms: readonly string[], frames: THREE.Matrix4[]) => THREE.Object3D & { dispose(): void }) | null = null;
   /** A piece in the location's colours (door bodies, rails), from the environment. */
   pieceFactory: ((piece: string) => THREE.Group | null) | null = null;
   private readonly propParts = new PropParts();
@@ -565,16 +567,27 @@ export class TileLayer {
       const kind = this.boundaryOf(owner) === 'walls' || this.boundaryOf(other) === 'walls' ? 'walls' : this.boundaryOf(owner);
       const a = parseHexKey(ka);
       const b = parseHexKey(kb);
-      // Masonry runs as whole partitions below; natural boundaries stay piece by piece.
-      if (kind === 'walls' && parts.length) continue;
       add(owner, kind, 'walls', kind === 'walls' ? edgeMatrix(a, b, WALL_HEIGHT, WALL_THICK) : edgeFrame(a, b));
     }
+    // Walls between rooms: the location's divider, a piece every metre or so along the line.
+    const dividers = new Map<string, { rooms: string[]; frames: THREE.Matrix4[] }[]>();
     for (const part of parts) {
       const shown = part.rooms.filter((r) => rooms.includes(r));
       const owner = shown[0];
       if (!owner) continue;
       const kind = part.rooms.some((r) => this.boundaryOf(r) === 'walls') ? 'walls' : this.boundaryOf(owner);
       const pts = part.points;
+      if (this.dividerFactory) {
+        const frames: THREE.Matrix4[] = [];
+        for (let i = 0; i + 1 < pts.length; i++) {
+          const a = pts[i]!;
+          const b = pts[i + 1]!;
+          const n = Math.max(1, Math.round(Math.hypot(b.x - a.x, b.z - a.z)));
+          for (let k = 0; k < n; k++) frames.push(stretchFrame({ x: a.x + ((b.x - a.x) * k) / n, z: a.z + ((b.z - a.z) * k) / n }, { x: a.x + ((b.x - a.x) * (k + 1)) / n, z: a.z + ((b.z - a.z) * (k + 1)) / n }));
+        }
+        dividers.set(owner, [...(dividers.get(owner) ?? []), { rooms: part.rooms, frames }]);
+        continue;
+      }
       if (kind === 'walls') {
         // Straight stretches meeting in mitred joints, a pillar where the wall turns.
         for (let i = 0; i + 1 < pts.length; i++) add(owner, kind, 'walls', stretchMatrix(pts[i]!, pts[i + 1]!, WALL_HEIGHT, WALL_THICK));
@@ -583,11 +596,10 @@ export class TileLayer {
           add(owner, kind, 'walls', new THREE.Matrix4().compose(new THREE.Vector3(p.x, PLATE_HEIGHT + (WALL_HEIGHT + 0.08) / 2 - 0.02, p.z), new THREE.Quaternion(), new THREE.Vector3(WALL_THICK * 1.8, WALL_HEIGHT + 0.08, WALL_THICK * 1.8)));
         }
       } else {
-        // A natural boundary carries on across the ring to the outer edge, piece after piece.
-        const ends: [{ x: number; z: number }, { x: number; z: number }][] = [];
-        if (part.extended[0]) ends.push([pts[0]!, pts[1]!]);
-        if (part.extended[1]) ends.push([pts[pts.length - 1]!, pts[pts.length - 2]!]);
-        for (const [a, b] of ends) {
+        // A natural boundary runs the same straight line, piece after piece.
+        for (let i = 0; i + 1 < pts.length; i++) {
+          const a = pts[i]!;
+          const b = pts[i + 1]!;
           const len = Math.hypot(b.x - a.x, b.z - a.z);
           const n = Math.max(1, Math.round(len));
           for (let k = 0; k < n; k++) {
@@ -619,10 +631,16 @@ export class TileLayer {
       room.edgeDisposables = [];
       room.edges = null;
       const lists = perRoom.get(room.id);
-      if (!lists) continue;
+      const walls = dividers.get(room.id);
+      if (!lists && !walls) continue;
       const edges = new THREE.Group();
       edges.name = 'edges';
-      for (const [kind, l] of lists) {
+      for (const w of walls ?? []) {
+        const built = this.dividerFactory!(w.rooms, w.frames);
+        edges.add(built);
+        room.edgeDisposables.push(built);
+      }
+      for (const [kind, l] of lists ?? []) {
         for (const which of ['walls', 'kerbs'] as const) {
           const list = l[which];
           if (!list.length) continue;
@@ -825,8 +843,17 @@ export class TileLayer {
     const object = new THREE.Group();
     const holder = new THREE.Group();
     // Stand the door on the hex edge it leads through: local X along the edge, +Z into the next room.
-    // A doorway in a wall that runs through the door hex stands in its middle, on the wall's line.
-    const inWall = (this.partitionLines?.() ?? []).some((p) => p.door === k);
+    // A doorway in a wall that runs through the door hex stands in its middle, across the wall's line.
+    const wall = (this.partitionLines?.() ?? []).find((p) => p.door === k);
+    const inWall = !!wall;
+    if (wall) {
+      const [a, b] = [wall.points[0]!, wall.points[wall.points.length - 1]!];
+      const len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+      const nx = -(b.z - a.z) / len;
+      const nz = (b.x - a.x) / len;
+      const flip = nx * dir.x + nz * dir.z < 0 ? -1 : 1;
+      dir.set(nx * flip, 0, nz * flip);
+    }
     const edge = inWall ? 0 : 0.62;
     holder.position.set(dir.x * edge, 0, dir.z * edge);
     holder.rotation.y = Math.atan2(dir.x, dir.z);
