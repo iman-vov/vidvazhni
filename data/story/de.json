@@ -831,6 +831,74 @@
         ]
       },
       "epilogue": { "id": "s12.epilogue", "speaker": "marta", "text": "Die Reiherin hat mir ihren Tee und ein Paar Stiefel geschickt. Sie sagt, im Sumpf geht ohne sie kein Schritt." }
+    },
+    "s13": {
+      "intro": [
+        { "id": "s13.intro.1", "speaker": "narrator", "text": "Im Wald hinter dem Sumpf liegt ein stiller Teich. Jede Nacht tanzen Glühwürmchen darüber, als hätte jemand Funken verstreut." },
+        { "id": "s13.intro.2", "speaker": "narrator", "text": "Doch heute hängen schwarze Kokons über dem Wasser, und aus ihnen kriechen Falter. Es sind nur noch acht Glühwürmchen übrig." },
+        { "id": "s13.intro.3", "speaker": "marta", "text": "Lasst die Falter nicht an den Teich und zerschlagt die Kokons. Wenigstens ein Glühwürmchen soll den Morgen erleben." },
+        {
+          "id": "s13.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Schützt die Glühwürmchen!",
+          "variants": {
+            "warden": "Ich stelle mich ans Wasser. Sollen die Falter erst mal an mir vorbeikommen.",
+            "wind-archer": "Drei Pfade führen zum Teich. Ich behalte alle drei im Blick.",
+            "herbalist": "Glühwürmchen mögen feuchtes Gras. Tretet bitte nicht aufs Ufer.",
+            "rogue": "Ein Glühwürmchen kann man nicht stehlen. Es entscheidet selbst, wem es leuchtet.",
+            "elementalist": "Der Nachtwind kommt vom Wasser. Ich versuche, ihn auf die Kokons zu lenken.",
+            "tinker": "Bolt, nicht bellen. Die Glühwürmchen haben schon genug Angst."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s13.cold-light",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s13.cold-light.1", "speaker": "narrator", "text": "Von Osten fliegen neue Falter heran. Die Glühwürmchen drängen sich in der Mitte des Teichs." },
+            { "id": "s13.cold-light.2", "speaker": "elementalist", "text": "Im Buch stand, dass Glühwürmchen kaltes Licht machen. Ich habe es nicht geglaubt. Jetzt sehe ich es." }
+          ]
+        },
+        {
+          "id": "s13.whisper",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s13.whisper.1", "speaker": "mist-queen", "text": "Wozu braucht ihr diese Lichtlein? Ohne sie ist es so still und dunkel. Niemand sieht etwas." }
+          ]
+        },
+        {
+          "id": "s13.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s13.first-moth.1", "speaker": "narrator", "text": "Der Falter wird blass, dreht eine Runde über dem Wasser und setzt sich neben ein Glühwürmchen aufs Schilf." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s13.win.1", "speaker": "narrator", "text": "Der Morgen ist da. Die Glühwürmchen steigen über den Teich und formen ein Bild, als malten sie mit Licht." },
+          { "id": "s13.win.2", "speaker": "narrator", "text": "Auf dem Bild ist ein Junge mit einem Glas. Er fängt Glühwürmchen, damit er nachts keine Angst hat." },
+          { "id": "s13.win.3", "speaker": "narrator", "text": "Am Morgen öffnet er das Glas und lässt sie frei. Die Glühwürmchen erinnern sich an seinen Namen: Lumo." },
+          { "id": "s13.win.4", "speaker": "narrator", "text": "Später wurde er groß und baute eine Laterne. Die ersten Lichter darin waren Glühwürmchen aus diesem Teich." },
+          {
+            "id": "s13.win.5", "speaker": "hero", "pick": "random",
+            "text": "Er hat sie freigelassen.",
+            "variants": {
+              "warden": "Er hatte Angst im Dunkeln und ließ die Glühwürmchen trotzdem frei. Ein gutes Herz.",
+              "wind-archer": "Wer ein Tier freilässt, versteht es. Lumo hat sie verstanden.",
+              "herbalist": "Der arme Kleine. Er hätte nur jemanden gebraucht, der nachts bei ihm sitzt.",
+              "rogue": "Albas Laterne hat mit Glühwürmchen in einem Glas angefangen? Was für eine Geschichte.",
+              "elementalist": "Kaltes Licht, das nicht erlischt. Darum wärmt die Schutzlaterne nie.",
+              "tinker": "Ein Glas, ein Deckel, Luftlöcher. So fängt jede gute Laterne an."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s13.lose.1", "speaker": "marta", "text": "Die Falter haben alle Glühwürmchen ausgelöscht. Seid nicht traurig, sie schlafen nur, und wir kommen nächste Nacht wieder." },
+          { "id": "s13.lose.2", "speaker": "marta", "text": "Stellt euch auf die Pfade, nicht direkt ans Wasser. Und zerschlagt zuerst die Kokons, denn aus ihnen kommen neue Falter." }
+        ]
+      },
+      "epilogue": { "id": "s13.epilogue", "speaker": "marta", "text": "Ein Glühwürmchen ist euch bis ins Gasthaus gefolgt. Jetzt sitzt es in einem Glas auf dem Regal und leuchtet dem Kater." }
     }
   }
 }

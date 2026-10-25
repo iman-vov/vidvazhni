@@ -831,6 +831,74 @@
         ]
       },
       "epilogue": { "id": "s12.epilogue", "speaker": "marta", "text": "Old Heron sent me her tea and a pair of boots. She says you can’t take a step in the marsh without them." }
+    },
+    "s13": {
+      "intro": [
+        { "id": "s13.intro.1", "speaker": "narrator", "text": "In the woods beyond the marsh lies a quiet pond. Every night fireflies dance over it, as if someone had scattered sparks." },
+        { "id": "s13.intro.2", "speaker": "narrator", "text": "But tonight black cocoons hang over the water, and moths are crawling out of them. Only eight fireflies are left." },
+        { "id": "s13.intro.3", "speaker": "marta", "text": "Keep the moths away from the pond and break the cocoons. Let at least one firefly see the morning." },
+        {
+          "id": "s13.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Protect the fireflies!",
+          "variants": {
+            "warden": "I’ll stand by the water. Let the moths try to get past me first.",
+            "wind-archer": "Three paths lead to the pond. I’m watching all three.",
+            "herbalist": "Fireflies like damp grass. Please don’t trample the bank.",
+            "rogue": "You can’t steal a firefly. It decides who to glow for.",
+            "elementalist": "The night breeze comes off the water. I’ll try to turn it on the cocoons.",
+            "tinker": "Bolt, no barking. The fireflies are scared enough already."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s13.cold-light",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s13.cold-light.1", "speaker": "narrator", "text": "New moths fly in from the east. The fireflies huddle in the middle of the pond." },
+            { "id": "s13.cold-light.2", "speaker": "elementalist", "text": "The book said fireflies make cold light. I didn’t believe it. Now I can see it." }
+          ]
+        },
+        {
+          "id": "s13.whisper",
+          "trigger": { "on": "round", "arg": 4 },
+          "lines": [
+            { "id": "s13.whisper.1", "speaker": "mist-queen", "text": "Why do you need these little lights? It’s so quiet and dark without them. No one will see a thing." }
+          ]
+        },
+        {
+          "id": "s13.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s13.first-moth.1", "speaker": "narrator", "text": "The moth turned pale, circled over the water and settled on a reed next to a firefly." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s13.win.1", "speaker": "narrator", "text": "Morning came. The fireflies rose over the pond and formed a picture, as if they were drawing with light." },
+          { "id": "s13.win.2", "speaker": "narrator", "text": "In the picture is a boy with a glass jar. He’s catching fireflies so he won’t be afraid of the night." },
+          { "id": "s13.win.3", "speaker": "narrator", "text": "And in the morning he opens the jar and lets them go. The fireflies remember his name: Lumo." },
+          { "id": "s13.win.4", "speaker": "narrator", "text": "Later he grew up and made a lantern. Its very first lights were fireflies from this pond." },
+          {
+            "id": "s13.win.5", "speaker": "hero", "pick": "random",
+            "text": "He let them go.",
+            "variants": {
+              "warden": "He was afraid of the dark and still let the fireflies go. A good heart.",
+              "wind-archer": "Whoever lets a creature go understands it. Lumo understood.",
+              "herbalist": "Poor little thing. He just needed someone to sit with him at night.",
+              "rogue": "Alba’s lantern started with fireflies in a jar? What a story.",
+              "elementalist": "Cold light that never goes out. That’s why the Guardian Lantern never feels warm.",
+              "tinker": "A jar, a lid, air holes. That’s how every good lantern begins."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s13.lose.1", "speaker": "marta", "text": "The moths put out all the fireflies. Don’t be sad, they’re only asleep, and we’ll come back tomorrow night." },
+          { "id": "s13.lose.2", "speaker": "marta", "text": "Stand on the paths, not right by the water. And break the cocoons first, because new moths keep coming out of them." }
+        ]
+      },
+      "epilogue": { "id": "s13.epilogue", "speaker": "marta", "text": "One firefly followed you all the way to the inn. Now it sits in a jar on the shelf and glows for the cat." }
     }
   }
 }

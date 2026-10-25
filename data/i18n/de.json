@@ -1346,5 +1346,19 @@
   "event.s12.horn": "Der Hornbläser hat geblasen, und ein großer Frosch klettert aus dem Wasser!",
   "event.s12.horn-stopped": "Der Hornbläser ist verjagt, das Horn schweigt. Er hat ein paar Münzen verloren.",
   "event.s12.herb": "Die Reiherin pflückt ein Kräuterbüschel und legt es in den Korb.",
-  "event.s12.map": "In der Truhe liegt eine alte Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf."
+  "event.s12.map": "In der Truhe liegt eine alte Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf.",
+  "scenario.s13": "Der Glühwürmchenteich",
+  "scenario.s13.goal": "Alle 3 Falterkokons über dem Teich zerschlagen",
+  "scenario.s13.goal.defend": "Haltet 7 Runden durch, damit im Teich mindestens ein Glühwürmchen übrig bleibt",
+  "scenario.s13.intro": "Über dem Waldteich hängen schwarze Kokons, und die Falter daraus löschen ein Glühwürmchen nach dem anderen. Stellt euch auf die Pfade und haltet sie vom Wasser fern, bis der Morgen kommt.",
+  "scenario.s13.outro": "Die Glühwürmchen haben den Morgen erlebt und eine Erinnerung gezeigt: Der Junge Lumo fing sie in einem Glas, um nachts keine Angst zu haben, und ließ sie morgens frei. Die ersten Lichter der Schutzlaterne waren Glühwürmchen.",
+  "room.s13.glade": "A. Lichtung am Teich",
+  "event.s13.firefly-out": "Ein Falter hat ein Glühwürmchen ausgelöscht. Noch {n} übrig.",
+  "event.s13.wave-east": "Von Osten fliegen Falter heran!",
+  "event.s13.wave-west": "Von Westen springen Frösche heran!",
+  "event.s13.wave-north": "Vom Nordpfad schwebt ein Schatten heran!",
+  "event.s13.wave-all": "Falter kommen von allen drei Pfaden!",
+  "event.s13.wave-cultist": "Ein Kultist bringt noch mehr Falter. Das ist die letzte Welle!",
+  "event.s13.cocoon": "Der Kokon platzt und zerfällt zu schwarzem Staub.",
+  "event.s13.map": "In der Baumhöhle steht eine alte Truhe mit der Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf."
 }
