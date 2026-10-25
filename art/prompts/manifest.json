@@ -2742,6 +2742,56 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "scatter-kit",
+      "nameUk": "Дрібниці на підлозі: камінці, тріски, листя, трава",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 77,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/scatter.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/scatter-kit/scatter-kit.blend",
+      "modelFile": "assets/models/scatter-kit/scatter-kit.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 12000
+      },
+      "textureMax": 256,
+      "attachTo": null
+    },
+    {
+      "id": "env-rocks",
+      "nameUk": "Набір каменів (спільний для всіх локацій)",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 78,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/rocks.blend",
+      "modelFile": "assets/models/env-rocks/env-rocks.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 30000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }
