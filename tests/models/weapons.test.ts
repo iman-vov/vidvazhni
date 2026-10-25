@@ -67,6 +67,25 @@ function skinnedBox(root: THREE.Object3D): THREE.Box3 {
   return box;
 }
 
+/** Where the fist closes, as weaponGrip has it: most of the way from the wrist to the middle knuckle. */
+function fistPoint(hand: THREE.Object3D): THREE.Vector3 {
+  const knuckle = hand.children.find((c) => /Middle1$/.test(c.name)) ?? hand.children[0];
+  return hand.localToWorld(knuckle ? knuckle.position.clone().multiplyScalar(0.75) : new THREE.Vector3());
+}
+
+/** Squared distance from a point to the nearest vertex of an object's meshes. */
+function nearestSq(object: THREE.Object3D, p: THREE.Vector3): number {
+  let best = Infinity;
+  const v = new THREE.Vector3();
+  object.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const pos = mesh.geometry.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) best = Math.min(best, v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld).distanceToSquared(p));
+  });
+  return best;
+}
+
 const pairs = [...HEROES, ...MONSTERS].flatMap((hero) => (WEAPONS[hero] ?? []).map((weapon) => [hero, weapon] as const));
 
 describe('weapons in hand', () => {
@@ -120,9 +139,13 @@ describe('weapons in hand', () => {
           const [lo, hi] = RATIO[weapon]!;
           expect(ratio, `${bone} @${at}: size ${ratio.toFixed(2)} of hero`).toBeGreaterThanOrEqual(lo);
           expect(ratio, `${bone} @${at}: size ${ratio.toFixed(2)} of hero`).toBeLessThanOrEqual(hi);
-          // The hand is on the weapon: the box (a little padded) holds the hand bone.
-          const hand = new THREE.Vector3().setFromMatrixPosition(findBone(h.scene, bone)!.matrixWorld);
+          // The hand is on the weapon: the box (a little padded) holds the hand bone, and the weapon's
+          // surface passes through the closed fist (not beside it, as the slingshot once floated).
+          const handBone = findBone(h.scene, bone)!;
+          const hand = new THREE.Vector3().setFromMatrixPosition(handBone.matrixWorld);
           expect(box.expandByScalar(0.08 * heroHeight).containsPoint(hand), `${bone} @${at}: hand off the weapon`).toBe(true);
+          const gap = Math.sqrt(nearestSq(object, fistPoint(handBone)));
+          expect(gap / heroHeight, `${bone} @${at}: weapon ${(gap / heroHeight).toFixed(3)} of hero away from the fist`).toBeLessThan(0.035);
         }
       }
       if (clipName === 'idle') {

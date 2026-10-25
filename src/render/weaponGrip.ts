@@ -43,8 +43,9 @@ export const WEAPON_GRIPS: Record<string, WeaponGrip> = {
   // Limbs along X, string on +Y, belly on -Y: through the fist, tipped a little toward the fingers,
   // string toward the wrist, so the bow stands upright when she aims.
   'wind-archer-bow': { size: 0.85, grip: [0, -0.6, 0], tip: [1, 0, 0], face: [0, 1, 0], tipDir: [1, 0.5, 0], faceDir: [0, -1, 0], frame: 'hand' },
-  // Door shield, emblem on +Z: upright on the forearm, face forward and a little outward.
-  'warden-shield': { size: 0.55, grip: [0, 0, -0.7], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [0, 1, 0], faceDir: [0.35, 0, 1] },
+  // Door shield, emblem on +Z, bowed: its middle sits at the front of the box (z ≈ 0.36), so the fist
+  // closes just behind it there. Upright on the forearm, face forward and a little outward.
+  'warden-shield': { size: 0.55, grip: [0, 0, 0.2], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [0, 1, 0], faceDir: [0.35, 0, 1] },
   // Blender-made (art/blender/weapons): blade at +Y, guard along X, flats on ±Z, leather grip low on
   // -Y. Through the fist, blade out of the thumb side and a little forward, edge leading.
   'warden-sword': { size: 0.55, grip: [0, -0.66, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.25, 0], faceDir: [0, 0, 1], frame: 'hand' },
@@ -53,10 +54,11 @@ export const WEAPON_GRIPS: Record<string, WeaponGrip> = {
   // Prod (bow) at -X, butt at +X, rail on +Y. The bandit shoots with the archer's clip: the left arm
   // reaches toward the target, the right hand comes to the cheek. So the left fist holds the fore-stock
   // with the prod along the forearm and the rail on the thumb side, and the butt comes back to the face.
-  crossbow: { size: 0.6, grip: [-0.3, -0.55, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0], faceDir: [1, 0, 0], frame: 'hand', bone: 'mixamorig:LeftHand' },
-  // Fork at +Y, handle at -Y, pouch toward -Z: upright in the fist, pouch toward the gremlin. Kept in the
+  crossbow: { size: 0.6, grip: [-0.3, 0.1, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0], faceDir: [1, 0, 0], frame: 'hand', bone: 'mixamorig:LeftHand' },
+  // Fork at +Y, handle at -Y and toward +Z (the bands and pouch hang back to -Z, so the wooden frame
+  // sits at the front of the box): upright in the fist, pouch toward the gremlin. Kept in the
   // hero's frame: his attack is a throw, not an aimed shot, and the upright Y reads better in idle.
-  'gremlin-slingshot': { size: 0.4, grip: [0, -0.62, 0], tip: [0, 1, 0], face: [0, 0, -1], tipDir: [0, 1, 0.35], faceDir: [0, 0, -1] },
+  'gremlin-slingshot': { size: 0.4, grip: [0, -0.62, 0.73], tip: [0, 1, 0], face: [0, 0, -1], tipDir: [0, 1, 0.35], faceDir: [0, 0, -1] },
   // Tied neck at +Y: hangs from the fist by the neck.
   'flour-sack': { size: 0.32, grip: [0, 0.8, 0], tip: [0, -1, 0], face: [0, 0, 1], tipDir: [0, -1, 0.1], faceDir: [0, 0, 1] },
   // Upright, crescent head at +Y: through the fist a little below the middle, head out of the thumb side.
