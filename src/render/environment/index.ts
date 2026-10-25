@@ -32,6 +32,7 @@ import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
 import { stoneLook, stoneParts, type StoneEnv } from './stone';
+import { columnParts, type ColumnEnv } from './column';
 import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
 import { pieceBox } from './footprint';
 import { buildScatter, planScatter, SCATTER_KIT, scatterProfile, scatterProto, type ScatterBuild } from './scatter';
@@ -353,8 +354,9 @@ export class BoardEnvironment {
     if (!this.def || !pieceMeta(piece)) return null;
     const group = new THREE.Group();
     group.name = `piece:${piece}`;
-    // Stones: different shapes for each one asked for (stone.ts); their parts are the kit's.
-    const stones = stoneParts(piece, this.stoneSeed++, this.stoneEnv);
+    // Stones and columns: their own shapes, variant and turn for each one asked for (stone.ts, column.ts).
+    const seed = this.stoneSeed++;
+    const stones = stoneParts(piece, seed, this.stoneEnv) ?? columnParts(piece, seed, this.columnEnv);
     for (const part of stones ?? this.kitParts.get(piece) ?? buildPiece(piece, { height: pieceMeta(piece)?.height ?? 1 })) {
       if (this.quality === 'low' && part.detail) continue;
       const g = stones || this.kitParts.has(piece) ? part.geometry.clone() : part.geometry;
@@ -538,6 +540,9 @@ export class BoardEnvironment {
   private stoneSeed = 0;
   private get stoneEnv(): StoneEnv {
     return { look: this.def ? stoneLook(this.def) : 'stone', rock: this.palette('rock'), kit: (id) => this.kitParts.get(id) };
+  }
+  private get columnEnv(): ColumnEnv {
+    return { edge: this.def?.edge ?? 'stone', kit: (id) => this.kitParts.get(id) };
   }
 
   private palette(key: MaterialKey): string {
@@ -730,8 +735,8 @@ export class BoardEnvironment {
         list.push(fit < 1 ? place.clone().multiply(new THREE.Matrix4().makeScale(fit, fit, fit)) : place.clone());
       }
       // A prop model keeps only the glowing bits of its placeholder (candle flames).
-      // Stones get shapes of their own per placement from the rock kit (stone.ts).
-      const parts = (stoneParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.stoneEnv) ?? this.partsFor(p.piece, p.height, cache)).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
+      // Stones get shapes of their own per placement from the rock kit (stone.ts), pillars a column (column.ts).
+      const parts = (stoneParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.stoneEnv) ?? columnParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.columnEnv) ?? this.partsFor(p.piece, p.height, cache)).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
       // A painted variation per piece and a darker foot (cheap baked occlusion).
       const tint = 0.86 + rnd() * 0.24;
       for (const part of parts) {

@@ -155,7 +155,8 @@ const SINGLE: Record<string, Spec[][]> = {
   boulder: [[S('boulder', { s: [1.02, 1.16] }), S('boulder', { s: [0.55, 0.7], near: 0 }), S('boulder', { s: [0.3, 0.4], near: 0 })]],
   'snow-rock': [[S('snow-rock', { s: [1.02, 1.16] }), S('snow-rock', { s: [0.5, 0.66], near: 0 }), S('boulder', { s: [0.3, 0.4], near: 0 })]],
   stalagmite: [[S('stalagmite'), S('stalagmite', { s: [0.45, 0.6], near: 0 }), S('boulder', { s: [0.35, 0.45], near: 0 })]],
-  pillar: [[S('pillar', { centre: true }), S('rubble', { s: [1.15, 1.4], near: 0 }), S('rubble', { s: [0.75, 0.9], near: 0 }), S('boulder', { s: [0.26, 0.34], near: 0, chance: 0.7 })]],
+  // The column brings its own fallen drums (column.ts); a stone and a boulder from the rock kit at its foot.
+  pillar: [[S('pillar', { centre: true }), S('rock', { s: [0.6, 0.75], near: 0 }), S('boulder', { s: [0.26, 0.34], near: 0 })]],
   // In a cave a standing stone grows out of rock: a stalagmite and broken rock at its foot.
   'pillar@cave': [[S('pillar', { centre: true }), S('rubble-heap', { s: [0.55, 0.68], near: 0 }), S('stalagmite', { s: [0.55, 0.7], near: 0 }), S('crystals', { s: [0.7, 0.9], near: 0 })]],
   'mine-support': [[S('mine-support', { centre: true }), S('timber-stack', { s: [0.68, 0.8], near: 0 }), S('ore-pile', { s: [0.8, 0.95], near: 0 }), S('rubble', { s: [1.1, 1.3], near: 0, chance: 0.7 })]],

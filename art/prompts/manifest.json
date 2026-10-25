@@ -2794,6 +2794,31 @@
       "attachTo": null
     },
     {
+      "id": "env-columns",
+      "nameUk": "Колони (спільні для всіх локацій): ціла, зламана, з мохом, дерев'яний стовп",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 78,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/columns.blend",
+      "modelFile": "assets/models/env-columns/env-columns.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 8000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
       "id": "marsh-kit",
       "nameUk": "Болото: купини очерету з рогозом, латаття, ряска, колоди, коріння, мулисті береги",
       "kind": "environment",

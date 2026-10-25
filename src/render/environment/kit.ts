@@ -97,8 +97,8 @@ export function loadKitPiece(location: string, piece: string): Promise<Part[] | 
 /** Model ids of the location kits a location uses (its own first), that exist in this build. */
 export function locationKits(location: string, borrowed: readonly string[] = []): string[] {
   const all = new Set(listModels());
-  // Every location borrows the shared rock kit last (stone.ts).
-  return [`env-${location}`, ...borrowed, 'env-rocks'].filter((id, i, a) => a.indexOf(id) === i && all.has(id));
+  // Every location borrows the shared rock and column kits last (stone.ts, column.ts).
+  return [`env-${location}`, ...borrowed, 'env-rocks', 'env-columns'].filter((id, i, a) => a.indexOf(id) === i && all.has(id));
 }
 
 /** Every piece of a location kit GLB (`env-<location>` model), by node name. */
