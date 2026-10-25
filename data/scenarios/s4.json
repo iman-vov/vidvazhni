@@ -65,7 +65,12 @@
       "obstacles": [
         { "hex": [11, -6], "model": "pillar" },
         { "hex": [15, -3], "model": "pillar" },
-        { "hex": [13, -3], "model": "pillar" }
+        { "hex": [13, -3], "model": "pillar" },
+        { "hex": [12, -7], "model": "table" },
+        { "hex": [13, -7], "model": "table" },
+        { "hex": [13, -2], "model": "crate" },
+        { "hex": [15, -8], "model": "barrel" },
+        { "hex": [11, -2], "model": "crate" }
       ],
       "spawns": [
         { "monster": "shadow-wraith", "hex": [14, -8], "by": { "2": "normal", "3": "normal", "4": "normal" } },
