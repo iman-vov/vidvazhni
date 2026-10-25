@@ -107,7 +107,8 @@ describe('scenario 1', () => {
       const ranks = spawns.filter((sp) => sp.monster === monster).map((sp) => sp.by[heroes]);
       return [ranks.filter((r) => r === 'normal').length, ranks.filter((r) => r === 'elite').length];
     };
-    expect(['2', '3', '4'].map((h) => count('s1.pantry', 'cellar-rat', h as '2'))).toEqual([[3, 0], [4, 0], [4, 1]]);
+    expect(['2', '3', '4'].map((h) => count('s1.pantry', 'cellar-rat', h as '2'))).toEqual([[3, 0], [3, 0], [3, 1]]);
+    expect(['2', '3', '4'].map((h) => count('s1.pantry', 'gremlin', h as '2'))).toEqual([[0, 0], [1, 0], [1, 0]]);
     expect(['2', '3', '4'].map((h) => count('s1.wine-cellar', 'gremlin', h as '2'))).toEqual([[2, 0], [2, 1], [3, 1]]);
     expect(['2', '3', '4'].map((h) => count('s1.wine-cellar', 'cellar-rat', h as '2'))).toEqual([[1, 0], [2, 0], [2, 0]]);
   });

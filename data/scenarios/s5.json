@@ -19,7 +19,7 @@
       "obstacles": [{ "hex": [2, 1], "model": "rock" }],
       "doors": [{ "hex": [8, -1], "to": "s5.heart" }],
       "spawns": [
-        { "monster": "shadow-wraith", "hex": [4, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [4, 0], "by": { "3": "normal", "4": "normal" } },
         { "monster": "shadow-wraith", "hex": [5, 1], "by": { "3": "normal", "4": "normal" } },
         { "monster": "gloom-cultist", "hex": [6, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "shadow-wraith", "hex": [4, 1], "by": { "3": "elite", "4": "normal" } },
@@ -63,7 +63,7 @@
         {
           "type": "spawn",
           "monster": "shadow-wraith",
-          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "by": { "3": "normal", "4": "normal" },
           "hexes": [[6, -1], [7, -1], [5, 0]]
         },
         { "type": "story", "text": "event.s5.wave" }

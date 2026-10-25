@@ -79,8 +79,8 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     expect(adjustDamage(ctx, boss(s), 5)).toBe(2);
     tile(s, [11, -3]).object!.state = 'lit';
     expect(adjustDamage(ctx, boss(s), 5)).toBe(5);
-    // Other monsters always take full damage.
-    const t = reveal(game('s5'), 's5.heart');
+    // Other monsters always take full damage (a party of 3 meets wraiths in the tunnel).
+    const t = reveal(game('s5', {}, ['warden', 'herbalist', 'rogue']), 's5.heart');
     expect(adjustDamage(ctxOf(t), monstersOf(t, 'shadow-wraith')[0]!, 5)).toBe(5);
   });
 
@@ -101,7 +101,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
   });
 
   it('a wraith ending its turn next to a lit brazier puts it out', () => {
-    let s = reveal(game('s5'), 's5.heart');
+    let s = reveal(game('s5', {}, ['warden', 'herbalist', 'rogue']), 's5.heart');
     const [w, ...rest] = monstersOf(s, 'shadow-wraith');
     for (const m of [...rest, ...monstersOf(s, 'gloom-cultist'), boss(s)]) delete s.figures[m.id];
     tile(s, [11, -5]).object!.state = 'lit';

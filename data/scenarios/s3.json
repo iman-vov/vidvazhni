@@ -47,7 +47,7 @@
       ],
       "doors": [{ "hex": [11, -2], "to": "s3.mill-hall" }],
       "spawns": [
-        { "monster": "bog-slime", "hex": [10, -3], "by": { "3": "elite", "4": "normal" } },
+        { "monster": "bandit-crossbow", "hex": [10, -3], "by": { "3": "normal", "4": "normal" } },
         { "monster": "bog-slime", "hex": [9, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "bog-slime", "hex": [8, -1], "by": { "3": "normal", "4": "normal" } },
         { "monster": "bog-slime", "hex": [9, -2], "by": { "4": "elite" } }
@@ -92,7 +92,7 @@
         {
           "type": "spawn",
           "monster": "bog-slime",
-          "by": { "2": "normal", "3": "normal", "4": "elite" },
+          "by": { "3": "normal", "4": "elite" },
           "count": 1,
           "hexes": [[7, -1], [7, 0], [8, -2]]
         },
