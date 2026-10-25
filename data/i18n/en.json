@@ -1374,5 +1374,16 @@
   "event.s14.hatch": "All three bells sing together. The hatch to the roof is open!",
   "event.s14.water-rises": "The water is rising! The bottom row is flooded.",
   "event.s14.water-deep": "It’s deep down there now. Better not step in.",
-  "event.s14.treasure": "The bell-ringer’s chest holds coins and a little bell."
+  "event.s14.treasure": "The bell-ringer’s chest holds coins and a little bell.",
+  "scenario.s15": "The Mist Queen",
+  "scenario.s15.goal": "Defeat the Mist Queen",
+  "scenario.s15.intro": "At the heart of the marsh the Mist Queen weaves mist on old looms. While they stand she’s hard to reach, and each one calls more moths. Break the looms and set her free.",
+  "scenario.s15.outro": "The Queen turned white and showed a memory: the Guardian Lantern was carried up to Alba’s town hall, and Lumo was left alone in the dark workshop. The black moths flew to the Shadow Tower, and the mist follows them towards the city.",
+  "room.s15.alley": "A. Willow Avenue",
+  "room.s15.heart": "B. Heart of the Mist",
+  "event.s15.loom-moth": "The loom clacks, and a moth flutters out of the cloth.",
+  "event.s15.loom-broken": "The loom falls apart, and the mist around the Queen grows thinner.",
+  "event.s15.looms-down": "All the looms are silent. Now the Queen can be seen clearly.",
+  "event.s15.bells": "The bells from the tower have already broken one loom. Only two are left.",
+  "event.s15.last-thread": "The last thread! Every loom still standing heals the Queen."
 }

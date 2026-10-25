@@ -1374,5 +1374,16 @@
   "event.s14.hatch": "Alle drei Glocken klingen zusammen. Die Luke zum Dach ist offen!",
   "event.s14.water-rises": "Das Wasser steigt! Die unterste Reihe steht unter Wasser.",
   "event.s14.water-deep": "Unten ist es jetzt tief. Dort tretet ihr besser nicht hin.",
-  "event.s14.treasure": "In der Truhe des Glöckners liegen Münzen und ein kleines Glöckchen."
+  "event.s14.treasure": "In der Truhe des Glöckners liegen Münzen und ein kleines Glöckchen.",
+  "scenario.s15": "Die Nebelkönigin",
+  "scenario.s15.goal": "Die Nebelkönigin besiegen",
+  "scenario.s15.intro": "Im Herzen des Sumpfes webt die Nebelkönigin Nebel auf alten Webstühlen. Solange sie stehen, ist sie schwer zu treffen, und jeder ruft Falter herbei. Zerschlagt die Webstühle und befreit sie.",
+  "scenario.s15.outro": "Die Königin ist weiß geworden und hat eine Erinnerung gezeigt: Die Schutzlaterne wurde aufs Rathaus von Alba getragen, und Lumo blieb allein in der dunklen Werkstatt. Die schwarzen Falter fliegen zum Schattenturm, und der Nebel zieht hinter ihnen auf die Stadt zu.",
+  "room.s15.alley": "A. Weidenallee",
+  "room.s15.heart": "B. Herz des Nebels",
+  "event.s15.loom-moth": "Der Webstuhl klappert, und aus dem Tuch flattert ein Falter.",
+  "event.s15.loom-broken": "Der Webstuhl zerfällt, und der Nebel um die Königin wird dünner.",
+  "event.s15.looms-down": "Alle Webstühle schweigen. Jetzt ist die Königin deutlich zu sehen.",
+  "event.s15.bells": "Die Glocken vom Turm haben schon einen Webstuhl zerbrochen. Es sind nur noch zwei.",
+  "event.s15.last-thread": "Der letzte Faden! Jeder heile Webstuhl heilt die Königin."
 }

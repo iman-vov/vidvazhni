@@ -972,6 +972,79 @@
         ]
       },
       "epilogue": { "id": "s14.epilogue", "speaker": "marta", "text": "Das Glöckchen des Glöckners hängt jetzt über der Tür. Wer hereinkommt, läutet, und der Kater läuft schon zur Begrüßung." }
+    },
+    "s15": {
+      "intro": [
+        { "id": "s15.intro.1", "speaker": "narrator", "text": "Mitten im Herzen des Sumpfes steht eine Weidenallee. Dahinter hört man ein leises Klappern: tick-tack, tick-tack, als webe jemand." },
+        { "id": "s15.intro.2", "speaker": "marta", "text": "Dort ist die Nebelkönigin. Solange ihre Webstühle stehen, kommen Pfeile und Zauber kaum zu ihr durch. Zerschlagt die Webstühle." },
+        { "id": "s15.intro.3", "speaker": "marta", "text": "Und denkt daran: Sie ist auch einer von Lumos Faltern. Befreit sie, dann erzählt sie vielleicht etwas." },
+        {
+          "id": "s15.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Zum Herzen des Nebels!",
+          "variants": {
+            "warden": "Der Nebel fürchtet den Schild nicht. Aber der Schild den Nebel auch nicht.",
+            "wind-archer": "Ein großer Falter fliegt langsam. Ich warte, bis sich der Nebel lichtet.",
+            "herbalist": "Ich habe Minze dabei. Wer lange nicht geschlafen hat, dem hilft sie immer.",
+            "rogue": "Ein Webstuhl, der Nebel webt. Zerschlagen ist schade, stehlen ist schwer. Ich zerschlage ihn.",
+            "elementalist": "Wind gegen Nebel. Endlich ein ehrliches Duell.",
+            "tinker": "Einen Webstuhl habe ich erst einmal repariert. Kaputt machen ist leichter."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s15.heart",
+          "trigger": { "on": "doorOpened", "arg": "s15.heart" },
+          "lines": [
+            { "id": "s15.heart.1", "speaker": "narrator", "text": "In der Mitte des Saals schwebt ein riesiger blasser Falter. Um ihn herum klappern Webstühle und weben Nebel." },
+            { "id": "s15.heart.2", "speaker": "mist-queen", "text": "Pssst. Stört mich nicht. Noch ein wenig Nebel, und niemand sieht mehr etwas." }
+          ]
+        },
+        {
+          "id": "s15.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s15.first-moth.1", "speaker": "narrator", "text": "Ein kleiner Falter wird blass und setzt sich der Königin auf den Flügel. Sie zuckt, als erinnere sie sich an etwas." }
+          ]
+        },
+        {
+          "id": "s15.half",
+          "trigger": { "on": "bossHalfHp", "arg": "mist-queen" },
+          "lines": [
+            { "id": "s15.half.1", "speaker": "narrator", "text": "Die Königin zieht am letzten Faden, und neue Falter flattern aus dem Nebel." },
+            { "id": "s15.half.2", "speaker": "mist-queen", "text": "Nehmt den Nebel nicht weg! Darunter ist er. Er will nicht, dass man ihn sieht." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s15.win.1", "speaker": "narrator", "text": "Der letzte Webstuhl verstummt. Der Nebel sinkt aufs Wasser und schmilzt, und die Königin wird weiß wie Milch." },
+          { "id": "s15.win.2", "speaker": "mist-queen", "text": "Ich war Lumos erster Falter. Ich habe Nebel gewebt, damit niemand sieht, wie er fremdes Licht nimmt." },
+          { "id": "s15.win.3", "speaker": "mist-queen", "text": "Seht her. Ich zeige euch die Nacht, in der alles begann." },
+          { "id": "s15.win.4", "speaker": "narrator", "text": "Im Nebel erscheint ein Bild. Leute aus Alba tragen die Schutzlaterne zum Rathaus, damit sie der ganzen Stadt leuchtet." },
+          { "id": "s15.win.5", "speaker": "narrator", "text": "Und Lumo bleibt allein in der dunklen Werkstatt zurück. Die Kerze ist heruntergebrannt, und er hat wieder Angst, wie damals im Sumpf." },
+          { "id": "s15.win.6", "speaker": "herbalist", "text": "Hier, Majestät, ein Minztee. Wie damals für Bruno. Damit schläft man gut, ganz ohne Nebel." },
+          {
+            "id": "s15.win.7", "speaker": "hero", "pick": "random",
+            "text": "Er hatte einfach Angst.",
+            "variants": {
+              "warden": "Er hat sein Licht allen gegeben und für sich nichts behalten. Ich wäre auch traurig.",
+              "wind-archer": "Ein verängstigtes Tier versteckt sich und beißt. Ein verängstigter Mensch offenbar auch.",
+              "herbalist": "Gegen Angst wächst kein Kraut. Nur jemand an deiner Seite und eine Kerze auf dem Tisch.",
+              "rogue": "Er hat Licht gestohlen, weil man ihm sein eigenes genommen hat. Das verstehe ich.",
+              "elementalist": "Schattenhand ist kein böser Zauberer. Er ist ein Junge, dem es immer noch dunkel ist.",
+              "tinker": "Ein Meister baut etwas für alle und bleibt selbst mit leeren Händen. So gehört sich das nicht."
+            }
+          },
+          { "id": "s15.win.8", "speaker": "narrator", "text": "Die Königin breitet ihre weißen Flügel aus. Doch über dem Sumpf steigen schwarze Falter auf und fliegen nach Westen, zum Schattenturm bei Alba." },
+          { "id": "s15.win.9", "speaker": "narrator", "text": "Langsam kriecht der Nebel hinter ihnen her. Er zieht auf die Stadt zu." }
+        ],
+        "defeat": [
+          { "id": "s15.lose.1", "speaker": "marta", "text": "Die Königin hat sich im Nebel versteckt. Ruht euch aus, und zerschlagt beim nächsten Mal zuerst die Webstühle." },
+          { "id": "s15.lose.2", "speaker": "marta", "text": "Jeder Webstuhl ruft einen Falter und heilt die Königin. Vertreibt den Nebel mit Feuer oder Wind, dann seht ihr sie." }
+        ]
+      },
+      "epilogue": { "id": "s15.epilogue", "speaker": "marta", "text": "Der Nebel zieht auf Alba zu. Schließt die Fensterläden, ihr Mutigen, und ich setze den größten Suppenkessel auf. Wir verteidigen die Stadt zusammen." }
     }
   }
 }

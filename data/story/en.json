@@ -972,6 +972,79 @@
         ]
       },
       "epilogue": { "id": "s14.epilogue", "speaker": "marta", "text": "I hung the bell-ringer’s little bell over the door. Whoever comes in rings it, and the cat runs to say hello." }
+    },
+    "s15": {
+      "intro": [
+        { "id": "s15.intro.1", "speaker": "narrator", "text": "At the very heart of the marsh stands an avenue of willows. Beyond it comes a soft clatter: click-clack, click-clack, as if someone were weaving." },
+        { "id": "s15.intro.2", "speaker": "marta", "text": "The Mist Queen is in there. While her looms stand, arrows and spells barely reach her. Break the looms." },
+        { "id": "s15.intro.3", "speaker": "marta", "text": "And remember: she’s one of Lumo’s moths too. Set her free and maybe she’ll tell you something." },
+        {
+          "id": "s15.intro.4", "speaker": "hero", "pick": "random",
+          "text": "To the Heart of the Mist!",
+          "variants": {
+            "warden": "The mist isn’t afraid of a shield. But the shield isn’t afraid of the mist either.",
+            "wind-archer": "A big moth flies slowly. I’ll wait for the mist to part.",
+            "herbalist": "I brought mint. It always helps anyone who hasn’t slept for a long time.",
+            "rogue": "A loom that weaves mist. A shame to break, hard to steal. I’ll break it.",
+            "elementalist": "Wind against mist. A fair duel at last.",
+            "tinker": "I’ve only ever fixed one loom. Breaking it will be easier."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s15.heart",
+          "trigger": { "on": "doorOpened", "arg": "s15.heart" },
+          "lines": [
+            { "id": "s15.heart.1", "speaker": "narrator", "text": "A huge pale moth hovers in the middle of the hall. Around her, looms clatter away, weaving mist." },
+            { "id": "s15.heart.2", "speaker": "mist-queen", "text": "Shhh. Don’t disturb me. A little more mist and no one will see a thing." }
+          ]
+        },
+        {
+          "id": "s15.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s15.first-moth.1", "speaker": "narrator", "text": "A little moth turned pale and settled on the Queen’s wing. She shivered, as if remembering something." }
+          ]
+        },
+        {
+          "id": "s15.half",
+          "trigger": { "on": "bossHalfHp", "arg": "mist-queen" },
+          "lines": [
+            { "id": "s15.half.1", "speaker": "narrator", "text": "The Queen tugged her last thread, and new moths fluttered out of the mist." },
+            { "id": "s15.half.2", "speaker": "mist-queen", "text": "Don’t lift the mist! He’s under it. He doesn’t want to be seen." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s15.win.1", "speaker": "narrator", "text": "The last loom fell silent. The mist sank onto the water and melted away, and the Queen turned white as milk." },
+          { "id": "s15.win.2", "speaker": "mist-queen", "text": "I was Lumo’s very first moth. I wove mist so no one would see him taking other people’s light." },
+          { "id": "s15.win.3", "speaker": "mist-queen", "text": "Look. I’ll show you the night it all began." },
+          { "id": "s15.win.4", "speaker": "narrator", "text": "A picture appears in the mist. People from Alba are carrying the Guardian Lantern to the town hall, to light the whole city." },
+          { "id": "s15.win.5", "speaker": "narrator", "text": "And Lumo is left alone in the dark workshop. His candle has burned down, and he’s scared again, just like that night in the marsh." },
+          { "id": "s15.win.6", "speaker": "herbalist", "text": "Here, Your Majesty, some mint tea. Just like I made for Bruno. It helps you sleep without any mist." },
+          {
+            "id": "s15.win.7", "speaker": "hero", "pick": "random",
+            "text": "He was just scared.",
+            "variants": {
+              "warden": "He gave his light to everyone and kept none for himself. I’d be sad too.",
+              "wind-archer": "A frightened animal hides and bites. A frightened person too, it seems.",
+              "herbalist": "There’s no herb for fear. Only someone beside you and a candle on the table.",
+              "rogue": "He stole light because they took his own. That I understand.",
+              "elementalist": "Shadowhand isn’t an evil wizard. He’s a boy who’s still in the dark.",
+              "tinker": "A craftsman made something for everyone and was left with nothing. That’s not right."
+            }
+          },
+          { "id": "s15.win.8", "speaker": "narrator", "text": "The Queen spread her white wings. But black moths rose over the marsh and flew west, to the Shadow Tower near Alba." },
+          { "id": "s15.win.9", "speaker": "narrator", "text": "The mist creeps slowly after them. It’s heading for the city." }
+        ],
+        "defeat": [
+          { "id": "s15.lose.1", "speaker": "marta", "text": "The Queen hid in her mist. Rest up, and next time break the looms first." },
+          { "id": "s15.lose.2", "speaker": "marta", "text": "Every loom calls a moth and heals the Queen. Clear the mist with fire or wind so you can see her." }
+        ]
+      },
+      "epilogue": { "id": "s15.epilogue", "speaker": "marta", "text": "The mist is coming for Alba. Shut the shutters, Brave Ones, and I’ll put on my biggest pot of soup. We’ll defend the town together." }
     }
   }
 }
