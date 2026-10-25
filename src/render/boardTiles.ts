@@ -19,7 +19,7 @@ import type { GraphicsQuality } from './quality';
 import type { PropModelSpec } from './environment/types';
 import type { Partition } from './environment/walls';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
-import { patchWater } from './environment/life';
+import { patchWater, setWaterMap } from './environment/life';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const WALL_HEIGHT = 0.62;
@@ -454,6 +454,7 @@ export class TileLayer {
         this.surfaceByHex.set(k, surfaceOf(k, room, this.defaultSurface));
       }
     }
+    setWaterMap(new Set(this.surfaceByHex.keys()));
     const wanted = only ? [...new Set([...this.rooms.keys(), only])] : s.board.revealedRooms;
     const added: string[] = [];
     for (const [id, room] of this.rooms) {
@@ -475,14 +476,14 @@ export class TileLayer {
       if (this.rooms.has(id)) continue;
       const tiles = byRoom.get(id);
       if (!tiles) continue;
-      this.rooms.set(id, this.buildRoom(id, tiles));
+      this.rooms.set(id, this.buildRoom(id, tiles, s.board.tiles));
       added.push(id);
     }
     this.buildWalls(s, wanted);
     return added;
   }
 
-  private buildRoom(id: string, tiles: [HexKey, Tile][]): RoomView {
+  private buildRoom(id: string, tiles: [HexKey, Tile][], all: Record<HexKey, Tile>): RoomView {
     const group = new THREE.Group();
     group.name = `room:${id}`;
     const room: RoomView = { id, group, plates: [], plateHexes: [], plateY: [], plateKeys: [], edges: null, edgeDisposables: [], props: new THREE.Group() };
@@ -516,9 +517,27 @@ export class TileLayer {
       list.push(parseHexKey(k));
     }
     for (const [key, list] of byKey) add(key, this.plateGeometry, list, PATCH_Y, 0);
-    // Terrain painted over the floor, then the grid lines over everything.
+    // Terrain painted over the floor, then the grid lines over everything. Water hexes that touch
+    // are one pond: the water layer also covers the room's dry hexes beside them, and the shared
+    // mask (life.ts bakeWaterMask) draws one wandering shore and its wet bank across them all.
+    // Hexes off the map beside the water belong to the room of the first water hex they touch.
+    const isWater = (h: Hex) => all[rulesHexKey(h)]?.terrain === 'water';
     for (const terrain of OVERLAYS) {
-      add(`overlay:${terrain}`, this.overlayGeometry, tiles.filter(([, t]) => t.terrain === terrain).map(([k]) => parseHexKey(k)), OVERLAY_Y[terrain], 1);
+      const list = tiles.filter(([k, t]) => t.terrain === terrain || (terrain === 'water' && neighbors(parseHexKey(k)).some(isWater))).map(([k]) => parseHexKey(k));
+      if (terrain === 'water') {
+        const off = new Map<HexKey, Hex>();
+        for (const h of list) {
+          if (!isWater(h)) continue;
+          for (const n of neighbors(h)) {
+            const nk = rulesHexKey(n);
+            if (this.surfaceByHex.has(nk) || off.has(nk)) continue;
+            const first = neighbors(n).filter(isWater).map(rulesHexKey).sort()[0];
+            if (first && all[first]!.room === id) off.set(nk, n);
+          }
+        }
+        list.push(...off.values());
+      }
+      add(`overlay:${terrain}`, this.overlayGeometry, list, OVERLAY_Y[terrain], 1);
     }
     add('grid', this.gridGeometry, tiles.map(([k]) => parseHexKey(k)), GRID_Y, 2);
     group.add(room.props);
@@ -968,7 +987,7 @@ export class TileLayer {
     const b = new THREE.Box2(new THREE.Vector2(Infinity, Infinity), new THREE.Vector2(-Infinity, -Infinity));
     let any = false;
     for (const room of this.rooms.values()) {
-      for (const list of room.plateHexes) {
+      for (const list of this.boardLists(room)) {
         for (const [q, r] of list) {
           const { x, z } = hexToWorld(q, r);
           b.expandByPoint(new THREE.Vector2(x, z));
@@ -982,8 +1001,13 @@ export class TileLayer {
   /** Every hex key of the built rooms. */
   hexKeys(): Set<HexKey> {
     const out = new Set<HexKey>();
-    for (const room of this.rooms.values()) for (const list of room.plateHexes) for (const h of list) out.add(rulesHexKey(h));
+    for (const room of this.rooms.values()) for (const list of this.boardLists(room)) for (const h of list) out.add(rulesHexKey(h));
     return out;
+  }
+
+  /** A room's plate lists without the water layer (it reaches onto hexes off the map). */
+  private boardLists(room: RoomView): Hex[][] {
+    return room.plateHexes.filter((_, i) => room.plateKeys[i] !== 'overlay:water');
   }
 
   dispose(): void {

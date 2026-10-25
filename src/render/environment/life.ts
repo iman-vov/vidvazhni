@@ -12,6 +12,7 @@ import { hexKey, parseHexKey, DIRECTIONS, type HexKey } from '../../rules/hex';
 import type { Terrain } from '../../rules/content';
 import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
 import type { GraphicsQuality } from '../quality';
+import { valueNoise } from './layout';
 
 let reducedQuery: MediaQueryList | null | undefined;
 
@@ -79,24 +80,56 @@ export function setWaterRipples(points: readonly { x: number; z: number }[]): vo
 const MASK_TEXELS_PER_UNIT = 12;
 let maskKey = '';
 
-/** Bakes the depth of the board's water hexes: distance from the nearest edge shared with a dry
- *  tile (a shore or walkway). Edges toward no tile stay open, the location's water runs on there. */
-export function bakeWaterMask(tiles: Record<HexKey, { terrain: Terrain }>): { data: Uint8Array; w: number; h: number; rect: THREE.Vector4 } | null {
-  const water = Object.keys(tiles).filter((k) => tiles[k]!.terrain === 'water');
+/** How far the shore wanders from the hex edges, in world units: out onto the dry hexes beside the
+ *  water (up to ~0.29) or back into the water's own hexes (up to ~0.25). */
+const SHORE_WANDER = 0.27;
+/** Range of the signed shore distance in the mask's G channel (±, world units). */
+export const SHORE_RANGE = 0.5;
+/** Distance from the shore at which the water reaches its full depth (R channel). */
+const DEEP_AT = 1.1;
+
+/** Bakes the board's ponds: water hexes that touch are one body of water. R: depth (0 at the shore,
+ *  1 toward the middle of a pond); G: the signed distance to the shore (inside positive), as
+ *  0.5 + d / (2 · SHORE_RANGE), the shore wandering off the hex edges by a seeded noise (the same on
+ *  every load of a map); A: whether a texel is on the water or a dry hex beside it. Edges shared
+ *  with a dry tile are shore, and so are edges toward a hex off the map (`map`, when known: the
+ *  pond ends on the ground beyond the board); edges toward a room not revealed yet stay open. */
+export function bakeWaterMask(tiles: Record<HexKey, { terrain: Terrain }>, map?: ReadonlySet<HexKey>): { data: Uint8Array; w: number; h: number; rect: THREE.Vector4 } | null {
+  const water = Object.keys(tiles).filter((k) => tiles[k]!.terrain === 'water').sort();
   if (!water.length) return null;
   const wet = new Set(water);
   let minX = Infinity;
   let minZ = Infinity;
   let maxX = -Infinity;
   let maxZ = -Infinity;
+  const dry = (k: HexKey) => !wet.has(k) && (!!tiles[k] || (!!map && !map.has(k)));
+  // The shore: edges between a water hex and a dry hex, as segments (x0, z0, x1, z1).
+  const shore: number[] = [];
   for (const k of water) {
     const [q, r] = parseHexKey(k);
     const c = hexToWorld(q, r);
-    minX = Math.min(minX, c.x - HEX_SIZE);
-    maxX = Math.max(maxX, c.x + HEX_SIZE);
-    minZ = Math.min(minZ, c.z - HEX_SIZE);
-    maxZ = Math.max(maxZ, c.z + HEX_SIZE);
+    // A ring of dry hexes around the water: the shore may creep onto them.
+    minX = Math.min(minX, c.x - 2 * HEX_SIZE);
+    maxX = Math.max(maxX, c.x + 2 * HEX_SIZE);
+    minZ = Math.min(minZ, c.z - 2 * HEX_SIZE);
+    maxZ = Math.max(maxZ, c.z + 2 * HEX_SIZE);
+    for (const [dq, dr] of DIRECTIONS) {
+      const nk = hexKey([q + dq, r + dr]);
+      if (!dry(nk)) continue;
+      const nc = hexToWorld(q + dq, r + dr);
+      const mx = (c.x + nc.x) / 2;
+      const mz = (c.z + nc.z) / 2;
+      const len = Math.hypot(nc.x - c.x, nc.z - c.z);
+      const px = (-(nc.z - c.z) / len) * HEX_SIZE * 0.5;
+      const pz = ((nc.x - c.x) / len) * HEX_SIZE * 0.5;
+      shore.push(mx - px, mz - pz, mx + px, mz + pz);
+    }
   }
+  // The map's own seed: the same water always gets the same shore.
+  let seed = 0;
+  for (const ch of water.join('|')) seed = (seed * 31 + ch.charCodeAt(0)) % 100003;
+  const ox = (seed % 317) * 1.37;
+  const oz = (Math.floor(seed / 317) % 317) * 1.91;
   const w = Math.min(512, Math.ceil((maxX - minX) * MASK_TEXELS_PER_UNIT));
   const h = Math.min(512, Math.ceil((maxZ - minZ) * MASK_TEXELS_PER_UNIT));
   const data = new Uint8Array(w * h * 4);
@@ -104,38 +137,57 @@ export function bakeWaterMask(tiles: Record<HexKey, { terrain: Terrain }>): { da
     for (let i = 0; i < w; i++) {
       const x = minX + ((i + 0.5) / w) * (maxX - minX);
       const z = minZ + ((j + 0.5) / h) * (maxZ - minZ);
-      const hex = worldToHex(x, z);
-      if (!wet.has(hexKey(hex))) continue;
-      const c = hexToWorld(hex[0], hex[1]);
-      let d = 1;
-      for (const [dq, dr] of DIRECTIONS) {
-        const n: [number, number] = [hex[0] + dq, hex[1] + dr];
-        const nk = hexKey(n);
-        if (wet.has(nk) || !tiles[nk]) continue;
-        const nc = hexToWorld(n[0], n[1]);
-        const len = Math.hypot(c.x - nc.x, c.z - nc.z);
-        // Distance inward from the shared edge (it lies halfway between the centres).
-        const inward = ((x - (c.x + nc.x) / 2) * (c.x - nc.x) + (z - (c.z + nc.z) / 2) * (c.z - nc.z)) / len;
-        d = Math.min(d, Math.max(0, inward / 0.62));
+      const k = hexKey(worldToHex(x, z));
+      const inWater = wet.has(k);
+      if (!inWater && !dry(k)) continue;
+      let d = DEEP_AT * 2;
+      for (let s = 0; s < shore.length; s += 4) {
+        const ax = shore[s]!;
+        const az = shore[s + 1]!;
+        const bx = shore[s + 2]! - ax;
+        const bz = shore[s + 3]! - az;
+        const t = Math.min(1, Math.max(0, ((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz)));
+        d = Math.min(d, Math.hypot(x - ax - bx * t, z - az - bz * t));
       }
-      data[(j * w + i) * 4] = Math.round(d * 255);
-      data[(j * w + i) * 4 + 3] = 255;
+      if (!inWater) d = -d;
+      // Broad bays and points with smaller wiggles along them.
+      const n = valueNoise((x + ox) * 0.95, (z + oz) * 0.95) * 0.6 + valueNoise((x + ox) * 2.7 + 5.1, (z + oz) * 2.7 - 2.7) * 0.4;
+      // Value noise stays near its middle: stretched so the shore really reaches its bays and points.
+      const sd = d + Math.min(1, Math.max(-1, (n - 0.5) * 4.4)) * SHORE_WANDER + 0.02;
+      const o = (j * w + i) * 4;
+      data[o] = Math.round(Math.min(1, Math.max(0, sd / DEEP_AT)) * 255);
+      data[o + 1] = Math.round(Math.min(1, Math.max(0, 0.5 + sd / (2 * SHORE_RANGE))) * 255);
+      data[o + 3] = 255;
     }
   }
   return { data, w, h, rect: new THREE.Vector4(minX, minZ, 1 / (maxX - minX), 1 / (maxZ - minZ)) };
 }
 
+let maskTiles: Record<HexKey, { terrain: Terrain }> | null = null;
+let maskMap: ReadonlySet<HexKey> | undefined;
+let mapKey = '';
+
+/** The scenario's hexes (TileLayer): beyond them a pond has a shore, toward unrevealed rooms not. */
+export function setWaterMap(map: ReadonlySet<HexKey>): void {
+  const key = [...map].sort().join('|');
+  if (key === mapKey) return;
+  mapKey = key;
+  maskMap = map;
+  if (maskTiles) setBoardWater(maskTiles);
+}
+
 /** Rebakes the shared mask when the board's water hexes change (a room revealed, a new scenario). */
 export function setBoardWater(tiles: Record<HexKey, { terrain: Terrain }>): void {
+  maskTiles = tiles;
   const key = Object.keys(tiles)
     .filter((k) => tiles[k]!.terrain === 'water')
     .sort()
-    .join('|') + `#${Object.keys(tiles).length}`;
+    .join('|') + `#${Object.keys(tiles).length}#${mapKey.length}`;
   if (key === maskKey) return;
   maskKey = key;
   WATER.uWaterMask.value?.dispose();
   WATER.uWaterMask.value = null;
-  const mask = bakeWaterMask(tiles);
+  const mask = bakeWaterMask(tiles, maskMap);
   if (!mask) return;
   const t = new THREE.DataTexture(mask.data, mask.w, mask.h, THREE.RGBAFormat);
   t.magFilter = t.minFilter = THREE.LinearFilter;
@@ -146,6 +198,16 @@ export function setBoardWater(tiles: Record<HexKey, { terrain: Terrain }>): void
 }
 
 // ─── Water shader ──────────────────────────────────────────────────────────
+
+// The board's ponds (bakeWaterMask): the signed distance to the shore, how much of a texel is
+// water, and a band of dark wet mud on the bank just outside it (broken up a little).
+const HEX_SHORE = `vec4 wMask = texture2D(uWaterMask, (vWaterW.xz - uWaterMaskRect.xy) * uWaterMaskRect.zw);
+      float wSd = (wMask.g - 0.5) * ${(2 * SHORE_RANGE).toFixed(2)};
+      float wCover = smoothstep(-0.012, 0.03, wSd) * wMask.a;
+      float wBank = smoothstep(-0.3 + 0.12 * waterHash(floor(vWaterW.xz * 7.0)), -0.02, wSd) * wMask.a;`;
+const HEX_BANK = `gl_FragColor.a *= wCover;
+      gl_FragColor.rgb = mix(vec3(0.15, 0.12, 0.085), gl_FragColor.rgb, wCover);
+      gl_FragColor.a = max(gl_FragColor.a, wBank * (1.0 - wCover) * 0.62);`;
 
 const WATER_HEAD = `
   uniform float uWaterTime;
@@ -250,10 +312,10 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
     if (mode === 'hex') frag = frag.replace('texture2D(map, vBvUv)', `texture2D(map, vBvUv + ${mapUv})`);
     const depth =
       mode === 'hex'
-        ? 'texture2D(uWaterMask, (vWaterW.xz - uWaterMaskRect.xy) * uWaterMaskRect.zw).r'
+        ? 'wMask.r'
         : 'smoothstep(0.35, 1.0, envField().b)';
     // A light line along the shore: full on the board's hexes, softer on the location's puddles.
-    const shore = mode === 'hex' ? '(1.0 - smoothstep(0.0, 0.22, wDepth)) * 0.6' : 'smoothstep(0.12, 0.2, envField().b) * (1.0 - smoothstep(0.22, 0.34, envField().b)) * 0.4';
+    const shore = mode === 'hex' ? '(1.0 - smoothstep(0.0, 0.12, wSd)) * wCover * 0.5' : 'smoothstep(0.12, 0.2, envField().b) * (1.0 - smoothstep(0.22, 0.34, envField().b)) * 0.4';
     frag = frag.replace(
       '#include <normal_fragment_maps>',
       `#include <normal_fragment_maps>
@@ -276,7 +338,10 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
     if (!frag.includes('vec2 wQ')) frag = frag.replace('void main() {', `void main() {\nvec2 wQ = vWaterW.xz + ${OSC};\nvec3 wN = vec3(0.0, 1.0, 0.0);`);
     frag = frag.replace(
       '#include <fog_fragment>',
-      `float wDepth = ${depth};
+      `${mode === 'hex' ? HEX_SHORE : ''}
+      float wDepth = ${depth};
+      // Shallows a touch warmer (the bottom shows through), the water darker toward a pond's middle.
+      ${mode === 'hex' ? 'gl_FragColor.rgb *= mix(vec3(1.06, 1.02, 0.86), vec3(1.0), smoothstep(0.0, 0.4, wDepth));' : ''}
       gl_FragColor.rgb *= mix(1.0, 0.52, wDepth);
       gl_FragColor.a = mix(gl_FragColor.a, min(1.0, gl_FragColor.a + 0.14), wDepth);
       #ifdef WATER_FULL
@@ -293,6 +358,7 @@ export function patchWater(m: THREE.Material, mode: WaterMode, full: boolean): v
       #else
       gl_FragColor.rgb *= 0.95 + 0.05 * sin(dot(wQ, vec2(2.3, 1.7))) * sin(dot(wQ, vec2(-1.3, 2.9)) + uWaterTime * 0.45);
       #endif
+      ${mode === 'hex' ? HEX_BANK : ''}
       #include <fog_fragment>`,
     );
     shader.fragmentShader = frag;
