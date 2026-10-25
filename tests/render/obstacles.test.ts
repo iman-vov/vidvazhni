@@ -35,8 +35,8 @@ describe('obstacle clusters', () => {
         const p = plans.get(hexKey(o.hex));
         if (!p) continue;
         // A hex of a set piece may hold little of it itself; the pair together holds several things.
-        const mate = neighbors(o.hex).map((n) => plans.get(hexKey(n))).find(Boolean);
-        expect(p.items.length + (mate?.items.length ?? 0), `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(3);
+        const mate = Math.max(0, ...neighbors(o.hex).map((n) => plans.get(hexKey(n))?.items.length ?? 0));
+        expect(p.items.length + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(3);
         // Nothing stands alone in the middle: the first thing is off the centre or has company.
         for (const it of p.items) if (Math.hypot(it.x, it.z) < 0.05) expect(p.items.length).toBeGreaterThan(1);
       }

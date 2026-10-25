@@ -641,6 +641,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "pattern": "^s[0-9]+\\.[a-z][a-z0-9-]*$" },
+          "kind": { "description": "Indoors (a house, mill, cellar, castle hall, mine: built floor, walls, furniture, no marsh) or outdoors (marsh, forest, path, yard, cave: natural ground and natural dividers, no house walls). Cosmetic; tests/data/zones.test.ts holds the rooms to it.", "enum": ["indoor", "outdoor"] },
           "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
           "walls": {
             "type": "array",

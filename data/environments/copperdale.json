@@ -55,6 +55,6 @@
     ],
     "ring": [["crate-stack", 1], ["ore-pile", 1], ["weapon-rack", 1], ["timber-stack", 1], ["crate-broken", 1], ["keg-rack", 1], ["candles", 1]],
     "far": [["house-far", 3]],
-    "density": 0.6
+    "density": 0.75
   }
 }

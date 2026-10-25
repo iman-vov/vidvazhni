@@ -289,9 +289,13 @@ export type SurfaceId = 'planks' | 'flagstones' | 'cobblestone' | 'worn-stone' |
 export type BoundaryKind = 'walls' | 'reeds' | 'thicket' | 'rocks' | 'logs';
 /** What a door between rooms looks like and how it opens (cosmetic; the rules see a door). */
 export type DoorKind = 'door' | 'gate' | 'barricade' | 'brush' | 'log' | 'rubble' | 'minecart';
+/** A built interior (house, mill, cellar, castle hall, mine) or open ground (marsh, forest, path,
+ *  yard, cave): what the room's floor, dividers, furniture and terrain may look like. Cosmetic. */
+export type RoomKind = 'indoor' | 'outdoor';
 
 export interface RoomDef {
   id: string; // `s1.cellar`
+  kind?: RoomKind;
   hexes: Hex[];
   /** Thin walls between two adjacent hexes. Map edges are walls automatically. */
   walls?: [Hex, Hex][];

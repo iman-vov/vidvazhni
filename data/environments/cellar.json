@@ -55,6 +55,6 @@
       { "weight": 1, "items": [{ "piece": "rubble", "x": 0, "z": 0.08 }, { "piece": "crate-broken", "x": 0.58, "z": 0.22 }, { "piece": "candles", "x": -0.5, "z": 0.2 }] }
     ],
     "ring": [["barrel", 3], ["keg-rack", 2], ["crate", 2], ["crate-stack", 2], ["sacks", 2], ["wine-rack", 2], ["candles", 2], ["shelf", 1], ["sack", 1], ["crate-broken", 1], ["stool", 1], ["rubble", 1]],
-    "density": 0.5
+    "density": 0.85
   }
 }

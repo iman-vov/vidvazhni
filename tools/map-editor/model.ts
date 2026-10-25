@@ -285,7 +285,7 @@ const SCENARIO_KEYS = [
   'id', 'number', 'draft', 'goal', 'startRoom', 'startHexes', 'introduces', 'specials', 'forkOrbs', 'rooms', 'reward',
 ];
 const ROOM_KEYS = [
-  'id', 'hexes', 'walls', 'terrain', 'obstacles', 'traps', 'doors', 'spawns', 'drops', 'coins', 'chests', 'objects',
+  'id', 'kind', 'surface', 'boundary', 'hexes', 'walls', 'terrain', 'obstacles', 'traps', 'doors', 'spawns', 'drops', 'coins', 'chests', 'objects',
 ];
 
 function ordered<T extends object>(obj: T, keys: readonly string[]): T {
@@ -310,7 +310,7 @@ export function normalize(s: ScenarioDef): ScenarioDef {
   out.rooms = out.rooms.map((room) => {
     const r = ordered(room, ROOM_KEYS);
     r.hexes = sortHexes(r.hexes);
-    for (const k of ROOM_KEYS.slice(2)) {
+    for (const k of ROOM_KEYS.slice(ROOM_KEYS.indexOf('hexes') + 1)) {
       const v = (r as unknown as Record<string, unknown>)[k];
       if (Array.isArray(v) && v.length === 0) delete (r as unknown as Record<string, unknown>)[k];
     }

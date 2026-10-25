@@ -48,6 +48,6 @@
       { "weight": 1, "items": [{ "piece": "sacks", "x": 0, "z": 0 }, { "piece": "barrel", "x": 0.6, "z": 0.14 }, { "piece": "candles", "x": -0.52, "z": 0.3 }] }
     ],
     "ring": [["crate", 1], ["barrel", 1], ["banner", 2], ["torch", 2], ["rubble", 2], ["weapon-rack", 2], ["sacks", 1], ["crate-stack", 1], ["crate-broken", 1], ["stool", 1], ["candles", 2]],
-    "density": 0.7
+    "density": 0.85
   }
 }

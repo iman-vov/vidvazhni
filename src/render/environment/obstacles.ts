@@ -8,7 +8,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { ScenarioDef } from '../../rules/content';
+import type { RoomKind, ScenarioDef } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
 import { HEX_INNER, seededRandom } from './layout';
@@ -221,6 +221,12 @@ const GOODS_SETS: Record<EdgeStyle, string[]> = {
   mine: ['crate-pile', 'barrel-pile'],
   forge: ['crate-pile', 'barrel-pile'],
 };
+/** Set pieces for goods in a room of this kind: no wagon indoors, a long table with stools in a
+ *  house's rooms (not down a mine or in a forge). */
+function goodsSets(edge: EdgeStyle, kind: RoomKind | undefined): string[] {
+  if (kind !== 'indoor') return GOODS_SETS[edge];
+  return edge === 'mine' || edge === 'forge' ? GOODS_SETS[edge] : ['long-table', 'barrel-pile', 'crate-pile'];
+}
 const FAMILY_SETS: Record<string, string[]> = { tree: ['trees-log'], rock: ['outcrop'], hut: ['yard'] };
 
 /** Litter on the floor by location look, and what certain things add. */
@@ -379,6 +385,7 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
   const playable = new Set<HexKey>();
   const blocked = new Set<HexKey>();
   const roomOf = new Map<HexKey, string>();
+  const kindOf = new Map(scenario.rooms.map((r) => [r.id, r.kind]));
   const pieces = new Map<HexKey, string>();
   for (const room of scenario.rooms) {
     for (const h of room.hexes) playable.add(hexKey(h));
@@ -426,7 +433,9 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
     let recipe: Spec[];
     if (group.length > 1) {
       const fam = FAMILY[pieces.get(group[0]!)!]!;
-      const options = fam === 'goods' ? GOODS_SETS[edge] : FAMILY_SETS[fam]!;
+      // Two tables side by side are always one long table with its stools.
+      const tables = group.every((k) => pieces.get(k) === 'table');
+      const options = tables ? ['long-table'] : fam === 'goods' ? goodsSets(edge, kindOf.get(roomOf.get(group[0]!)!)) : FAMILY_SETS[fam]!;
       const mid = { x: (centres[0]!.x + centres[1]!.x) / 2, z: (centres[0]!.z + centres[1]!.z) / 2 };
       // Not the same set piece as one close by, when the location has another.
       const near = new Set(usedSets.filter((u) => Math.hypot(u.x - mid.x, u.z - mid.z) < 6).map((u) => u.set));

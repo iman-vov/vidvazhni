@@ -181,7 +181,9 @@ describe('showcase cellar (s1)', () => {
     expect(ring.some((p) => (p.y ?? 0) > 0)).toBe(true);
     expect(new Set(ring.map((p) => p.piece)).size).toBeGreaterThanOrEqual(4);
     const looks = assignObstacleLooks(content.scenarios.s1!, def);
-    expect(looks.size).toBe(5);
+    // One look per barrel obstacle (the cellar's other furniture keeps its own model).
+    const barrels = content.scenarios.s1!.rooms.flatMap((r) => r.obstacles ?? []).filter((o) => o.model === 'barrel');
+    expect(looks.size).toBe(barrels.length);
     expect(new Set(looks.values()).size).toBeGreaterThanOrEqual(4);
     for (const [k, look] of looks) {
       const [q, r] = k.split(',').map(Number) as [number, number];

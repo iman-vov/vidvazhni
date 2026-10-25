@@ -10,7 +10,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { BoundaryKind, ScenarioDef } from '../../rules/content';
+import type { BoundaryKind, RoomKind, ScenarioDef } from '../../rules/content';
 import { hexKey, parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
@@ -97,16 +97,37 @@ const DIVIDERS: Record<string, DividerStyle> = {
 /** Divider by edge style, for a location not listed and for a room with an edge of its own. */
 const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick' };
 const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge']);
+/** The natural edge of an outdoor room inside a built location: underground it is cave rock. */
+const NATURAL_EDGE: Record<EdgeStyle, EdgeStyle> = { stone: 'cave', tower: 'cliff', timber: 'forest', mine: 'cave', forge: 'cave', forest: 'forest', shore: 'shore', cave: 'cave', cliff: 'cliff' };
+
+/** Dividers that are a building's wall; the rest (fences, hedges, reeds, rock) stand outdoors. */
+const BUILT_DIVIDERS: ReadonlySet<DividerStyle> = new Set(['stone', 'brick', 'planks']);
 
 /**
- * What the wall between these rooms is built as: the location's divider, unless one of the rooms
- * has an indoor edge of its own inside an outdoor location (the mill hall) — then that room's.
+ * What the wall between these rooms is built as, by the rooms' kinds (`kinds`; a room without one
+ * counts as indoor where its edge is a built one). Between interiors and where an interior meets
+ * open ground it is the building's wall: the location's divider when that is masonry or planks,
+ * else the interior's own (a storeroom on a village square has plank walls, not a wattle fence;
+ * a mine opening onto a cave lake ends in a rock ridge). Between open rooms it is the location's
+ * natural divider (reeds, hedge, palisade), or the natural one of the room's edge.
  */
-export function dividerFor(def: Pick<EnvironmentDef, 'id' | 'edge' | 'rooms' | 'divider'>, rooms: readonly string[]): DividerStyle {
+export function dividerFor(
+  def: Pick<EnvironmentDef, 'id' | 'edge' | 'rooms' | 'divider'>,
+  rooms: readonly string[],
+  kinds: Readonly<Record<string, RoomKind | undefined>> = {},
+): DividerStyle {
   const own = def.divider ?? DIVIDERS[def.id] ?? EDGE_DIVIDER[def.edge];
-  if (INDOOR_EDGES.has(def.edge)) return own;
-  const indoor = rooms.map((r) => def.rooms?.[r]?.edge).find((e): e is EdgeStyle => !!e && INDOOR_EDGES.has(e));
-  return indoor ? EDGE_DIVIDER[indoor] : own;
+  const edgeOf = (r: string) => def.rooms?.[r]?.edge ?? def.edge;
+  const isIndoor = (r: string) => (kinds[r] ?? (INDOOR_EDGES.has(edgeOf(r)) ? 'indoor' : 'outdoor')) === 'indoor';
+  const inside = rooms.filter(isIndoor);
+  if (!rooms.length) return own;
+  if (inside.length) {
+    const edge = INDOOR_EDGES.has(edgeOf(inside[0]!)) ? edgeOf(inside[0]!) : 'timber';
+    if (edge === 'mine' && inside.length < rooms.length) return 'rock-ridge';
+    return BUILT_DIVIDERS.has(own) && INDOOR_EDGES.has(def.edge) ? own : EDGE_DIVIDER[edge];
+  }
+  if (!BUILT_DIVIDERS.has(own)) return own;
+  return EDGE_DIVIDER[NATURAL_EDGE[edgeOf(rooms[0]!)]];
 }
 
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
@@ -156,6 +177,8 @@ export class BoardEnvironment {
   layout: EnvLayout | null = null;
   private quality: GraphicsQuality;
   private scenarioId: string | null = null;
+  /** Each room's kind from the scenario (indoor or outdoor), for the dividers between rooms. */
+  private roomKinds: Record<string, RoomKind | undefined> = {};
   private readonly uniforms: EnvUniforms = createUniforms();
   private field: Field | null = null;
   private fieldTex: THREE.DataTexture | null = null;
@@ -222,6 +245,7 @@ export class BoardEnvironment {
       return;
     }
     this.scenarioId = scenario.id;
+    this.roomKinds = Object.fromEntries(scenario.rooms.map((r) => [r.id, r.kind]));
     this.def = withRoomEdges(environmentFor(scenario.id), scenario);
     this.obstacleLooks = assignObstacleLooks(scenario, this.def);
     this.obstaclePlans = planObstacles(scenario, this.def, (model, k) => {
@@ -397,7 +421,7 @@ export class BoardEnvironment {
   /** The straight wall between these rooms as the location's divider (dividerFor), one piece per
    *  frame (frames along the wall's line, a metre or so each). */
   divider(rooms: readonly string[], frames: THREE.Matrix4[]): THREE.Object3D & { dispose(): void } {
-    const style = this.def ? dividerFor(this.def, rooms) : 'stone';
+    const style = this.def ? dividerFor(this.def, rooms, this.roomKinds) : 'stone';
     return this.pieceRow(DIVIDER_PIECES[style], frames, false, `divider:${style}`);
   }
 
@@ -1138,7 +1162,18 @@ export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): Envir
   const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber' || def.edge === 'mine' || def.edge === 'forge';
   for (const room of scenario.rooms) {
     const b = room.boundary;
-    if (!b || def.rooms?.[room.id]) continue;
+    if (def.rooms?.[room.id]) continue;
+    // The room's kind first: open ground under a built location (a lake in a mine, a cave below a
+    // forge) closes with the natural edge, an interior in an open location with timber walls.
+    if (room.kind === 'outdoor' && indoor && (!b || b === 'walls')) {
+      rooms[room.id] = { edge: NATURAL_EDGE[def.edge] };
+      continue;
+    }
+    if (room.kind === 'indoor' && !indoor && (!b || b === 'walls')) {
+      rooms[room.id] = { edge: 'timber' };
+      continue;
+    }
+    if (!b) continue;
     if (b === 'walls') {
       if (!indoor) rooms[room.id] = { edge: 'timber' };
     } else if (BOUNDARY_EDGE[b] !== def.edge) rooms[room.id] = { edge: BOUNDARY_EDGE[b] };
