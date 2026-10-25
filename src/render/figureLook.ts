@@ -47,7 +47,7 @@ export const ELITE_SCALE = 1.12;
 
 /** Weapons to attach when their model exists (from art/prompts/manifest.json `items`). */
 export const WEAPONS: Record<string, string[]> = {
-  warden: ['warden-shield'],
+  warden: ['warden-shield', 'warden-sword'],
   'wind-archer': ['wind-archer-bow'],
   herbalist: ['herbalist-staff'],
   rogue: ['rogue-dagger'],
@@ -73,9 +73,11 @@ export const PROJECTILE: Record<string, ProjectileKind> = {
 };
 
 /** Yaw offset (radians) while the attack clip plays: Meshy's «Archery Shot» aims ~60° to the left
- *  of where the archer faces (docs/art/meshy-batch-1.md), so she turns right to shoot. */
+ *  of where the archer faces (docs/art/meshy-batch-1.md), so she turns right to shoot. The crossbow
+ *  bandit shoots with the same clip (Meshy has no crossbow one). */
 export const ATTACK_YAW: Record<string, number> = {
   'wind-archer': (-60 * Math.PI) / 180,
+  'bandit-crossbow': (-60 * Math.PI) / 180,
 };
 
 /** Hero colour codes from the style guide; monsters are fog-grey, elites gold. */

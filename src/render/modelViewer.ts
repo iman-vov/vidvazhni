@@ -4,12 +4,14 @@
 //   &clip=attack           play only this clip instead of cycling
 //   &view=close            close-up from the front instead of the game camera
 //   &hand=right            put a marker box on that hand bone (checks attachToBone)
-//   &weapon=warden-shield  attach a weapon model with attachWeapon
+//   &weapon=warden-shield  attach a weapon model with attachWeapon (several: comma-separated)
 //   &scale=0.8             model scale on the board
 //   &quality=low           model tier: low, medium or high (default: the device's graphics quality)
 //   &compare=raw           raw Meshy file (art/meshy-source) on the left, same lights; idle only
 //   &compare=low           another tier on the left, playing the same clips
 //   &env=1                 add a room environment map (metal looks dark without one)
+//   &sheet=1               contact sheet instead of the live view: idle, attack mid-frame and walk,
+//                          front and from the weapon side, close up (window.sheet holds a JPEG data URL)
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -142,7 +144,7 @@ async function main(): Promise<void> {
     attachToBone(model, marker, hand === 'left' ? 'mixamorig:LeftHand' : 'mixamorig:RightHand');
   }
   const weapon = params.get('weapon');
-  if (weapon) await attachWeapon(model, weapon);
+  for (const w of weapon?.split(',') ?? []) await attachWeapon(model, w);
 
   let triangles = 0;
   const textures = new Set<string>();
@@ -156,6 +158,11 @@ async function main(): Promise<void> {
       if (t && img?.width) textures.add(`${img.width}×${img.height}`);
     }
   });
+
+  if (params.get('sheet')) {
+    renderSheet(model, weapon ? `${id} + ${weapon}` : id);
+    return;
+  }
 
   const names = CYCLE.filter((c) => model.clips[c]).concat(Object.keys(model.clips).filter((c) => !CYCLE.includes(c)));
   const only = params.get('clip');
@@ -208,6 +215,58 @@ async function main(): Promise<void> {
       `${id} (${model.meta.kind}, ${model.quality}${other ? ` vs ${other.quality} on the left` : ''})  clip: ${model.current}  ${(model.mixer.time % 100).toFixed(1)} s\n` +
       `${triangles} tris, textures ${[...textures].join(', ') || 'none'}, clips ${Object.keys(model.clips).join(' ')}`;
   });
+}
+
+/** Poses the model at a few frames and draws each from two sides onto one canvas. */
+function renderSheet(model: Model, title: string): void {
+  const frames = (
+    [
+      ['idle', 0.3],
+      ['attack', 0.35],
+      ['attack', 0.55],
+      ['walk', 0.5],
+    ] as const
+  ).filter(([clip]) => model.clips[clip]);
+  const tile = 380;
+  const views = 3;
+  const canvas = document.createElement('canvas');
+  canvas.width = tile * frames.length;
+  canvas.height = tile * views + 28;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#10141c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '15px system-ui, sans-serif';
+  ctx.fillStyle = '#e8ecf4';
+  ctx.fillText(title, 8, 19);
+  renderer.setPixelRatio(1);
+  renderer.setSize(tile, tile, false);
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
+  const box = new THREE.Box3();
+  frames.forEach(([clip, at], col) => {
+    model.mixer.stopAllAction();
+    const action = model.mixer.clipAction(model.clips[clip]!);
+    action.reset().play();
+    action.time = at * model.clips[clip]!.duration;
+    model.mixer.update(0);
+    model.scene.updateMatrixWorld(true);
+    box.setFromObject(model.scene);
+    const h = box.max.y - PLATE_HEIGHT;
+    const centre = box.getCenter(new THREE.Vector3());
+    const y = PLATE_HEIGHT + h * 0.6;
+    // Front, from the figure's right (where most weapons are), from its left; whole figure in each.
+    const shots: [number, number][] = [[0, 1], [-1, 0.35], [1, 0.35]];
+    shots.forEach(([x, z], row) => {
+      const dir = new THREE.Vector3(x, 0.15, z).normalize();
+      cam.position.set(centre.x, y, centre.z).addScaledVector(dir, h * 2.4);
+      cam.lookAt(centre.x, y - h * 0.08, centre.z);
+      renderer.render(scene, cam);
+      ctx.drawImage(renderer.domElement, col * tile, 28 + row * tile);
+    });
+    ctx.fillText(`${clip} ${Math.round(at * 100)}%`, col * tile + 8, 28 + 18);
+  });
+  canvas.style.cssText = 'position:absolute;inset:0;max-width:100%;max-height:100%;margin:auto';
+  document.body.appendChild(canvas);
+  Object.assign(window, { sheet: canvas.toDataURL('image/jpeg', 0.85) });
 }
 
 main().catch((err: unknown) => {

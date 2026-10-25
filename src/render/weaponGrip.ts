@@ -23,20 +23,44 @@ export interface WeaponGrip {
   tipDir: Vec3;
   /** Where `face` points in idle, same frame (only its part across tipDir counts). */
   faceDir: Vec3;
+  /** 'hand': tipDir and faceDir are in the fist's own frame instead: +X through the closed fist
+   *  toward the thumb, +Y along the fingers, +Z out of the back of the hand. Then the handle runs
+   *  through the fist in every pose, not only in idle (a bow stays upright when the arm aims). */
+  frame?: 'hero' | 'hand';
+  /** Hand bone to hold it in, instead of the weapon's manifest `attachTo.bones`. */
+  bone?: string;
 }
 
 /** Grips of the weapons in figureLook's WEAPONS; a weapon without one is sized by DEFAULT_GRIP. */
 export const WEAPON_GRIPS: Record<string, WeaponGrip> = {
   // Jaw at -X, red handle at +X, thin along Y: carried forward and up, jaw out front.
   'tinker-wrench': { size: 0.55, grip: [0.62, 0, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0.15, 0.55, 1], faceDir: [1, 0, 0] },
-  // Blade toward -Z, pommel at +Z, wide guard along X: blade forward, a little up.
-  'rogue-dagger': { size: 0.26, grip: [0, 0, 0.72], tip: [0, 0, -1], face: [0, 1, 0], tipDir: [0.1, 0.25, 1], faceDir: [0, 1, 0] },
+  // Blade toward -Z, pommel at +Z, wide guard along X, flats on ±Y: handle through the fist, blade out
+  // of the thumb side and a little forward, flats facing the palm and the back of the hand.
+  'rogue-dagger': { size: 0.26, grip: [0, 0, 0.6], tip: [0, 0, -1], face: [0, 1, 0], tipDir: [1, 0.3, 0], faceDir: [0, 0, 1], frame: 'hand' },
   // Upright, head at +Y: held at the middle, foot near the ground.
   'herbalist-staff': { size: 1.0, grip: [0, -0.05, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [0.05, 1, 0.12], faceDir: [0, 0, 1] },
-  // Limbs along X, string on +Y, belly on -Y: upright at the side, string toward the back.
-  'wind-archer-bow': { size: 0.85, grip: [0, -0.6, 0], tip: [1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0.1], faceDir: [0, 0, -1] },
+  // Limbs along X, string on +Y, belly on -Y: through the fist, tipped a little toward the fingers,
+  // string toward the wrist, so the bow stands upright when she aims.
+  'wind-archer-bow': { size: 0.85, grip: [0, -0.6, 0], tip: [1, 0, 0], face: [0, 1, 0], tipDir: [1, 0.5, 0], faceDir: [0, -1, 0], frame: 'hand' },
   // Door shield, emblem on +Z: upright on the forearm, face forward and a little outward.
   'warden-shield': { size: 0.55, grip: [0, 0, -0.7], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [0, 1, 0], faceDir: [0.35, 0, 1] },
+  // Blender-made (art/blender/weapons): blade at +Y, guard along X, flats on ±Z, leather grip low on
+  // -Y. Through the fist, blade out of the thumb side and a little forward, edge leading.
+  'warden-sword': { size: 0.55, grip: [0, -0.66, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.25, 0], faceDir: [0, 0, 1], frame: 'hand' },
+  // Spiked head at -X, wrapped handle at +X sloping down a little: held at the handle's end, head out of the thumb side.
+  'bandit-club': { size: 0.5, grip: [0.7, -0.46, 0], tip: [-1, 0.29, 0], face: [0, 0, 1], tipDir: [1, 0.3, 0], faceDir: [0, 0, 1], frame: 'hand' },
+  // Prod (bow) at -X, butt at +X, rail on +Y. The bandit shoots with the archer's clip: the left arm
+  // reaches toward the target, the right hand comes to the cheek. So the left fist holds the fore-stock
+  // with the prod along the forearm and the rail on the thumb side, and the butt comes back to the face.
+  crossbow: { size: 0.6, grip: [-0.3, -0.55, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0], faceDir: [1, 0, 0], frame: 'hand', bone: 'mixamorig:LeftHand' },
+  // Fork at +Y, handle at -Y, pouch toward -Z: upright in the fist, pouch toward the gremlin. Kept in the
+  // hero's frame: his attack is a throw, not an aimed shot, and the upright Y reads better in idle.
+  'gremlin-slingshot': { size: 0.4, grip: [0, -0.62, 0], tip: [0, 1, 0], face: [0, 0, -1], tipDir: [0, 1, 0.35], faceDir: [0, 0, -1] },
+  // Tied neck at +Y: hangs from the fist by the neck.
+  'flour-sack': { size: 0.32, grip: [0, 0.8, 0], tip: [0, -1, 0], face: [0, 0, 1], tipDir: [0, -1, 0.1], faceDir: [0, 0, 1] },
+  // Upright, crescent head at +Y: through the fist a little below the middle, head out of the thumb side.
+  'cultist-staff': { size: 1.0, grip: [0, -0.05, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.15, 0], faceDir: [0, 0, 1], frame: 'hand' },
 };
 
 /** Monsters' weapons and anything new: hand-sized, at its centre, as it lies. */
@@ -49,7 +73,7 @@ export function weaponGrip(weaponId: string): WeaponGrip {
 /** The hero in idle: its height and each hand bone's transform, relative to the hero's root. */
 interface IdlePose {
   height: number;
-  bones: Map<string, { matrix: THREE.Matrix4; grip: THREE.Vector3 }>;
+  bones: Map<string, { matrix: THREE.Matrix4; grip: THREE.Vector3; fist: THREE.Matrix4 }>;
 }
 
 const poses = new WeakMap<THREE.AnimationClip | THREE.Object3D, IdlePose>();
@@ -83,15 +107,27 @@ function idlePose(hero: THREE.Object3D, idle: THREE.AnimationClip | undefined): 
   copy.traverse((o) => {
     if (!(o as THREE.Bone).isBone) return;
     // Where the fist closes: most of the way from the wrist to the middle knuckle.
-    const knuckle = o.children.find((c) => /Middle1$/.test(c.name)) ?? o.children[0];
-    const grip = knuckle ? knuckle.position.clone().multiplyScalar(0.75) : new THREE.Vector3();
-    bones.set(o.name, { matrix: o.matrixWorld.clone(), grip });
+    const child = (re: RegExp) => o.children.find((c) => re.test(c.name))?.position;
+    const knuckle = child(/Middle1$/) ?? o.children[0]?.position;
+    const grip = knuckle ? knuckle.clone().multiplyScalar(0.75) : new THREE.Vector3();
+    bones.set(o.name, { matrix: o.matrixWorld.clone(), grip, fist: fistFrame(/Left/.test(o.name), knuckle, child(/Pinky1$/), child(/Thumb1$/)) });
   });
   poses.set(key, pose);
   return pose;
 }
 
 const toVec = (v: Vec3) => new THREE.Vector3(...v);
+
+/** The fist's axes in the hand bone's space (see WeaponGrip.frame): through the fist along the
+ *  knuckles from the little finger (or, without one, from the middle knuckle toward the thumb). */
+function fistFrame(left: boolean, middle?: THREE.Vector3, pinky?: THREE.Vector3, thumb?: THREE.Vector3): THREE.Matrix4 {
+  if (!middle || (!pinky && !thumb)) return new THREE.Matrix4();
+  const y = middle.clone().normalize();
+  const across = pinky ? middle.clone().sub(pinky) : thumb!.clone().sub(middle);
+  const x = across.addScaledVector(y, -across.dot(y)).normalize();
+  // x × y is the palm on a right hand and the back on a left one (they are mirror images).
+  return new THREE.Matrix4().makeBasis(x, y, x.clone().cross(y).multiplyScalar(left ? 1 : -1));
+}
 
 /** Rotation that turns axes (a1, a2) into directions (b1, b2); a2/b2 count only across a1/b1. */
 function alignAxes(a1: THREE.Vector3, a2: THREE.Vector3, b1: THREE.Vector3, b2: THREE.Vector3): THREE.Quaternion {
@@ -135,7 +171,10 @@ export function placeWeapon(
   // The hero's frame for this hand: +X away from the body on the hand's side.
   const handPos = new THREE.Vector3().setFromMatrixPosition(bone.matrix);
   const out = handPos.x < 0 ? -1 : 1;
-  const side = (v: Vec3) => new THREE.Vector3(v[0] * out, v[1], v[2]);
+  const side =
+    g.frame === 'hand'
+      ? (v: Vec3) => toVec(v).applyMatrix4(bone.fist).transformDirection(bone.matrix)
+      : (v: Vec3) => new THREE.Vector3(v[0] * out, v[1], v[2]);
   const rotation = alignAxes(toVec(g.tip), toVec(g.face), side(g.tipDir), side(g.faceDir));
 
   // In the hero's frame: grip point on the fist. Then into the bone's space.

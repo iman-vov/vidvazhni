@@ -91,6 +91,36 @@
       }
     },
     {
+      "id": "warden-sword",
+      "nameUk": "Меч Вартового",
+      "kind": "weapon",
+      "styleBlock": "D",
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 2,
+      "wave": 1,
+      "scenarios": [],
+      "descriptionSource": "blender",
+      "meshy": null,
+      "modelFile": "assets/models/warden-sword.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 3000,
+        "estimate": true
+      },
+      "textureMax": 1024,
+      "attachTo": {
+        "model": "warden",
+        "hand": "right",
+        "bones": [
+          "mixamorig:RightHand"
+        ]
+      }
+    },
+    {
       "id": "wind-archer",
       "nameUk": "Лучниця Вітру",
       "kind": "hero",

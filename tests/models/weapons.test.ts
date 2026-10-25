@@ -1,4 +1,4 @@
-// Weapons in the heroes' hands: every hero weapon, in every tier, attached the way the game does
+// Weapons in the figures' hands: every hero and monster weapon, in every tier, attached the way the game does
 // it (render/weaponGrip.ts), must come out at a believable size next to its hero and sit in the
 // hand, in idle, walk and attack. Guards against the weapon being parented to the hand bone at its
 // raw Meshy size (about two units, bigger than the 1.7-unit hero) or lying across the hex.
@@ -15,6 +15,7 @@ import { findBone } from '../../src/render/models';
 import { placeWeapon, weaponGrip } from '../../src/render/weaponGrip';
 
 const HEROES = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
+const MONSTERS = ['bandit-brute', 'bandit-crossbow', 'gremlin', 'gloom-cultist', 'bog-miller'];
 const TIERS = ['.low', '', '.hq'];
 /** Longest side of each weapon next to its hero's height (idle), min and max. */
 const RATIO: Record<string, [number, number]> = {
@@ -23,6 +24,12 @@ const RATIO: Record<string, [number, number]> = {
   'herbalist-staff': [0.8, 1.15],
   'rogue-dagger': [0.18, 0.4],
   'tinker-wrench': [0.4, 0.7],
+  'warden-sword': [0.4, 0.7],
+  'bandit-club': [0.35, 0.65],
+  crossbow: [0.45, 0.75],
+  'gremlin-slingshot': [0.25, 0.55],
+  'cultist-staff': [0.8, 1.15],
+  'flour-sack': [0.2, 0.45],
 };
 
 const file = (id: string, tier: string) => `assets/models/${id}/${id}${tier}.glb`;
@@ -60,10 +67,10 @@ function skinnedBox(root: THREE.Object3D): THREE.Box3 {
   return box;
 }
 
-const pairs = HEROES.flatMap((hero) => (WEAPONS[hero] ?? []).map((weapon) => [hero, weapon] as const));
+const pairs = [...HEROES, ...MONSTERS].flatMap((hero) => (WEAPONS[hero] ?? []).map((weapon) => [hero, weapon] as const));
 
-describe('hero weapons in hand', () => {
-  it('every hero weapon has its own grip and size range', () => {
+describe('weapons in hand', () => {
+  it('every weapon has its own grip and size range', () => {
     for (const [, weapon] of pairs) {
       expect(RATIO[weapon], weapon).toBeDefined();
       expect(weaponGrip(weapon).size, weapon).toBeGreaterThanOrEqual(RATIO[weapon]![0]);
@@ -84,9 +91,9 @@ describe('hero weapons in hand', () => {
         return box.max.y - Math.min(0, box.min.y);
       })();
 
-      const bones: string[] = [];
       const meta = (w.scene.userData['vidvazhni'] as { attachTo?: { bones: string[] } } | undefined)?.attachTo;
-      bones.push(...(meta?.bones ?? []));
+      const gripBone = weaponGrip(weapon).bone;
+      const bones = gripBone ? [gripBone] : [...(meta?.bones ?? [])];
       expect(bones.length).toBeGreaterThan(0);
 
       // The weapon's own longest side; on the hero it counts with the scale it gets in the world.

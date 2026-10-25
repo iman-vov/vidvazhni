@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
-import { placeWeapon } from './weaponGrip';
+import { placeWeapon, weaponGrip } from './weaponGrip';
 import { castsShadow, getGraphicsQuality, GRAPHICS_QUALITIES, rendererPreset, type GraphicsQuality } from './quality';
 
 /** The game's clip names; `npm run models` renames Meshy's clips to these. */
@@ -238,7 +238,8 @@ export interface AttachOptions {
  */
 export async function attachWeapon(model: Model, weaponId: string, opts: AttachOptions = {}): Promise<THREE.Object3D[]> {
   const weapon = await loadModel(weaponId, { quality: model.quality });
-  const bones = opts.bones ?? weapon.meta.attachTo?.bones ?? [];
+  const gripBone = weaponGrip(weaponId).bone;
+  const bones = opts.bones ?? (gripBone ? [gripBone] : weapon.meta.attachTo?.bones) ?? [];
   if (!bones.length) throw new Error(`Weapon "${weaponId}" has no attachTo bones`);
   return bones.map((boneName, i) => {
     const object = i === 0 ? weapon.scene : cloneSkinned(weapon.scene);
