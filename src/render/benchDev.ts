@@ -92,11 +92,28 @@ function status(text: string): void {
   bar.appendChild(span);
 }
 
+/** Frees the last board's WebGL context now: a page unloaded in a frame keeps it until garbage
+ *  collection, and after a few dozen boards the browser loses contexts and blocks WebGL for the site. */
+function release(): void {
+  const win = frame.contentWindow as (BoardWindow & { board?: { dispose?(): void } }) | null;
+  try {
+    const canvases = [...(win?.document.querySelectorAll('canvas') ?? [])];
+    win?.board?.dispose?.();
+    for (const c of canvases) {
+      const gl = (c.getContext('webgl2') ?? c.getContext('webgl')) as WebGLRenderingContext | null;
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    }
+  } catch {
+    // A page from another origin or one that never started: nothing to free.
+  }
+}
+
 /** Loads one board in the frame and resolves with its window once the models are in. A page that
  *  does not start (the dev server re-optimising its dependencies answers 504 once) is reloaded. */
 async function openBoard(board: string, quality: GraphicsQuality): Promise<BoardWindow> {
   const url = `board.html?board=${board}&quality=${quality}&bench=1`;
   for (let attempt = 0; attempt < 3; attempt++) {
+    release();
     await new Promise<void>((resolve) => {
       frame.onload = () => resolve();
       frame.src = attempt ? `${url}&try=${attempt}` : url;
@@ -208,6 +225,7 @@ async function runAll(saved: Saved): Promise<void> {
     saved.runs.push(run);
     save(saved);
   }
+  release();
   frame.src = 'about:blank';
   bar.innerHTML = '';
   await finish(saved);
