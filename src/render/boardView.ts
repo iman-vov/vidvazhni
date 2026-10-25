@@ -12,6 +12,7 @@ import { DIRECTIONS, hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
 import { planAnimation, TIMING, type AnimStep } from './animPlan';
+import { cruiseSpeed, trapezoid } from './gait';
 import { BoardCamera, KEY_ZOOM_STEP } from './boardCamera';
 import { KEY_YAW_STEP } from './cameraGestures';
 import { BoardEffects, ELEMENT_COLORS } from './boardEffects';
@@ -33,6 +34,9 @@ import { ShadowBake } from './shadowBake';
 import { applyShadowFlags, bakeCaster, fitSunShadow, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
+
+/** Distance between the centres of neighbouring hexes. */
+const HEX_STEP = Math.sqrt(3) * HEX_SIZE;
 
 const BACKGROUND = '#1b1d27';
 /** Frame rate while only the rings under figures move. */
@@ -765,6 +769,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         return !!f && f.kind === 'monster' && !!PROJECTILE[lookOf(f, job.content).modelId];
       },
       windup: (id) => figures.get(id)?.attackWindup(TIMING.attackWindup) ?? TIMING.attackWindup,
+      walkSeconds: (id, hexes) => figures.get(id)?.walkSeconds(hexes * HEX_STEP, TIMING.walkPerHex * hexes) ?? TIMING.walkPerHex * hexes,
     });
     if (!steps.length) return;
     const ctx: JobCtx = {
@@ -825,7 +830,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     overlay.still = reducedMotion();
     switch (step.kind) {
       case 'walk':
-        return walk(step.figureId, step.path, ctx);
+        return walk(step.figureId, step.path, step.wait, ctx);
       case 'jump':
         return jump(step.figureId, step.path, step.fly, step.duration);
       case 'slide':
@@ -974,19 +979,23 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     return anim.tween(seconds, (k) => fv.setYaw(from + delta * k));
   }
 
-  async function walk(id: FigureId, path: Hex[], ctx: JobCtx): Promise<void> {
+  /** Walks along `path` in `seconds`: speeds up and slows down at the ends, with the walk or run
+   *  clip played as fast as the figure goes, so its feet stay planted (src/render/gait.ts). */
+  async function walk(id: FigureId, path: Hex[], seconds: number, ctx: JobCtx): Promise<void> {
     const fv = figures.get(id);
     if (!fv || path.length < 2) return;
     const pts = path.map(([q, r]) => hexToWorld(q, r));
     const segs = pts.length - 1;
-    fv.playClip('walk');
+    const clipScale = fv.startGait(cruiseSpeed(segs * HEX_STEP, seconds));
     let seg = -1;
     let yawFrom = fv.yaw;
     let yawDelta = 0;
     await anim.tween(
-      TIMING.walkPerHex * segs,
+      seconds,
       (k) => {
-        const t = Math.min(segs - 1e-6, k * segs);
+        const { travel, pace } = trapezoid(k, seconds);
+        if (clipScale) fv.setClipSpeed(clipScale * Math.max(0.25, pace));
+        const t = Math.min(segs - 1e-6, travel * segs);
         const i = Math.floor(t);
         const u = t - i;
         const a = pts[i]!;

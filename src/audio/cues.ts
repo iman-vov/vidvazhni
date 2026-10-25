@@ -102,8 +102,9 @@ export function stepCues(step: AnimStep, speed = 1, hitTarget: FigureId | null =
   switch (step.kind) {
     case 'walk':
     case 'slide': {
-      const per = (step.kind === 'walk' ? TIMING.walkPerHex : TIMING.slidePerHex) * k;
       const hexes = Math.min(6, step.path.length - 1);
+      // A walk's wait is its length: slower figures (src/render/gait.ts) step slower.
+      const per = (step.kind === 'walk' ? step.wait / Math.max(1, step.path.length - 1) : TIMING.slidePerHex) * k;
       const key = step.kind === 'walk' ? 'moved' : 'pushed';
       return Array.from({ length: hexes }, (_, i) => cue(t, key, i * per + per * 0.4)).flat();
     }

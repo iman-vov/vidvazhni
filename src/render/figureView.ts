@@ -11,6 +11,7 @@ import type { Hex } from '../rules/hex';
 import type { Figure, FigureId } from '../rules/state';
 import type { FigureBadge, OverlayItem } from './boardOverlay';
 import { modelScale, type FigureLook } from './figureLook';
+import { chooseGait, MODEL_STRIDE, walkSeconds, type Stride } from './gait';
 import { PLATE_HEIGHT } from './boardTiles';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
 import { blobShadowTexture } from './contactShadow';
@@ -499,6 +500,30 @@ export class FigureView {
   get hover(): number {
     if (!this.look.flying || this.downed || this.gone) return 0;
     return HOVER_HEIGHT + hoverBob(this.clock, this.hoverPhase);
+  }
+
+  /** How far one walk and run cycle carry this figure, once its model with a walk clip is on. */
+  private get stride(): Stride | undefined {
+    return this.model?.clips['walk'] ? MODEL_STRIDE[this.look.modelId] : undefined;
+  }
+
+  /** Seconds a walk over `distance` takes: `base` (the board's pace), longer when the legs cannot
+   *  keep up with it. */
+  walkSeconds(distance: number, base: number): number {
+    return walkSeconds(distance, base, this.stride, this.look.height);
+  }
+
+  /** Starts the walk or the run, whichever keeps the feet planted at `speed` (world units per
+   *  second); returns the clip's time scale at that speed (1 without stride data, 0 without a clip). */
+  startGait(speed: number): number {
+    const model = this.model;
+    const stride = this.stride;
+    if (!model || !stride) return this.playClip('walk') ? 1 : 0;
+    const run = model.clips['run'];
+    const g = chooseGait(speed, stride, this.look.height, { walk: model.clips['walk']!.duration, ...(run ? { run: run.duration } : {}) });
+    this.playClip(g.clip, { crossFade: 0.15 });
+    this.setClipSpeed(g.timeScale);
+    return g.timeScale;
   }
 
   /** Time scale of the clip playing now (a slowed run while airborne). */

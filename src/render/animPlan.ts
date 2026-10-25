@@ -81,6 +81,9 @@ export interface PlanOptions {
   isRanged?: (id: FigureId) => boolean;
   /** Seconds from the start of an attacker's attack clip to the blow (default TIMING.attackWindup). */
   windup?: (id: FigureId) => number;
+  /** Seconds a figure's walk over `hexes` takes (default TIMING.walkPerHex each: slower figures
+   *  whose legs cannot keep that pace take longer). */
+  walkSeconds?: (id: FigureId, hexes: number) => number;
 }
 
 /**
@@ -108,7 +111,7 @@ export function planAnimation(events: readonly GameEvent[], positions: Readonly<
           const d = TIMING.jumpBase + TIMING.jumpPerHex * hexes;
           push({ kind: 'jump', figureId: e.figureId, path, fly: !!e.fly, wait: d, duration: d });
         } else {
-          const d = TIMING.walkPerHex * hexes;
+          const d = opts.walkSeconds?.(e.figureId, hexes) ?? TIMING.walkPerHex * hexes;
           push({ kind: 'walk', figureId: e.figureId, path, wait: d, duration: d + 0.2 });
         }
         break;
