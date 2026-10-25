@@ -29,6 +29,8 @@ import { reducedMotion, setBoardWater, setWaterRipples } from './environment/lif
 import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
+import { ShadowBake } from './shadowBake';
+import { applyShadowFlags, bakeCaster, fitSunShadow, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
 
@@ -37,6 +39,16 @@ const BACKGROUND = '#1b1d27';
 const RING_FPS = 24;
 /** Frame rate of the idle board while the location lives (flames, dust, fog): low on tablets. */
 const AMBIENT_FPS: Record<GraphicsQuality, number> = { low: 15, medium: 24, high: 30 };
+/** The way the sunlight travels: from the far left of the board, so shadows fall to the right and
+ *  toward the camera where they can be seen (a sun behind the camera hides them behind things). */
+const SUN_DIRECTION = new THREE.Vector3(0.7, -1, 0.5).normalize();
+/** The sun as the key light: the locations' sun gives only ~10 % of the floor's light next to sky,
+ *  image light and lamps, so its shadows hardly show. It is made stronger and the fill weaker, about
+ *  as bright overall, so a shadow keeps ~2/3 of the light. */
+const KEY_GAIN = 4;
+const FILL_GAIN = 0.55;
+/** How long the board stays still before the low level re-bakes its floor shadows (ms). */
+const BAKE_DELAY = 250;
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
 const LABELS: Record<
@@ -139,6 +151,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   const effects = new BoardEffects(anim);
   const parts = createFigureParts();
   scene.add(environment.root, tiles.root, effects.root);
+  const bake = new ShadowBake();
+  scene.add(bake.decal);
 
   // Highlights: hex fills and frames (instanced), path dots.
   const fillGeo = new THREE.CircleGeometry(0.86 * HEX_SIZE, 6, Math.PI / 6).rotateX(-Math.PI / 2);
@@ -213,7 +227,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   function makeRenderer(q: GraphicsQuality): THREE.WebGLRenderer {
     const preset = rendererPreset(q);
     const r = new THREE.WebGLRenderer({ antialias: preset.antialias, powerPreference: 'high-performance' });
-    r.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    r.shadowMap.type = THREE.PCFShadowMap;
     const c = r.domElement;
     c.style.display = 'block';
     c.style.width = '100%';
@@ -234,13 +248,21 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   function applyQuality(): void {
     const preset = rendererPreset(quality);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, preset.maxPixelRatio));
-    const shadows = preset.shadows !== 'none';
+    const tier = SHADOW_TIERS[quality];
+    const shadows = tier.mode === 'realtime';
     renderer.shadowMap.enabled = shadows;
     sun.castShadow = shadows;
+    sun.shadow.radius = tier.radius;
+    if (shadows) {
+      bake.clear();
+      bakeKey = '';
+    }
+    else for (const l of lampLights.splice(0)) l.castShadow = false;
+    shadowsDirty = true;
     post.configure(renderer, preset);
     post.setSize(root.clientWidth, root.clientHeight, renderer.getPixelRatio());
-    if (shadows && sun.shadow.mapSize.x !== preset.shadowMapSize) {
-      sun.shadow.mapSize.set(preset.shadowMapSize, preset.shadowMapSize);
+    if (shadows && sun.shadow.mapSize.x !== tier.mapSize) {
+      sun.shadow.mapSize.set(tier.mapSize, tier.mapSize);
       sun.shadow.map?.dispose();
       sun.shadow.map = null;
     }
@@ -291,6 +313,79 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   const orbAnchor = new THREE.Vector3();
   let ringTimer: ReturnType<typeof setTimeout> | 0 = 0;
 
+  // ─── Shadows (shadows.ts, shadowBake.ts) ────────────────────────────────
+
+  let shadowsDirty = true;
+  let bakeTimer: ReturnType<typeof setTimeout> | 0 = 0;
+  let lampLights: THREE.PointLight[] = [];
+  /** What the last bake drew (its casters and where they stood). */
+  let bakeKey = '';
+
+  /** Something was built, loaded, revealed or removed: shadow flags (and the bake) follow. */
+  function shadowsChanged(): void {
+    shadowsDirty = true;
+    requestRender();
+  }
+
+  function isFigurePart(o: THREE.Object3D): boolean {
+    for (const fv of figures.values()) if (o === fv.root) return true;
+    return o === bake.decal;
+  }
+
+  function refreshShadows(): void {
+    shadowsDirty = false;
+    const tier = SHADOW_TIERS[quality];
+    applyShadowFlags(scene, tier, PLATE_HEIGHT, isFigurePart);
+    if (tier.mode === 'realtime') {
+      const centre = sun.target.position;
+      lampLights = tier.lamps > 0 ? setupLampShadows(scene, tier.lamps, centre) : [];
+      markLampCasters([scene], lampLights);
+      return;
+    }
+    // At most one bake per BAKE_DELAY (loads keep coming in for a while), and none when the
+    // casters are the same as last time.
+    if (bakeTimer) return;
+    bakeTimer = setTimeout(() => {
+      bakeTimer = 0;
+      if (disposed || SHADOW_TIERS[quality].mode !== 'baked') return;
+      bakeShadows();
+      requestRender();
+    }, BAKE_DELAY);
+  }
+
+  /** Low level: draws the static things' shadows and occlusion into the floor decal once. */
+  function bakeShadows(): void {
+    const b = tiles.bounds();
+    if (!b) return;
+    const area = b.clone().expandByScalar(3.5 * HEX_SIZE);
+    const casters: THREE.Mesh[] = [];
+    const box = new THREE.Box3();
+    scene.updateMatrixWorld();
+    const visit = (o: THREE.Object3D): void => {
+      if (!o.visible || isFigurePart(o) || o.name === 'env:life') return;
+      const mesh = o as THREE.Mesh;
+      // Things sunk under the floor (rooms not risen yet) throw nothing.
+      if (bakeCaster(mesh) && box.setFromObject(mesh).max.y > PLATE_HEIGHT + 0.01) casters.push(mesh);
+      for (const c of o.children) visit(c);
+    };
+    visit(scene);
+    let sum = 0;
+    for (const m of casters) sum += m.id * 0.618 + m.matrixWorld.elements[12]! * 3.1 + m.matrixWorld.elements[14]! * 7.3 + m.geometry.id;
+    const key = `${casters.length}:${sum.toFixed(3)}:${area.min.x},${area.min.y},${area.max.x},${area.max.y}`;
+    if (key === bakeKey) return;
+    bakeKey = key;
+    // A full shadow keeps the sky's share of the light: sky / (sky + sun).
+    const cos = Math.max(0.2, -SUN_DIRECTION.y);
+    const sky = hemi.color.clone().multiplyScalar(hemi.intensity);
+    const lit = sky.clone().add(sun.color.clone().multiplyScalar(sun.intensity * cos));
+    const shade = new THREE.Color(
+      THREE.MathUtils.clamp(sky.r / lit.r, 0.45, 0.8),
+      THREE.MathUtils.clamp(sky.g / lit.g, 0.45, 0.8),
+      THREE.MathUtils.clamp(sky.b / lit.b, 0.45, 0.8),
+    );
+    bake.bake(renderer, scene, { area, floorY: PLATE_HEIGHT, sun: SUN_DIRECTION, casters, shade });
+  }
+
   function requestRender(): void {
     if (!frame && !disposed) frame = requestAnimationFrame(renderFrame);
   }
@@ -315,6 +410,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.spinGlow(t);
     }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
+    if (shadowsDirty) refreshShadows();
     post.render();
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
     if (resetButton) {
@@ -398,8 +494,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   };
   document.addEventListener('visibilitychange', onVisibility);
   resize();
-  tiles.onChange = requestRender;
-  environment.onChange = requestRender;
+  tiles.onChange = shadowsChanged;
+  environment.onChange = shadowsChanged;
   tiles.obstacleFactory = (model) => environment.makeObstacle(model);
   tiles.obstacleLook = (model, k) => environment.obstacleLook(model, k);
   tiles.partitionLines = () => environment.partitions();
@@ -427,19 +523,11 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       focus.expandByPoint(new THREE.Vector2(x, z));
     }
     camera.setBounds(b, animate, focus.isEmpty() ? null : focus);
-    const c = b.getCenter(new THREE.Vector2());
     // Walls stand a hex ring outside the board: keep their shadows inside the shadow camera.
-    const half = Math.max(b.max.x - b.min.x, b.max.y - b.min.y) / 2 + 3 * HEX_SIZE;
-    sun.target.position.set(c.x, 0, c.y);
-    sun.position.set(c.x - 5, 12, c.y + 7);
-    const cam = sun.shadow.camera;
-    cam.left = cam.bottom = -half * 1.3;
-    cam.right = cam.top = half * 1.3;
-    cam.near = 0.5;
-    cam.far = 50;
-    cam.updateProjectionMatrix();
-    sun.shadow.bias = -0.0006;
-    sun.shadow.normalBias = 0.02;
+    const wallRing = 3 * HEX_SIZE;
+    const area = new THREE.Box3(new THREE.Vector3(b.min.x - wallRing, PLATE_HEIGHT - 0.05, b.min.y - wallRing), new THREE.Vector3(b.max.x + wallRing, PLATE_HEIGHT + 2.6, b.max.y + wallRing));
+    fitSunShadow(sun, area, SUN_DIRECTION);
+    shadowsChanged();
   }
 
   // ─── Figures ─────────────────────────────────────────────────────────────
@@ -526,12 +614,16 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   }
 
   function syncNow(s: GameState, c: Content): void {
+    shadowsChanged();
     state = s;
     content = c;
     const scenario = c.scenarios[s.scenarioId];
     if (scenario) {
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
+      sun.intensity *= KEY_GAIN;
+      hemi.intensity *= FILL_GAIN;
+      scene.environmentIntensity *= FILL_GAIN;
       post.setGrade(environment.grade);
       tiles.setSurroundings(environment.footprint, environment.innerWallColor, environment.def?.surface ?? null, environment.defaultBoundary);
     }
@@ -1145,6 +1237,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     );
     environment.revealRoom(roomId, 1);
     tiles.setRoomRise(roomId, 1, origin);
+    shadowsChanged();
   }
 
   async function loot(heroId: FigureId, coins: number, ctx: JobCtx, chestId?: string): Promise<void> {
@@ -1505,6 +1598,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     resizeObserver.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
     stopQuality();
+    if (bakeTimer) clearTimeout(bakeTimer);
+    bake.dispose();
     camera.dispose();
     for (const fv of [...figures.values()]) removeFigure(fv);
     for (const m of [fills, frames, dots, edges]) m?.dispose();
