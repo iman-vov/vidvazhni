@@ -2,7 +2,7 @@
   "id": "herbalist",
   "complexity": "medium",
   "color": "#E0B040",
-  "hpByLevel": [8, 9, 11, 12, 14],
+  "hpByLevel": [8, 9, 11, 12, 14, 15, 17],
   "handSize": 10,
   "recommendedHand": ["herbalist.healing-salve", "herbalist.poison-brew", "herbalist.thorn-staff", "herbalist.blooming-circle", "herbalist.roots", "herbalist.morning-dew", "herbalist.sun-brew", "herbalist.stinging-nettle", "herbalist.forest-gift", "herbalist.bramble-lash"],
   "classElement": "light",

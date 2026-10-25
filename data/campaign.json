@@ -1,5 +1,5 @@
 {
-  "xpByLevel": [0, 20, 45, 75, 110],
+  "xpByLevel": [0, 15, 40, 65, 95, 140, 195],
   "startGold": 15,
   "sellRate": 0.5,
   "giftStep": 5,

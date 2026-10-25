@@ -2,7 +2,7 @@
   "id": "elementalist",
   "complexity": "complex",
   "color": "#C23B4E",
-  "hpByLevel": [6, 7, 8, 9, 10],
+  "hpByLevel": [6, 7, 8, 9, 10, 11, 12],
   "handSize": 8,
   "recommendedHand": ["elementalist.fire-arrow", "elementalist.ice-breath", "elementalist.gusts", "elementalist.stone-skin", "elementalist.fireball", "elementalist.ice-shackles", "elementalist.earth-breath", "elementalist.earth-rampart"],
   "classElement": "any",

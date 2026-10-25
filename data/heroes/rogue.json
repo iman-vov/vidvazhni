@@ -2,7 +2,7 @@
   "id": "rogue",
   "complexity": "medium",
   "color": "#7E4FC4",
-  "hpByLevel": [8, 9, 11, 12, 14],
+  "hpByLevel": [8, 9, 11, 12, 14, 15, 17],
   "handSize": 9,
   "recommendedHand": ["rogue.quick-stab", "rogue.backstab", "rogue.smoke-bomb", "rogue.twin-daggers", "rogue.throwing-knife", "rogue.shadow", "rogue.deadly-strike", "rogue.strike-from-dark", "rogue.lucky-throw"],
   "classElement": "dark",

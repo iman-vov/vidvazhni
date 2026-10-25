@@ -51,9 +51,9 @@ describe('hero classes', () => {
 
   it('health per level follows the «+1,5» rule (Вартовий +2, Стихійник +1)', () => {
     const hp = (id: string) => content.heroes[id]?.hpByLevel;
-    expect(hp('warden')).toEqual([10, 12, 14, 16, 18]);
-    expect(hp('elementalist')).toEqual([6, 7, 8, 9, 10]);
-    for (const id of ['wind-archer', 'herbalist', 'rogue', 'tinker']) expect(hp(id)).toEqual([8, 9, 11, 12, 14]);
+    expect(hp('warden')).toEqual([10, 12, 14, 16, 18, 20, 22]);
+    expect(hp('elementalist')).toEqual([6, 7, 8, 9, 10, 11, 12]);
+    for (const id of ['wind-archer', 'herbalist', 'rogue', 'tinker']) expect(hp(id)).toEqual([8, 9, 11, 12, 14, 15, 17]);
   });
 
   it('hand sizes, classes and the Ґудзик summon match the design doc', () => {

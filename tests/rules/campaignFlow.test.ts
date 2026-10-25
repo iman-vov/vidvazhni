@@ -100,8 +100,9 @@ describe('applyScenarioResult', () => {
 describe('level-up', () => {
   it('needs the XP of the next threshold', () => {
     const s = fresh();
+    hero(s).xp = 14;
     expect(canLevelUp(c, hero(s))).toBe(false);
-    hero(s).xp = 20;
+    hero(s).xp = 15;
     expect(canLevelUp(c, hero(s))).toBe(true);
     expect(err(levelUp(c, fresh(), 'warden', { card: 'warden.stone-bulwark', perk: 'add-two-plus1' }))).toBe('not enough XP');
   });
@@ -129,9 +130,11 @@ describe('level-up', () => {
     expect(err(levelUp(c, t, 'warden', { card: 'warden.tremor', perk: 'remove-minus2' }))).toBe('choose an available perk');
   });
 
-  it('stops at the last threshold', () => {
+  it('stops at the base-game cap, level 7', () => {
     const s = fresh();
-    Object.assign(hero(s), { level: 5, xp: 500 });
+    Object.assign(hero(s), { level: 6, xp: 195 });
+    expect(canLevelUp(c, hero(s))).toBe(true);
+    Object.assign(hero(s), { level: 7, xp: 500 });
     expect(canLevelUp(c, hero(s))).toBe(false);
   });
 });

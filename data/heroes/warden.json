@@ -2,7 +2,7 @@
   "id": "warden",
   "complexity": "simple",
   "color": "#3B6FB6",
-  "hpByLevel": [10, 12, 14, 16, 18],
+  "hpByLevel": [10, 12, 14, 16, 18, 20, 22],
   "handSize": 10,
   "recommendedHand": ["warden.shield-bash", "warden.iron-wall", "warden.challenge", "warden.sweeping-blow", "warden.thorn-shield", "warden.ram", "warden.unyielding", "warden.earth-strike", "warden.last-stand", "warden.shoulder-charge"],
   "classElement": "earth",

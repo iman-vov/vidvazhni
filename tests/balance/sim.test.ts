@@ -41,7 +41,7 @@ export interface SimResult {
   rounds: number;
   end: 'won' | 'cards' | 'damage' | 'timeout' | 'error';
   error?: string;
-  heroes: { classId: string; dealt: number; healed: number; taken: number; exhausted: boolean; lost: number; hand: number }[];
+  heroes: { classId: string; xp: number; dealt: number; healed: number; taken: number; exhausted: boolean; lost: number; hand: number }[];
   heroInitiative: number[];
   monsterInitiative: number[];
   dodges: number;
@@ -104,7 +104,7 @@ function play(setup: GameSetup, content: ReturnType<typeof loadContent>): SimRes
       if (e.type === 'retaliated' && e.figureId === id) dealt += e.damage;
       if (e.type === 'damaged' && e.figureId === id) taken += e.amount;
     }
-    return { classId: h.classId, dealt, healed, taken, exhausted: h.exhausted, lost: h.lost.length, hand: h.hand.length };
+    return { classId: h.classId, xp: h.xp, dealt, healed, taken, exhausted: h.exhausted, lost: h.lost.length, hand: h.hand.length };
   });
   // Heals: credit the hero whose turn it was (the healer), self-heals included.
   let turn: string | undefined;

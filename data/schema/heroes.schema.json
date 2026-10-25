@@ -398,7 +398,7 @@
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "complexity": { "enum": ["simple", "medium", "complex"] },
     "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "The class colour (art/prompts/ui/card-frames.md): portraits, frames, board tokens." },
-    "hpByLevel": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 5, "maxItems": 5 },
+    "hpByLevel": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 7, "maxItems": 7 },
     "handSize": { "type": "integer", "minimum": 1 },
     "recommendedHand": {
       "type": "array",

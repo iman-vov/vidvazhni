@@ -2,7 +2,7 @@
   "id": "tinker",
   "complexity": "complex",
   "color": "#A65E2E",
-  "hpByLevel": [8, 9, 11, 12, 14],
+  "hpByLevel": [8, 9, 11, 12, 14, 15, 17],
   "handSize": 10,
   "recommendedHand": ["tinker.gather-button", "tinker.wrench", "tinker.repair", "tinker.trap", "tinker.explosive-jar", "tinker.spring-boots", "tinker.smoke-canister", "tinker.clever-device", "tinker.crossbow", "tinker.first-aid"],
   "classElement": "fire",

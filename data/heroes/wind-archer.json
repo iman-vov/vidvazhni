@@ -2,7 +2,7 @@
   "id": "wind-archer",
   "complexity": "medium",
   "color": "#2FA36B",
-  "hpByLevel": [8, 9, 11, 12, 14],
+  "hpByLevel": [8, 9, 11, 12, 14, 15, 17],
   "handSize": 9,
   "recommendedHand": ["wind-archer.quick-shot", "wind-archer.double-arrow", "wind-archer.wind-arrow", "wind-archer.repelling-shot", "wind-archer.aimed-shot", "wind-archer.arrow-rain", "wind-archer.light-step", "wind-archer.binding-arrow", "wind-archer.retreat-shot"],
   "classElement": "air",

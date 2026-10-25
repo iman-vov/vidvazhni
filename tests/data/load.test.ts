@@ -19,7 +19,7 @@ describe('loadContent', () => {
     expect(Object.keys(content.items)).toHaveLength(19);
     expect(Object.keys(content.battleGoals)).toHaveLength(8);
     expect(Object.keys(content.perks)).toHaveLength(6);
-    expect(content.campaign.xpByLevel).toEqual([0, 20, 45, 75, 110]);
+    expect(content.campaign.xpByLevel).toEqual([0, 15, 40, 65, 95, 140, 195]);
   });
 
   it('template decks have 8 cards, as do the boss decks', () => {
