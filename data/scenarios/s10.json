@@ -19,7 +19,14 @@
         [6, -1]
       ],
       "terrain": [{ "hex": [3, -1], "terrain": "hazardous" }],
-      "obstacles": [{ "hex": [2, 2], "model": "crate-stack" }, { "hex": [4, -2], "model": "barrel" }],
+      "obstacles": [
+        { "hex": [2, 2], "model": "crate-stack" },
+        { "hex": [4, -2], "model": "barrel" },
+        { "hex": [2, -1], "model": "barrel" },
+        { "hex": [1, 0], "model": "barrel" },
+        { "hex": [3, 2], "model": "rubble" },
+        { "hex": [5, -2], "model": "crate-stack" }
+      ],
       "doors": [{ "hex": [6, -1], "to": "s10.forge-hall" }],
       "spawns": [
         { "monster": "night-moth", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
@@ -55,7 +62,14 @@
         { "hex": [7, -5], "model": "rubble" },
         { "hex": [14, -2], "model": "rubble" },
         { "hex": [7, 2], "model": "pillar" },
-        { "hex": [14, -9], "model": "pillar" }
+        { "hex": [14, -9], "model": "pillar" },
+        { "hex": [10, -7], "model": "barrel" },
+        { "hex": [11, -7], "model": "barrel" },
+        { "hex": [11, 0], "model": "crate-stack" },
+        { "hex": [12, -8], "model": "rubble" },
+        { "hex": [8, -6], "model": "barrel" },
+        { "hex": [9, 1], "model": "crate-stack" },
+        { "hex": [14, -4], "model": "rubble" }
       ],
       "spawns": [
         { "monster": "hammerfist", "hex": [11, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } }
