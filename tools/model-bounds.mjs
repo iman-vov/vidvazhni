@@ -1,6 +1,7 @@
 // Floor boxes of the prop models: reads each assets/models/<id>/<id>.glb's JSON chunk (POSITION
 // accessor min/max under the node transforms, no textures loaded) and writes
-// src/render/environment/modelBounds.json as id → [minX, maxX, minY, maxY, minZ, maxZ].
+// src/render/environment/modelBounds.json as id → [minX, maxX, minY, maxY, minZ, maxZ] (and, for
+// kits, `<kit>#<node>` per piece).
 // footprint.ts turns them into the floor box a prop model really takes, so placing keeps every
 // model clear of the others and of the walls. Run after adding or replacing a model:
 //   node tools/model-bounds.mjs
@@ -40,7 +41,8 @@ function bounds(file) {
   const buf = readFileSync(file);
   const len = buf.readUInt32LE(12);
   const gltf = JSON.parse(buf.subarray(20, 20 + len).toString('utf8'));
-  const b = [Infinity, -Infinity, Infinity, -Infinity, Infinity, -Infinity];
+  const fresh = () => [Infinity, -Infinity, Infinity, -Infinity, Infinity, -Infinity];
+  let b = fresh();
   const visit = (i, parent) => {
     const node = gltf.nodes[i];
     const m = mul(parent, mat(node));
@@ -64,16 +66,27 @@ function bounds(file) {
   };
   const scene = gltf.scenes[gltf.scene ?? 0];
   const id = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-  for (const n of scene.nodes) visit(n, id);
-  return b.every(Number.isFinite) ? b.map((v) => Math.round(v * 1e4) / 1e4) : null;
+  const round = (x) => (x.every(Number.isFinite) ? x.map((v) => Math.round(v * 1e4) / 1e4) : null);
+  // Each top-level node on its own (a kit's `<kind>_<n>` pieces), then the whole model.
+  const nodes = {};
+  const all = fresh();
+  for (const n of scene.nodes) {
+    b = fresh();
+    visit(n, id);
+    if (gltf.nodes[n].name && round(b)) nodes[gltf.nodes[n].name] = round(b);
+    for (let k = 0; k < 6; k++) all[k] = k % 2 ? Math.max(all[k], b[k]) : Math.min(all[k], b[k]);
+  }
+  return { all: round(all), nodes };
 }
 
 const out = {};
 for (const id of readdirSync(ROOT).sort()) {
   const file = join(ROOT, id, `${id}.glb`);
   if (!existsSync(file)) continue;
-  const b = bounds(file);
-  if (b) out[id] = b;
+  const { all, nodes } = bounds(file);
+  if (all) out[id] = all;
+  // Kits (several pieces in one GLB) also list each piece as `<kit>#<node>`.
+  if (id.endsWith('-kit')) for (const [name, nb] of Object.entries(nodes)) out[`${id}#${name}`] = nb;
 }
 writeFileSync(OUT, JSON.stringify(out, null, 0).replace(/\],/g, '],\n') + '\n');
 console.log(Object.keys(out).length, 'models →', OUT);

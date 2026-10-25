@@ -1,0 +1,211 @@
+diff --git a/src/render/environment/obstacles.ts b/src/render/environment/obstacles.ts
+index 771995e..cd9ac99 100644
+--- a/src/render/environment/obstacles.ts
++++ b/src/render/environment/obstacles.ts
+@@ -47,10 +48,8 @@ export const HEIGHT: Record<string, number> = {
+   'crate-broken': 0.42,
+   table: 0.58,
+-  'long-table': 0.6,
+   stool: 0.38,
+   sack: 0.42,
+   sacks: 0.5,
+   'keg-rack': 0.8,
+-  wagon: 0.72,
+   'obstacle-tree': 1.7,
+   boulder: 0.66,
+@@ -80,6 +79,4 @@ export const HEIGHT: Record<string, number> = {
+  *  circle of the meta radius. */
+ const FOOT: Record<string, [number, number, number, number]> = {
+-  'long-table': [-0.8, 0.8, -0.34, 0.34],
+-  wagon: [-1.2, 0.6, -0.7, 0.42],
+   table: [-0.46, 0.46, -0.32, 0.32],
+   log: [-0.68, 0.68, -0.19, 0.19],
+@@ -180,5 +177,5 @@ const COMPOSITE: Record<string, Spec[]> = {
+     S('crate', { s: SMALL, near: 1, chance: 0.7 }),
+   ],
+-  'long-table': [S('long-table', { along: true }), S('stool', { near: 0 }), S('stool', { near: 0 }), S('stool', { near: 0, tip: 'side' }), S('barrel', { s: [0.62, 0.72], near: 0, chance: 0.6 })],
++  'long-table': [S('long-table', { along: true, s: [0.94, 1.04] }), S('chair', { near: 0, s: [0.94, 1.04] }), S('chair', { near: 0, s: [0.94, 1.04] }), S('chair', { near: 0, tip: 'side', s: [0.94, 1.04] }), S('chair', { near: 0, chance: 0.5, s: [0.94, 1.04] }), S('barrel', { s: [0.62, 0.72], near: 0, chance: 0.6 })],
+   'crate-pile': [
+     S('crate', { s: [1.08, 1.18] }),
+@@ -189,8 +186,8 @@ const COMPOSITE: Record<string, Spec[]> = {
+     S('crate', { s: SMALL, near: 2, tip: 'lean' }),
+   ],
+-  wagon: [S('wagon', { along: true }), S('sacks', { near: 0 }), S('barrel', { s: [0.8, 0.9], near: 0 }), S('crate', { s: SMALL, near: 0, chance: 0.7 })],
++  wagon: [S('cart', { along: true, s: [0.94, 1.04] }), S('sacks', { near: 0 }), S('barrel', { s: [0.8, 0.9], near: 0 }), S('crate', { s: SMALL, near: 0, chance: 0.7 })],
+   'trees-log': [S('obstacle-tree'), S('obstacle-tree', { s: [0.8, 0.92], near: 0 }), S('log', { near: 0, s: [1, 1.1] }), S('fern', { near: 1 }), S('mushrooms', { near: 2 })],
+   outcrop: [S('boulder', { s: [1.2, 1.3] }), S('boulder', { s: [0.85, 0.95], near: 0 }), S('boulder', { s: [0.55, 0.65], near: 1 }), S('boulder', { s: [0.32, 0.4], near: 0 }), S('boulder', { s: [0.28, 0.36], near: 2 })],
+-  yard: [S('hut', { centre: true }), S('wagon', { along: true }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.72, 0.82], near: 1 }), S('sacks', { s: [0.7, 0.8], near: 1 })],
++  yard: [S('hut', { centre: true }), S('cart', { along: true, s: [0.94, 1.04] }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.72, 0.82], near: 1 }), S('sacks', { s: [0.7, 0.8], near: 1 })],
+ };
+ 
+@@ -288,13 +291,32 @@ interface Placed {
+ }
+ 
+-function footprint(piece: string, scale: number, tip: ClusterItem['tip']): [number, number, number, number] {
++/** Set pieces modelled in Blender (assets/models/cluster-kit, art/blender/cluster-kit/cluster_kit.py):
++ *  `<kind>_<n>` nodes at life size, KIT_VARIANTS each, drawn from the kit with no stand-in. */
++export const CLUSTER_KIT = 'cluster-kit';
++const KIT_PIECES: ReadonlySet<string> = new Set(['long-table', 'chair', 'cart']);
++const KIT_VARIANTS = 4;
++const BOUNDS = MODEL_BOUNDS as Record<string, number[]>;
++
++/** A kit piece's variant bounds [minX, maxX, minY, maxY, minZ, maxZ] at scale 1 (tools/model-bounds.mjs). */
++function kitBounds(piece: string, variant = 0): number[] | undefined {
++  return BOUNDS[`${CLUSTER_KIT}#${piece}_${(variant % KIT_VARIANTS) + 1}`];
++}
++
++/** Height of a piece in a cluster at scale 1 (a kit piece's own, else the nominal one). */
++function heightOf(piece: string, variant?: number): number {
++  const kb = KIT_PIECES.has(piece) ? kitBounds(piece, variant) : undefined;
++  return kb ? kb[3]! : (HEIGHT[piece] ?? pieceMeta(piece)?.height ?? 1);
++}
++
++function footprint(piece: string, scale: number, tip: ClusterItem['tip'], variant?: number): [number, number, number, number] {
+   const meta = pieceMeta(piece);
+-  const k = (HEIGHT[piece] ?? meta?.height ?? 1) / (meta?.height ?? 1);
++  const kb = KIT_PIECES.has(piece) ? kitBounds(piece, variant) : undefined;
++  const k = kb ? 1 : (HEIGHT[piece] ?? meta?.height ?? 1) / (meta?.height ?? 1);
+   const r = meta?.radius ?? 0.4;
+-  const [x0, x1, z0, z1] = FOOT[piece] ?? [-r, r, -r, r];
++  const [x0, x1, z0, z1] = kb ? [kb[0]!, kb[1]!, kb[4]!, kb[5]!] : (FOOT[piece] ?? [-r, r, -r, r]);
+   const s = k * scale;
+   if (tip === 'side') {
+     // Tipped over onto its side (about local X): its height now lies along Z, centred.
+-    const h = (HEIGHT[piece] ?? meta?.height ?? 1) * scale;
++    const h = heightOf(piece, variant) * scale;
+     const w = ((z1 - z0) * s) / 2;
+     return [x0 * s, x1 * s, -Math.max(h / 2, w), Math.max(h / 2, w)];
+@@ -432,5 +457,5 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
+       const [q, r] = parseHexKey(key);
+       const c = hexToWorld(q, r);
+-      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: (HEIGHT[p.piece] ?? pieceMeta(p.piece)?.height ?? 1) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
++      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
+     };
+     // A stacked item goes with the hex of the one it stands on.
+@@ -469,13 +494,14 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number;
+     const lean = tip === 'lean' ? between(rnd, [0.14, 0.26]) : 0;
+     const leanDir = rnd() * Math.PI * 2;
+-    const box = footprint(spec.p, scale, tip);
+-    const h = (HEIGHT[spec.p] ?? pieceMeta(spec.p)?.height ?? 1) * scale;
++    const variant = KIT_PIECES.has(spec.p) ? Math.floor(rnd() * KIT_VARIANTS) : undefined;
++    const box = footprint(spec.p, scale, tip, variant);
++    const h = heightOf(spec.p, variant) * scale;
+     if (spec.on !== undefined) {
+       const base = placed[placedIndex(placed, recipe, spec.on)];
+       if (!base) continue;
+-      const top = base.tip === 'side' ? (base.box[1] - base.box[0]) * 0.95 : (HEIGHT[base.piece] ?? 0.5) * base.scale * 0.97;
++      const top = base.tip === 'side' ? (base.box[1] - base.box[0]) * 0.95 : heightOf(base.piece, base.variant) * base.scale * 0.97;
+       const a = rnd() * Math.PI * 2;
+       const d = between(rnd, [0.03, 0.09]);
+-      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot: base.rot + between(rnd, [-0.7, 0.7]), scale, tip, lean, leanDir, box });
++      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot: base.rot + between(rnd, [-0.7, 0.7]), scale, tip, lean, leanDir, box, variant });
+       continue;
+     }
+@@ -516,5 +542,5 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number;
+         if (!placed.length && centres.length === 1 && d < 0.12) continue;
+       }
+-      const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box };
++      const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box, variant };
+       if (!outline(cand, strict ? 0.04 : 0.02).every((v) => regionHas(v.x, v.z))) continue;
+       if (placed.some((p) => p.y === 0 && overlaps(p, cand, strict ? 0.02 : 0.08))) continue;
+@@ -584,4 +610,6 @@ export interface ClusterContext {
+   /** The Blender scatter kit's shapes by node name (`chips_1`…). */
+   loadKit(): Promise<Map<string, Part[]>>;
++  /** The Blender cluster kit's set pieces by node name (`long-table_1`…). */
++  loadClusterKit(): Promise<Map<string, Part[]>>;
+   /** Contact shadow under an item of a footprint radius. */
+   shadow(radius: number): THREE.Object3D | null;
+@@ -614,5 +641,6 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
+     tilt.add(body);
+     holder.add(tilt);
+-    const placeholder = ctx.makePiece(it.piece);
++    const kitPiece = KIT_PIECES.has(it.piece);
++    const placeholder = kitPiece ? null : ctx.makePiece(it.piece);
+     const meta = pieceMeta(it.piece);
+     if (placeholder && meta) {
+@@ -620,7 +648,29 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
+       body.add(placeholder);
+     }
++    if (kitPiece) {
++      // A Blender kit piece at life size: shown once the kit has loaded, in the location's colours.
++      void ctx.loadClusterKit().then((kit) => {
++        const parts = kit.get(`${it.piece}_${((it.variant ?? 0) % KIT_VARIANTS) + 1}`);
++        if (!parts || !ctx.alive() || !body.parent) return;
++        const group = new THREE.Group();
++        for (const part of parts) {
++          const key = typeof part.material === 'string' ? part.material : part.material.name;
++          const g = part.geometry;
++          if (!g.getAttribute('color')) g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 3).fill(1), 3));
++          const mesh = new THREE.Mesh(g, ctx.material((key in PALETTE_DEFAULTS ? key : 'wood') as MaterialKey));
++          mesh.applyMatrix4(part.matrix);
++          mesh.castShadow = true;
++          mesh.receiveShadow = true;
++          group.add(mesh);
++        }
++        group.scale.setScalar(it.scale);
++        body.add(group);
++        settle(tilt, it.tip === 'side');
++        ctx.onChange();
++      });
++    }
+     settle(tilt, it.tip === 'side');
+     if (it.y === 0) {
+-      const box = footprint(it.piece, it.scale, it.tip);
++      const box = footprint(it.piece, it.scale, it.tip, it.variant);
+       const blob = ctx.shadow(Math.max(box[1] - box[0], box[3] - box[2]) / 2);
+       if (blob) {
+@@ -631,5 +681,5 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
+     root.add(holder);
+     const nominal = HEIGHT[it.piece] ?? meta?.height ?? 1;
+-    const spec = ctx.propSpec(it.piece, nominal);
++    const spec = kitPiece ? null : ctx.propSpec(it.piece, nominal);
+     if (spec) {
+       void ctx.loadProp({ ...spec, height: nominal }).then((model) => {
+diff --git a/src/render/environment/pieces.ts b/src/render/environment/pieces.ts
+index 34c3736..dbf6214 100644
+--- a/src/render/environment/pieces.ts
++++ b/src/render/environment/pieces.ts
+@@ -1505,43 +1505,4 @@ const PIECES: Record<string, PieceDef> = {
+     },
+   },
+-
+-  // Set pieces of obstacle clusters that span two hexes (obstacles.ts), along X.
+-  'long-table': {
+-    kind: 'prop',
+-    height: 0.75,
+-    radius: 0.8,
+-    build: (b) => {
+-      // Planks of slightly different shades, two trestles, a cloth runner, a jug and a mug.
+-      for (let i = 0; i < 4; i++) b.box(i % 2 ? 'woodLight' : 'wood', [1.56, 0.07, 0.16], [0.01 * (i % 2), 0.68, -0.25 + i * 0.165], [0, 0.004 * (i - 1.5), 0]);
+-      for (const x of [-0.58, 0.58]) {
+-        b.box('woodDark', [0.08, 0.62, 0.5], [x, 0.31, 0], [0, 0, 0]);
+-        b.box('woodDark', [0.1, 0.06, 0.6], [x, 0.03, 0]);
+-      }
+-      b.box('woodDark', [1.1, 0.06, 0.06], [0, 0.2, 0]);
+-      b.box('cloth', [0.7, 0.012, 0.24], [0.15, 0.72, -0.02], [0, 0.05, 0], true);
+-      b.cyl('clothDark', 0.07, 0.06, 0.18, 7, [-0.42, 0.715, 0.08], [0, 0, 0], true);
+-      b.cyl('wood', 0.04, 0.035, 0.08, 6, [0.35, 0.715, 0.12], [0, 0, 0], true);
+-      b.cyl('wood', 0.04, 0.035, 0.08, 6, [0.5, 0.715, -0.14], [0, 0, 0], true);
+-    },
+-  },
+-  wagon: {
+-    kind: 'prop',
+-    height: 0.8,
+-    radius: 0.8,
+-    build: (b) => {
+-      // A farm cart with its shafts down to the floor, a wheel off and leaning on it.
+-      b.box('wood', [1.1, 0.06, 0.62], [0, 0.36, 0]);
+-      for (const z of [-0.31, 0.31]) b.box('woodDark', [1.1, 0.22, 0.04], [0, 0.48, z]);
+-      for (const x of [-0.55, 0.55]) b.box('woodDark', [0.04, 0.22, 0.62], [x, 0.48, 0]);
+-      b.box('woodDark', [0.08, 0.08, 0.66], [0.1, 0.3, 0]);
+-      b.add(new THREE.TorusGeometry(0.28, 0.035, 4, 12), 'woodDark', [0.1, 0.28, 0.36]);
+-      for (let i = 0; i < 4; i++) b.box('wood', [0.5, 0.03, 0.03], [0.1, 0.28, 0.36], [0, 0, (i * Math.PI) / 4], true);
+-      // The far wheel is off: it lies flat on the floor, half under the bed, the axle propped on a block.
+-      b.add(new THREE.TorusGeometry(0.28, 0.035, 4, 12), 'woodDark', [0.15, 0.035, -0.42], [Math.PI / 2, 0, 0]);
+-      b.box('woodDark', [0.16, 0.26, 0.16], [0.1, 0.13, -0.24]);
+-      for (const z of [-0.2, 0.2]) b.box('woodDark', [0.75, 0.05, 0.05], [-0.88, 0.2, z], [0, 0, 0.42]);
+-      b.box('straw', [0.5, 0.08, 0.4], [0.2, 0.43, 0.02], [0, 0.2, 0], true);
+-    },
+-  },
+ };
+ 
