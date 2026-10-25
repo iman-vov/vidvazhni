@@ -31,13 +31,10 @@ import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SP
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
-import { buildNatural, naturalEdge, type TintedPlacement } from './thicket';
 import { stoneLook, stoneParts, type StoneEnv } from './stone';
 import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
 import { pieceBox } from './footprint';
-import { buildScatter, planScatter, SCATTER_KIT, scatterProfile, scatterProto, type ScatterBuild } from './scatter';
-import { onFloorDetailChange } from '../floorDetail';
-import { buildMarsh, isMarsh, MARSH_COLOURS, MARSH_KIT, marshKitReady, planMarsh, wetness, wetRock, type MarshBuild, type MarshSpot } from './marsh';
+import { buildScatter, planScatter, scatterProfile } from './scatter';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
@@ -63,6 +60,7 @@ const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 
 /** The map edge style a room boundary stands for (outdoor rooms close with plants, caves with rock). */
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
+/** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 /** The wall between rooms per divider style (pieces.ts ids, replaceable by an art kit like the rest). */
 export const DIVIDER_PIECES: Record<DividerStyle, string> = {
   stone: 'divider-stone',
@@ -90,9 +88,6 @@ const DIVIDERS: Record<string, DividerStyle> = {
 };
 /** Divider by edge style, for a location not listed and for a room with an edge of its own. */
 const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick' };
-/** Pieces that look wet beside marsh water. */
-const WET_PIECES = /rock|boulder|stone|log|stump|roots/;
-const wc = new THREE.Color();
 const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge']);
 
 /**
@@ -106,7 +101,6 @@ export function dividerFor(def: Pick<EnvironmentDef, 'id' | 'edge' | 'rooms' | '
   return indoor ? EDGE_DIVIDER[indoor] : own;
 }
 
-/** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
   barrel: { piece: 'barrel', scale: 1.04 },
   crate: { piece: 'crate', scale: 1.3 },
@@ -191,16 +185,6 @@ export class BoardEnvironment {
   /** Hexes with an obstacle, door, object or trap: the small-things layer keeps off them. */
   private busy = new Set<HexKey>();
   private clusterShadow: THREE.MeshBasicMaterial | null = null;
-  /** The small-things layer, rebuilt alone when the floor-detail setting changes. */
-  private scatter: ScatterBuild | null = null;
-  /** Bumped per small-things build: a kit load for an older one is dropped. */
-  private scatterGen = 0;
-  /** Marsh growth (marsh.ts): its Blender kit once loaded, the placements before it took the old
-   *  plant pieces (for re-planning when the floor detail changes), its spots and its layer. */
-  private marshKit: ReadonlyMap<string, readonly Part[]> | null = null;
-  private marshBase: Placement[] = [];
-  private marshSpots: MarshSpot[] = [];
-  private marsh: MarshBuild | null = null;
   private partitionLines: Partition[] = [];
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
@@ -211,12 +195,6 @@ export class BoardEnvironment {
     this.root.name = 'environment';
     // The location's floor is the board's floor: everything stands on the hexes' level.
     this.root.position.y = PLATE_HEIGHT;
-    onFloorDetailChange(() => {
-      if (!this.layout) return;
-      this.buildScatter();
-      this.buildMarsh(true);
-      this.onChange();
-    });
   }
 
   /** Builds the location for a scenario (all its rooms); rooms in `revealed` are clear of the veil.
@@ -243,7 +221,6 @@ export class BoardEnvironment {
     this.loadToken++;
     this.rebuild();
     this.loadKit();
-    this.loadMarsh();
     this.loadPropModels();
   }
 
@@ -255,7 +232,6 @@ export class BoardEnvironment {
     this.propProtos.clear();
     this.rebuild();
     this.loadKit();
-    this.loadMarsh();
     this.loadPropModels();
   }
 
@@ -560,9 +536,6 @@ export class BoardEnvironment {
   private clear(): void {
     this.root.clear();
     for (const d of this.disposables) d.dispose();
-    this.scatter = null;
-    this.scatterGen++;
-    this.marsh = null;
     this.disposables = [];
     this.materials.clear();
     this.morok = null;
@@ -599,14 +572,9 @@ export class BoardEnvironment {
     setWaterLook(outputColor(def.light.sky), waterFlow(layout), def.ground.waterFlow === 'flowing');
 
     this.buildGround(def);
-    const partitions = this.partitionLines.map((p) => p.points);
-    // Forest edges grow into a thicket and lone trees into groves (thicket.ts).
-    this.marshBase = naturalEdge(layout, def, this.quality, planEnvironment(layout, def, this.quality, partitions), partitions);
-    // Marsh plants take the place of the old reed and lily pieces once their kit is in (marsh.ts).
-    this.placements = this.planMarsh(false);
+    this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
     this.buildPieces(q.shadows);
     this.buildScatter();
-    this.buildMarsh(false);
     this.buildLights(q.lights);
     this.buildAtmosphere();
     if (q.wisps > 0) {
@@ -715,7 +683,6 @@ export class BoardEnvironment {
     let parts = cache.get(key);
     if (!parts) {
       parts = buildPiece(piece, { height });
-      if (!parts.length) parts = buildNatural(piece, { height });
       cache.set(key, parts);
     }
     return parts;
@@ -754,9 +721,6 @@ export class BoardEnvironment {
       const parts = (stoneParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.stoneEnv) ?? this.partsFor(p.piece, p.height, cache)).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
       // A painted variation per piece and a darker foot (cheap baked occlusion).
       const tint = 0.86 + rnd() * 0.24;
-      const hue = (p as TintedPlacement).tint ?? [1, 1, 1];
-      // Rocks and logs by the marsh water: wet, dark low down, algae at the water line (marsh.ts).
-      const wet = this.marshKit && this.field && WET_PIECES.test(p.piece) ? wetness(this.field, p.x, p.z) : 0;
       for (const part of parts) {
         if (low && part.detail) continue;
         const g = part.geometry.clone();
@@ -764,18 +728,10 @@ export class BoardEnvironment {
         const pos = g.getAttribute('position');
         const colors = new Float32Array(pos.count * 3);
         const lit = typeof part.material !== 'string' || !UNLIT.has(part.material);
-        // A part painted with colours of its own (thicket.ts) keeps them under the tints.
-        const own = part.geometry.getAttribute('color');
-        const nrm = g.getAttribute('normal');
         for (let i = 0; i < pos.count; i++) {
           const foot = lit ? 0.6 + 0.4 * Math.min(1, Math.max(0, pos.getY(i) / 0.55)) : 1;
           const c = (lit ? tint : 1) * foot;
-          for (let k = 0; k < 3; k++) colors[i * 3 + k] = c * (lit ? hue[k]! : 1) * (own ? own.getComponent(i, k) : 1);
-          if (wet > 0.05 && lit) {
-            wc.fromArray(colors, i * 3);
-            wetRock(wc, pos.getY(i), nrm ? nrm.getY(i) : 1, wet);
-            wc.toArray(colors, i * 3);
-          }
+          colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = c;
         }
         g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
@@ -804,53 +760,6 @@ export class BoardEnvironment {
     this.buildModelled(modelled, shadows);
     this.buildBlobs(blobs);
   }
-
-  /** Loads the marsh kit for a marsh location (marsh.ts); the location rebuilds with it. */
-  private loadMarsh(): void {
-    const def = this.def;
-    this.marshKit = null;
-    if (!def || !isMarsh(def) || !listModels().includes(MARSH_KIT)) return;
-    const token = this.loadToken;
-    void loadLocationKit(MARSH_KIT, this.quality).then((kit) => {
-      if (token !== this.loadToken || !marshKitReady(kit)) return;
-      this.marshKit = kit;
-      this.rebuild();
-    });
-  }
-
-  /** Plans the marsh over `marshBase`: its spots, and the placements left for buildPieces. */
-  private planMarsh(keep: boolean): Placement[] {
-    if (!this.marshKit || !this.def || !this.field) {
-      this.marshSpots = [];
-      return this.marshBase;
-    }
-    const plan = planMarsh({ layout: this.layout!, def: this.def, field: this.field, quality: this.quality, placements: this.marshBase });
-    this.marshSpots = plan.spots;
-    return keep ? this.placements : plan.placements;
-  }
-
-  /** Draws the marsh spots (re-planned first when the floor detail changed). */
-  private buildMarsh(replan: boolean): void {
-    if (this.marsh) {
-      this.marsh.root.removeFromParent();
-      this.marsh.dispose();
-      this.disposables = this.disposables.filter((d) => d !== this.marsh);
-      this.marsh = null;
-    }
-    if (replan) this.planMarsh(true);
-    if (!this.marshKit || !this.marshSpots.length) return;
-    const proto = scatterProto(this.quality, false);
-    const built = buildMarsh(
-      this.marshSpots,
-      this.marshKit,
-      (key) => new THREE.Color(key in PALETTE_DEFAULTS ? this.palette(key as MaterialKey) : (MARSH_COLOURS[key] ?? this.palette('reed'))),
-      (look) => (look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto)),
-    );
-    this.root.add(built.root);
-    this.disposables.push(built);
-    this.marsh = built;
-  }
-
 
   /** A material bending in the wind (life.ts) for the swaying parts of plants and banners. */
   private swayMaterial(key: MaterialKey | THREE.Material, spec: SwaySpec): THREE.Material {
@@ -979,40 +888,17 @@ export class BoardEnvironment {
   /** Pebbles, tufts, candle stubs, bones, ore… in clumps over the floor (see scatter.ts). */
   private buildScatter(): void {
     const def = this.def!;
-    if (this.scatter) {
-      this.scatter.root.removeFromParent();
-      this.scatter.dispose();
-      this.disposables = this.disposables.filter((d) => d !== this.scatter);
-      this.scatter = null;
-    }
     const spots = planScatter({
       layout: this.layout!,
-      profile: scatterProfile(def.id, def.edge, def.season),
-      def,
+      profile: scatterProfile(def.id, def.edge),
       quality: this.quality,
       busy: this.busy,
       placements: this.placements,
       partitions: this.partitionLines.map((p) => p.points),
     });
-    // The shapes come from the Blender kit; the layer appears once it has loaded.
-    const gen = ++this.scatterGen;
-    const quality = this.quality;
-    void loadLocationKit(SCATTER_KIT, quality).then((kit) => {
-      if (gen !== this.scatterGen || !this.layout) return;
-      const built = buildScatter(
-        spots,
-        kit,
-        (key) => new THREE.Color(this.palette(key)),
-        (look) => {
-          const proto = scatterProto(quality, look.unlit);
-          return !look.unlit && look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto);
-        },
-      );
-      this.root.add(built.root);
-      this.disposables.push(built);
-      this.scatter = built;
-      this.onChange();
-    });
+    const built = buildScatter(spots, (key, sway) => (sway ? this.swayMaterial(key, { amp: sway }) : this.material(key)));
+    this.root.add(built.root);
+    this.disposables.push(built);
   }
 
   /** Dirt on the floor, dressing on the walls, warm pools under the flames (see decals.ts). */
