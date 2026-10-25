@@ -49,6 +49,40 @@ export const MARSH_KINDS = Object.keys(KINDS) as MarshKind[];
 /** Water surface height (index.ts lays the water plane there). */
 const WATER_Y = 0.04;
 
+/**
+ * Spots for a reed wall on edge frames (origin on the edge, X along it): three low clumps per
+ * frame, a little in front of and behind the line, seeded by the wall's name.
+ */
+export function reedRow(frames: readonly THREE.Matrix4[], low: boolean, seed: string): MarshSpot[] {
+  const rnd = seededRandom(`reed-row:${seed}`);
+  const spots: MarshSpot[] = [];
+  const p = new THREE.Vector3();
+  const q = new THREE.Quaternion();
+  const s = new THREE.Vector3();
+  const e = new THREE.Euler();
+  for (const frame of frames) {
+    frame.decompose(p, q, s);
+    const yaw = e.setFromQuaternion(q, 'YXZ').y;
+    for (const along of [-0.34, 0, 0.34]) {
+      const v = new THREE.Vector3(along + (rnd() - 0.5) * 0.12, 0, (rnd() - 0.5) * 0.16).applyMatrix4(frame);
+      const g = 0.86 + rnd() * 0.24;
+      const dry = rnd();
+      spots.push({
+        kind: 'reeds-low',
+        x: v.x,
+        z: v.z,
+        y: v.y,
+        rot: yaw + rnd() * Math.PI * 2,
+        scale: (low ? 0.6 : 0.9) + rnd() * 0.3,
+        variant: Math.floor(rnd() * KINDS['reeds-low'].variants),
+        tint: [g * (1 + dry * 0.12), g * (1 - dry * 0.04), g * (1 - dry * 0.1)],
+        room: null,
+      });
+    }
+  }
+  return spots;
+}
+
 /** Locations that grow marsh. */
 export function isMarsh(def: EnvironmentDef): boolean {
   return def.edge === 'shore' || ((def.ground.water ?? 0) > 0 && !!def.palette?.reed);
@@ -372,14 +406,15 @@ export function wetness(field: Field, x: number, z: number): number {
 /** Re-paints a rock vertex for the marsh: dark and glistening low down, algae at the water line,
  *  greener moss on top. `y` is the height above the floor, `ny` the normal's up part. */
 export function wetRock(c: THREE.Color, y: number, ny: number, wet: number): void {
+  // Multiplies only: the kit's painted stone and moss stay, darker and duller by the water.
   const band = Math.min(1, Math.max(0, 1 - y / (0.1 + wet * 0.18)));
-  c.multiplyScalar(1 - band * (0.25 + wet * 0.3));
-  // Algae: a green-brown tide line at the water.
+  c.multiplyScalar((1 - band * (0.25 + wet * 0.3)) * (1 - wet * 0.12));
+  // Algae: a dark olive tide line at the water.
   const algae = Math.max(0, 1 - Math.abs(y - WATER_Y - 0.03) / 0.05) * wet;
-  c.lerp(ALGAE, algae * 0.55);
-  // Moss creeps over the tops of stones near water.
-  if (ny > 0.55) c.lerp(MOSS, Math.min(1, (ny - 0.55) * 2.2) * (0.25 + wet * 0.35));
+  c.multiply(tmp.setRGB(1 - algae * 0.3, 1 - algae * 0.18, 1 - algae * 0.45));
+  // Tops (moss) toward dark olive rather than lime.
+  const top = Math.min(1, Math.max(0, (ny - 0.4) * 2)) * (0.55 + wet * 0.3);
+  c.multiply(tmp.setRGB(1 - top * 0.3, 1 - top * 0.4, 1 - top * 0.32)).multiplyScalar(0.9);
 }
-const ALGAE = new THREE.Color('#4a5a2a');
-const MOSS = new THREE.Color('#5d7a34');
+const tmp = new THREE.Color();
 
