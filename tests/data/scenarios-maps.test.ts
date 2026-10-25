@@ -57,8 +57,8 @@ describe('scenario files', () => {
 const TABLES: Record<string, Record<string, Record<string, string>>> = {
   s2: {
     's2.forest-edge': { 'grey-wolf': '1+0 / 1+1 / 2+1', thornling: '2+0 / 2+1 / 3+1' },
-    's2.ravine': { 'grey-wolf': '1+0 / 1+1 / 2+1', thornling: '1+0 / 1+0 / 1+0' },
-    's2.lodge': { 'bandit-brute': '1+0 / 0+1 / 1+0', 'grey-wolf': '1+0 / 1+0 / 0+1' },
+    's2.ravine': { 'grey-wolf': '2+0 / 2+0 / 2+1', thornling: '0+0 / 1+0 / 1+0' },
+    's2.lodge': { 'bandit-brute': '1+0 / 0+1 / 1+0', 'grey-wolf': '0+0 / 1+0 / 0+1' },
   },
   s3: {
     's3.yard': { 'bandit-crossbow': '1+0 / 1+1 / 1+1', 'bandit-brute': '1+0 / 1+1 / 2+1' },
@@ -67,7 +67,7 @@ const TABLES: Record<string, Record<string, Record<string, string>>> = {
   },
   s4: {
     's4.gate': { 'stone-sentinel': '1+0 / 1+0 / 1+0', gremlin: '0+0 / 1+0 / 1+1' },
-    's4.barracks': { 'gloom-cultist': '2+0 / 2+0 / 2+0', 'stone-sentinel': '0+0 / 0+0 / 1+0', gremlin: '1+0 / 1+0 / 1+0' },
+    's4.barracks': { 'gloom-cultist': '2+0 / 2+0 / 2+0', 'stone-sentinel': '0+0 / 0+0 / 1+0', gremlin: '0+0 / 1+0 / 1+0' },
     's4.upper-tier': { 'shadow-wraith': '2+0 / 3+0 / 4+0', 'stone-sentinel': '0+0 / 1+0 / 0+1' },
   },
   s5: {

@@ -56,8 +56,8 @@
       "doors": [{ "hex": [13, -3], "to": "s2.lodge" }],
       "spawns": [
         { "monster": "grey-wolf", "hex": [9, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "thornling", "hex": [9, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } },
-        { "monster": "grey-wolf", "hex": [12, -3], "by": { "3": "elite", "4": "normal" } },
+        { "monster": "grey-wolf", "hex": [9, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "thornling", "hex": [12, -3], "by": { "3": "normal", "4": "normal" } },
         { "monster": "grey-wolf", "hex": [12, -2], "by": { "4": "elite" } }
       ]
     },
@@ -76,7 +76,7 @@
       ],
       "spawns": [
         { "monster": "bandit-brute", "hex": [16, -5], "by": { "2": "normal", "3": "elite", "4": "normal" } },
-        { "monster": "grey-wolf", "hex": [16, -4], "by": { "2": "normal", "3": "normal", "4": "elite" } }
+        { "monster": "grey-wolf", "hex": [16, -4], "by": { "3": "normal", "4": "elite" } }
       ],
       "coins": [[14, -5]]
     }
