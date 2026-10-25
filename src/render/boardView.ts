@@ -368,11 +368,14 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       const centre = sun.target.position;
       lampLights = tier.lamps > 0 ? setupLampShadows(scene, tier.lamps, centre) : [];
       markLampCasters(scene, isFigurePart);
+      // A lamp new to shadows draws its map at once (setupLampShadows asks for it), from the static things.
+      if (lampLights.some((l) => l.shadow.needsUpdate)) redrawLamps();
       // Lamp maps are redrawn once things settle (models keep loading for a while after a build).
       if (lampLights.length && !lampTimer) {
         lampTimer = setTimeout(() => {
           lampTimer = 0;
-          for (const l of lampLights) l.shadow.needsUpdate = true;
+          if (disposed) return;
+          redrawLamps();
           requestRender();
         }, LAMP_DELAY);
       }
@@ -387,6 +390,23 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       bakeShadows();
       requestRender();
     }, BAKE_DELAY);
+  }
+
+  const lampTarget = new THREE.WebGLRenderTarget(1, 1);
+
+  /** Draws the lamps' shadow maps from the static things only, in a render of its own with the
+   *  figures hidden: three tests the main camera's layers in the shadow pass, so LAMP_LAYER alone
+   *  would draw every figure six times per lamp and freeze their silhouettes into the kept maps.
+   *  The sun's map is drawn again with the figures in the next frame. */
+  function redrawLamps(): void {
+    const shown = [...figures.values()].filter((fv) => fv.root.visible);
+    for (const fv of shown) fv.root.visible = false;
+    for (const l of lampLights) l.shadow.needsUpdate = true;
+    const target = renderer.getRenderTarget();
+    renderer.setRenderTarget(lampTarget);
+    renderer.render(scene, camera.camera);
+    renderer.setRenderTarget(target);
+    for (const fv of shown) fv.root.visible = true;
   }
 
   /** Low level: draws the static things' shadows and occlusion into the floor decal once. */
@@ -1659,6 +1679,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     envTexture?.dispose();
     overlay.dispose();
     post.dispose();
+    lampTarget.dispose();
     renderer.dispose();
     root.remove();
     hexListeners.clear();
