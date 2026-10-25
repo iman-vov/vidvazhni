@@ -469,12 +469,24 @@ export type EventAction =
 
 export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';
 
+/** Where an item comes from (docs/design/items.md); only `shop` items are sold. */
+export interface ItemSource {
+  type: 'shop' | 'chest' | 'drop' | 'boss' | 'secret' | 'gift';
+  /** Scenario id; the monster id for `drop`. */
+  at?: string;
+}
+
 export interface ItemDef {
   id: string;
   slot: ItemSlot;
+  /** Group of a small item. */
+  kind?: 'potion' | 'throwable' | 'charm' | 'dice';
+  rarity?: 'common' | 'rare' | 'legendary';
   price: number;
   /** 0 = in the shop from the start; N = after scenario N. */
   unlockedAfter: number;
+  /** Absent = `shop`. */
+  source?: ItemSource;
   /** `spent` is restored by a long rest, `lost` after the scenario, `passive` is always on. */
   use: 'spent' | 'lost' | 'passive';
   effect: Step[];

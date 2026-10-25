@@ -390,8 +390,20 @@
     "properties": {
       "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
       "slot": { "enum": ["head", "body", "legs", "hand", "twoHands", "small"] },
+      "kind": { "description": "Group of a small item (docs/design/items.md).", "enum": ["potion", "throwable", "charm", "dice"] },
+      "rarity": { "enum": ["common", "rare", "legendary"] },
       "price": { "type": "integer", "minimum": 1 },
       "unlockedAfter": { "type": "integer", "minimum": 0 },
+      "source": {
+        "description": "Where the item comes from; only `shop` items are sold. `at`: scenario id, or the monster id for `drop`.",
+        "type": "object",
+        "properties": {
+          "type": { "enum": ["shop", "chest", "drop", "boss", "secret", "gift"] },
+          "at": { "type": "string", "minLength": 1 }
+        },
+        "required": ["type"],
+        "additionalProperties": false
+      },
       "use": { "enum": ["spent", "lost", "passive"] },
       "effect": { "$ref": "#/definitions/steps" },
       "forkEffect": { "$ref": "#/definitions/steps" },
@@ -407,7 +419,7 @@
         "additionalProperties": false
       }
     },
-    "required": ["id", "slot", "price", "unlockedAfter", "use", "effect"],
+    "required": ["id", "slot", "rarity", "price", "unlockedAfter", "source", "use", "effect"],
     "additionalProperties": false
   },
   "minItems": 1

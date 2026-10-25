@@ -2,8 +2,10 @@
   {
     "id": "leather-helmet",
     "slot": "head",
+    "rarity": "common",
     "price": 20,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }],
     "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
@@ -11,8 +13,10 @@
   {
     "id": "chainmail",
     "slot": "body",
+    "rarity": "common",
     "price": 25,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }],
     "upgrade": { "price": 25, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
@@ -20,8 +24,10 @@
   {
     "id": "swift-boots",
     "slot": "legs",
+    "rarity": "common",
     "price": 20,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 2 } }],
     "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "moveBonus", "params": { "value": 3 } }] }
@@ -29,8 +35,10 @@
   {
     "id": "dagger",
     "slot": "hand",
+    "rarity": "common",
     "price": 15,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 1 } }],
     "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 2 } }] }
@@ -38,8 +46,10 @@
   {
     "id": "buckler",
     "slot": "hand",
+    "rarity": "common",
     "price": 20,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }],
     "upgrade": { "price": 20, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
@@ -47,8 +57,11 @@
   {
     "id": "healing-potion",
     "slot": "small",
+    "kind": "potion",
+    "rarity": "common",
     "price": 10,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "heal", "value": 3, "target": "self" }],
     "upgrade": { "price": 10, "effect": [{ "type": "heal", "value": 4, "target": "self" }] }
@@ -56,8 +69,11 @@
   {
     "id": "strength-potion",
     "slot": "small",
+    "kind": "potion",
+    "rarity": "common",
     "price": 15,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }],
     "upgrade": { "price": 15, "effect": [{ "type": "condition", "condition": "strengthen", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
@@ -65,8 +81,11 @@
   {
     "id": "grappling-rope",
     "slot": "small",
+    "kind": "charm",
+    "rarity": "common",
     "price": 15,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "jumpOnMove" }],
     "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "jumpOnMove" }, { "type": "special", "name": "moveBonus", "params": { "value": 1 } }] }
@@ -74,8 +93,11 @@
   {
     "id": "light-amulet",
     "slot": "small",
+    "kind": "charm",
+    "rarity": "rare",
     "price": 30,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "infuse", "element": "light" }],
     "forkEffect": [{ "type": "infuse", "element": "earth" }],
@@ -84,8 +106,10 @@
   {
     "id": "shadow-cloak",
     "slot": "body",
+    "rarity": "rare",
     "price": 40,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }],
     "upgrade": { "price": 40, "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
@@ -93,8 +117,10 @@
   {
     "id": "yew-bow",
     "slot": "twoHands",
+    "rarity": "rare",
     "price": 35,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "passive",
     "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 1 } }],
     "upgrade": { "price": 35, "effect": [{ "type": "special", "name": "rangedRangeBonus", "params": { "value": 2 } }] }
@@ -102,20 +128,22 @@
   {
     "id": "heavy-armor",
     "slot": "body",
+    "rarity": "rare",
     "price": 45,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "passive",
-    "effect": [
-      { "type": "shield", "value": 1, "target": "self", "duration": "persistent" },
-      { "type": "special", "name": "movePenalty", "params": { "value": 1 } }
-    ],
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "persistent" }, { "type": "special", "name": "movePenalty", "params": { "value": 1 } }],
     "upgrade": { "price": 45, "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "persistent" }] }
   },
   {
     "id": "hourglass",
     "slot": "small",
+    "kind": "dice",
+    "rarity": "common",
     "price": 15,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "initiativeReroll" }],
     "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "initiativeReroll", "params": { "times": 2 } }] }
@@ -123,8 +151,11 @@
   {
     "id": "agility-potion",
     "slot": "small",
+    "kind": "potion",
+    "rarity": "common",
     "price": 10,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "special", "name": "initiativeDieOne" }],
     "upgrade": { "price": 10, "effect": [{ "type": "special", "name": "initiativeDieOne" }, { "type": "heal", "value": 2, "target": "self" }] }
@@ -132,8 +163,11 @@
   {
     "id": "partner-whistle",
     "slot": "small",
+    "kind": "charm",
+    "rarity": "common",
     "price": 20,
     "unlockedAfter": 0,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "initiativeSwap" }],
     "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "initiativeSwap" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
@@ -141,8 +175,10 @@
   {
     "id": "quiet-boots",
     "slot": "legs",
+    "rarity": "common",
     "price": 20,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "initiativeShift", "params": { "value": 10 } }],
     "upgrade": { "price": 20, "effect": [{ "type": "special", "name": "initiativeShift", "params": { "value": 15 } }] }
@@ -150,8 +186,11 @@
   {
     "id": "lucky-bone",
     "slot": "small",
+    "kind": "dice",
+    "rarity": "rare",
     "price": 30,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "xRerollBest" }],
     "upgrade": { "price": 30, "effect": [{ "type": "special", "name": "xRerollBest", "params": { "rolls": 2 } }] }
@@ -159,8 +198,11 @@
   {
     "id": "luck-potion",
     "slot": "small",
+    "kind": "potion",
+    "rarity": "common",
     "price": 15,
     "unlockedAfter": 3,
+    "source": { "type": "shop" },
     "use": "lost",
     "effect": [{ "type": "special", "name": "dieRerollBest" }],
     "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "dieRerollBest" }, { "type": "heal", "value": 2, "target": "self" }] }
@@ -168,8 +210,10 @@
   {
     "id": "hammerfist-hammer",
     "slot": "twoHands",
+    "rarity": "legendary",
     "price": 40,
     "unlockedAfter": 10,
+    "source": { "type": "boss", "at": "s10" },
     "use": "spent",
     "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 2 } }],
     "upgrade": { "price": 40, "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 3 } }] }
