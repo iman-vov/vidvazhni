@@ -184,7 +184,10 @@ function worldUvMaterial(map: THREE.Texture, tint: string): THREE.MeshStandardMa
         bvWorld = instanceMatrix * bvWorld;
         #endif
         bvWorld = modelMatrix * bvWorld;
-        vBvUv = bvWorld.xz * ${(1 / TEXTURE_WORLD_SIZE).toFixed(4)};`,
+        vBvUv = bvWorld.xz * ${(1 / TEXTURE_WORLD_SIZE).toFixed(4)};
+        #ifdef USE_MAP
+        vBvUv = (mapTransform * vec3(vBvUv, 1.0)).xy;
+        #endif`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\nvarying vec2 vBvUv;')

@@ -261,22 +261,52 @@ function rockWall(b: Builder, h: number, crystal: boolean): void {
   }
 }
 
-/** A mine wall: rough rock behind a timber set (two posts and a cap), the lagging boards above;
- *  with `ore`, copper veins run through the rock. */
+/** A mine wall: the bare rock of the drift, lumpy, its top uneven, a fallen stone at its foot;
+ *  with `ore`, copper veins run through it. The timber sets stand only every few metres (mineSet). */
 function mineWall(b: Builder, h: number, ore: boolean): void {
-  b.box('rockDark', [WALL_LEN, h, WALL_THICK], [0, h / 2, -WALL_THICK / 2]);
-  b.rock('rock', 0.3, [-0.18, h * 0.35, -0.02], [1.3, h * 0.9, 0.35], [0.2, 0.4, 0.1], true);
-  b.rock('rockDark', 0.26, [0.22, h * 0.62, -0.02], [1.2, h * 0.8, 0.35], [0.5, 1.1, 0.2], true);
-  for (const x of [-0.45, 0.45]) {
-    b.box('woodDark', [0.13, h - 0.08, 0.13], [x, (h - 0.08) / 2, 0.05], [0, 0, x * 0.05]);
-    b.box('rockDark', [0.2, 0.08, 0.2], [x, 0.04, 0.05]);
-  }
-  b.box('wood', [WALL_LEN + 0.06, 0.15, 0.17], [0, h - 0.075, 0.05]);
-  for (let i = 0; i < 4; i++) b.box(i % 2 ? 'wood' : 'woodDark', [0.2, 0.05, 0.3], [-0.3 + i * 0.2, h - 0.17, -0.06], [0, 0, (i - 1.5) * 0.04], true);
+  b.box('rockDark', [WALL_LEN, h * 0.9, WALL_THICK], [0, h * 0.45, -WALL_THICK / 2]);
+  b.rock('rock', 0.34, [-0.3, h * 0.32, -0.02], [1.15, h * 0.95, 0.5], [0.2, 0.4, 0.1]);
+  b.rock('rockDark', 0.3, [0.26, h * 0.46, -0.05], [1.1, h * 1.05, 0.46], [0.5, 1.1, 0.2]);
+  b.rock('rock', 0.27, [0.02, h * 0.78, -0.1], [1.6, 0.95, 0.55], [0.1, 0.7, 0.3]);
+  b.rock('rockDark', 0.22, [-0.36, h * 0.96, -0.14], [1.4, 0.85, 0.7], [0.4, 0.2, 0.1]);
+  b.rock('rock', 0.18, [0.34, h * 0.98, -0.16], [1.3, 0.7, 0.7], [0.9, 0.5, 0.2], true);
+  b.rock('rockDark', 0.15, [0.38, 0.1, 0.06], [1.4, 0.7, 1.1], [0, 0.3, 0], true);
   if (ore) {
-    for (let i = 0; i < 3; i++) b.box('ore', [0.5 - i * 0.1, 0.04, 0.03], [-0.1 + i * 0.12, 0.45 + i * 0.28, 0.01], [0, 0, 0.5 - i * 0.35]);
-    for (let i = 0; i < 5; i++) b.add(new THREE.OctahedronGeometry(0.05, 0), 'ore', [-0.25 + i * 0.13, 0.4 + ((i * 7) % 5) * 0.12, 0.03], [i, i * 0.5, 0], [1, 1.4, 0.7], true);
+    for (let i = 0; i < 3; i++) b.box('ore', [0.5 - i * 0.1, 0.04, 0.03], [-0.1 + i * 0.12, 0.45 + i * 0.28, 0.12], [0, 0, 0.5 - i * 0.35]);
+    for (let i = 0; i < 5; i++) b.add(new THREE.OctahedronGeometry(0.05, 0), 'ore', [-0.25 + i * 0.13, 0.4 + ((i * 7) % 5) * 0.12, 0.13], [i, i * 0.5, 0], [1, 1.4, 0.7], true);
   }
+}
+
+/** Height of the lamp hung from a mine set's cap (its light spot). */
+const MINE_LAMP_Y = 1.12;
+
+/** A timber set in the rock: two splayed posts on footings, a cap beam with wedges and lagging
+ *  boards over it, and a miner's lamp hung from the cap on a chain. */
+function mineSet(b: Builder, h: number): void {
+  mineWall(b, h, false);
+  for (const x of [-0.44, 0.44]) {
+    b.box('woodDark', [0.15, h - 0.06, 0.15], [x, (h - 0.06) / 2, 0.12], [0, 0, -Math.sign(x) * 0.05]);
+    b.rock('rockDark', 0.11, [x, 0.04, 0.12], [1.3, 0.6, 1.3]);
+    b.box('wood', [0.12, 0.08, 0.17], [x * 0.88, h - 0.2, 0.12], [0, 0, 0], true);
+  }
+  b.box('wood', [WALL_LEN + 0.12, 0.17, 0.2], [0, h - 0.05, 0.12]);
+  for (let i = 0; i < 5; i++) b.box(i % 2 ? 'wood' : 'woodDark', [0.19, 0.05, 0.42], [-0.4 + i * 0.2, h + 0.06, -0.02], [0.05 * (i - 2), 0, (i - 2) * 0.03], true);
+  // The lamp: a hook on the cap, a chain, a lantern with a glowing glass.
+  const top = h - 0.14;
+  const chain = Math.max(0.05, top - (MINE_LAMP_Y + 0.13));
+  b.box('iron', [0.012, chain, 0.012], [0, top - chain / 2, 0.2]);
+  b.cyl('iron', 0.055, 0.075, 0.035, 6, [0, MINE_LAMP_Y + 0.1, 0.2]);
+  b.cyl('glow', 0.05, 0.05, 0.13, 6, [0, MINE_LAMP_Y, 0.2]);
+  b.cyl('iron', 0.065, 0.065, 0.03, 6, [0, MINE_LAMP_Y - 0.08, 0.2]);
+}
+
+/** The near (camera-side) edge of a mine: a low ridge of fallen rock, not a fence. */
+function mineRubble(b: Builder, h: number): void {
+  b.rock('rockDark', 0.26, [-0.28, h * 0.45, -0.1], [1.3, h * 2.4, 1.0], [0.3, 0.5, 0.1]);
+  b.rock('rock', 0.24, [0.22, h * 0.5, -0.08], [1.4, h * 2.6, 1.0], [0.1, 1.2, 0.2]);
+  b.rock('rock', 0.16, [-0.02, h * 0.35, 0.06], [1.3, h * 2.0, 1.0], [0.6, 0.2, 0.3], true);
+  b.rock('rockDark', 0.12, [0.45, h * 0.25, 0.08], [1.2, h * 1.8, 1.0], [0.2, 0.9, 0], true);
+  b.rock('rock', 0.1, [-0.48, h * 0.2, 0.1], [1.2, h * 1.6, 1.0], [0.9, 0.4, 0], true);
 }
 
 /** A thick timber post on a stone footing (mine corners). */
@@ -1216,7 +1246,8 @@ const PIECES: Record<string, PieceDef> = {
   // Act II, the Grey Mountains: mine (s6, s9), mountain pass (s7), Copperdale (s8), old forge (s10).
   'mine-wall': wall((b, o) => mineWall(b, o.height, false)),
   'mine-wall-ore': wall((b, o) => mineWall(b, o.height, true)),
-  'mine-wall-low': wall((b, o) => lowWall(b, o.height, 'rockDark', 'woodDark')),
+  'mine-wall-set': wall((b, o) => mineSet(b, o.height), 'wall', { x: 0, y: MINE_LAMP_Y, z: 0.2, kind: 'lantern', fire: 0.8 }),
+  'mine-wall-low': wall((b, o) => mineRubble(b, o.height)),
   'mine-post': wall((b, o) => minePost(b, o.height), 'corner'),
   'mine-post-low': wall((b, o) => minePost(b, o.height), 'corner'),
   'mine-adit': wall((b, o) => {

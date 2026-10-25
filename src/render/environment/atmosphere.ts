@@ -85,8 +85,8 @@ export const ATMOSPHERE: Record<string, Atmosphere> = {
     variants: [['plain', 3], ['support', 2]],
   },
   'mountain-pass': {
-    // Cold, washed-out blue daylight; snow everywhere it can lie.
-    grade: grade([0.03, 0.04, 0.07], [0.96, 1.0, 1.08], 0.82, 1.08, 0.42),
+    // Low, warm afternoon sun on dark rock: cold blue shadows, warm lit faces, real contrast.
+    grade: grade([0.02, 0.03, 0.06], [1.1, 1.0, 0.88], 0.95, 1.2, 0.5),
     pools: 0.35,
     grime: '#2a2c34',
     floor: { density: 1.3, kinds: [['snow', 5], ['debris', 2], ['crack', 1], ['rubble', 1], ['dust', 1]] },

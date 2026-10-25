@@ -21,6 +21,9 @@ interface SurfaceDef {
   paint?: Painter;
   /** Flat colour until the base loads (and of the noise fallback). */
   fallback: string;
+  /** World units per repeat when larger than the usual TEXTURE_SCALE_WORLD: the canvas doubles
+   *  and the texture's repeat scales the world UVs down to match. */
+  world?: number;
   /** Colour of the plate's sides. */
   side: string;
   roughness: number;
@@ -30,6 +33,8 @@ interface SurfaceDef {
 export const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#d9cdb6', hazardous: '#ffc4ae', water: '#8fa6a8' };
 /** Water hexes sit lower than the others, under their water. */
 export const WATER_DROP = 0.05;
+/** World units per repeat of a surface texture by default (boardTiles TEXTURE_WORLD_SIZE). */
+const TEXTURE_SCALE_WORLD = 2.6;
 
 function seeded(seed: number): () => number {
   let s = seed;
@@ -48,73 +53,370 @@ function tiled(size: number, x: number, y: number, r: number, draw: (x: number, 
   }
 }
 
-/** Slabs in courses with dark joints; `cool` greys them (tower), else warm (cellar). */
-function slabs(cool: boolean, rows: number): Painter {
+/** How a stone floor is laid (sizes in world units). */
+interface StoneStyle {
+  /** Course heights (when laid in courses). */
+  course: [number, number];
+  /** Laid as random ashlar instead of in courses: a module (world units) and stone sizes in modules. */
+  ashlar?: { module: number; w: [number, number]; h: [number, number] };
+  /** Stone length as a multiple of its course height. */
+  length: [number, number];
+  /** Chance a stone is split into two smaller ones. */
+  split: number;
+  /** Joint half-width. */
+  gap: number;
+  /** Corner rounding, share of each side (0.5 = pebble). */
+  round: number;
+  /** Chance per corner of a chipped-off corner. */
+  chips: number;
+  /** Share of stones broken by a crack. */
+  cracks: number;
+  /** Dirt and moss over the joints, as multipliers of the default amount. */
+  dirt: number;
+  moss: number;
+  grout: [number, number, number];
+  /** Colour of one stone. */
+  tone: (rnd: () => number) => [number, number, number];
+}
+
+type Pt = [number, number];
+
+const wrapIndex = (i: number, n: number) => ((i % n) + n) % n;
+
+/** A closed outline with its corners rounded by `round` (share of each side). */
+function roundedPath(ctx: CanvasRenderingContext2D, pts: Pt[], round: number, ox: number, oy: number): void {
+  ctx.beginPath();
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const p = pts[(i + n - 1) % n]!;
+    const v = pts[i]!;
+    const q = pts[(i + 1) % n]!;
+    const a: Pt = [v[0] + (p[0] - v[0]) * round, v[1] + (p[1] - v[1]) * round];
+    const b: Pt = [v[0] + (q[0] - v[0]) * round, v[1] + (q[1] - v[1]) * round];
+    if (i) ctx.lineTo(a[0] + ox, a[1] + oy);
+    else ctx.moveTo(a[0] + ox, a[1] + oy);
+    ctx.quadraticCurveTo(v[0] + ox, v[1] + oy, b[0] + ox, b[1] + oy);
+  }
+  ctx.closePath();
+}
+
+const rgba = ([r, g, b]: readonly number[], d = 0, a = 1) => `rgba(${Math.round(r! + d)},${Math.round(g! + d)},${Math.round(b! + d)},${a})`;
+
+interface Stone {
+  pts: Pt[];
+  cx: number;
+  cy: number;
+  reach: number;
+  tone: [number, number, number];
+  /** Direction and amount of the light-to-dark tilt across the stone. */
+  tilt: [number, number, number];
+  specks: [number, number, number, number][];
+  crack: Pt[] | null;
+}
+
+/**
+ * Stones laid in courses of uneven height, each course offset, stones of uneven length (some split
+ * in two), every one its own tone, tilt and outline: joints wander and change width, corners are
+ * chipped, some stones cracked, and dirt and moss gather in the joints. `world` is the world size
+ * of one repeat; it spans several hexes, so the pattern does not repeat across a room.
+ * Everything is generated once and then drawn at each tiling offset, so the edges meet.
+ */
+function stones(st: StoneStyle, world: number): Painter {
   return (ctx, size, rnd) => {
-    ctx.fillStyle = cool ? '#3d3f42' : '#46392e';
+    const u = size / world;
+    const span = (r: [number, number]) => r[0] + rnd() * (r[1] - r[0]);
+    const blob = (x: number, y: number, r: number, col: [number, number, number], a: number) => {
+      tiled(size, x, y, r, (cx, cy) => {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, rgba(col, 0, a));
+        g.addColorStop(1, rgba(col, 0, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      });
+    };
+    // Earthy joints, not one flat colour.
+    ctx.fillStyle = rgba(st.grout);
     ctx.fillRect(0, 0, size, size);
-    const rowH = size / rows;
-    for (let row = 0; row < rows; row++) {
-      let x = rnd() * size * 0.3;
-      const start = x;
-      while (x < start + size) {
-        const w = Math.min(start + size - x, rowH * (1 + rnd() * 0.9));
-        const base = cool ? 128 + rnd() * 40 : 140 + rnd() * 40;
-        const [r, g, b] = cool ? [base, base + 3, base + 6] : [base + 14, base + 4, base - 12];
-        const gap = size * 0.008;
-        tiled(size, x + w / 2, row * rowH + rowH / 2, Math.max(w, rowH), (cx, cy) => {
-          const grad = ctx.createLinearGradient(cx, cy - rowH / 2, cx, cy + rowH / 2);
-          grad.addColorStop(0, `rgb(${r + 14},${g + 14},${b + 14})`);
-          grad.addColorStop(1, `rgb(${r - 18},${g - 18},${b - 18})`);
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.roundRect(cx - w / 2 + gap, cy - rowH / 2 + gap, w - gap * 2, rowH - gap * 2, size * (cool ? 0.02 : 0.012));
-          ctx.fill();
-        });
-        x += w;
+    for (let i = 0; i < 90; i++) {
+      const d = (rnd() - 0.4) * 30;
+      blob(rnd() * size, rnd() * size, u * (0.15 + rnd() * 0.4), [st.grout[0] + d, st.grout[1] + d, st.grout[2] + d], 0.5);
+    }
+
+    const all: Stone[] = [];
+    const lay = (x: number, y: number, w: number, h: number) => {
+      const g = () => st.gap * u * (0.5 + rnd() * 1.1);
+      const [l, t, r, b] = [g(), g(), g(), g()];
+      const corners: Pt[] = [
+        [x + l, y + t],
+        [x + w - r, y + t],
+        [x + w - r, y + h - b],
+        [x + l, y + h - b],
+      ];
+      const jitter = st.gap * u * 0.9;
+      const pts: Pt[] = [];
+      corners.forEach((c, i) => {
+        const next = corners[(i + 1) % 4]!;
+        const prev = corners[(i + 3) % 4]!;
+        if (rnd() < st.chips) {
+          // A chipped corner: cut off at an angle.
+          const cut = Math.min(w, h) * (0.06 + rnd() * 0.16);
+          const toward = (o: Pt, k: number): Pt => {
+            const d = Math.hypot(o[0] - c[0], o[1] - c[1]) || 1;
+            return [c[0] + ((o[0] - c[0]) / d) * cut * k, c[1] + ((o[1] - c[1]) / d) * cut * k];
+          };
+          pts.push(toward(prev, 0.6 + rnd() * 0.8), toward(next, 0.6 + rnd() * 0.8));
+        } else {
+          pts.push([c[0] + (rnd() - 0.5) * jitter, c[1] + (rnd() - 0.5) * jitter]);
+        }
+        // A bump or dent part way along the side.
+        const k = 0.3 + rnd() * 0.4;
+        const nx = -(next[1] - c[1]);
+        const ny = next[0] - c[0];
+        const nl = Math.hypot(nx, ny) || 1;
+        const off = (rnd() - 0.5) * jitter * 1.6;
+        pts.push([c[0] + (next[0] - c[0]) * k + (nx / nl) * off, c[1] + (next[1] - c[1]) * k + (ny / nl) * off]);
+      });
+      const ang = rnd() * Math.PI * 2;
+      const specks: Stone['specks'] = [];
+      const count = Math.round(((w * h) / (u * u)) * 40);
+      for (let i = 0; i < count; i++) specks.push([x + rnd() * w, y + rnd() * h, u * (0.008 + rnd() * 0.022), (rnd() - 0.5) * 70]);
+      let crack: Pt[] | null = null;
+      if (rnd() < st.cracks) {
+        const along = w > h;
+        let px = along ? x + w * (0.25 + rnd() * 0.5) : x;
+        let py = along ? y : y + h * (0.25 + rnd() * 0.5);
+        crack = [[px, py]];
+        for (let i = 1; i <= 5; i++) {
+          if (along) {
+            py = y + (h * i) / 5;
+            px += (rnd() - 0.5) * h * 0.35;
+          } else {
+            px = x + (w * i) / 5;
+            py += (rnd() - 0.5) * w * 0.2;
+          }
+          crack.push([px, py]);
+        }
+      }
+      all.push({ pts, cx: x + w / 2, cy: y + h / 2, reach: Math.hypot(w, h), tone: st.tone(rnd), tilt: [Math.cos(ang), Math.sin(ang), 8 + rnd() * 16], specks, crack });
+    };
+
+    if (st.ashlar) {
+      // Random ashlar: stones of a few module sizes packed on a wrapping grid, so no joint runs on
+      // across the floor (as course joints do). Big stones first, anywhere (also across the
+      // canvas edges), then the gaps filled in reading order with whatever fits.
+      const a = st.ashlar;
+      const n = Math.max(4, Math.round(world / a.module));
+      const c = size / n;
+      const used = new Uint8Array(n * n);
+      const cell = (i: number, j: number) => wrapIndex(j, n) * n + wrapIndex(i, n);
+      const pick = (r: [number, number]) => r[0] + Math.floor(rnd() * (r[1] - r[0] + 1));
+      const place = (i: number, j: number, min: number) => {
+        let [w, h] = [pick(a.w), pick(a.h)];
+        if (rnd() < 0.3) [w, h] = [h, w];
+        let ww = 1;
+        while (ww < w && !used[cell(i + ww, j)]) ww++;
+        let hh = 1;
+        grow: while (hh < h) {
+          for (let k = 0; k < ww; k++) if (used[cell(i + k, j + hh)]) break grow;
+          hh++;
+        }
+        if (ww * hh < min) return;
+        for (let y = 0; y < hh; y++) for (let x = 0; x < ww; x++) used[cell(i + x, j + y)] = 1;
+        lay(i * c, j * c, ww * c, hh * c);
+      };
+      for (let k = 0; k < n * n * 1.5; k++) {
+        const i = Math.floor(rnd() * n);
+        const j = Math.floor(rnd() * n);
+        if (!used[cell(i, j)]) place(i, j, 4);
+      }
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if (!used[cell(i, j)]) place(i, j, 1);
+    } else {
+      // Courses that add up to the canvas exactly (it tiles vertically too).
+      const heights: number[] = [];
+      let total = 0;
+      while (total < size) {
+        const h = span(st.course) * u;
+        heights.push(h);
+        total += h;
+      }
+      if (heights.length > 1 && total - size > heights[heights.length - 1]! * 0.5) total -= heights.pop()!;
+      let y = 0;
+      for (const h0 of heights) {
+        const h = (h0 * size) / total;
+        const start = rnd() * size;
+        const xs = [start];
+        for (let x = start; x < start + size; ) xs.push((x += h * span(st.length)));
+        xs[xs.length - 1] = start + size;
+        // No slivers at the seam: a short last stone merges into the one before.
+        if (xs.length > 2 && xs[xs.length - 1]! - xs[xs.length - 2]! < h * 0.6) xs.splice(xs.length - 2, 1);
+        for (let i = 0; i < xs.length - 1; i++) {
+          const x = xs[i]!;
+          const w = xs[i + 1]! - x;
+          if (rnd() < st.split) {
+            const f = 0.4 + rnd() * 0.2;
+            if (rnd() < 0.5) {
+              lay(x, y, w, h * f);
+              lay(x, y + h * f, w, h * (1 - f));
+            } else {
+              lay(x, y, w * f, h);
+              lay(x + w * f, y, w * (1 - f), h);
+            }
+          } else lay(x, y, w, h);
+        }
+        y += h;
       }
     }
-    // Wear: chips, stains and a few cracks.
-    for (let i = 0; i < 60; i++) {
-      const x = rnd() * size;
-      const y = rnd() * size;
-      const rad = size * (0.004 + rnd() * 0.02);
-      tiled(size, x, y, rad, (cx, cy) => {
-        ctx.fillStyle = `rgba(${rnd() > 0.5 ? '255,250,235' : '30,24,18'},${0.06 + rnd() * 0.08})`;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+
+    for (const s of all) {
+      tiled(size, s.cx, s.cy, s.reach, (px, py) => {
+        const ox = px - s.cx;
+        const oy = py - s.cy;
+        const [dx, dy, lift] = s.tilt;
+        const half = s.reach / 2;
+        const grad = ctx.createLinearGradient(px - dx * half, py - dy * half, px + dx * half, py + dy * half);
+        grad.addColorStop(0, rgba(s.tone, lift));
+        grad.addColorStop(1, rgba(s.tone, -lift));
+        roundedPath(ctx, s.pts, st.round, ox, oy);
+        ctx.fillStyle = grad;
         ctx.fill();
-      });
-    }
-    ctx.lineWidth = size * 0.003;
-    for (let i = 0; i < (cool ? 10 : 6); i++) {
-      let x = rnd() * size;
-      let y = rnd() * size;
-      const pts: [number, number][] = [[x, y]];
-      for (let k = 0; k < 4; k++) pts.push([(x += (rnd() - 0.5) * size * 0.08), (y += (rnd() - 0.5) * size * 0.08)]);
-      tiled(size, pts[0]![0], pts[0]![1], size * 0.2, (cx, cy) => {
-        const ox = cx - pts[0]![0];
-        const oy = cy - pts[0]![1];
-        ctx.strokeStyle = 'rgba(20,16,12,0.35)';
-        ctx.beginPath();
-        pts.forEach(([px, py], j) => (j ? ctx.lineTo(px + ox, py + oy) : ctx.moveTo(px + ox, py + oy)));
-        ctx.stroke();
-      });
-    }
-    if (cool) {
-      for (let i = 0; i < 40; i++) {
-        const x = rnd() * size;
-        const y = rnd() * size;
-        tiled(size, x, y, 6, (cx, cy) => {
-          ctx.fillStyle = `rgba(96,120,64,${0.12 + rnd() * 0.12})`;
+        ctx.save();
+        ctx.clip();
+        for (const [sx, sy, r, d] of s.specks) {
+          ctx.fillStyle = rgba(s.tone, d, 0.35);
           ctx.beginPath();
-          ctx.arc(cx, cy, size * (0.004 + rnd() * 0.008), 0, Math.PI * 2);
+          ctx.arc(sx + ox, sy + oy, r, 0, Math.PI * 2);
           ctx.fill();
-        });
+        }
+        // Worn, rounded edges: darker toward the outline.
+        roundedPath(ctx, s.pts, st.round, ox, oy);
+        ctx.lineWidth = u * 0.09;
+        ctx.strokeStyle = rgba(s.tone, -40, 0.18);
+        ctx.stroke();
+        ctx.lineWidth = u * 0.025;
+        ctx.strokeStyle = rgba(st.grout, 0, 0.3);
+        ctx.stroke();
+        if (s.crack) {
+          const line = (d: number) => {
+            ctx.beginPath();
+            s.crack!.forEach(([cx, cy], j) => (j ? ctx.lineTo(cx + ox + d, cy + oy + d) : ctx.moveTo(cx + ox + d, cy + oy + d)));
+            ctx.stroke();
+          };
+          ctx.strokeStyle = rgba(st.grout, 0, 0.9);
+          ctx.lineWidth = u * 0.018;
+          line(0);
+          ctx.strokeStyle = rgba(s.tone, 30, 0.35);
+          ctx.lineWidth = u * 0.008;
+          line(u * 0.012);
+        }
+        ctx.restore();
+      });
+    }
+
+    // A point somewhere on a joint (on a stone's outline).
+    const onJoint = (): Pt => {
+      const s = all[Math.floor(rnd() * all.length)]!;
+      const i = Math.floor(rnd() * s.pts.length);
+      const a = s.pts[i]!;
+      const b = s.pts[(i + 1) % s.pts.length]!;
+      const t = rnd();
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    };
+    // Broad stains and paler worn paths: tone that ignores the stones.
+    for (let i = 0; i < 14 * st.dirt; i++) {
+      const dark = rnd() < 0.6;
+      blob(rnd() * size, rnd() * size, u * (0.5 + rnd() * 0.9), dark ? [46, 34, 22] : [235, 225, 205], dark ? 0.12 + rnd() * 0.12 : 0.05 + rnd() * 0.06);
+    }
+    // Dirt packed into the joints.
+    for (let i = 0; i < 260 * st.dirt; i++) {
+      const [x, y] = onJoint();
+      blob(x, y, u * (0.04 + rnd() * 0.12), [40 + rnd() * 20, 30 + rnd() * 14, 20 + rnd() * 10], 0.3 + rnd() * 0.3);
+    }
+    // Moss: clumps of small dots along a joint.
+    for (let i = 0; i < 45 * st.moss; i++) {
+      const [x, y] = onJoint();
+      const spread = u * (0.06 + rnd() * 0.12);
+      const dots: [number, number, number, string][] = [];
+      for (let k = 6 + Math.floor(rnd() * 14); k > 0; k--) {
+        const shade = rnd();
+        dots.push([(rnd() - 0.5) * spread * 2, (rnd() - 0.5) * spread * 2, u * (0.012 + rnd() * 0.03), rgba([58 + shade * 50, 78 + shade * 52, 36 + shade * 22], 0, 0.55 + rnd() * 0.35)]);
       }
+      tiled(size, x, y, spread * 2, (cx, cy) => {
+        for (const [dx, dy, r, col] of dots) {
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(cx + dx, cy + dy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
     }
   };
 }
+
+/** World size of one repeat of the stone floors: several hexes, so a room shows no repeat. */
+const STONE_WORLD = 7.2;
+
+const FLAGSTONES: StoneStyle = {
+  course: [0.55, 1.0],
+  ashlar: { module: 0.34, w: [2, 4], h: [2, 3] },
+  length: [0.9, 2.1],
+  split: 0.14,
+  gap: 0.022,
+  round: 0.12,
+  chips: 0.28,
+  cracks: 0.16,
+  dirt: 1,
+  moss: 0.35,
+  grout: [70, 58, 46],
+  tone: (rnd) => {
+    const v = 122 + rnd() * 48;
+    const kind = rnd();
+    if (kind < 0.15) return [v - 4, v - 4, v - 2]; // a grey stone among the sandstone
+    if (kind < 0.25) return [v - 8, v - 22, v - 36]; // darker, rustier
+    return [v + 14 + rnd() * 10, v + 3, v - 12 - rnd() * 10];
+  },
+};
+
+const WORN_STONE: StoneStyle = {
+  course: [0.45, 0.85],
+  ashlar: { module: 0.36, w: [2, 4], h: [2, 3] },
+  length: [0.8, 2.2],
+  split: 0.18,
+  gap: 0.02,
+  round: 0.16,
+  chips: 0.35,
+  cracks: 0.22,
+  dirt: 1,
+  moss: 1,
+  grout: [62, 60, 56],
+  tone: (rnd) => {
+    const v = 108 + rnd() * 46;
+    const kind = rnd();
+    if (kind < 0.18) return [v + 12, v + 4, v - 6]; // a warmer, browner stone
+    if (kind < 0.28) return [v - 18, v - 16, v - 12]; // darker
+    return [v - 2 + rnd() * 6, v + 2, v + 6 + rnd() * 6];
+  },
+};
+
+const COBBLES: StoneStyle = {
+  course: [0.2, 0.34],
+  ashlar: { module: 0.17, w: [2, 3], h: [2, 3] },
+  length: [0.8, 1.6],
+  split: 0,
+  gap: 0.03,
+  round: 0.5,
+  chips: 0.15,
+  cracks: 0.04,
+  dirt: 0.8,
+  moss: 0.3,
+  grout: [112, 100, 84],
+  tone: (rnd) => {
+    const v = 136 + rnd() * 54;
+    const kind = rnd();
+    if (kind < 0.3) return [v + 12, v + 2, v - 10]; // warm
+    if (kind < 0.45) return [v - 6, v - 2, v + 8]; // bluish
+    return [v + 2, v, v - 2];
+  },
+};
 
 /** Grass blades over whatever is below; `count` per canvas, `wet` darker and bluer. */
 function grass(count: number, wet: boolean): Painter {
@@ -241,9 +543,9 @@ const walkway: Painter = (ctx, size, rnd) => {
 
 const SURFACES: Record<SurfaceId, SurfaceDef> = {
   planks: { base: 'tavern-planks', fallback: '#8a6a4a', side: '#4e3a2a', roughness: 0.85 },
-  flagstones: { paint: slabs(false, 3), fallback: '#9a8a76', side: '#5a4c40', roughness: 0.92 },
-  cobblestone: { base: 'cobblestone', fallback: '#9a948a', side: '#5c5048', roughness: 0.92 },
-  'worn-stone': { paint: slabs(true, 4), fallback: '#8e9094', side: '#55575c', roughness: 0.9 },
+  flagstones: { paint: stones(FLAGSTONES, STONE_WORLD), world: STONE_WORLD, fallback: '#9a8a76', side: '#5a4c40', roughness: 0.92 },
+  cobblestone: { paint: stones(COBBLES, STONE_WORLD), world: STONE_WORLD, fallback: '#9a948a', side: '#5c5048', roughness: 0.92 },
+  'worn-stone': { paint: stones(WORN_STONE, STONE_WORLD), world: STONE_WORLD, fallback: '#8e9094', side: '#55575c', roughness: 0.9 },
   'forest-floor': { base: 'forest-floor', fallback: '#6a5a3e', side: '#4a3c2a', roughness: 0.95 },
   grass: { base: 'forest-floor', paint: grass(1400, false), fallback: '#6a7a40', side: '#4a4430', roughness: 0.95 },
   roots: { base: 'forest-floor', paint: roots, fallback: '#6a5a3e', side: '#4a3c2a', roughness: 0.95 },
@@ -275,7 +577,7 @@ export type TextureUrl = (name: string, quality: GraphicsQuality) => string | un
  */
 export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: TextureUrl, onChange: () => void, onDraw?: (canvas: HTMLCanvasElement) => void): THREE.Texture {
   const def = SURFACES[id];
-  const size = quality === 'low' ? 256 : 512;
+  const size = (quality === 'low' ? 256 : 512) * (def.world ? 2 : 1);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
@@ -283,6 +585,8 @@ export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: Tex
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = quality === 'low' ? 1 : 4;
+  // The floor shaders map world XZ / TEXTURE_SCALE_WORLD to UVs, then apply the texture's transform.
+  if (def.world) tex.repeat.setScalar(TEXTURE_SCALE_WORLD / def.world);
   const seed = SURFACE_IDS.indexOf(id) * 7919 + 17;
   const draw = (base: HTMLImageElement | null) => {
     ctx.fillStyle = def.fallback;

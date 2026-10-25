@@ -43,6 +43,9 @@ export interface StylePieces {
   door: string;
   /** Straight wall segments on the outline (else loose clumps that may stray outward). */
   walled: boolean;
+  /** A framed segment (timber set with its lamp) put every 2-3 wall segments; the style's walls
+   *  get no sconces then, the frames light the edge. */
+  frame?: string;
 }
 
 export const STYLE_PIECES: Record<EdgeStyle, StylePieces> = {
@@ -52,7 +55,7 @@ export const STYLE_PIECES: Record<EdgeStyle, StylePieces> = {
   forest: { wall: 'thicket', alt: 'thicket-thorn', low: 'thicket-low', corner: null, cornerLow: null, door: 'forest-gap', walled: false },
   shore: { wall: 'reeds-bank', alt: 'reeds-bank', low: 'reeds-low', corner: null, cornerLow: null, door: 'forest-gap', walled: false },
   cave: { wall: 'rock-wall', alt: 'rock-wall-crystal', low: 'rock-low', corner: 'rock-pillar', cornerLow: 'rock-pillar-low', door: 'cave-mouth', walled: false },
-  mine: { wall: 'mine-wall', alt: 'mine-wall-ore', low: 'mine-wall-low', corner: 'mine-post', cornerLow: 'mine-post-low', door: 'mine-adit', walled: true },
+  mine: { wall: 'mine-wall', alt: 'mine-wall-ore', low: 'mine-wall-low', corner: 'mine-post', cornerLow: 'mine-post-low', door: 'mine-adit', walled: true, frame: 'mine-wall-set' },
   cliff: { wall: 'cliff-wall', alt: 'cliff-wall-snow', low: 'cliff-low', corner: 'cliff-pillar', cornerLow: 'cliff-pillar-low', door: 'cliff-gap', walled: true },
   forge: { wall: 'forge-wall', alt: 'forge-hearth', low: 'forge-wall-low', corner: 'forge-pillar', cornerLow: 'forge-pillar-low', door: 'forge-doorway', walled: true },
 };
@@ -111,11 +114,17 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
 
   // ── Outline: walls or their outdoor stand-ins, doorways, corners.
   const altCount = new Map<EdgeStyle, number>();
+  const frameDue = new Map<EdgeStyle, number>();
   const sconce = def.walls?.sconce;
   let plain = 0;
   const wallPiece = (style: EdgeStyle, front: boolean): string => {
     const s = STYLE_PIECES[style];
     if (front) return s.low;
+    if (s.frame) {
+      const due = (frameDue.get(style) ?? 1) - 1;
+      frameDue.set(style, due > 0 ? due : 2 + Math.floor(rnd() * 2));
+      if (due <= 0) return s.frame;
+    }
     if (altEvery > 0) {
       const n = (altCount.get(style) ?? 0) + 1;
       altCount.set(style, n);
@@ -124,7 +133,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
     return s.wall;
   };
   const hangSconce = (piece: string, style: EdgeStyle, x: number, z: number, rot: number, room: string) => {
-    if (!sconce || piece !== STYLE_PIECES[style].wall || sconce.every <= 0 || ++plain % sconce.every !== 1) return;
+    if (!sconce || STYLE_PIECES[style].frame || piece !== STYLE_PIECES[style].wall || sconce.every <= 0 || ++plain % sconce.every !== 1) return;
     const meta = pieceMeta(sconce.piece);
     if (meta && meta.height < wallH) put({ piece: sconce.piece, x, z, rot, scale: 1, height: meta.height, room, band: 'edge' }, 0.05);
   };

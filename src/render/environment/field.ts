@@ -156,17 +156,25 @@ export type PatchMode = 'prop' | 'ground' | 'water';
 export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode): void {
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, u);
-    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vEnvWorld;').replace(
+    // The ground's texture may span more world than uEnvTexScale says (stone floors, surfaces.ts):
+    // its repeat, read from the map transform, scales the world UVs.
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vEnvWorld;\nvarying float vEnvTexK;').replace(
       '#include <begin_vertex>',
       `#include <begin_vertex>
       vec4 envW = vec4(transformed, 1.0);
       #ifdef USE_INSTANCING
       envW = instanceMatrix * envW;
       #endif
-      vEnvWorld = (modelMatrix * envW).xyz;`,
+      vEnvWorld = (modelMatrix * envW).xyz;
+      #ifdef USE_MAP
+      vEnvTexK = mapTransform[0][0];
+      #else
+      vEnvTexK = 1.0;
+      #endif`,
     );
     const head = `#include <common>
       varying vec3 vEnvWorld;
+      varying float vEnvTexK;
       uniform sampler2D uEnvField;
       uniform vec4 uEnvRect;
       uniform vec3 uEnvFog;
@@ -176,6 +184,13 @@ export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode
       uniform float uEnvVeil;
       uniform float uEnvTexScale;
       vec4 envField() { return texture2D(uEnvField, (vEnvWorld.xz - uEnvRect.xy) * uEnvRect.zw); }
+      float envHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float envNoise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(envHash(i), envHash(i + vec2(1.0, 0.0)), f.x), mix(envHash(i + vec2(0.0, 1.0)), envHash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
       #ifdef ENV_RELIEF
       uniform sampler2D uEnvRelief;
       uniform float uEnvReliefStrength;
@@ -185,13 +200,14 @@ export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode
       frag = frag.replace(
         '#include <map_fragment>',
         `vec4 envG = envField();
-        vec2 envUv = vEnvWorld.xz * uEnvTexScale;
+        float envK = uEnvTexScale * vEnvTexK;
+        vec2 envUv = vEnvWorld.xz * envK;
         #ifdef ENV_RELIEF
         #ifdef ENV_PARALLAX
         // One-step parallax: raised stone shifts toward the eye, joints away from it.
         vec3 envEye = normalize(cameraPosition - vEnvWorld);
         float envH = texture2D(uEnvRelief, envUv).b;
-        envUv += envEye.xz / max(envEye.y, 0.35) * (envH - 0.5) * 0.05 * uEnvTexScale;
+        envUv += envEye.xz / max(envEye.y, 0.35) * (envH - 0.5) * 0.05 * envK;
         #endif
         vec4 envR = texture2D(uEnvRelief, envUv);
         #endif
@@ -201,6 +217,13 @@ export function patchMaterial(m: THREE.Material, u: EnvUniforms, mode: PatchMode
         #ifdef ENV_RELIEF
         diffuseColor.rgb *= mix(1.0, envR.a, 0.85);
         #endif
+        // Broad, unpatterned light and dark patches and a drift between warmer and cooler, so the
+        // floor does not read as one texture repeated (stronger on the big-period stone floors).
+        float envMacro = envNoise(vEnvWorld.xz * 0.21 + 3.7) * 0.65 + envNoise(vEnvWorld.xz * 0.57 - 1.3) * 0.35;
+        float envHue = envNoise(vEnvWorld.xz * 0.13 + 11.0) - 0.5;
+        float envMacroK = vEnvTexK < 0.99 ? 1.0 : 0.45;
+        diffuseColor.rgb *= 1.0 + (envMacro - 0.5) * 0.42 * envMacroK;
+        diffuseColor.rgb *= 1.0 + vec3(0.07, 0.0, -0.07) * envHue * envMacroK;
         diffuseColor.rgb *= 1.0 - envG.a * 0.7;
         diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.5, 0.58, 0.62), envG.b);`,
       );

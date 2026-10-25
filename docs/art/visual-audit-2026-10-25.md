@@ -30,15 +30,15 @@ by the straight-walls session, not touched here).
 
 | # | Fix | Where | Size | Status |
 |---|---|---|---|---|
-| 1 | Floors on `flagstones` / `worn-stone` / `cobblestone` read as a tile grid (s0, s1, s4, s8, s10): irregular slab sizes, offset rows, per-slab tint and height, broken grout, worn edges | renderer/code (surfaces.ts, relief.ts) | medium | open |
+| 1 | Floors on `flagstones` / `worn-stone` / `cobblestone` read as a tile grid (s0, s1, s4, s8, s10): irregular slab sizes, offset rows, per-slab tint and height, broken grout, worn edges | renderer/code (surfaces.ts, relief.ts) | medium | **done** (2026-10-25, `docs/art/floors/`): random ashlar packed on a wrapping grid (no joint runs across the floor), 7.2-unit repeat, per-stone tone and tilt, chipped corners, cracks, dirt and moss in the joints, broad tone drift in the floor shader; Copperdale gets rounded cobbles |
 | 2 | Act II figures without models: night-moth, mountain-ram, Hammerfist, shepherd → box tokens | art (Meshy, meshy-act2 session) | large | open |
 | 3 | Act II props without models: mine-cart, mine-support, ore-pile, mine-lantern, campfire, pennant-pole, forge, anvil, dark-lantern, chain-hoist | art | large | open |
 | 4 | Small-things layer: pebbles, tufts, flowers, mushrooms, twigs, leaves, straw, shards, bones, candle stubs, ore, coal, scraps, snow, reeds — clumped, off hex middles, per quality | renderer/code (`scatter.ts`) | medium | **done** |
-| 5 | Mine edge (s6, s9) is a low fence: needs rock walls with timber frames and lamps | renderer/code (plan.ts `mine` style) | medium | open |
+| 5 | Mine edge (s6, s9) is a low fence: needs rock walls with timber frames and lamps | renderer/code (plan.ts `mine` style) | medium | layout **done**: bare rock face, a timber set with a hung lamp every 2–3 segments, a rubble ridge on the near side; the pieces are still procedural stand-ins and must be remade in Blender (`env-mine-tunnel` kit) per the Blender-only rule |
 | 6 | Lone props → clusters: sets for watchtower, thorn-path, flooded-mill, gloom-heart; Copperdale ring without single barrels/crates | data/dressing | small | **done** |
 | 7 | s0 had no location: now the cellar (kit walls, torches, lights, sets) | data/dressing | small | **done** |
 | 8 | Forest edge (s2) and outdoor trees (s2, s3): bead-like blob bushes and cone trees; use the env-thorn-path kit thickets/trees or painted models | art + data | large | open |
-| 9 | Too dark / too flat light: s6, s9 raised hemi and lamp light; s5 warm braziers + purple motes; s7 still flat grey (needs a warmer sun and darker rock tint) | data/dressing | small | s5, s6, s9 **done**; s7 open |
+| 9 | Too dark / too flat light: s6, s9 raised hemi and lamp light; s5 warm braziers + purple motes; s7 still flat grey (needs a warmer sun and darker rock tint) | data/dressing | small | **done**: s7 has a warm low sun (#ffc48a, 2.4), less sky fill, darker rock and ground, a cool-shadow/warm-light grade with contrast 1.2 |
 | 10 | Things that should move and do not: lever and chest lids (single-mesh GLBs), banners only sway on cloth pieces, no fireflies/motes table entries for Act II and the cellar | renderer/code (life.ts) + Blender split | small/medium | open |
 
 Also seen: Copperdale `house-far` silhouettes look like boxes (data: swap for trees or remove, small).
@@ -60,6 +60,6 @@ Also seen: Copperdale `house-far` silhouettes look like boxes (data: swap for tr
 - The `medium` check and «after» shots of s2 overview, s7–s10 were not taken (dev server restarts).
 - The small things are subtle from the default camera; if the user wants them louder, raise `SIZE`
   or `perHex` in `scatter.ts`.
-- Fixes 1, 2, 3, 5, 8, 10 and s7 lighting.
+- Fixes 2, 3, 8, 10; the mine wall pieces as a Blender kit (fix 5).
 - `tests/render/obstacles.test.ts` (obstacle-clusters session, uncommitted) fails on s2
   (18 < 20 items); not caused by this pass (obstacles.ts reads no dressing data).
