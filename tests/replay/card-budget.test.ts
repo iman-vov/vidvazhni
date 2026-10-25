@@ -6,8 +6,8 @@
 //   max = the rounds of play the party's smallest hand allows, every rest costing a card
 // Wanted: slack (max − min) / max ≥ 25%. Then the greedy bot plays a few seeds and counts the
 // games lost to an empty deck (a hero exhausted for lack of cards, not hit points). The target is
-// under 10%; the bot is still too weak to win s2–s5 at all, so for those the count may only not
-// grow past the numbers measured before the map rework (KNOWN_DECK_LOSSES).
+// under 10%; where the bot still loses more (s3–s5, see docs/balance/sim-2026-10-24.md) the count
+// may only not grow past the numbers measured with the balance pass of 2026-10-24 (KNOWN_DECK_LOSSES).
 
 import { describe, expect, it } from 'vitest';
 import type { Content, ScenarioDef } from '../../src/rules/content';
@@ -26,8 +26,8 @@ const SEEDS = [1, 2, 3, 4, 5, 6];
 const MAX_ROUNDS = 40;
 const MIN_SLACK = 0.25;
 const MAX_DECK_LOSSES = 0.1;
-/** Bot games (of SEEDS) lost to an empty deck before the map rework; may not grow. */
-const KNOWN_DECK_LOSSES: Record<string, number> = { s2: 6, s3: 6, s4: 6, s5: 6 };
+/** Bot games (of SEEDS) lost to an empty deck after the balance pass of 2026-10-24; may not grow. */
+const KNOWN_DECK_LOSSES: Record<string, number> = { s3: 2, s5: 4 };
 
 const PARTIES: Record<string, [string, string]> = {
   s1: ['warden', 'wind-archer'],
@@ -126,14 +126,17 @@ export function cardBudget(id: string, content: Content): Budget {
   return { walk: steps, hp, min, max, slack: (max - min) / max };
 }
 
+/** Plays to the end; the log is kept apart from the state so the bot's look-ahead clones stay small. */
 function play(start: GameState, content: Content): GameState {
   let s = start;
+  const log = [...s.log];
   while (s.phase !== 'won' && s.phase !== 'lost' && s.round <= MAX_ROUNDS) {
     const r = apply(s, chooseAction(s, content), content);
     if (!r.ok) throw new Error(`round ${s.round}: ${r.error}`);
-    s = r.state;
+    log.push(...r.events);
+    s = { ...r.state, log: [] };
   }
-  return s;
+  return { ...s, log };
 }
 
 describe('card budget: the deck outlasts the mission', () => {
@@ -172,5 +175,5 @@ describe('card budget: the deck outlasts the mission', () => {
       );
       const allowed = Math.max(KNOWN_DECK_LOSSES[id] ?? 0, Math.ceil(MAX_DECK_LOSSES * SEEDS.length) - 1);
       expect(deckLosses).toBeLessThanOrEqual(allowed);
-    }, 300_000);
+    }, 900_000);
 });

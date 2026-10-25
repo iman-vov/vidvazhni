@@ -202,21 +202,31 @@ function moveValue(c: Content, h: HeroState, cardId: string): number {
   return (mv && 'value' in mv ? mv.value : 1) - (card?.bottom.loss ? 3 : 0);
 }
 
-/** The best own-turn action; with `ahead` each is valued with the best follow-up of the same turn
- *  (so a move that brings an attack into reach beats an attack that cannot land yet). */
+/** The best own-turn action. With `ahead`, the AHEAD best by their own half are valued again with
+ *  the best follow-up of the same turn (so a move that brings an attack into reach beats an attack
+ *  that cannot land yet); the rest keep their own value. */
+const AHEAD = 3;
 function bestTurnAction(s: GameState, content: Content, heroId: string, ahead: boolean): { action: Action; value: number } {
-  let best: Action = { type: 'endTurn', heroId };
-  let bestScore = score(s, heroId, content) - 0.25;
+  const options: { action: Action; end: GameState; value: number; more: boolean }[] = [];
   for (const { action: a, state: t } of legalActionResults(s, content)) {
     if (a.type !== 'startHalf' && a.type !== 'surge' && a.type !== 'reviveAlly' && a.type !== 'interact' && a.type !== 'useItem') continue;
     const instant = a.type === 'reviveAlly' || a.type === 'interact' || a.type === 'useItem';
     const cost = a.type === 'useItem' ? 4 : a.type === 'startHalf' && a.basic ? 0.1 : 0;
     const end = instant ? t : finishHalf(t, content, heroId);
     const more = ahead && end.pending?.kind === 'heroTurn' && end.pending.heroId === heroId && a.type !== 'useItem';
-    const v = (more ? bestTurnAction(end, content, heroId, false).value : score(end, heroId, content)) - cost;
-    if (v > bestScore) {
-      bestScore = v;
-      best = a;
+    options.push({ action: a, end, value: score(end, heroId, content) - cost, more });
+  }
+  options.sort((x, y) => y.value - x.value);
+  for (const o of options.slice(0, AHEAD)) {
+    const cost = o.value - score(o.end, heroId, content);
+    if (o.more) o.value = bestTurnAction(o.end, content, heroId, false).value + cost;
+  }
+  let best: Action = { type: 'endTurn', heroId };
+  let bestScore = score(s, heroId, content) - 0.25;
+  for (const o of options) {
+    if (o.value > bestScore) {
+      bestScore = o.value;
+      best = o.action;
     }
   }
   return { action: best, value: bestScore };
