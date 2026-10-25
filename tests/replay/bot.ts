@@ -9,10 +9,34 @@
 import type { Content } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
-import { goalZone } from '../../src/rules/objectives';
+import { goalZone, npcId } from '../../src/rules/objectives';
+import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import { availableCards, recommendedHand } from '../../src/rules/setup';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
+import { stepsFrom } from '../../tools/map-editor/checks';
+
+/** Walking steps to the nearest of `targets` (walls and obstacles respected), cached per scenario and target set. */
+const stepCache = new Map<string, Map<string, number>>();
+function steps(s: GameState, content: Content, targets: Hex[]): Map<string, number> {
+  const key = `${s.scenarioId}:${targets.map((h) => h.join(',')).sort().join(';')}`;
+  let map = stepCache.get(key);
+  if (!map) stepCache.set(key, (map = stepsFrom(content.scenarios[s.scenarioId]!, targets)));
+  return map;
+}
+function pathDistance(s: GameState, content: Content, targets: Hex[], from: Hex): number {
+  return steps(s, content, targets).get(from.join(',')) ?? 20 + Math.min(...targets.map((x) => distance(x, from)));
+}
+
+/** The closed doors on the way to the goal zone: those fewest steps from it, not the side rooms. */
+function doorsTowards(s: GameState, content: Content, zone: Hex[]): Hex[] {
+  const doors = closedDoors(s);
+  if (doors.length < 2) return doors;
+  const toZone = steps(s, content, zone);
+  const d = (h: Hex) => toZone.get(h.join(',')) ?? Infinity;
+  const best = Math.min(...doors.map(d));
+  return doors.filter((h) => d(h) === best);
+}
 
 function hero(s: GameState, id: string): HeroState {
   return s.figures[id] as HeroState;
@@ -40,8 +64,9 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
     case 'reachExit': {
       // Clear the way first, then run for the exit (or the next door).
       if (monsters.length > 0) return null;
-      const exits = goalZone(content.scenarios[s.scenarioId]!).filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
-      return exits.length > 0 ? exits : closedDoors(s);
+      const zone = goalZone(content.scenarios[s.scenarioId]!);
+      const exits = zone.filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
+      return exits.length > 0 ? exits : doorsTowards(s, content, zone);
     }
     case 'carryItem': {
       const carriers = Object.values(s.figures).filter(
@@ -51,6 +76,22 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       if (carriers.length > 0 || monsters.length > 0) return null;
       const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
       return items.length > 0 ? items : null;
+    }
+    case 'escape': {
+      // The cave-in timer runs: run for the lift past the monsters, opening the doors on the way.
+      const zone = goalZone(content.scenarios[s.scenarioId]!);
+      return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
+    }
+    case 'destroy': {
+      // Break the cages; their rooms open first.
+      const cages = tilesWith(s, (t) => !!t.breakable && t.object?.kind === goal.kind);
+      return cages.length > 0 ? cages : null;
+    }
+    case 'escort': {
+      // Clear the way, then walk ahead of the escorted NPC towards the zone (score() keeps it on a leash).
+      if (monsters.length > 0) return null;
+      const zone = goalZone(content.scenarios[s.scenarioId]!);
+      return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
     }
     default:
       // Light the braziers first (s5); otherwise the plain «nearest monster, then doors» pull.
@@ -79,15 +120,26 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   if (goal?.type === 'carryItem') {
     for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted) v += 30 * (f.questItems?.length ?? 0);
   }
-  if (goal?.type === 'reachExit') {
+  if (goal?.type === 'destroy') v += 60 * (s.destroyedObjects?.length ?? 0);
+  if (goal?.type === 'reachExit' || goal?.type === 'escape') {
     for (const f of Object.values(s.figures)) {
       if (f.kind === 'hero' && !f.exhausted && goalZone(content!.scenarios[s.scenarioId]!).some((x) => distance(x, f.hex) === 0)) v += 25;
     }
   }
   const me = heroId ? hero(s, heroId) : undefined;
+  if (goal?.type === 'escort' && me && !me.exhausted) {
+    // The NPC walks only while a hero is within NPC_LEAD: the acting hero stays that close, or two
+    // hexes further when an ally does; the party doesn't split up to open rooms alone.
+    const npc = s.figures[npcId(goal.npc)];
+    const near = (f: { hex: Hex }) => !!npc && distance(f.hex, npc.hex) <= NPC_LEAD;
+    const ally = Object.values(s.figures).some((f) => f.kind === 'hero' && f.id !== me.id && !f.exhausted && near(f));
+    if (npc) v -= 15 * Math.max(0, distance(me.hex, npc.hex) - NPC_LEAD - (ally ? 2 : 0));
+  }
   const targets = me && content ? goalTargets(s, content, me) : null;
-  if (me && !me.exhausted && targets && targets.length > 0) {
-    v -= 3 * Math.min(...targets.map((x) => distance(x, me.hex)));
+  if (me && content && !me.exhausted && targets && targets.length > 0) {
+    // In the last rounds before the cave-in, any step towards the lift beats staying safe.
+    const late = goal?.type === 'escape' && s.round >= goal.rounds - 3;
+    v -= (late ? 60 : 3) * pathDistance(s, content, targets, me.hex);
   } else if (me && !me.exhausted) {
     if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
     else {
@@ -162,7 +214,8 @@ function avoidOrTake(s: GameState, content?: Content): Action {
 function bestStep(s: GameState, content: Content, heroId: string): Action {
   let best: Action = { type: 'skipStep' };
   let bestScore = -Infinity;
-  const fighting = Object.values(s.figures).some((f) => f.kind === 'monster');
+  // On the escape's timer the party runs past the monsters instead of clearing every room.
+  const fighting = content.scenarios[s.scenarioId]?.goal.type !== 'escape' && Object.values(s.figures).some((f) => f.kind === 'monster');
   for (const { action: a, state } of legalActionResults(s, content)) {
     if (a.type !== 'resolveStep' && a.type !== 'skipStep') continue;
     let t: GameState | null = state;

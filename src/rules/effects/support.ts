@@ -302,7 +302,10 @@ export function performTeleport(ctx: Ctx, f: Figure, step: S<'teleport'>, choice
   // Monsters (Тінерук) pick their hex deterministically.
   const hex = choice.hex ?? (f.kind === 'monster' ? teleportHex(ctx, f, step.range, monsterStats(ctx, f).range ?? 1) : undefined);
   if (f.kind === 'monster' && hex && hex[0] === f.hex[0] && hex[1] === f.hex[1]) return () => {};
-  if (!hex || distance(hex, f.hex) > step.range || !isFreeHex(ctx.s, hex)) return 'teleport needs a free hex in range';
+  // A closed door opens only by walking in: a hero teleported onto it would stand in a shut doorway.
+  if (!hex || distance(hex, f.hex) > step.range || !isFreeHex(ctx.s, hex) || tileAt(ctx.s, hex)?.door?.open === false) {
+    return 'teleport needs a free hex in range';
+  }
   return () => {
     f.hex = [hex[0], hex[1]];
     emit(ctx, { type: 'moved', figureId: f.id, path: [[hex[0], hex[1]]], jump: true });
