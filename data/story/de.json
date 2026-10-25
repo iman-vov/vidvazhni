@@ -761,6 +761,76 @@
         ]
       },
       "epilogue": { "id": "s11.epilogue", "speaker": "marta", "text": "Der Fährmann hat einen Korb Moosbeeren geschickt. Jetzt wählt: die Reiherin oder die Glühwürmchen?" }
+    },
+    "s12": {
+      "intro": [
+        { "id": "s12.intro.1", "speaker": "narrator", "text": "Die Insel der alten Reiherin liegt mitten im Sumpf. Eine Hütte auf hohen Pfählen, rundherum ein Kräutergarten und dichter Nebel." },
+        { "id": "s12.intro.2", "speaker": "marta", "text": "Die Reiherin ist alt, geht langsam und sieht schlecht. Bringt sie zum Boot am Steg und bleibt dicht bei ihr." },
+        { "id": "s12.intro.3", "speaker": "herbalist", "text": "Sie hat mich doch alles gelehrt! Gleich fragt sie, ob ich meine Gläser beschrifte. Das fragt sie immer." },
+        { "id": "s12.intro.4", "speaker": "heron", "text": "Wer trampelt da durch meinen Garten? Ach, die Mutigen. Na, dann führt mich, aber nicht so schnell." },
+        {
+          "id": "s12.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Bleibt nah bei der Reiherin.",
+          "variants": {
+            "warden": "Großmutter, hakt Euch bei mir unter. Ich bin auch langsam, das passt gut.",
+            "wind-archer": "Reiher stehen auf einem Bein und haben es nie eilig. Diese auch nicht.",
+            "herbalist": "Eure Minze wächst ja bis zum Gartentor. Ich nehme ein bisschen, ja?",
+            "rogue": "So viele Gläser! Nein, ich nehme nichts. Ich zähle nur.",
+            "elementalist": "Der Nebel im Schilf ist wie eine Wand. Ein bisschen Wind, und er zieht weg.",
+            "tinker": "Die Pfähle der Hütte stehen schief. Wenn wir zurück sind, mache ich sie fest."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s12.garden",
+          "trigger": { "on": "doorOpened", "arg": "s12.garden" },
+          "lines": [
+            { "id": "s12.garden.1", "speaker": "narrator", "text": "Im Garten wachsen Minze, Kamille und Johanniskraut. Und dazwischen bewegen sich Dornlinge." },
+            { "id": "s12.garden.2", "speaker": "heron", "text": "Vorsicht mit der Kamille! Ach nein, das ist keine Kamille. Das ist ein Dornling." }
+          ]
+        },
+        {
+          "id": "s12.reeds",
+          "trigger": { "on": "doorOpened", "arg": "s12.reeds" },
+          "lines": [
+            { "id": "s12.reeds.1", "speaker": "narrator", "text": "Das Schilf versinkt in weißen Nebelbänken. Man sieht nichts hindurch, man hört nur Rascheln." },
+            { "id": "s12.reeds.2", "speaker": "heron", "text": "In den Nebel gehe ich nicht. Vor langer Zeit habe ich dort einen kleinen Jungen herausgeholt. Ich weiß noch, wie er gezittert hat." }
+          ]
+        },
+        {
+          "id": "s12.pier",
+          "trigger": { "on": "doorOpened", "arg": "s12.pier" },
+          "lines": [
+            { "id": "s12.pier.1", "speaker": "narrator", "text": "Am Boot warten Kultisten, und einer bläst schon die Backen auf und hebt sein Horn." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s12.win.1", "speaker": "narrator", "text": "Die Reiherin setzt sich ins Boot und rückt ihr Kopftuch zurecht. Der Nebel um die Insel wird dünner." },
+          { "id": "s12.win.2", "speaker": "heron", "text": "Der Junge aus dem Nebel hatte ein Lämpchen. Das Lämpchen ging aus, und er saß bis zum Morgen im Dunkeln auf einem Grasbuckel." },
+          { "id": "s12.win.3", "speaker": "heron", "text": "Ich gab ihm eine Kerze, und er sagte: Wenn ich groß bin, baue ich eine Laterne, die nie ausgeht. Er hieß Lumo." },
+          { "id": "s12.win.4", "speaker": "herbalist", "text": "Sie hat mich gerade gefragt, ob ich meine Gläser immer noch nicht beschrifte. Ich habe so getan, als hörte ich nichts." },
+          {
+            "id": "s12.win.5", "speaker": "hero", "pick": "random",
+            "text": "Lumo hatte Angst im Dunkeln.",
+            "variants": {
+              "warden": "Daher kommt also seine Angst. Eine dunkle Nacht im Sumpf, und niemand bei ihm.",
+              "wind-archer": "Tiere im Dunkeln sind nicht gefährlich. Aber ein Kleiner weiß das nicht.",
+              "herbalist": "So ist die Reiherin immer: erst rettet sie dich, dann gibt es Tee.",
+              "rogue": "Eine Laterne, die nie ausgeht. Na, sein Versprechen hat er gehalten.",
+              "elementalist": "Schattenhand war auch mal klein und hatte Angst. Das steht in keinem Buch.",
+              "tinker": "Ein Junge, der von einer Laterne träumte. Ich habe als Kind von Zahnrädern geträumt."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s12.lose.1", "speaker": "marta", "text": "Die Reiherin ist müde geworden und hat sich hingesetzt. Macht nichts, sie wartet, und ihr sammelt neue Kraft." },
+          { "id": "s12.lose.2", "speaker": "marta", "text": "Vertreibt den Nebel mit Feuer oder Wind, bevor die Reiherin hineingeht. Im Nebel versteckt sich jemand." }
+        ]
+      },
+      "epilogue": { "id": "s12.epilogue", "speaker": "marta", "text": "Die Reiherin hat mir ihren Tee und ein Paar Stiefel geschickt. Sie sagt, im Sumpf geht ohne sie kein Schritt." }
     }
   }
 }

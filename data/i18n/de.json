@@ -1333,5 +1333,18 @@
   "event.s11.rival-home": "Der Anführer ist schon am Hof und quakt vom Dach. Beeilt euch!",
   "story.speaker.ferryman": "Fährmann",
   "story.speaker.heron": "Alte Reiherin",
-  "story.speaker.mist-queen": "Nebelkönigin"
+  "story.speaker.mist-queen": "Nebelkönigin",
+  "scenario.s12": "Die Insel der alten Reiherin",
+  "scenario.s12.goal": "Die alte Reiherin zum Boot am Steg bringen",
+  "scenario.s12.intro": "Der Nebel steht vor der Hütte der alten Reiherin, der Heilerin, die die Kräuterfrau gelehrt hat. Allein findet sie ihr Boot nicht. Führt sie durch den Garten und das neblige Schilf zum Steg.",
+  "scenario.s12.outro": "Die Reiherin sitzt im Boot. Sie erinnert sich an den Jungen Lumo, der sich im Sumpf verirrte, als sein Lämpchen ausging, und der versprach, eine Laterne zu bauen, die nie erlischt.",
+  "room.s12.hut": "A. Pfahlhütte",
+  "room.s12.garden": "B. Kräutergarten",
+  "room.s12.reeds": "C. Nebelschilf",
+  "room.s12.pier": "D. Steg",
+  "event.s12.ambush": "Hinterhalt im Schilf! Aus dem Nebel kommen Schatten.",
+  "event.s12.horn": "Der Hornbläser hat geblasen, und ein großer Frosch klettert aus dem Wasser!",
+  "event.s12.horn-stopped": "Der Hornbläser ist verjagt, das Horn schweigt. Er hat ein paar Münzen verloren.",
+  "event.s12.herb": "Die Reiherin pflückt ein Kräuterbüschel und legt es in den Korb.",
+  "event.s12.map": "In der Truhe liegt eine alte Karte des Glöckners. Darauf ist ein Glockenturm mitten im Sumpf."
 }

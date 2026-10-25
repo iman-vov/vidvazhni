@@ -1333,5 +1333,18 @@
   "event.s11.rival-home": "The Hopper Chief is already at the farm, croaking from the roof. Hurry!",
   "story.speaker.ferryman": "Ferryman",
   "story.speaker.heron": "Old Heron",
-  "story.speaker.mist-queen": "Mist Queen"
+  "story.speaker.mist-queen": "Mist Queen",
+  "scenario.s12": "Old Heron’s Island",
+  "scenario.s12.goal": "Lead Old Heron to the boat at the pier",
+  "scenario.s12.intro": "The mist has crept up to the hut of Old Heron, the healer who taught the Herbalist. She can’t find her boat on her own. Lead her through the garden and the misty reeds to the pier.",
+  "scenario.s12.outro": "Old Heron is in her boat. She remembered a boy called Lumo who got lost in the marsh when his little lantern went out, and promised to make a lantern that would never go out.",
+  "room.s12.hut": "A. Stilt Hut",
+  "room.s12.garden": "B. Herb Garden",
+  "room.s12.reeds": "C. Misty Reeds",
+  "room.s12.pier": "D. Pier",
+  "event.s12.ambush": "Ambush in the reeds! Shadows step out of the mist.",
+  "event.s12.horn": "The horn blower sounded his horn, and a big frog climbs out of the water!",
+  "event.s12.horn-stopped": "The horn blower is chased off and the horn is silent. He dropped a few coins.",
+  "event.s12.herb": "Old Heron picks a bunch of herbs and tucks it into her basket.",
+  "event.s12.map": "In the chest lies an old bell-ringer’s map. It shows a bell tower in the middle of the marsh."
 }

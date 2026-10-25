@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const LANGS = ['uk', 'de', 'en'] as const;
-const MARSH = ['s11'];
+const MARSH = ['s11', 's12'];
 
 type Line = { id: string; speaker: string; text: string; variants?: Record<string, string> };
 type Scenario = { intro: Line[]; beats: { id: string; lines: Line[] }[]; outro: { victory: Line[]; defeat: Line[] }; epilogue: Line };

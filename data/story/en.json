@@ -761,6 +761,76 @@
         ]
       },
       "epilogue": { "id": "s11.epilogue", "speaker": "marta", "text": "The ferryman sent a basket of cranberries. Now choose: Old Heron or the fireflies?" }
+    },
+    "s12": {
+      "intro": [
+        { "id": "s12.intro.1", "speaker": "narrator", "text": "Old Heron’s island sits in the middle of the marsh. A hut on tall stilts, a herb garden all around, and thick mist." },
+        { "id": "s12.intro.2", "speaker": "marta", "text": "Old Heron is slow and her eyes are weak. Walk her to the boat at the pier and stay close." },
+        { "id": "s12.intro.3", "speaker": "herbalist", "text": "She’s the one who taught me! Any moment now she’ll ask if I label my jars. She always asks." },
+        { "id": "s12.intro.4", "speaker": "heron", "text": "Who’s that stomping through my garden? Oh, the Brave Ones. Well, lead the way, but not too fast." },
+        {
+          "id": "s12.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Stay close to Old Heron.",
+          "variants": {
+            "warden": "Take my arm, Granny. I’m slow too, so we’re a good match.",
+            "wind-archer": "Herons stand on one leg and never hurry. This one doesn’t either.",
+            "herbalist": "Your mint has grown right up to the gate. I’ll pick a little, all right?",
+            "rogue": "So many jars! No, I won’t take any. I’m just counting.",
+            "elementalist": "The mist in the reeds is like a wall. A little wind and it’ll clear.",
+            "tinker": "The hut’s stilts are leaning. When we’re back I’ll fix them."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s12.garden",
+          "trigger": { "on": "doorOpened", "arg": "s12.garden" },
+          "lines": [
+            { "id": "s12.garden.1", "speaker": "narrator", "text": "Mint, chamomile and St John’s wort grow in the garden. And thornlings are stirring among them." },
+            { "id": "s12.garden.2", "speaker": "heron", "text": "Careful with the chamomile! Oh, no, that’s not chamomile. That’s a thornling." }
+          ]
+        },
+        {
+          "id": "s12.reeds",
+          "trigger": { "on": "doorOpened", "arg": "s12.reeds" },
+          "lines": [
+            { "id": "s12.reeds.1", "speaker": "narrator", "text": "The reeds sink into white banks of mist. You can’t see through them, you only hear rustling." },
+            { "id": "s12.reeds.2", "speaker": "heron", "text": "I don’t go into the mist. Long ago I pulled a little boy out of it. I still remember how he shivered." }
+          ]
+        },
+        {
+          "id": "s12.pier",
+          "trigger": { "on": "doorOpened", "arg": "s12.pier" },
+          "lines": [
+            { "id": "s12.pier.1", "speaker": "narrator", "text": "Cultists wait by the boat, and one is already puffing his cheeks and raising a horn." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s12.win.1", "speaker": "narrator", "text": "Old Heron sat down in the boat and straightened her headscarf. The mist around the island grew thinner." },
+          { "id": "s12.win.2", "speaker": "heron", "text": "That boy from the mist had a little lantern. It went out, and he sat on a tussock in the dark until morning." },
+          { "id": "s12.win.3", "speaker": "heron", "text": "I gave him a candle, and he said: when I grow up, I’ll make a lantern that never goes out. His name was Lumo." },
+          { "id": "s12.win.4", "speaker": "herbalist", "text": "She just asked if I still don’t label my jars. I pretended not to hear." },
+          {
+            "id": "s12.win.5", "speaker": "hero", "pick": "random",
+            "text": "Lumo was afraid of the dark.",
+            "variants": {
+              "warden": "So that’s where his fear comes from. A dark night in the marsh with no one beside him.",
+              "wind-archer": "Animals in the dark aren’t scary. But a little one doesn’t know that.",
+              "herbalist": "That’s Old Heron all over: first she rescues you, then she makes you tea.",
+              "rogue": "A lantern that never goes out. Well, he kept his promise.",
+              "elementalist": "Shadowhand was little and scared once too. They don’t put that in books.",
+              "tinker": "A boy who dreamed of a lantern. When I was small, I dreamed of gears."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s12.lose.1", "speaker": "marta", "text": "Old Heron got tired and sat down to rest. Never mind, she’ll wait while you get your strength back." },
+          { "id": "s12.lose.2", "speaker": "marta", "text": "Clear the mist with fire or wind before Old Heron steps into it. Someone is hiding in there." }
+        ]
+      },
+      "epilogue": { "id": "s12.epilogue", "speaker": "marta", "text": "Old Heron sent me her tea and a pair of boots. She says you can’t take a step in the marsh without them." }
     }
   }
 }
