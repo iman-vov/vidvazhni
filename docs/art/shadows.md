@@ -54,3 +54,6 @@ Low reads as baked-in: soft, dark and grounded, with an occlusion rim at the foo
 - `tests/render/scatter.test.ts` fails on the leaf-pile kit model (0.0037 > 0.003). That is the scatter kit session's file, not this change.
 
 - Drive C: had filled up with about 50 GB of leftover headless Chrome profiles from the screenshot scripts. They were deleted, and the script now removes its own profile.
+## Fix: black board on high in D3D11 (2026-10-25)
+
+s2 on high could come out almost black (dark blue-grey shapes, no textures) in headless Chrome on D3D11. Lamps on high cast shadows with `autoUpdate = false`, and three creates a lamp's cube map only when it draws one. Until the 600 ms redraw, the lit shaders' `samplerCubeShadow pointShadowMap` got three's empty colour cube texture. ANGLE/D3D11 then drops every lit draw call, so only the clear colour, GTAO, fog and the transparent grid were left. Medium has no lamp shadows, so it was fine. `setupLampShadows` now asks a lamp without a map to draw it at once (`shadow.needsUpdate`); the fix itself went in with ce94a61, and `redrawLamps()` (6837ed0) draws it from the static things. Before/after: `hq/s2-high-fix.jpg`. Re-shot s0–s10 on high: none is black or washed out.
