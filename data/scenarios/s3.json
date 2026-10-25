@@ -78,7 +78,7 @@
         { "hex": [16, -5], "terrain": "water" },
         { "hex": [15, -3], "terrain": "water" }
       ],
-      "obstacles": [{ "hex": [12, -6], "model": "pillar" }, { "hex": [13, -1], "model": "pillar" }],
+      "obstacles": [{ "hex": [12, -6], "model": "tree" }, { "hex": [13, -1], "model": "rock" }],
       "spawns": [
         { "monster": "bog-miller", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } }
       ],

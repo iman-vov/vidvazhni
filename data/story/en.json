@@ -137,7 +137,7 @@
     "s3": {
       "intro": [
         { "id": "s3.intro.1", "speaker": "narrator", "text": "The river has burst its banks, and the old mill stands knee-deep in water. The wheel creaks, though nobody turns it." },
-        { "id": "s3.intro.2", "speaker": "marta", "text": "Bandits guard the yard. And inside, something mumbles. Something big and wet." },
+        { "id": "s3.intro.2", "speaker": "marta", "text": "Bandits guard the yard. And in the millpond under the wheel, something mumbles. Something big and wet." },
         { "id": "s3.intro.3", "speaker": "marta", "text": "They say the sluice has a lever that lets the water out. Find it, and things get easier." },
         {
           "id": "s3.intro.4", "speaker": "hero", "pick": "random",

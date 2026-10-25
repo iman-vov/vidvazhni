@@ -2,7 +2,6 @@
   "id": "flooded-mill",
   "scenarios": ["s3"],
   "edge": "shore",
-  "rooms": { "s3.mill-hall": { "edge": "timber" } },
   "kits": ["env-thorn-path", "env-flora"],
   "surface": "mud",
   "boundary": "reeds",

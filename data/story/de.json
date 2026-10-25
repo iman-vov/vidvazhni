@@ -137,7 +137,7 @@
     "s3": {
       "intro": [
         { "id": "s3.intro.1", "speaker": "narrator", "text": "Der Fluss ist über die Ufer getreten, und die alte Mühle steht knietief im Wasser. Das Rad knarrt, obwohl es niemand dreht." },
-        { "id": "s3.intro.2", "speaker": "marta", "text": "Räuber bewachen den Hof. Und drinnen brummelt etwas. Etwas Großes und Nasses." },
+        { "id": "s3.intro.2", "speaker": "marta", "text": "Räuber bewachen den Hof. Und im Mühlteich unter dem Rad brummelt etwas. Etwas Großes und Nasses." },
         { "id": "s3.intro.3", "speaker": "marta", "text": "Man sagt, an der Schleuse gibt es einen Hebel, der das Wasser ablässt. Findet ihn, dann wird es leichter." },
         {
           "id": "s3.intro.4", "speaker": "hero", "pick": "random",
