@@ -1,6 +1,6 @@
 {
   "id": "bog-miller",
-  "hpPerHero": 8,
+  "hpPerHero": 7,
   "hpPerHeroPerLevel": 2,
   "move": 2,
   "attack": 3,

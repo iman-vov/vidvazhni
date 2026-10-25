@@ -62,7 +62,7 @@ const TABLES: Record<string, Record<string, Record<string, string>>> = {
   },
   s3: {
     's3.yard': { 'bandit-brute': '1+0 / 1+1 / 2+1', 'bandit-crossbow': '1+0 / 1+1 / 1+1' },
-    's3.sluice': { 'bog-slime': '2+0 / 2+1 / 3+1' },
+    's3.sluice': { 'bog-slime': '1+0 / 2+1 / 3+1' },
     's3.mill-hall': { 'bog-miller': '1+0 / 1+0 / 1+0' },
   },
   s4: {
@@ -71,7 +71,7 @@ const TABLES: Record<string, Record<string, Record<string, string>>> = {
     's4.upper-tier': { 'shadow-wraith': '2+0 / 2+1 / 3+1', 'stone-sentinel': '0+0 / 1+0 / 0+1' },
   },
   s5: {
-    's5.tunnel': { 'shadow-wraith': '2+0 / 2+1 / 3+1', 'gloom-cultist': '1+0 / 1+0 / 1+1' },
+    's5.tunnel': { 'shadow-wraith': '1+0 / 2+1 / 3+1', 'gloom-cultist': '1+0 / 1+0 / 1+1' },
     's5.heart': { shadowhand: '1+0 / 1+0 / 1+0' },
   },
 };

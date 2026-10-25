@@ -1,6 +1,6 @@
 {
   "id": "shadowhand",
-  "hpPerHero": 10,
+  "hpPerHero": 9,
   "hpPerHeroPerLevel": 2,
   "move": 3,
   "attack": 3,

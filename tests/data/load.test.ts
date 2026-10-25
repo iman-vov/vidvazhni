@@ -77,8 +77,8 @@ describe('monsters', () => {
   });
 
   it('bosses match the design doc', () => {
-    expect(content.bosses['bog-miller']).toMatchObject({ hpPerHero: 8, hpPerHeroPerLevel: 2, move: 2, attack: 3, shield: 1 });
-    expect(content.bosses['shadowhand']).toMatchObject({ hpPerHero: 10, hpPerHeroPerLevel: 2, move: 3, attack: 3, range: 3 });
+    expect(content.bosses['bog-miller']).toMatchObject({ hpPerHero: 7, hpPerHeroPerLevel: 2, move: 2, attack: 3, shield: 1 });
+    expect(content.bosses['shadowhand']).toMatchObject({ hpPerHero: 9, hpPerHeroPerLevel: 2, move: 3, attack: 3, range: 3 });
     for (const boss of Object.values(content.bosses)) expect(boss.immune).toEqual(['stun', 'immobilize', 'muddle']);
   });
 });

@@ -38,7 +38,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
   it('three unlit braziers stand in the Heart and block movement', () => {
     const s = heart();
     for (const hex of BRAZIERS) expect(tile(s, hex)).toMatchObject({ obstacle: true, object: { kind: 'brazier', state: 'unlit' } });
-    expect(boss(s).maxHp).toBe(20);
+    expect(boss(s).maxHp).toBe(18);
   });
 
   it('a hero next to a brazier spends a bottom action to light it and infuse Light', () => {
@@ -86,8 +86,8 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
 
   it('a hero attack on Тінерук deals half (base Атака 2 → 1), full once all braziers burn', () => {
     for (const [lit, expected] of [
-      [false, 19],
-      [true, 18],
+      [false, 17],
+      [true, 16],
     ] as const) {
       let s = heart();
       if (lit) lightAll(s);
@@ -170,7 +170,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     const s = heart();
     const m = boss(s);
     const ctx = ctxOf(s);
-    takeDamage(ctx, m, 9, 'test');
+    takeDamage(ctx, m, 8, 'test');
     expect(m.bossPhase).toBeUndefined();
     takeDamage(ctx, m, 1, 'test');
     expect(m.bossPhase).toBe(2);
@@ -178,7 +178,7 @@ describe('s5 Серце Мороку: жаровні й Тінерук', () => {
     expect(eventsOf(ctx.ev, 'bossHalfHp')).toEqual([{ type: 'bossHalfHp', figureId: m.id }]);
     expect(monsterStats(ctx, m).attack).toBe(4);
     healFigure(ctx, m, 10);
-    expect(m.hp).toBe(20);
+    expect(m.hp).toBe(18);
     expect(monsterStats(ctx, m).attack).toBe(4);
     s.behaviourDecks['shadowhand']!.current = 'boss.shadowhand.88';
     expect(figureSteps(ctx, m)[1]).toMatchObject({ type: 'attack', value: 5, range: 3, conditions: ['wound'] });

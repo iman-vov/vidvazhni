@@ -23,13 +23,13 @@ function hall(warden: [number, number], herbalist: [number, number], variants = 
 }
 
 describe('s3 Затоплений млин: Мірошник-Болотяник', () => {
-  it('health is 8 per hero (+2 per hero per level above 1), with Shield 1 and boss immunities', () => {
-    expect(miller(reveal(game('s3'), 's3.mill-hall')).maxHp).toBe(16);
-    expect(miller(reveal(game('s3', {}, ['warden', 'herbalist', 'tinker']), 's3.mill-hall')).maxHp).toBe(24);
+  it('health is 7 per hero (+2 per hero per level above 1), with Shield 1 and boss immunities', () => {
+    expect(miller(reveal(game('s3'), 's3.mill-hall')).maxHp).toBe(14);
+    expect(miller(reveal(game('s3', {}, ['warden', 'herbalist', 'tinker']), 's3.mill-hall')).maxHp).toBe(21);
     // Heroes of level 3 → scenario level 2.
     const lvl = reveal(game('s3', {}, ['warden', 'herbalist'], 3), 's3.mill-hall');
     expect(lvl.level).toBe(2);
-    expect(miller(lvl).maxHp).toBe(20);
+    expect(miller(lvl).maxHp).toBe(18);
     const s = reveal(game('s3'), 's3.mill-hall');
     const m = miller(s);
     expect(m.shields).toEqual([{ value: 1, source: 'stats', until: 'scenario' }]);
