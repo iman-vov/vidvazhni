@@ -1152,16 +1152,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const hint = { path: t('game.step.move'), targets: m.maxTargets > 1 ? t('game.step.targets', { n: m.maxTargets }) : t('game.step.target'), area: t('game.step.area'), hex: t('ui.chooseHex'), plain: '' }[m.mode];
     if (m.choices.length === 0) out.push(h('p', { class: 'gside-hint' }, t('ui.noTarget')));
     else if (hint) out.push(h('p', { class: 'gside-hint' }, ui.chosen ? t('game.step.again') : hint));
-    if (m.consumeToggle) {
-      out.push(
-        h(
-          'button',
-          { class: `gbtn gbtn-toggle${ui.sel.consume ? ' gbtn-glow' : ''}`, 'aria-pressed': String(ui.sel.consume), onclick: () => ((ui.sel = { ...emptySelection(), consume: !ui.sel.consume }), (ui.chosen = null), render()) },
-          icon(info.step.consume?.element && info.step.consume.element !== 'any' ? info.step.consume.element : 'any'),
-          t('ui.useConsume'),
-        ),
-      );
-    }
     // The result on the chosen target (or the only one): «Травниця: 5 → 8».
     const pv = info.preview;
     if (pv) {
@@ -1172,6 +1162,16 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         if (!r || !r.text) continue;
         out.push(h('p', { class: 'gside-hint gstep-preview' }, h('b', null, `${figureName(id, s)}: ${r.text} `), icon(r.icon === 'heal' ? 'hp' : r.icon)));
       }
+    }
+    if (m.consumeToggle) {
+      out.push(
+        h(
+          'button',
+          { class: `gbtn gbtn-toggle${ui.sel.consume ? ' gbtn-glow' : ''}`, 'aria-pressed': String(ui.sel.consume), onclick: () => ((ui.sel = { ...emptySelection(), consume: !ui.sel.consume }), (ui.chosen = null), render()) },
+          icon(info.step.consume?.element && info.step.consume.element !== 'any' ? info.step.consume.element : 'any'),
+          t('ui.useConsume'),
+        ),
+      );
     }
     if (m.elementKeys.length > 0 && m.mode !== 'plain') {
       out.push(
@@ -1794,6 +1794,17 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (m.mode === 'path') {
       hl.reachable = m.highlights.map((hex) => ({ hex, cost: shortestPath(m.choices, hex) }));
       if (ui.chosen?.path) hl.path = ui.chosen.path;
+    } else if (stepInfo.preview && (m.mode === 'targets' || m.mode === 'plain')) {
+      // Heal, shield, buffs, push and pull: the targets in green (allies) or red, the reach around
+      // the hero and the result over each target; the chosen one first.
+      const pv = stepInfo.preview;
+      const chosen = ui.chosen?.targets ?? ui.sel.targets;
+      hl.targets = [...chosen.filter((x) => pv.targets.includes(x)), ...pv.targets.filter((x) => !chosen.includes(x))];
+      hl.targetTone = pv.tone;
+      const hero = s.figures[stepInfo.heroId];
+      if (hero && pv.range > 0) hl.range = { center: hero.hex, radius: pv.range };
+      hl.preview = {};
+      for (const [id, r] of Object.entries(pv.results)) hl.preview[id] = { text: r.text, icon: r.icon };
     } else if (m.mode === 'targets') {
       hl.targets = m.targetIds;
       const step = stepInfo.step;
@@ -1823,17 +1834,6 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   board.sync(game.state, content);
   // Music: the location's track, the battle track while a boss is up; sounds follow the board.
-    } else if (stepInfo.preview && (m.mode === 'targets' || m.mode === 'plain')) {
-      // Heal, shield, buffs, push and pull: the targets in green (allies) or red, the reach around
-      // the hero and the result over each target; the chosen one first.
-      const pv = stepInfo.preview;
-      const chosen = ui.chosen?.targets ?? ui.sel.targets;
-      hl.targets = [...chosen.filter((x) => pv.targets.includes(x)), ...pv.targets.filter((x) => !chosen.includes(x))];
-      hl.targetTone = pv.tone;
-      const hero = s.figures[stepInfo.heroId];
-      if (hero && pv.range > 0) hl.range = { center: hero.hex, radius: pv.range };
-      hl.preview = {};
-      for (const [id, r] of Object.entries(pv.results)) hl.preview[id] = { text: r.text, icon: r.icon };
   function music(): void {
     const awake = Object.values(game.state.figures).filter((f): f is MonsterState => f.kind === 'monster' && f.hp > 0);
     if (!game.over) boardMusic(environmentFor(game.state.scenarioId).id, awake.some((f) => f.rank === 'boss'), Math.min(1, awake.length / 6));
