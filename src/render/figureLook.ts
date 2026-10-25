@@ -37,6 +37,9 @@ export const MODEL_HEIGHT: Record<string, number> = {
   'shadow-wraith': 1.25,
   'bog-miller': 1.9,
   shadowhand: 1.85,
+  'night-moth': 0.9,
+  'mountain-ram': 1.1,
+  hammerfist: 2.0,
 };
 
 /** Elite monsters stand a little taller (and get a gold base). */
