@@ -30,7 +30,7 @@
         { "monster": "thornling", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "thornling", "hex": [5, 0], "by": { "3": "normal", "4": "normal" } },
         { "monster": "thornling", "hex": [4, 2], "by": { "4": "normal" } },
-        { "monster": "mountain-ram", "hex": [5, 1], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "mountain-ram", "hex": [5, 1], "by": { "3": "normal", "4": "normal" } },
         { "monster": "mountain-ram", "hex": [3, -1], "by": { "4": "normal" } }
       ],
       "coins": [[1, 0]]
@@ -73,7 +73,7 @@
         },
         { "monster": "bandit-crossbow", "hex": [17, -5], "by": { "3": "normal", "4": "normal" } },
         { "monster": "bandit-crossbow", "hex": [18, -9], "by": { "4": "normal" } },
-        { "monster": "bandit-brute", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "bandit-brute", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "bandit-brute", "hex": [15, -4], "by": { "4": "normal" } }
       ],
       "chests": [{ "hex": [17, -4], "id": "s7.loot-sack", "loot": { "coins": 3 } }]

@@ -25,13 +25,13 @@
       ],
       "doors": [{ "hex": [6, -2], "to": "s8.storeroom-north" }, { "hex": [6, 1], "to": "s8.storeroom-south" }],
       "spawns": [
-        { "monster": "bandit-brute", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "bandit-brute", "hex": [4, 0], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "bandit-brute", "hex": [4, -1], "by": { "3": "normal", "4": "normal" } },
         { "monster": "bandit-brute", "hex": [4, 1], "by": { "4": "normal" } },
         {
           "monster": "bandit-crossbow",
           "hex": [5, -2],
-          "by": { "2": "normal", "3": "elite", "4": "elite" },
+          "by": { "2": "normal", "3": "normal", "4": "elite" },
           "tag": "s8.bell"
         },
         { "monster": "bandit-crossbow", "hex": [5, 1], "by": { "3": "normal", "4": "normal" } }
@@ -53,7 +53,7 @@
       ],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [9, -3], "by": { "2": "normal", "3": "elite", "4": "elite" } },
-        { "monster": "gloom-cultist", "hex": [8, -4], "by": { "3": "normal", "4": "normal" } }
+        { "monster": "grey-wolf", "hex": [8, -4], "by": { "3": "normal", "4": "normal" } }
       ],
       "coins": [[10, -3]],
       "objects": [{ "hex": [10, -5], "id": "s8.cage-1", "kind": "cage", "hp": 3, "blocks": true }]

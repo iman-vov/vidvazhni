@@ -32,7 +32,7 @@
         { "monster": "night-moth", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "night-moth", "hex": [5, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "night-moth", "hex": [5, 1], "by": { "3": "normal", "4": "normal" } },
-        { "monster": "gloom-cultist", "hex": [5, 0], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "gloom-cultist", "hex": [5, 0], "by": { "3": "normal", "4": "normal" } },
         { "monster": "gloom-cultist", "hex": [4, 1], "by": { "4": "normal" } }
       ],
       "coins": [[1, 3]]
