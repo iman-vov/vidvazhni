@@ -33,10 +33,21 @@
     "stool": { "model": "stool", "height": 0.45 },
     "cage": { "model": "prisoner-cage", "height": 1.1 },
     "totem": { "model": "tribal-totem", "height": 1.5 },
-    "crystal": { "model": "crystal-cluster", "height": 0.7 }
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "candles": { "model": "candles-stone", "height": 0.6 },
+    "sack": { "model": "flour-sack", "height": 0.5 },
+    "shelf": { "model": "shelf", "height": 1.25 }
   },
   "dressing": {
-    "ring": [["crate", 2], ["barrel", 2], ["banner", 2], ["torch", 2], ["rubble", 2], ["weapon-rack", 2], ["sacks", 1], ["crate-stack", 1], ["crate-broken", 1], ["stool", 1]],
+    "anchors": [["candles", 2]],
+    "sets": [
+      { "weight": 2, "items": [{ "piece": "barrel", "x": -0.36, "z": 0 }, { "piece": "crate", "x": 0.36, "z": 0.04 }, { "piece": "sack", "x": 0.0, "z": 0.5, "tilt": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "weapon-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "crate", "x": 0.7, "z": 0.14 }, { "piece": "stool", "x": -0.62, "z": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "crate-stack", "x": 0, "z": 0 }, { "piece": "crate-broken", "x": 0.64, "z": 0.16 }, { "piece": "rubble", "x": -0.56, "z": 0.34 }] },
+      { "weight": 1, "items": [{ "piece": "shelf", "x": 0, "z": -0.08, "align": true }, { "piece": "candles", "x": 0.66, "z": 0.16 }, { "piece": "barrel", "x": -0.68, "z": 0.12 }] },
+      { "weight": 1, "items": [{ "piece": "sacks", "x": 0, "z": 0 }, { "piece": "barrel", "x": 0.6, "z": 0.14 }, { "piece": "candles", "x": -0.52, "z": 0.3 }] }
+    ],
+    "ring": [["crate", 1], ["barrel", 1], ["banner", 2], ["torch", 2], ["rubble", 2], ["weapon-rack", 2], ["sacks", 1], ["crate-stack", 1], ["crate-broken", 1], ["stool", 1], ["candles", 2]],
     "density": 0.7
   }
 }

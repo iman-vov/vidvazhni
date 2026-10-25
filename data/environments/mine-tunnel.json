@@ -10,11 +10,11 @@
   "light": {
     "sky": "#5a6078",
     "ground": "#14100c",
-    "hemi": 0.42,
+    "hemi": 0.55,
     "sun": "#8a90b0",
     "sunIntensity": 0.7,
     "env": 0.25,
-    "point": { "color": "#ffa04a", "intensity": 8, "distance": 6.5 }
+    "point": { "color": "#ffa04a", "intensity": 9, "distance": 7.5 }
   },
   "fog": { "color": "#0e0b09", "glow": "#1c140e", "start": 1.8, "end": 6, "morok": "#9a96a0", "morokOpacity": 0.35 },
   "weather": { "kind": "dust", "count": 500, "color": "#b89a78", "wind": [0.12, 0.04] },

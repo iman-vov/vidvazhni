@@ -17,6 +17,7 @@
     "point": { "color": "#a884ff", "intensity": 5, "distance": 7 }
   },
   "fog": { "color": "#121119", "glow": "#241d36", "start": 2.6, "end": 8.5, "morok": "#9c9cb4", "morokOpacity": 0.5 },
+  "weather": { "kind": "dust", "count": 360, "color": "#a890d8", "wind": [0.05, 0.03] },
   "entrance": null,
   "propModels": {
     "brazier": { "model": "brazier", "height": 0.8 },
@@ -28,9 +29,17 @@
     "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
     "cage": { "model": "prisoner-cage", "height": 1.1 },
     "totem": { "model": "tribal-totem", "height": 1.5 },
-    "crystal": { "model": "crystal-cluster", "height": 0.7 }
+    "crystal": { "model": "crystal-cluster", "height": 0.7 },
+    "candles": { "model": "candles-stone", "height": 0.6 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 }
   },
   "dressing": {
+    "anchors": [["brazier-lit", 2], ["candles", 2]],
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "stalagmite", "x": 0, "z": -0.05 }, { "piece": "crystals", "x": 0.5, "z": 0.18 }, { "piece": "glow-mushrooms", "x": -0.45, "z": 0.28 }] },
+      { "weight": 2, "items": [{ "piece": "rock", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.2 }, { "piece": "glow-mushrooms", "x": -0.4, "z": 0.3 }] },
+      { "weight": 1, "items": [{ "piece": "candles", "x": 0, "z": 0 }, { "piece": "rubble", "x": 0.55, "z": 0.18 }, { "piece": "rock", "x": -0.5, "z": 0.22 }] }
+    ],
     "ring": [["stalagmite", 3], ["rock", 3], ["crystals", 2], ["glow-mushrooms", 2]],
     "outside": [["stalagmite", 2], ["rock", 2], ["crystals", 1]],
     "far": [["stalagmite-big", 3]],

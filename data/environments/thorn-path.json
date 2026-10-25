@@ -29,6 +29,12 @@
     "crystal": { "model": "crystal-cluster", "height": 0.7 }
   },
   "dressing": {
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "fern", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.12 }, { "piece": "mushrooms", "x": -0.42, "z": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "stump", "x": 0, "z": 0 }, { "piece": "fern", "x": 0.45, "z": 0.1 }, { "piece": "mushrooms", "x": -0.36, "z": 0.28 }] },
+      { "weight": 2, "items": [{ "piece": "log", "x": 0, "z": 0.05, "align": true }, { "piece": "fern", "x": 0.7, "z": 0.12 }, { "piece": "roots", "x": -0.6, "z": 0.2 }] },
+      { "weight": 2, "items": [{ "piece": "bush", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.55, "z": 0.2 }, { "piece": "fern", "x": -0.5, "z": 0.22 }] }
+    ],
     "ring": [["fern", 3], ["mushrooms", 2], ["rock", 2], ["roots", 2], ["bush", 2], ["stump", 1], ["log", 1]],
     "outside": [["tree", 4], ["tree-green", 3], ["pine", 2], ["thorn-bush", 2], ["bush", 2], ["rock", 1], ["stump", 1], ["fern", 1]],
     "far": [["tree-far", 3], ["pine", 2]],

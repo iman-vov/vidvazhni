@@ -31,6 +31,7 @@ import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SP
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { gapPartitions, partitions, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
+import { buildScatter, planScatter, scatterProfile } from './scatter';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
@@ -124,6 +125,8 @@ export class BoardEnvironment {
   private flicker: { material: THREE.MeshBasicMaterial; base: THREE.Color }[] = [];
   private lights: { light: THREE.PointLight; base: number; phase: number; kind: LightSpot['kind']; room: string | null }[] = [];
   private placements: Placement[] = [];
+  /** Hexes with an obstacle, door, object or trap: the small-things layer keeps off them. */
+  private busy = new Set<HexKey>();
   private kitParts = new Map<string, Part[]>();
   /** Prop models that loaded for pieces of this location, by piece id. */
   private propProtos = new Map<string, PropPrototype>();
@@ -156,6 +159,7 @@ export class BoardEnvironment {
     this.def = withRoomEdges(environmentFor(scenario.id), scenario);
     this.obstacleLooks = assignObstacleLooks(scenario, this.def);
     this.layout = buildLayout(scenario);
+    this.busy = busyHexes(scenario);
     this.partitionLines = scenarioPartitions(this.layout, scenario);
     this.veil.clear();
     for (const room of scenario.rooms) this.veil.set(room.id, revealed.includes(room.id) ? 0 : 1);
@@ -468,6 +472,7 @@ export class BoardEnvironment {
     this.buildGround(def);
     this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
     this.buildPieces(q.shadows);
+    this.buildScatter();
     this.buildLights(q.lights);
     this.buildAtmosphere();
     if (q.wisps > 0) {
@@ -770,6 +775,22 @@ export class BoardEnvironment {
     this.update(0);
   }
 
+  /** Pebbles, tufts, candle stubs, bones, ore… in clumps over the floor (see scatter.ts). */
+  private buildScatter(): void {
+    const def = this.def!;
+    const spots = planScatter({
+      layout: this.layout!,
+      profile: scatterProfile(def.id, def.edge),
+      quality: this.quality,
+      busy: this.busy,
+      placements: this.placements,
+      partitions: this.partitionLines.map((p) => p.points),
+    });
+    const built = buildScatter(spots, (key, sway) => (sway ? this.swayMaterial(key, { amp: sway }) : this.material(key)));
+    this.root.add(built.root);
+    this.disposables.push(built);
+  }
+
   /** Dirt on the floor, dressing on the walls, warm pools under the flames (see decals.ts). */
   private buildAtmosphere(): void {
     this.atmosphere = buildAtmosphere({
@@ -956,6 +977,21 @@ export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): Envir
 }
 
 /** The scenario's walls between rooms as partitions over the location's outline. */
+/** Hexes that have something on them in the scenario data (obstacles, doors, objects, traps…). */
+export function busyHexes(scenario: ScenarioDef): Set<HexKey> {
+  const out = new Set<HexKey>();
+  for (const room of scenario.rooms) {
+    for (const value of Object.values(room)) {
+      if (!Array.isArray(value)) continue;
+      for (const item of value) {
+        const hex = (item as { hex?: unknown } | null)?.hex;
+        if (Array.isArray(hex) && hex.length === 2 && hex.every((n) => typeof n === 'number')) out.add(hexKey(hex as [number, number]));
+      }
+    }
+  }
+  return out;
+}
+
 export function scenarioPartitions(layout: EnvLayout, scenario: ScenarioDef): Partition[] {
   const walls = scenario.rooms.flatMap((room) =>
     (room.walls ?? []).map(([a, b]) => ({ a, b, rooms: [...new Set([room.id, layout.footprint.get(hexKey(a)), layout.footprint.get(hexKey(b))].filter((r): r is string => !!r))] })),

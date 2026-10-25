@@ -49,6 +49,11 @@ if (/^s([6-9]|10)$/.test(params.get('board') ?? '')) {
     if (table) table[id!] = data;
   }
 }
+// The tutorial (s0) lives in data/tutorial/, outside loadContent()'s scenarios: ?board=s0 adds it.
+if (params.get('board') === 's0') {
+  const tutorial = import.meta.glob<Record<string, unknown>>('/data/tutorial/s0-tutorial.json', { eager: true, import: 'default' });
+  for (const data of Object.values(tutorial)) (content.scenarios as Record<string, unknown>)['s0'] = data;
+}
 const heroes = (params.get('heroes') ?? 'warden,wind-archer,herbalist,rogue').split(',').filter((id) => content.heroes[id]);
 const fork = params.get('fork') === '1';
 const setup = {
@@ -75,6 +80,8 @@ function freshGame(): GameState {
 }
 
 const board = createBoardView(view, { quality, speed: Number(params.get('speed') ?? 1), lang: 'uk' });
+// For headless screenshot scripts: board.benchmark(1) then canvas.toDataURL() in the same task.
+(window as unknown as { board: typeof board }).board = board;
 let state: GameState = freshGame();
 board.sync(state, content);
 // For automated checks (screenshots, emulated touch) from the browser's console.

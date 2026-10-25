@@ -37,6 +37,12 @@
     "crystal": { "model": "crystal-cluster", "height": 0.7 }
   },
   "dressing": {
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "reeds", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.16 }, { "piece": "lilies", "x": -0.5, "z": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "sacks", "x": 0, "z": 0 }, { "piece": "crate", "x": 0.6, "z": 0.1 }, { "piece": "sack", "x": -0.46, "z": 0.3, "tilt": 0.35 }] },
+      { "weight": 2, "items": [{ "piece": "post", "x": 0, "z": 0 }, { "piece": "reeds", "x": 0.4, "z": 0.12 }, { "piece": "log", "x": -0.55, "z": 0.2, "align": true }] },
+      { "weight": 1, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "crate-broken", "x": 0.62, "z": 0.16 }, { "piece": "reeds", "x": -0.5, "z": 0.24 }] }
+    ],
     "ring": [["reeds", 3], ["rock", 2], ["sacks", 1], ["post", 2], ["fence", 2], ["log", 1], ["lilies", 2], ["crate-broken", 1]],
     "outside": [["reeds", 3], ["lilies", 3], ["rock", 1], ["post", 1], ["tree-green", 1], ["log", 1]],
     "far": [["tree-far", 2], ["reeds", 1]],

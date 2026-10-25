@@ -35,7 +35,11 @@
     "sack": { "model": "flour-sack", "height": 0.5 },
     "campfire": { "model": "campfire", "height": 0.5 },
     "mine-cart": { "model": "mine-cart", "height": 0.75 },
-    "ore-pile": { "model": "ore-pile", "height": 0.45 }
+    "ore-pile": { "model": "ore-pile", "height": 0.45 },
+    "table": { "model": "tavern-table", "height": 0.62 },
+    "stool": { "model": "stool", "height": 0.45 },
+    "keg-rack": { "model": "keg-rack", "height": 0.95 },
+    "candles": { "model": "candles-stone", "height": 0.6 }
   },
   "obstacles": { "barrel": ["barrel", "crate", "sacks", "barrel"], "crate": ["crate", "crate-stack", "crate-broken"] },
   "dressing": {
@@ -45,9 +49,11 @@
       { "weight": 2, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "crate", "x": 0.03, "z": 0.02, "on": 0 }, { "piece": "crate-broken", "x": 0.66, "z": 0.14 }] },
       { "weight": 2, "items": [{ "piece": "mine-cart", "x": 0, "z": 0.05, "align": true }, { "piece": "ore-pile", "x": 0.75, "z": 0.2 }] },
       { "weight": 1, "items": [{ "piece": "weapon-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "barrel", "x": 0.72, "z": 0.18 }] },
-      { "weight": 1, "items": [{ "piece": "timber-stack", "x": 0, "z": 0, "align": true }, { "piece": "sacks", "x": 0.7, "z": 0.15 }] }
+      { "weight": 1, "items": [{ "piece": "timber-stack", "x": 0, "z": 0, "align": true }, { "piece": "sacks", "x": 0.7, "z": 0.15 }] },
+      { "weight": 2, "items": [{ "piece": "table", "x": 0, "z": 0.1 }, { "piece": "stool", "x": 0.6, "z": 0.25 }, { "piece": "stool", "x": -0.55, "z": 0.3 }] },
+      { "weight": 2, "items": [{ "piece": "keg-rack", "x": 0, "z": 0, "align": true }, { "piece": "barrel", "x": -0.72, "z": 0.1 }, { "piece": "sack", "x": 0.64, "z": 0.3, "tilt": 0.3 }] }
     ],
-    "ring": [["crate", 2], ["barrel", 2], ["sacks", 2], ["crate-stack", 1], ["ore-pile", 1], ["weapon-rack", 1], ["timber-stack", 1], ["crate-broken", 1]],
+    "ring": [["crate-stack", 1], ["ore-pile", 1], ["weapon-rack", 1], ["timber-stack", 1], ["crate-broken", 1], ["keg-rack", 1], ["candles", 1]],
     "far": [["house-far", 3]],
     "density": 0.6
   }
