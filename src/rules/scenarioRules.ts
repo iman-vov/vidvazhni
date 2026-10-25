@@ -235,12 +235,22 @@ export function spawnNpcs(ctx: Ctx, room: RoomDef): void {
   }
 }
 
-/** Where an NPC walks this turn: the goal zone while a hero is near, else nowhere (null). */
+/** Where an NPC walks this turn: the goal zone while a hero is near, else nowhere (null). Until the
+ *  zone's room is revealed it heads for the revealed hexes nearest the zone (the doorway on the way). */
 export function npcGoal(ctx: Pick<Ctx, 's' | 'c'>, npc: SummonState): Hex[] | null {
   const scenario = scenarioOf(ctx);
   if (!scenario || !heroes(ctx.s).some((h) => isPresent(h) && distance(h.hex, npc.hex) <= NPC_LEAD)) return null;
   const zone = goalZone(scenario);
-  return zone.length ? zone : null;
+  if (!zone.length) return null;
+  if (zone.some((h) => ctx.s.board.tiles[hexKey(h)])) return zone;
+  const toZone = (k: string) => Math.min(...zone.map((h) => distance(h, parseHexKey(k))));
+  const keys = Object.keys(ctx.s.board.tiles).filter((k) => {
+    const t = ctx.s.board.tiles[k]!;
+    return !t.obstacle && !(t.door && !t.door.open);
+  });
+  // The nearest two rings, so a hero standing on the nearest hex doesn't stop the NPC.
+  const best = Math.min(...keys.map(toZone));
+  return keys.filter((k) => toZone(k) <= best + 1).map(parseHexKey);
 }
 
 /** Start of a round: every standing object with `spawn` (a totem) calls a monster next to it. */
