@@ -50,7 +50,7 @@ describe('renderer presets', () => {
   it('grow with the level', () => {
     expect(RENDERER_PRESETS.low).toMatchObject({ maxPixelRatio: 1, antialias: false, shadows: 'none' });
     expect(RENDERER_PRESETS.medium).toMatchObject({ maxPixelRatio: 1.5, antialias: true, shadows: 'figures' });
-    expect(RENDERER_PRESETS.high.maxPixelRatio).toBe(2);
+    expect(RENDERER_PRESETS.high.maxPixelRatio).toBe(1.5);
     expect(RENDERER_PRESETS.high.shadowMapSize).toBeGreaterThan(RENDERER_PRESETS.medium.shadowMapSize);
   });
 

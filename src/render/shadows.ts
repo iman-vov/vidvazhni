@@ -20,17 +20,23 @@ export interface ShadowTier {
   casters: 'all' | 'big';
   /** Point lights (lanterns, torches) that cast shadows, nearest the board first. */
   lamps: number;
+  /** Whether swaying reed blades cast: hundreds of thousands of triangles drawn again into the
+   *  sun's map for a shadow that reads as noise (their still stems keep casting). */
+  reeds: boolean;
 }
 
 export const SHADOW_TIERS: Record<GraphicsQuality, ShadowTier> = {
-  low: { mode: 'baked', mapSize: 0, radius: 0, casters: 'all', lamps: 0 },
-  medium: { mode: 'realtime', mapSize: 1024, radius: 1.5, casters: 'big', lamps: 0 },
-  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'all', lamps: 2 },
+  low: { mode: 'baked', mapSize: 0, radius: 0, casters: 'all', lamps: 0, reeds: true },
+  medium: { mode: 'realtime', mapSize: 1024, radius: 1.5, casters: 'big', lamps: 0, reeds: true },
+  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'all', lamps: 2, reeds: false },
 };
 
 /** Layer of the things a lamp's shadow is drawn from: the static casters, not the figures (a lamp's
  *  map is drawn once and kept). */
 export const LAMP_LAYER = 3;
+
+/** The marsh's swaying reed blades (environment/marsh.ts names them env:marsh:<node>:soft). */
+const SWAYING_REEDS = /^env:marsh:reeds[\w-]*:soft$/;
 
 /** Height (m) below which a mesh counts as flat: it casts nothing (floors, decals, a coin). */
 const FLAT = 0.012;
@@ -87,7 +93,7 @@ export function applyShadowFlags(root: THREE.Object3D, tier: ShadowTier, floorY:
     const mesh = o as THREE.Mesh;
     if (mesh.isMesh) {
       const kind = casterSize(mesh);
-      mesh.castShadow = kind !== 'none' && (tier.casters === 'all' || kind === 'big') && worldTop(mesh) > floorY + 0.015;
+      mesh.castShadow = kind !== 'none' && (tier.casters === 'all' || kind === 'big') && (tier.reeds || !SWAYING_REEDS.test(mesh.name)) && worldTop(mesh) > floorY + 0.015;
       // On low the flag only marks what the bake draws; receiving costs nothing without a map.
       mesh.receiveShadow = realtime && solid(mesh);
     }
@@ -137,6 +143,78 @@ export function fitSunShadow(sun: THREE.DirectionalLight, area: THREE.Box3, dire
   const texel = Math.max(lb.max.x - lb.min.x, lb.max.y - lb.min.y) / mapSize;
   sun.shadow.bias = -0.0002;
   sun.shadow.normalBias = texel * 1.4;
+  cam.userData.full = { left: cam.left, right: cam.right, bottom: cam.bottom, top: cam.top, floorY: area.min.y + 0.05, topY: area.max.y };
+}
+
+/** Shrink steps of the view-fitted map: its size changes only between these (zooming), never while
+ *  panning, so shadow edges do not crawl. */
+const VIEW_STEP = Math.SQRT2;
+const MAX_VIEW_STEPS = 2;
+const ndc = [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const;
+const near = new THREE.Vector3();
+const far = new THREE.Vector3();
+const lightBox = new THREE.Box2();
+const point = new THREE.Vector3();
+
+/**
+ * Narrows the sun's shadow camera (fitted to the whole board by fitSunShadow) to the part of the
+ * board the view shows, with `margin` metres around it: casters outside it are not drawn into the
+ * map (three culls them against the shadow camera), and the map's texels go where the eye is. The
+ * light-space column over the visible floor is kept whole, so a wall off screen still throws its
+ * shadow into view. The size moves in √2 steps and the position in whole texels, and the filter
+ * radius follows the texel size, so the shadows look the same as from the whole-board fit.
+ * Returns whether the camera changed.
+ */
+export function fitSunToView(sun: THREE.DirectionalLight, view: THREE.Camera, baseRadius: number, margin: number): boolean {
+  const cam = sun.shadow.camera;
+  const full = cam.userData.full as { left: number; right: number; bottom: number; top: number; floorY: number; topY: number } | undefined;
+  if (!full) return false;
+  const toLight = cam.matrixWorldInverse;
+  lightBox.makeEmpty();
+  for (const [x, y] of ndc) {
+    near.set(x, y, -1).unproject(view);
+    far.set(x, y, 1).unproject(view);
+    // Where this corner's ray meets the floor; a ray above the horizon ends at the far plane.
+    const t = far.y < full.floorY ? (full.floorY - near.y) / (far.y - near.y) : 1;
+    point.lerpVectors(near, far, Math.min(1, Math.max(0, t)));
+    for (const h of [full.floorY, full.topY]) {
+      // Each floor point and the same spot at wall height (the tops of walls seen at the screen's edge).
+      const v = new THREE.Vector3(point.x, h, point.z).applyMatrix4(toLight);
+      lightBox.expandByPoint(new THREE.Vector2(v.x, v.y));
+    }
+  }
+  lightBox.expandByScalar(margin);
+  const fullW = Math.max(full.right - full.left, full.top - full.bottom);
+  const needW = Math.max(lightBox.max.x - lightBox.min.x, lightBox.max.y - lightBox.min.y);
+  // The smallest step that holds the view, never more than the whole board.
+  // At most two steps (half the board's width): the 5-tap filter turns grainy past twice its radius.
+  const steps = Math.min(MAX_VIEW_STEPS, Math.max(0, Math.floor(Math.log(fullW / Math.max(needW, 1e-3)) / Math.log(VIEW_STEP))));
+  const w = fullW / Math.pow(VIEW_STEP, steps);
+  const mapSize = Math.max(1, sun.shadow.mapSize.x);
+  const texel = w / mapSize;
+  const snap = (x: number) => Math.floor(x / texel) * texel;
+  let left: number;
+  let bottom: number;
+  if (steps === 0) {
+    left = full.left;
+    bottom = full.bottom;
+  } else {
+    const cx = THREE.MathUtils.clamp((lightBox.min.x + lightBox.max.x) / 2, full.left + w / 2, full.right - w / 2);
+    const cy = THREE.MathUtils.clamp((lightBox.min.y + lightBox.max.y) / 2, full.bottom + w / 2, full.top - w / 2);
+    left = snap(cx - w / 2);
+    bottom = snap(cy - w / 2);
+  }
+  const width = steps === 0 ? full.right - full.left : w;
+  const height = steps === 0 ? full.top - full.bottom : w;
+  sun.shadow.radius = baseRadius * (fullW / w);
+  sun.shadow.normalBias = texel * 1.4;
+  if (cam.left === left && cam.bottom === bottom && cam.right === left + width && cam.top === bottom + height) return false;
+  cam.left = left;
+  cam.right = left + width;
+  cam.bottom = bottom;
+  cam.top = bottom + height;
+  cam.updateProjectionMatrix();
+  return true;
 }
 
 /**
@@ -167,6 +245,10 @@ export function setupLampShadows(scene: THREE.Scene, count: number, centre: THRE
     l.shadow.camera.far = Math.max(2, l.distance || 6);
     l.shadow.camera.layers.set(LAMP_LAYER);
     l.shadow.autoUpdate = false;
+    // three makes the cube map only when it draws one. Until then the shader's samplerCubeShadow
+    // gets an empty colour cube, and D3D11 (ANGLE) drops every lit draw call: a black board for
+    // the 600 ms before the caller's redraw. So a lamp without a map draws it on the next frame.
+    if (!l.shadow.map) l.shadow.needsUpdate = true;
   }
   return on;
 }

@@ -32,7 +32,7 @@ import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, type PerfBreakdown } from './perfStats';
-import { applyShadowFlags, bakeCaster, fitSunShadow, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
+import { applyShadowFlags, bakeCaster, fitSunShadow, fitSunToView, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
 
@@ -57,6 +57,8 @@ const KEY_MAX = 4.8;
 const FILL_GAIN = 0.55;
 /** How much darker a shadow on the floor gets on top of the light it loses (ShadowMaterial over the
  *  floor): lamps and sky still fill a shadowed floor to ~2/3 indoors, which reads too pale. */
+/** Metres of board around the view that the sun's shadow map still covers (fitSunToView). */
+const SUN_VIEW_MARGIN = 1.5;
 const FLOOR_SHADE: Record<GraphicsQuality, number> = { low: 0, medium: 0.25, high: 0.32 };
 /** How long the board stays still before the low level re-bakes its floor shadows (ms). */
 const BAKE_DELAY = 250;
@@ -445,6 +447,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     if (shadowsDirty) refreshShadows();
+    // The sun's map covers what the view shows (and what throws shadows into it), not the whole board.
+    if (sun.castShadow) fitSunToView(sun, camera.camera, SHADOW_TIERS[quality].radius, SUN_VIEW_MARGIN);
     post.render();
     overlay.update(camera.camera, root.clientWidth, root.clientHeight);
     if (resetButton) {

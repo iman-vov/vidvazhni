@@ -22,7 +22,7 @@ export interface RendererPreset {
 export const RENDERER_PRESETS: Record<GraphicsQuality, RendererPreset> = {
   low: { maxPixelRatio: 1, antialias: false, shadows: 'none', shadowMapSize: 0, post: 'none' },
   medium: { maxPixelRatio: 1.5, antialias: true, shadows: 'figures', shadowMapSize: 1024, post: 'grade' },
-  high: { maxPixelRatio: 2, antialias: true, shadows: 'all', shadowMapSize: 2048, post: 'ao' },
+  high: { maxPixelRatio: 1.5, antialias: true, shadows: 'all', shadowMapSize: 2048, post: 'ao' },
 };
 
 const STORAGE_KEY = 'vidvazhni.graphicsQuality';

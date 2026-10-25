@@ -67,20 +67,16 @@ const GradeShader = {
     }`,
 };
 
-/** GTAO that leaves out see-through things (fog, glows, decals, the grid): they write no depth. */
+/** GTAO from the depth the scene pass already drew (normals rebuilt from it), at half resolution:
+ *  no second render of the whole scene, and no second draw of the shadow maps. */
 class BoardAOPass extends GTAOPass {
-  private hidden: THREE.Object3D[] = [];
+  override setSize(width: number, height: number): void {
+    super.setSize(Math.max(1, Math.ceil(width / 2)), Math.max(1, Math.ceil(height / 2)));
+  }
+
   override render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, deltaTime: number, maskActive: boolean): void {
-    this.scene.traverseVisible((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
-      if (!m) return;
-      const list = Array.isArray(m) ? m : [m];
-      if (list.some((x) => x.transparent || !x.depthWrite || x.blending !== THREE.NormalBlending)) this.hidden.push(o);
-    });
-    for (const o of this.hidden) o.visible = false;
+    if (readBuffer.depthTexture && this.depthTexture !== readBuffer.depthTexture) this.setGBuffer(readBuffer.depthTexture);
     super.render(renderer, writeBuffer, readBuffer, deltaTime, maskActive);
-    for (const o of this.hidden) o.visible = true;
-    this.hidden = [];
   }
 }
 
@@ -112,7 +108,9 @@ export class BoardPost {
     this.renderer = renderer;
     this.mode = preset.post;
     if (this.mode === 'none') return;
-    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: preset.antialias ? 4 : 0 });
+    // AO reads the scene pass's depth (each of the composer's two targets has its own).
+    const depthTexture = this.mode === 'ao' ? new THREE.DepthTexture(1, 1) : null;
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: preset.antialias ? 4 : 0, depthTexture });
     const composer = new EffectComposer(renderer, target);
     composer.addPass(new RenderPass(this.scene, this.camera));
     if (this.mode === 'ao') {
@@ -177,8 +175,10 @@ export class BoardPost {
     this.ao?.dispose();
     this.ao = null;
     if (this.composer) {
-      this.composer.renderTarget1.dispose();
-      this.composer.renderTarget2.dispose();
+      for (const t of [this.composer.renderTarget1, this.composer.renderTarget2]) {
+        t.depthTexture?.dispose();
+        t.dispose();
+      }
     }
     this.composer = null;
   }

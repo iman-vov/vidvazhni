@@ -5,7 +5,8 @@
 // All pieces are procedural placeholders with kit ids; an art kit replaces them by id (kit.ts), and
 // a prop model from Meshy (assets/models, mapped by the location's `propModels`) replaces a prop
 // piece once it exists, drawn instanced. Props stand on soft contact shadows.
-// Static geometry is merged per material, so the whole environment costs ~15–30 draw calls.
+// Static geometry is merged per material (a heavy material per 8 m patch, so what is out of view is
+// culled), so the whole environment costs ~15–40 draw calls.
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -64,6 +65,10 @@ const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
 /** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
+/** Side (m) of the ground patches a heavy merged material is split into, and the triangle count
+ *  from which it is split: a patch out of view costs nothing in the scene or the sun's map. */
+const PATCH = 8;
+const PATCH_MIN_TRIS = 100_000;
 /** The wall between rooms per divider style (pieces.ts ids, replaceable by an art kit like the rest). */
 export const DIVIDER_PIECES: Record<DividerStyle, string> = {
   stone: 'divider-stone',
@@ -712,7 +717,8 @@ export class BoardEnvironment {
   private buildPieces(shadows: boolean): void {
     const rnd = seededRandom(`colours:${this.scenarioId}`);
     const cache = new Map<string, Part[]>();
-    const groups = new Map<MaterialKey | THREE.Material, THREE.BufferGeometry[]>();
+    // Per material, then per patch of ground (see PATCH): far patches drop out of view and out of the sun's map.
+    const groups = new Map<MaterialKey | THREE.Material, Map<string, THREE.BufferGeometry[]>>();
     const low = this.quality === 'low';
     const place = new THREE.Matrix4();
     const full = new THREE.Matrix4();
@@ -761,23 +767,32 @@ export class BoardEnvironment {
         // Reeds, grass and banners bend in the wind: their parts go to a swaying material.
         const sway = swayFor(p.piece, part.material);
         const key = sway ? this.swayMaterial(part.material, sway) : part.material;
-        let list = groups.get(key);
-        if (!list) groups.set(key, (list = []));
+        let patches = groups.get(key);
+        if (!patches) groups.set(key, (patches = new Map()));
+        const patch = `${Math.floor(p.x / PATCH)},${Math.floor(p.z / PATCH)}`;
+        let list = patches.get(patch);
+        if (!list) patches.set(patch, (list = []));
         list.push(g);
       }
     }
     for (const parts of cache.values()) for (const part of parts) part.geometry.dispose();
-    for (const [key, list] of groups) {
-      const merged = mergeGeometries(list, false);
-      for (const g of list) g.dispose();
-      if (!merged) continue;
-      const mesh = new THREE.Mesh(merged, typeof key !== 'string' && this.swayed.has(key) ? key : this.material(key));
-      mesh.name = `env:${typeof key === 'string' ? key : key.name || 'kit'}`;
-      const lit = typeof key !== 'string' || !UNLIT.has(key);
-      mesh.castShadow = shadows && lit;
-      mesh.receiveShadow = lit;
-      this.disposables.push(merged);
-      this.root.add(mesh);
+    for (const [key, patches] of groups) {
+      // A light material stays one draw call; a heavy one (rock kits, timber) is one per patch.
+      let tris = 0;
+      for (const list of patches.values()) for (const g of list) tris += (g.index?.count ?? g.getAttribute('position').count) / 3;
+      const lists = tris < PATCH_MIN_TRIS ? [[...patches.values()].flat()] : [...patches.values()];
+      for (const list of lists) {
+        const merged = mergeGeometries(list, false);
+        for (const g of list) g.dispose();
+        if (!merged) continue;
+        const mesh = new THREE.Mesh(merged, typeof key !== 'string' && this.swayed.has(key) ? key : this.material(key));
+        mesh.name = `env:${typeof key === 'string' ? key : key.name || 'kit'}`;
+        const lit = typeof key !== 'string' || !UNLIT.has(key);
+        mesh.castShadow = shadows && lit;
+        mesh.receiveShadow = lit;
+        this.disposables.push(merged);
+        this.root.add(mesh);
+      }
     }
     this.buildModelled(modelled, shadows);
     this.buildBlobs(blobs);
