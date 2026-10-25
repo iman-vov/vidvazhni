@@ -242,6 +242,19 @@ function renderSheet(model: Model, title: string): void {
   renderer.setSize(tile, tile, false);
   const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
   const box = new THREE.Box3();
+  // Some raw rigs are a centimetre tall (the board scales them by figureLook's height): bring every
+  // figure to hero height, measured the way figureView does.
+  model.scene.updateMatrixWorld(true);
+  model.scene.traverse((o) => {
+    const sm = o as THREE.SkinnedMesh;
+    if (sm.isSkinnedMesh) {
+      sm.skeleton.update();
+      sm.computeBoundingBox();
+    }
+  });
+  box.setFromObject(model.scene);
+  const measured = box.max.y - Math.max(PLATE_HEIGHT, box.min.y);
+  if (measured > 1e-6) model.scene.scale.multiplyScalar(1.3 / measured);
   frames.forEach(([clip, at], col) => {
     model.mixer.stopAllAction();
     const action = model.mixer.clipAction(model.clips[clip]!);
@@ -249,8 +262,15 @@ function renderSheet(model: Model, title: string): void {
     action.time = at * model.clips[clip]!.duration;
     model.mixer.update(0);
     model.scene.updateMatrixWorld(true);
-    box.setFromObject(model.scene);
-    const h = box.max.y - PLATE_HEIGHT;
+    // Framed by the posed bones (the skinned meshes' boxes are far off on some rigs), padded a little.
+    box.makeEmpty();
+    model.scene.traverse((o) => {
+      if ((o as THREE.Bone).isBone) box.expandByPoint(new THREE.Vector3().setFromMatrixPosition(o.matrixWorld));
+    });
+    if (box.isEmpty()) box.setFromObject(model.scene);
+    box.expandByVector(box.getSize(new THREE.Vector3()).multiplyScalar(0.12));
+    box.min.y = Math.min(box.min.y, PLATE_HEIGHT);
+    const h = Math.max(box.max.y - PLATE_HEIGHT, 0.2);
     const centre = box.getCenter(new THREE.Vector3());
     const y = PLATE_HEIGHT + h * 0.6;
     // Front, from the figure's right (where most weapons are), from its left; whole figure in each.
