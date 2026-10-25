@@ -685,6 +685,82 @@
         ]
       },
       "epilogue": { "id": "s10.epilogue", "speaker": "marta", "text": "Now we have a smith giant too. Maybe he can at least make nails for the roof." }
+    },
+    "s11": {
+      "intro": [
+        { "id": "s11.intro.1", "speaker": "narrator", "text": "Past Thornwood lies the Sleepy Marsh. The mist sits on the water like a blanket on a sleeping cat." },
+        { "id": "s11.intro.2", "speaker": "marta", "text": "The moths flew off to the marsh, and the mist there is so thick you can’t see your own spoon. Take the boardwalk to the ferryman’s farm." },
+        { "id": "s11.intro.3", "speaker": "marta", "text": "And watch out for the Hopper Chief. It’s jumping to the farm too, and whoever gets there first gets the ferry." },
+        {
+          "id": "s11.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Onto the boardwalk!",
+          "variants": {
+            "warden": "The boards are narrow and I’m wide. Walk behind me, I’ll check they hold.",
+            "wind-archer": "Hear the croaking? That’s not a quarrel. They’re counting off.",
+            "herbalist": "Bog myrtle and cranberries grow in the marsh. Just don’t eat anything without asking me.",
+            "rogue": "I don’t like wet boots. But I do like a race against a frog.",
+            "elementalist": "Mist is just water in the air. I read that. It doesn’t scare me. Almost.",
+            "tinker": "Bolt, keep to the middle of the boards. You swim like a nail."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s11.causeway",
+          "trigger": { "on": "doorOpened", "arg": "s11.causeway" },
+          "lines": [
+            { "id": "s11.causeway.1", "speaker": "narrator", "text": "The boardwalk stretches far into the mist. Deep dark water lies to the left and right, and beside it the Hopper Chief leaps from lily pad to lily pad." },
+            { "id": "s11.causeway.2", "speaker": "wind-archer", "text": "The frogs jump on the third step. Count it: one, two, hop. And don’t stand where they land." }
+          ]
+        },
+        {
+          "id": "s11.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s11.whisper.1", "speaker": "narrator", "text": "Suddenly the mist stirs, as if someone smoothed it with a hand." },
+            { "id": "s11.whisper.2", "speaker": "mist-queen", "text": "Shhh. The marsh is sleeping. Who’s that splashing along my boardwalk?" }
+          ]
+        },
+        {
+          "id": "s11.first-hopper",
+          "trigger": { "on": "monsterKilled", "arg": "marsh-hopper" },
+          "lines": [
+            { "id": "s11.first-hopper.1", "speaker": "narrator", "text": "The Marsh Hopper gave a funny hiccup, the mist flew off its back, and it plopped into the water to catch gnats." }
+          ]
+        },
+        {
+          "id": "s11.farm",
+          "trigger": { "on": "doorOpened", "arg": "s11.ferry" },
+          "lines": [
+            { "id": "s11.farm.1", "speaker": "narrator", "text": "Here is the ferryman’s farm. Grey wolves stand by the ferry, with the same mist in their eyes." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s11.win.1", "speaker": "narrator", "text": "The party reached the farm first. The Hopper Chief sat on a stump and puffed out its cheeks in a sulk." },
+          { "id": "s11.win.2", "speaker": "ferryman", "text": "Thank you, Brave Ones. This mist isn’t ordinary. Someone weaves it at night on old looms, thread by thread." },
+          { "id": "s11.win.3", "speaker": "ferryman", "text": "And Old Heron is all alone on her island. The mist has crept up to her hut, and she can’t see her boat." },
+          { "id": "s11.win.4", "speaker": "ferryman", "text": "And at the forest pond the moths are putting out the fireflies, one by one. Where will you go first?" },
+          {
+            "id": "s11.win.5", "speaker": "hero", "pick": "random",
+            "text": "We have to choose.",
+            "variants": {
+              "warden": "Someone needs a shield and someone needs a light. You choose, I’ll follow.",
+              "wind-archer": "Herons don’t like being frightened. Neither do fireflies.",
+              "herbalist": "Old Heron? My Heron? She taught me everything I know.",
+              "rogue": "Someone weaves mist? I wonder what a loom like that is worth.",
+              "elementalist": "Fireflies glow without any heat. I’ve always wanted to see that.",
+              "tinker": "Looms in a marsh? The wood will swell. Strange work."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s11.lose.1", "speaker": "marta", "text": "The frog was quicker. Never mind, dry your boots and we’ll try again." },
+          { "id": "s11.lose.2", "speaker": "marta", "text": "Keep away from deep water, your feet get stuck there. And ring the bell on the little island. It calls the ferry." }
+        ]
+      },
+      "epilogue": { "id": "s11.epilogue", "speaker": "marta", "text": "The ferryman sent a basket of cranberries. Now choose: Old Heron or the fireflies?" }
     }
   }
 }

@@ -685,6 +685,82 @@
         ]
       },
       "epilogue": { "id": "s10.epilogue", "speaker": "marta", "text": "Jetzt haben wir auch noch einen Schmiederiesen. Soll er uns wenigstens Nägel fürs Dach schmieden." }
+    },
+    "s11": {
+      "intro": [
+        { "id": "s11.intro.1", "speaker": "narrator", "text": "Hinter dem Dornwald beginnt der Schlummersumpf. Der Nebel liegt dort auf dem Wasser wie eine Decke auf einem schlafenden Kater." },
+        { "id": "s11.intro.2", "speaker": "marta", "text": "Die Falter sind in den Sumpf geflogen, und dort ist der Nebel so dick, dass man den Löffel nicht sieht. Geht über den Bohlenweg zum Hof des Fährmanns." },
+        { "id": "s11.intro.3", "speaker": "marta", "text": "Und passt auf den Anführer-Hüpfer auf. Er springt auch zum Hof, und wer zuerst da ist, bekommt die Fähre." },
+        {
+          "id": "s11.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Auf den Bohlenweg!",
+          "variants": {
+            "warden": "Die Bretter sind schmal, und ich bin breit. Geht hinter mir, ich prüfe, ob sie halten.",
+            "wind-archer": "Hört ihr das Quaken? Das ist kein Streit. Die zählen sich ab.",
+            "herbalist": "Im Sumpf wachsen Porst und Moosbeeren. Esst nur nichts, ohne mich zu fragen.",
+            "rogue": "Nasse Stiefel mag ich nicht. Aber ein Wettrennen mit einem Frosch schon.",
+            "elementalist": "Nebel ist nur Wasser in der Luft. Habe ich gelesen. Er macht mir keine Angst. Fast.",
+            "tinker": "Bolt, bleib in der Mitte der Bretter. Du schwimmst wie ein Nagel."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s11.causeway",
+          "trigger": { "on": "doorOpened", "arg": "s11.causeway" },
+          "lines": [
+            { "id": "s11.causeway.1", "speaker": "narrator", "text": "Der Bohlenweg zieht sich weit in den Nebel. Links und rechts liegt tiefes, dunkles Wasser, und daneben hüpft der Anführer über die Seerosenblätter." },
+            { "id": "s11.causeway.2", "speaker": "wind-archer", "text": "Die Frösche springen beim dritten Schritt. Zählt mit: eins, zwei, hopp. Und steht nicht da, wo sie landen." }
+          ]
+        },
+        {
+          "id": "s11.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s11.whisper.1", "speaker": "narrator", "text": "Plötzlich bewegt sich der Nebel, als hätte jemand mit der Hand darübergestrichen." },
+            { "id": "s11.whisper.2", "speaker": "mist-queen", "text": "Pssst. Der Sumpf schläft. Wer platscht da über meinen Bohlenweg?" }
+          ]
+        },
+        {
+          "id": "s11.first-hopper",
+          "trigger": { "on": "monsterKilled", "arg": "marsh-hopper" },
+          "lines": [
+            { "id": "s11.first-hopper.1", "speaker": "narrator", "text": "Der Sumpfhüpfer macht einen lustigen Hickser, der Nebel fliegt von seinem Rücken, und er plumpst ins Wasser, um Mücken zu fangen." }
+          ]
+        },
+        {
+          "id": "s11.farm",
+          "trigger": { "on": "doorOpened", "arg": "s11.ferry" },
+          "lines": [
+            { "id": "s11.farm.1", "speaker": "narrator", "text": "Da ist der Hof des Fährmanns. Bei der Fähre stehen graue Wölfe, und in ihren Augen liegt derselbe Nebel." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s11.win.1", "speaker": "narrator", "text": "Die Gruppe hat den Hof als Erste erreicht. Der Anführer setzt sich auf einen Baumstumpf und bläst beleidigt die Backen auf." },
+          { "id": "s11.win.2", "speaker": "ferryman", "text": "Danke, ihr Mutigen. Dieser Nebel ist nicht gewöhnlich. Jemand webt ihn nachts auf alten Webstühlen, Faden für Faden." },
+          { "id": "s11.win.3", "speaker": "ferryman", "text": "Und auf der Insel ist die alte Reiherin ganz allein. Der Nebel steht vor ihrer Hütte, und sie findet ihr Boot nicht." },
+          { "id": "s11.win.4", "speaker": "ferryman", "text": "Und im Waldteich löschen die Falter die Glühwürmchen aus, eins nach dem anderen. Wohin geht ihr zuerst?" },
+          {
+            "id": "s11.win.5", "speaker": "hero", "pick": "random",
+            "text": "Wir müssen wählen.",
+            "variants": {
+              "warden": "Die einen brauchen einen Schild, die anderen ein Lichtlein. Wählt ihr, ich gehe mit.",
+              "wind-archer": "Reiher mögen es nicht, wenn man sie erschreckt. Glühwürmchen auch nicht.",
+              "herbalist": "Die alte Reiherin? Meine Reiherin? Sie hat mir doch alles beigebracht.",
+              "rogue": "Jemand webt Nebel? Ich frage mich, was so ein Webstuhl kostet.",
+              "elementalist": "Glühwürmchen leuchten, ohne zu wärmen. Das wollte ich immer schon sehen.",
+              "tinker": "Webstühle im Sumpf? Das Holz quillt doch auf. Seltsame Arbeit."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s11.lose.1", "speaker": "marta", "text": "Der Frosch war schneller. Macht nichts, trocknet eure Stiefel, dann versuchen wir es noch einmal." },
+          { "id": "s11.lose.2", "speaker": "marta", "text": "Bleibt weg vom tiefen Wasser, da bleiben die Füße stecken. Und läutet die Glocke auf der Insel, sie ruft die Fähre." }
+        ]
+      },
+      "epilogue": { "id": "s11.epilogue", "speaker": "marta", "text": "Der Fährmann hat einen Korb Moosbeeren geschickt. Jetzt wählt: die Reiherin oder die Glühwürmchen?" }
     }
   }
 }

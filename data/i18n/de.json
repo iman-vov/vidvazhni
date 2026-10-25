@@ -1318,5 +1318,20 @@
   "room.s9.lake": "B. Unterirdischer See",
   "room.s9.gate": "C. Schmiedetor",
   "room.s10.foundry": "A. Gießerei",
-  "room.s10.forge-hall": "B. Essenhalle"
+  "room.s10.forge-hall": "B. Essenhalle",
+  "scenario.s11": "Der neblige Bohlenweg",
+  "scenario.s11.goal": "Alle Helden erreichen bis zum Ende der 13. Runde den Hof des Fährmanns",
+  "scenario.s11.intro": "Die schwarzen Falter sind nach Süden geflogen, in den Schlummersumpf. Ein schmaler Bohlenweg führt durch den Nebel zum Hof des Fährmanns, und daneben hüpft der Anführer der Sumpfhüpfer. Wer zuerst da ist, bekommt die Fähre.",
+  "scenario.s11.outro": "Die Gruppe war zuerst da. Der Fährmann sagt, jemand webe den Nebel auf alten Webstühlen, und die alte Reiherin und die Glühwürmchen seien in Not.",
+  "room.s11.shore": "A. Ufer",
+  "room.s11.causeway": "B. Bohlenweg",
+  "room.s11.willow": "C. Weideninsel",
+  "room.s11.ferry": "D. Hof des Fährmanns",
+  "event.s11.frog-choir": "Froschchor! Neben dem Steg springen neue Frösche aus dem Wasser.",
+  "event.s11.ferry-bell": "Kling! Der Fährmann hat die Glocke gehört und stakt die Fähre heran. Am Hof ist es jetzt seicht.",
+  "event.s11.rival-gone": "Der Anführer ist verjagt. Er taucht ins Schilf und macht beim Rennen nicht mehr mit.",
+  "event.s11.rival-home": "Der Anführer ist schon am Hof und quakt vom Dach. Beeilt euch!",
+  "story.speaker.ferryman": "Fährmann",
+  "story.speaker.heron": "Alte Reiherin",
+  "story.speaker.mist-queen": "Nebelkönigin"
 }
