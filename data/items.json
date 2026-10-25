@@ -495,5 +495,78 @@
     "use": "spent",
     "effect": [{ "type": "condition", "condition": "strengthen", "target": "alliesInRadius", "radius": 1 }],
     "upgrade": { "price": 35, "effect": [{ "type": "condition", "condition": "strengthen", "target": "alliesInRadius", "radius": 2 }] }
+  },
+  {
+    "id": "heron-tea",
+    "slot": "small",
+    "kind": "potion",
+    "rarity": "common",
+    "price": 15,
+    "unlockedAfter": 12,
+    "source": { "type": "shop" },
+    "use": "lost",
+    "effect": [{ "type": "heal", "value": 3, "target": "self", "removeNegative": 1 }],
+    "upgrade": { "price": 15, "effect": [{ "type": "heal", "value": 4, "target": "self", "removeNegative": 1 }] }
+  },
+  {
+    "id": "pepper-pouch",
+    "slot": "small",
+    "kind": "throwable",
+    "rarity": "common",
+    "price": 10,
+    "unlockedAfter": 1,
+    "source": { "type": "shop" },
+    "use": "lost",
+    "effect": [{ "type": "condition", "condition": "muddle", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 10, "effect": [{ "type": "condition", "condition": "muddle", "target": "enemiesInRadius", "radius": 2 }] }
+  },
+  {
+    "id": "goo-jar",
+    "slot": "small",
+    "kind": "throwable",
+    "rarity": "common",
+    "price": 15,
+    "unlockedAfter": 1,
+    "source": { "type": "drop", "at": "bog-slime" },
+    "use": "lost",
+    "effect": [{ "type": "condition", "condition": "immobilize", "target": "enemiesInRadius", "radius": 2 }],
+    "upgrade": { "price": 15, "effect": [{ "type": "condition", "condition": "immobilize", "target": "enemiesInRadius", "radius": 2 }, { "type": "condition", "condition": "poison", "target": "enemiesInRadius", "radius": 2 }] }
+  },
+  {
+    "id": "thunder-popper",
+    "slot": "small",
+    "kind": "throwable",
+    "rarity": "rare",
+    "price": 25,
+    "unlockedAfter": 9,
+    "source": { "type": "shop" },
+    "use": "lost",
+    "effect": [{ "type": "condition", "condition": "stun", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "condition", "condition": "stun", "target": "adjacentEnemies" }, { "type": "push", "value": 1, "target": "adjacentEnemies" }] }
+  },
+  {
+    "id": "clover",
+    "slot": "small",
+    "kind": "charm",
+    "rarity": "common",
+    "price": 20,
+    "unlockedAfter": 1,
+    "source": { "type": "gift", "at": "s1" },
+    "use": "lost",
+    "effect": [{ "type": "bless", "target": "self" }],
+    "upgrade": { "price": 20, "effect": [{ "type": "bless", "target": "self" }, { "type": "bless", "target": "adjacentAllies" }] }
+  },
+  {
+    "id": "firefly-jar",
+    "slot": "small",
+    "kind": "charm",
+    "rarity": "rare",
+    "price": 25,
+    "unlockedAfter": 13,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "light" }],
+    "forkEffect": [{ "type": "infuse", "element": "air" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "infuse", "element": "light" }, { "type": "heal", "value": 2, "target": "self" }], "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "heal", "value": 2, "target": "self" }] }
   }
 ]

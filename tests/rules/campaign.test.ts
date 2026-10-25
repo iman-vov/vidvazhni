@@ -76,7 +76,7 @@ describe('shopStock', () => {
     expect(start).not.toContain('yew-bow');
     s.completed = ['s1', 's2', 's3'];
     expect(furthestScenario(c, s)).toBe(3);
-    expect(shopStock(c, s)).toHaveLength(18);
+    expect(shopStock(c, s)).toHaveLength(21);
   });
 });
 

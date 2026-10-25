@@ -16,7 +16,7 @@ describe('loadContent', () => {
       ['archer', 'boss.hammerfist', 'boss.miller', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
     );
     expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10']);
-    expect(Object.keys(content.items)).toHaveLength(19);
+    expect(Object.keys(content.items)).toHaveLength(50);
     expect(Object.keys(content.battleGoals)).toHaveLength(8);
     expect(Object.keys(content.perks)).toHaveLength(6);
     expect(content.campaign.xpByLevel).toEqual([0, 15, 40, 65, 95, 140, 195]);
