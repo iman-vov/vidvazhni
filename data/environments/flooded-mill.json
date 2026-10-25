@@ -3,7 +3,7 @@
   "scenarios": ["s3"],
   "edge": "shore",
   "rooms": { "s3.mill-hall": { "edge": "timber" } },
-  "kits": ["env-thorn-path"],
+  "kits": ["env-thorn-path", "env-flora"],
   "surface": "mud",
   "boundary": "reeds",
   "ground": { "texture": "swamp-mud", "tint": "#76694e", "scale": 2.6, "water": 0.5, "waterColor": "#5c8c92", "waterFlow": "still" },

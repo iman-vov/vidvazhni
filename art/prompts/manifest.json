@@ -2842,6 +2842,35 @@
       },
       "textureMax": 256,
       "attachTo": null
+    },
+    {
+      "id": "env-flora",
+      "nameUk": "Набір лісової рослинності (дерева, кущі, ожина, трава)",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 79,
+      "wave": 5,
+      "scenarios": [
+        2,
+        3,
+        7
+      ],
+      "descriptionSource": "docs/art/env-kit.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/env-kit/flora.blend",
+      "modelFile": "assets/models/env-flora/env-flora.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 45000
+      },
+      "textureMax": 2048,
+      "attachTo": null
     }
   ]
 }

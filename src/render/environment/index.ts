@@ -31,6 +31,7 @@ import { fireflySpots, Life, lifeCounts, patchSway, patchWater, setWaterLook, SP
 import { bakeReliefLight, reliefFromCanvas, reliefTexture } from './relief';
 import { roomWalls, type Partition } from './walls';
 import { planEnvironment, type Placement } from './plan';
+import { naturalEdge, type TintedPlacement } from './thicket';
 import { stoneLook, stoneParts, type StoneEnv } from './stone';
 import { columnParts, type ColumnEnv } from './column';
 import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
@@ -331,7 +332,6 @@ export class BoardEnvironment {
       propSpec: (piece, height) => (this.def?.propModels?.[piece] ? propModelFor(this.def, [piece], this.available, height) : null),
       loadProp: (spec) => loadPropPrototype(spec, quality).then((proto) => (proto ? proto.object.clone() : null)),
       loadKit: () => loadLocationKit('scatter-kit', quality),
-      loadClusterKit: () => loadLocationKit('cluster-kit', quality),
       material: (key) => this.material(key),
       shadow: (radius) => {
         const geometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
@@ -591,7 +591,9 @@ export class BoardEnvironment {
     setWaterLook(outputColor(def.light.sky), waterFlow(layout), def.ground.waterFlow === 'flowing');
 
     this.buildGround(def);
-    this.placements = planEnvironment(layout, def, this.quality, this.partitionLines.map((p) => p.points));
+    const partitions = this.partitionLines.map((p) => p.points);
+    // Forest edges grow into a thicket and lone trees into groves (thicket.ts).
+    this.placements = naturalEdge(layout, def, this.quality, planEnvironment(layout, def, this.quality, partitions), partitions);
     this.buildPieces(q.shadows);
     this.buildScatter();
     this.buildLights(q.lights);
@@ -740,6 +742,7 @@ export class BoardEnvironment {
       const parts = (stoneParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.stoneEnv) ?? columnParts(p.piece, p.x * 7.13 + p.z * 3.71 + 1000, this.columnEnv) ?? this.partsFor(p.piece, p.height, cache)).filter((part) => !proto || (typeof part.material === 'string' && UNLIT.has(part.material) && part.material !== 'shadow'));
       // A painted variation per piece and a darker foot (cheap baked occlusion).
       const tint = 0.86 + rnd() * 0.24;
+      const hue = (p as TintedPlacement).tint ?? [1, 1, 1];
       for (const part of parts) {
         if (low && part.detail) continue;
         const g = part.geometry.clone();
@@ -750,7 +753,7 @@ export class BoardEnvironment {
         for (let i = 0; i < pos.count; i++) {
           const foot = lit ? 0.6 + 0.4 * Math.min(1, Math.max(0, pos.getY(i) / 0.55)) : 1;
           const c = (lit ? tint : 1) * foot;
-          colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = c;
+          for (let k = 0; k < 3; k++) colors[i * 3 + k] = c * (lit ? hue[k]! : 1);
         }
         g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);

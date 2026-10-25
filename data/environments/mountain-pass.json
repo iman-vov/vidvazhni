@@ -1,5 +1,6 @@
 {
   "id": "mountain-pass",
+  "kits": ["env-flora"],
   "scenarios": ["s7"],
   "edge": "cliff",
   "season": "winter",
