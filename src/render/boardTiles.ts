@@ -330,6 +330,10 @@ export class TileLayer {
   /** Every hex of the map when an environment surrounds it: no kerbs toward the outside then
    *  (the environment's floor and walls take over); kerbs stay toward rooms not yet revealed. */
   private footprint: ReadonlySet<HexKey> | null = null;
+  /** Off-map hexes inside the walls beside each room → that room's floor, so a room is one floor
+   *  from wall to wall. */
+  private roomOfHex = new Map<HexKey, string>();
+  private ringFloor = new Map<string, { hexes: { hex: Hex; owned: boolean }[]; surface: SurfaceId }>();
 
   /** The walls between rooms as polylines from outer wall to outer wall (environment/walls.ts). */
   partitionLines: (() => readonly Partition[]) | null = null;
@@ -455,6 +459,30 @@ export class TileLayer {
       }
     }
     setWaterMap(new Set(this.surfaceByHex.keys()));
+    this.ringFloor = new Map();
+    const rooms = content.scenarios[s.scenarioId]?.rooms ?? [];
+    const roomOf = new Map<HexKey, (typeof rooms)[number]>();
+    for (const room of rooms) for (const h of room.hexes) roomOf.set(rulesHexKey(h), room);
+    this.roomOfHex = new Map([...roomOf].map(([k, r]) => [k, r.id]));
+    for (const room of rooms) this.ringFloor.set(room.id, { hexes: [], surface: room.surface ?? this.defaultSurface });
+    const seen = new Set<HexKey>();
+    for (const room of rooms)
+      for (const h of room.hexes)
+        for (const n of neighbors(h)) {
+          const nk = rulesHexKey(n);
+          if (roomOf.has(nk) || seen.has(nk)) continue;
+          seen.add(nk);
+          // Every room beside it may floor it up to the wall between them (buildWalls clips it);
+          // where no wall crosses it, the room most of its playable neighbours are in, a tie going
+          // to an interior.
+          const count = new Map<(typeof rooms)[number], number>();
+          for (const m of neighbors(n)) {
+            const r = roomOf.get(rulesHexKey(m));
+            if (r) count.set(r, (count.get(r) ?? 0) + 1);
+          }
+          const best = [...count].sort((x, y) => y[1] - x[1] || Number(y[0].kind === 'indoor') - Number(x[0].kind === 'indoor'))[0]![0];
+          for (const r of count.keys()) this.ringFloor.get(r.id)!.hexes.push({ hex: n, owned: r === best });
+        }
     const wanted = only ? [...new Set([...this.rooms.keys(), only])] : s.board.revealedRooms;
     const added: string[] = [];
     for (const [id, room] of this.rooms) {
@@ -481,6 +509,46 @@ export class TileLayer {
     }
     this.buildWalls(s, wanted);
     return added;
+  }
+
+  /** The room's floor over the off-map hexes inside its walls, cut along the walls between rooms
+   *  (a partition runs straight through such hexes), so the floor meets each wall on its own side. */
+  private ringFloorMesh(id: string, parts: readonly Partition[]): THREE.Mesh | null {
+    const ring = this.ringFloor.get(id);
+    if (!ring || ring.surface === this.defaultSurface || !ring.hexes.length) return null;
+    const mine = parts.filter((p) => p.rooms.includes(id));
+    const positions: number[] = [];
+    for (const { hex, owned } of ring.hexes) {
+      const c = hexToWorld(...hex);
+      // A hex of this room beside it: the side of a wall this room is on.
+      const inside = neighbors(hex).map((n) => this.surfaceByHex.has(rulesHexKey(n)) && this.roomOfHex.get(rulesHexKey(n)) === id ? hexToWorld(...n) : null).find(Boolean)!;
+      let poly = Array.from({ length: 6 }, (_, i) => ({ x: c.x + HEX_SIZE * 1.004 * Math.cos((i * Math.PI) / 3), z: c.z + HEX_SIZE * 1.004 * Math.sin((i * Math.PI) / 3) }));
+      let cut = false;
+      for (const p of mine)
+        for (let i = 0; i + 1 < p.points.length; i++) {
+          const a = p.points[i]!;
+          const b = p.points[i + 1]!;
+          const side = (q: { x: number; z: number }) => (b.x - a.x) * (q.z - a.z) - (b.z - a.z) * (q.x - a.x);
+          if (!poly.some((q) => side(q) > 0) || !poly.some((q) => side(q) < 0) || segmentDistance(c, a, b) > HEX_SIZE) continue;
+          poly = clipHalfPlane(poly, side, side(inside) >= 0 ? 1 : -1);
+          cut = true;
+        }
+      if ((!cut && !owned) || poly.length < 3) continue;
+      for (let i = 1; i + 1 < poly.length; i++) {
+        const [a, b, d] = [poly[0]!, poly[i]!, poly[i + 1]!];
+        // Wound to face up (+Y): (b − a) × (d − a) has a positive y.
+        const up = (b.z - a.z) * (d.x - a.x) - (b.x - a.x) * (d.z - a.z) > 0;
+        for (const q of up ? [a, b, d] : [a, d, b]) positions.push(q.x, PATCH_Y, q.z);
+      }
+    }
+    if (!positions.length) return null;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from({ length: positions.length / 3 }, () => [0, 1, 0]).flat(), 3));
+    const mesh = new THREE.Mesh(geo, this.material(`floor:${ring.surface}`));
+    mesh.name = `ring-floor:${ring.surface}`;
+    mesh.receiveShadow = true;
+    return mesh;
   }
 
   private buildRoom(id: string, tiles: [HexKey, Tile][], all: Record<HexKey, Tile>): RoomView {
@@ -654,9 +722,14 @@ export class TileLayer {
       room.edges = null;
       const lists = perRoom.get(room.id);
       const walls = dividers.get(room.id);
-      if (!lists && !walls) continue;
+      const ring = this.ringFloorMesh(room.id, parts);
+      if (!lists && !walls && !ring) continue;
       const edges = new THREE.Group();
       edges.name = 'edges';
+      if (ring) {
+        edges.add(ring);
+        room.edgeDisposables.push(ring.geometry);
+      }
       for (const w of walls ?? []) {
         const built = this.dividerFactory!(w.rooms, w.frames);
         edges.add(built);
@@ -1276,4 +1349,29 @@ class PropParts {
   dispose(): void {
     for (const d of this.disposables) d.dispose();
   }
+}
+
+/** Distance from a point to a segment (world XZ). */
+function segmentDistance(p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): number {
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / (dx * dx + dz * dz || 1)));
+  return Math.hypot(p.x - a.x - t * dx, p.z - a.z - t * dz);
+}
+
+/** The part of a convex polygon where `sign * side(q) >= 0` (Sutherland–Hodgman, one edge). */
+function clipHalfPlane(poly: { x: number; z: number }[], side: (q: { x: number; z: number }) => number, sign: number): { x: number; z: number }[] {
+  const out: { x: number; z: number }[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]!;
+    const q = poly[(i + 1) % poly.length]!;
+    const sp = sign * side(p);
+    const sq = sign * side(q);
+    if (sp >= 0) out.push(p);
+    if (sp >= 0 !== sq >= 0) {
+      const t = sp / (sp - sq);
+      out.push({ x: p.x + t * (q.x - p.x), z: p.z + t * (q.z - p.z) });
+    }
+  }
+  return out;
 }
