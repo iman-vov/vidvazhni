@@ -217,5 +217,84 @@
     "use": "spent",
     "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 2 } }],
     "upgrade": { "price": 40, "effect": [{ "type": "special", "name": "meleeAttackBonus", "params": { "value": 3 } }] }
+  },
+  {
+    "id": "bucket-helmet",
+    "slot": "head",
+    "rarity": "common",
+    "price": 10,
+    "unlockedAfter": 1,
+    "source": { "type": "shop" },
+    "use": "lost",
+    "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 10, "effect": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }, { "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }] }
+  },
+  {
+    "id": "miner-helmet",
+    "slot": "head",
+    "rarity": "common",
+    "price": 25,
+    "unlockedAfter": 5,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "light" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "forkEffect": [{ "type": "infuse", "element": "fire" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "infuse", "element": "light" }, { "type": "shield", "value": 2, "target": "self", "duration": "round" }], "forkEffect": [{ "type": "infuse", "element": "fire" }, { "type": "shield", "value": 2, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "feather-hat",
+    "slot": "head",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 6,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "initiativeDieOne" }],
+    "upgrade": { "price": 30, "effect": [{ "type": "special", "name": "initiativeDieOne" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "owl-hood",
+    "slot": "head",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 7,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }, { "type": "shield", "value": 1, "target": "adjacentAllies", "duration": "round" }],
+    "upgrade": { "price": 35, "effect": [{ "type": "special", "name": "nextAttackAgainstSelfDisadvantage" }, { "type": "shield", "value": 1, "target": "alliesInRadius", "duration": "round", "range": 1 }] }
+  },
+  {
+    "id": "snow-hat",
+    "slot": "head",
+    "rarity": "common",
+    "price": 25,
+    "unlockedAfter": 8,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "ice" }, { "type": "condition", "condition": "immobilize", "target": "adjacentEnemies" }],
+    "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "condition", "condition": "immobilize", "target": "adjacentEnemies" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "infuse", "element": "ice" }, { "type": "condition", "condition": "immobilize", "target": "adjacentEnemies" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }], "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "condition", "condition": "immobilize", "target": "adjacentEnemies" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "diving-helmet",
+    "slot": "head",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 12,
+    "source": { "type": "chest", "at": "s12" },
+    "use": "spent",
+    "effect": [{ "type": "heal", "value": 2, "target": "self", "removeNegative": 1 }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }],
+    "upgrade": { "price": 35, "effect": [{ "type": "heal", "value": 3, "target": "self", "removeNegative": 1 }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "shadow-mask",
+    "slot": "head",
+    "rarity": "legendary",
+    "price": 50,
+    "unlockedAfter": 5,
+    "source": { "type": "boss", "at": "s5" },
+    "use": "spent",
+    "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }],
+    "upgrade": { "price": 50, "effect": [{ "type": "condition", "condition": "invisible", "target": "self" }, { "type": "heal", "value": 2, "target": "self" }] }
   }
 ]
