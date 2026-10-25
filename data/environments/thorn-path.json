@@ -2,6 +2,7 @@
   "id": "thorn-path",
   "scenarios": ["s2"],
   "edge": "forest",
+  "season": "autumn",
   "surface": "forest-floor",
   "boundary": "thicket",
   "ground": { "texture": "forest-floor", "tint": "#5e5a42", "scale": 2.8 },

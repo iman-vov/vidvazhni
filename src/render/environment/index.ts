@@ -34,7 +34,8 @@ import { planEnvironment, type Placement } from './plan';
 import { stoneLook, stoneParts, type StoneEnv } from './stone';
 import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
 import { pieceBox } from './footprint';
-import { buildScatter, planScatter, scatterProfile } from './scatter';
+import { buildScatter, planScatter, SCATTER_KIT, scatterProfile, scatterProto, type ScatterBuild } from './scatter';
+import { onFloorDetailChange } from '../floorDetail';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
@@ -185,6 +186,10 @@ export class BoardEnvironment {
   /** Hexes with an obstacle, door, object or trap: the small-things layer keeps off them. */
   private busy = new Set<HexKey>();
   private clusterShadow: THREE.MeshBasicMaterial | null = null;
+  /** The small-things layer, rebuilt alone when the floor-detail setting changes. */
+  private scatter: ScatterBuild | null = null;
+  /** Bumped per small-things build: a kit load for an older one is dropped. */
+  private scatterGen = 0;
   private partitionLines: Partition[] = [];
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
@@ -195,6 +200,11 @@ export class BoardEnvironment {
     this.root.name = 'environment';
     // The location's floor is the board's floor: everything stands on the hexes' level.
     this.root.position.y = PLATE_HEIGHT;
+    onFloorDetailChange(() => {
+      if (!this.layout) return;
+      this.buildScatter();
+      this.onChange();
+    });
   }
 
   /** Builds the location for a scenario (all its rooms); rooms in `revealed` are clear of the veil.
@@ -537,6 +547,8 @@ export class BoardEnvironment {
   private clear(): void {
     this.root.clear();
     for (const d of this.disposables) d.dispose();
+    this.scatter = null;
+    this.scatterGen++;
     this.disposables = [];
     this.materials.clear();
     this.morok = null;
@@ -889,17 +901,40 @@ export class BoardEnvironment {
   /** Pebbles, tufts, candle stubs, bones, ore… in clumps over the floor (see scatter.ts). */
   private buildScatter(): void {
     const def = this.def!;
+    if (this.scatter) {
+      this.scatter.root.removeFromParent();
+      this.scatter.dispose();
+      this.disposables = this.disposables.filter((d) => d !== this.scatter);
+      this.scatter = null;
+    }
     const spots = planScatter({
       layout: this.layout!,
-      profile: scatterProfile(def.id, def.edge),
+      profile: scatterProfile(def.id, def.edge, def.season),
+      def,
       quality: this.quality,
       busy: this.busy,
       placements: this.placements,
       partitions: this.partitionLines.map((p) => p.points),
     });
-    const built = buildScatter(spots, (key, sway) => (sway ? this.swayMaterial(key, { amp: sway }) : this.material(key)));
-    this.root.add(built.root);
-    this.disposables.push(built);
+    // The shapes come from the Blender kit; the layer appears once it has loaded.
+    const gen = ++this.scatterGen;
+    const quality = this.quality;
+    void loadLocationKit(SCATTER_KIT, quality).then((kit) => {
+      if (gen !== this.scatterGen || !this.layout) return;
+      const built = buildScatter(
+        spots,
+        kit,
+        (key) => new THREE.Color(this.palette(key)),
+        (look) => {
+          const proto = scatterProto(quality, look.unlit);
+          return !look.unlit && look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto);
+        },
+      );
+      this.root.add(built.root);
+      this.disposables.push(built);
+      this.scatter = built;
+      this.onChange();
+    });
   }
 
   /** Dirt on the floor, dressing on the walls, warm pools under the flames (see decals.ts). */

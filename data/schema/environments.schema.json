@@ -64,6 +64,7 @@
       },
       "additionalProperties": false
     },
+    "season": { "enum": ["spring", "summer", "autumn", "winter"], "description": "Season of the outdoor rooms: what lies on the open floor (scatter.ts). Absent = the mixed look." },
     "palette": { "type": "object", "additionalProperties": { "$ref": "#/definitions/color" } },
     "light": {
       "type": "object",

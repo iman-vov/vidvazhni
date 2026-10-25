@@ -1,7 +1,8 @@
-// Settings: language, graphics quality, music / sound / voice volume (src/audio) and the
+// Settings: language, graphics quality, floor details, music / sound / voice volume (src/audio) and the
 // hint level per hero, and «Сюжет» (full / short / off). Used as a screen from the main menu and inside the in-game menu.
 
 import { getGraphicsQuality, GRAPHICS_QUALITIES, setGraphicsQuality, type GraphicsQuality } from '../../render/quality';
+import { FLOOR_DETAILS, floorDetail, setFloorDetail } from '../../render/floorDetail';
 import { h } from '../../ui/dom';
 import { getLang, LANGS, setLang, t } from '../../ui/i18n';
 import { BASE_RULES, FULL_FORK, VARIANT_ORDER, type Variants } from '../../rules/variants';
@@ -57,6 +58,29 @@ export function settingsPanel(o: SettingsPanelOptions = {}): HTMLElement {
           ),
         ),
         t('settings.quality.text'),
+      ),
+      field(
+        t('settings.floorDetail'),
+        h(
+          'div',
+          { class: 'gseg', role: 'group' },
+          FLOOR_DETAILS.map((d) =>
+            h(
+              'button',
+              {
+                class: 'gbtn gbtn-chip',
+                'aria-pressed': String(d === floorDetail(quality)),
+                onclick: () => {
+                  // The board rebuilds its small-things layer on the change (environment/index.ts).
+                  setFloorDetail(d);
+                  render();
+                },
+              },
+              t(`settings.floorDetail.${d}`),
+            ),
+          ),
+        ),
+        t('settings.floorDetail.text'),
       ),
       field(
         t('settings.speed'),

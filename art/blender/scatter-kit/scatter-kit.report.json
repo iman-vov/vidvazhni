@@ -1,0 +1,302 @@
+{
+ "pebbles": [
+  {
+   "name": "pebbles_1",
+   "tris": 100,
+   "reach": 0.0571,
+   "height": 0.0199,
+   "low": -0.0074
+  },
+  {
+   "name": "pebbles_2",
+   "tris": 120,
+   "reach": 0.0523,
+   "height": 0.017,
+   "low": -0.0071
+  },
+  {
+   "name": "pebbles_3",
+   "tris": 140,
+   "reach": 0.0514,
+   "height": 0.0192,
+   "low": -0.0077
+  },
+  {
+   "name": "pebbles_4",
+   "tris": 100,
+   "reach": 0.0558,
+   "height": 0.0201,
+   "low": -0.0069
+  }
+ ],
+ "stick": [
+  {
+   "name": "stick_1",
+   "tris": 116,
+   "reach": 0.1453,
+   "height": 0.0196,
+   "low": -0.0003
+  },
+  {
+   "name": "stick_2",
+   "tris": 116,
+   "reach": 0.1786,
+   "height": 0.0198,
+   "low": -0.0003
+  },
+  {
+   "name": "stick_3",
+   "tris": 116,
+   "reach": 0.1572,
+   "height": 0.0209,
+   "low": -0.0003
+  },
+  {
+   "name": "stick_4",
+   "tris": 116,
+   "reach": 0.1468,
+   "height": 0.022,
+   "low": -0.0005
+  }
+ ],
+ "leaf-pile": [
+  {
+   "name": "leaf-pile_1",
+   "tris": 42,
+   "reach": 0.0693,
+   "height": 0.0302,
+   "low": 0.0013
+  },
+  {
+   "name": "leaf-pile_2",
+   "tris": 48,
+   "reach": 0.0565,
+   "height": 0.0329,
+   "low": 0.0037
+  },
+  {
+   "name": "leaf-pile_3",
+   "tris": 48,
+   "reach": 0.0717,
+   "height": 0.0326,
+   "low": 0.0029
+  },
+  {
+   "name": "leaf-pile_4",
+   "tris": 48,
+   "reach": 0.0631,
+   "height": 0.0354,
+   "low": 0.0026
+  }
+ ],
+ "chips": [
+  {
+   "name": "chips_1",
+   "tris": 60,
+   "reach": 0.0424,
+   "height": 0.01,
+   "low": -0.0027
+  },
+  {
+   "name": "chips_2",
+   "tris": 60,
+   "reach": 0.0511,
+   "height": 0.0091,
+   "low": -0.0033
+  },
+  {
+   "name": "chips_3",
+   "tris": 36,
+   "reach": 0.0379,
+   "height": 0.0089,
+   "low": -0.0018
+  },
+  {
+   "name": "chips_4",
+   "tris": 36,
+   "reach": 0.0428,
+   "height": 0.0086,
+   "low": -0.0023
+  }
+ ],
+ "plank": [
+  {
+   "name": "plank_1",
+   "tris": 76,
+   "reach": 0.1034,
+   "height": 0.011,
+   "low": -0.0003
+  },
+  {
+   "name": "plank_2",
+   "tris": 76,
+   "reach": 0.1026,
+   "height": 0.011,
+   "low": -0.0008
+  },
+  {
+   "name": "plank_3",
+   "tris": 76,
+   "reach": 0.1005,
+   "height": 0.011,
+   "low": -0.0007
+  },
+  {
+   "name": "plank_4",
+   "tris": 76,
+   "reach": 0.1078,
+   "height": 0.0105,
+   "low": -0.0006
+  }
+ ],
+ "straw": [
+  {
+   "name": "straw_1",
+   "tris": 132,
+   "reach": 0.0892,
+   "height": 0.0092,
+   "low": 0.0008
+  },
+  {
+   "name": "straw_2",
+   "tris": 132,
+   "reach": 0.1001,
+   "height": 0.0096,
+   "low": 0.0011
+  },
+  {
+   "name": "straw_3",
+   "tris": 132,
+   "reach": 0.0893,
+   "height": 0.0104,
+   "low": 0.0004
+  },
+  {
+   "name": "straw_4",
+   "tris": 120,
+   "reach": 0.0829,
+   "height": 0.0092,
+   "low": 0.0008
+  }
+ ],
+ "pine-cone": [
+  {
+   "name": "pine-cone_1",
+   "tris": 120,
+   "reach": 0.0374,
+   "height": 0.0346,
+   "low": -0.0015
+  },
+  {
+   "name": "pine-cone_2",
+   "tris": 120,
+   "reach": 0.0398,
+   "height": 0.037,
+   "low": -0.002
+  },
+  {
+   "name": "pine-cone_3",
+   "tris": 120,
+   "reach": 0.0364,
+   "height": 0.0378,
+   "low": -0.0018
+  },
+  {
+   "name": "pine-cone_4",
+   "tris": 120,
+   "reach": 0.0386,
+   "height": 0.0383,
+   "low": -0.0014
+  }
+ ],
+ "snow": [
+  {
+   "name": "snow_1",
+   "tris": 72,
+   "reach": 0.0774,
+   "height": 0.02,
+   "low": 0.0
+  },
+  {
+   "name": "snow_2",
+   "tris": 48,
+   "reach": 0.0786,
+   "height": 0.02,
+   "low": 0.0
+  },
+  {
+   "name": "snow_3",
+   "tris": 48,
+   "reach": 0.0793,
+   "height": 0.02,
+   "low": 0.0
+  },
+  {
+   "name": "snow_4",
+   "tris": 48,
+   "reach": 0.0802,
+   "height": 0.02,
+   "low": 0.0
+  }
+ ],
+ "tuft": [
+  {
+   "name": "tuft_1",
+   "tris": 126,
+   "reach": 0.059,
+   "height": 0.0988,
+   "low": 0.0
+  },
+  {
+   "name": "tuft_2",
+   "tris": 108,
+   "reach": 0.0491,
+   "height": 0.0951,
+   "low": 0.0
+  },
+  {
+   "name": "tuft_3",
+   "tris": 117,
+   "reach": 0.056,
+   "height": 0.1006,
+   "low": 0.0
+  },
+  {
+   "name": "tuft_4",
+   "tris": 99,
+   "reach": 0.0589,
+   "height": 0.0992,
+   "low": 0.0
+  }
+ ],
+ "shards": [
+  {
+   "name": "shards_1",
+   "tris": 48,
+   "reach": 0.0602,
+   "height": 0.011,
+   "low": -0.0011
+  },
+  {
+   "name": "shards_2",
+   "tris": 72,
+   "reach": 0.0559,
+   "height": 0.011,
+   "low": -0.0022
+  },
+  {
+   "name": "shards_3",
+   "tris": 48,
+   "reach": 0.0303,
+   "height": 0.011,
+   "low": -0.0011
+  },
+  {
+   "name": "shards_4",
+   "tris": 72,
+   "reach": 0.0491,
+   "height": 0.011,
+   "low": -0.0022
+  }
+ ]
+}
