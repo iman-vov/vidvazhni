@@ -16,7 +16,9 @@ Decisions:
 - **The sun is the key light.** In the locations the sun gave about 10 % of the floor's light; sky, image light and lamps gave the rest, so a shadow was 90 % as bright as the lit floor. Now the sun is ×4 and the sky and image light are ×0.55. Overall brightness stays about the same, and a shadow keeps roughly 2/3 of the light.
 - **Nothing whose top is at or below the floor casts.** The hex plates under the floor had put the whole floor in their own shadow.
 - **Small instanced scatter (pebbles, leaves, straw) casts nothing.** At 1–2 texels its shadow would be invisible, and it would cost a full extra pass. GTAO and the blob already ground it. Planks and sticks from the obstacle litter do cast on high.
-- **Lamp shadows exist but are off** (`SHADOW_TIERS.high.lamps = 0`). One lantern's cube map cost 6–70 ms even when limited to the 60k triangles nearest to it (A/B below).
+- **Lamps cast on high, from static things only** (`SHADOW_TIERS.high.lamps = 2`, the two nearest the board). Their cube maps (512², near clip 0.6 m so a lantern's own post throws no spokes) are drawn once, 600 ms after a change. Figures stay out; the sun shadows them. Redrawn every frame they cost 6–70 ms; static, about 0–3 ms.
+- **A shadow catcher over the floor** (`ShadowMaterial`, opacity 0.32 on high, 0.25 on medium) deepens every shadow that lands on the floor. Indoors, lamps and sky still filled a shadowed floor to about 2/3 of the lit floor (measured in s1), which read too pale.
+- **The key boost stops at 4.8.** The mountain pass already has a strong warm sun (2.4), and ×4 burnt it orange.
 - **The bake runs at most once per 250 ms**, and only when the casters changed (a key built from the caster set and positions). Async loads had kept postponing a debounced bake forever.
 
 ## Frame time (Iris Xe laptop, headless Chrome, 1024×768, ms per frame)
@@ -35,16 +37,20 @@ A/B in the same page, with shadows switched on and then off (median of 5×20 fra
 
 Whole-frame numbers before this work (HEAD 5366044, same method): low s1 13.2, s2 9.0, s6 11.8; high s1 57.1, s2 67.7, s6 58.3. The scenes have grown since then (thicket, floors, rocks), so whole-frame before/after does not isolate the shadows. The A/B table above does.
 
+## High, before / after, s0–s10 (2026-10-25, after the floor and rock commits)
+
+`docs/art/shadows/hq/sN-before.jpg` is e319e4a, the commit before the shadow work. `sN-after.jpg` is the working tree with this change, both `quality=high`, 1024×768. Extra A/B on high (ms; lamps, catcher and sun switched off one by one, in the same page): s1 42.5 → no lamps 45.0 → no catcher 45.6 → no sun 27.1; s2 72.0 / 73.6 / 74.9 / 37.7; s6 69.0 / 70.0 / 87.3 / 39.3; s7 60.3 / 54.8 / 62.9 / 39.9. Lamps and catcher sit within the noise. The sun map is the cost: 15–35 ms on a busy Iris Xe.
+
 ## Look
 
 - `s1-low.jpg` / `s1-high.jpg` / `s1-medium.jpg`: shadows of the wall, the divider (right of it) and the barrels fall to the lower right.
 - `s1-zooms.jpg`: top row is low, bottom row is high. It shows the barrel pile, the leaning crate, broken boards and a figure.
 - `s2-*`, `s6-*`: forest palisade and trees, and the mine. These were taken before the latest floor and rock commits, with the same shadow code.
 
-Low reads as baked-in: soft, dark and grounded, with an occlusion rim at the foot of the walls. High is softer and lighter, because the lamps and GTAO still fill in.
+Low reads as baked-in: soft, dark and grounded, with an occlusion rim at the foot of the walls. High, with the floor catcher and the static lamp maps, now shows clear shadows from walls, dividers, barrels, shelves and planks indoors too (see hq/s0, s1, s6, s8–s10).
 
 ## Left / follow-ups
 
-- High shadows could be stronger in the torch-lit indoor maps (s1, s6), where the lamps dominate. The next step would be per-location key/fill values in the environment JSON instead of the global ×4 / ×0.55.
-- s8 at high, and all levels after the latest floor and rock commits, were not re-shot. Another session's mid-edit of `thicket.ts` kept breaking the page. Repeated GPU-heavy headless runs also coincided with two PC freezes, so the screenshot runs were kept short.
 - `tests/render/scatter.test.ts` fails on the leaf-pile kit model (0.0037 > 0.003). That is the scatter kit session's file, not this change.
+
+- Drive C: had filled up with about 50 GB of leftover headless Chrome profiles from the screenshot scripts. They were deleted, and the script now removes its own profile.

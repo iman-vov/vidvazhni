@@ -1,6 +1,6 @@
 // Shadows per quality level, in one place:
 // - high: everything solid casts and receives from the sun (a soft PCF map fitted to the board),
-//   lamps can cast too (SHADOW_TIERS.lamps), but are off: too dear for their gain;
+//   plus the lamps nearest the board, from the static things only (their maps drawn once);
 // - medium: a smaller, harder map where only big things cast (figures, walls, obstacles, furniture);
 // - low: no shadow maps at all — the static shadows are baked once into a texture on the floor
 //   (shadowBake.ts) and figures stand on their blob.
@@ -25,12 +25,11 @@ export interface ShadowTier {
 export const SHADOW_TIERS: Record<GraphicsQuality, ShadowTier> = {
   low: { mode: 'baked', mapSize: 0, radius: 0, casters: 'all', lamps: 0 },
   medium: { mode: 'realtime', mapSize: 1024, radius: 1.5, casters: 'big', lamps: 0 },
-  // A lamp's cube map costs ~20 ms on the family laptop even limited to the figures near it: off.
-  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'all', lamps: 0 },
+  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'all', lamps: 2 },
 };
 
-/** Layer of the things a lamp's shadow is drawn from (figures and props near it): a point light
- *  renders its map six times, so it only sees these. */
+/** Layer of the things a lamp's shadow is drawn from: the static casters, not the figures (a lamp's
+ *  map is drawn once and kept). */
 export const LAMP_LAYER = 3;
 
 /** Height (m) below which a mesh counts as flat: it casts nothing (floors, decals, a coin). */
@@ -141,8 +140,10 @@ export function fitSunShadow(sun: THREE.DirectionalLight, area: THREE.Box3, dire
 }
 
 /**
- * Lets the `count` point lights nearest `centre` cast shadows (small cube maps that see only
- * LAMP_LAYER: figures and the props within reach), and switches the rest off.
+ * Lets up to `count` point lights (lanterns, torches, the forge) nearest `centre` cast shadows from
+ * the static things around them: walls, shelves, barrels, planks. Their cube maps are drawn once
+ * (autoUpdate off; the caller sets shadow.needsUpdate after things changed, sparingly: six
+ * passes of every static caster per lamp), so a frame pays only for reading them. Figures stay out (LAMP_LAYER); the sun shadows them.
  */
 export function setupLampShadows(scene: THREE.Scene, count: number, centre: THREE.Vector3): THREE.PointLight[] {
   const lamps: THREE.PointLight[] = [];
@@ -154,49 +155,32 @@ export function setupLampShadows(scene: THREE.Scene, count: number, centre: THRE
   const on = lamps.slice(0, count);
   for (const l of lamps) {
     const cast = on.includes(l);
-    if (l.castShadow === cast) continue;
     l.castShadow = cast;
     if (!cast) continue;
-    l.shadow.mapSize.set(256, 256);
-    l.shadow.radius = 4;
-    l.shadow.bias = -0.002;
-    l.shadow.normalBias = 0.02;
-    l.shadow.camera.near = 0.08;
+    l.shadow.mapSize.set(512, 512);
+    l.shadow.radius = 3;
+    l.shadow.bias = -0.004;
+    l.shadow.normalBias = 0.03;
+    // The lamp's own post, legs and housing (within ~60 cm) are clipped away, or they throw long
+    // spokes across the board.
+    l.shadow.camera.near = 0.6;
     l.shadow.camera.far = Math.max(2, l.distance || 6);
     l.shadow.camera.layers.set(LAMP_LAYER);
+    l.shadow.autoUpdate = false;
   }
   return on;
 }
 
-/** Triangles a lamp's shadow map may draw (six times, one per cube face). */
-const LAMP_TRIANGLES = 60_000;
-
-/** Marks the figures and props nearest the casting lamps for their shadow maps, nearest first,
- *  until LAMP_TRIANGLES is spent; merged and instanced location meshes span the map and stay out. */
-export function markLampCasters(roots: readonly THREE.Object3D[], lamps: readonly THREE.PointLight[]): void {
-  const p = new THREE.Vector3();
-  const spots = lamps.map((l) => ({ at: l.getWorldPosition(new THREE.Vector3()), reach: Math.min(5, l.shadow.camera.far) }));
-  const near: { mesh: THREE.Mesh; d: number; tris: number }[] = [];
-  for (const root of roots) {
-    root.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      mesh.layers.disable(LAMP_LAYER);
-      if (!mesh.castShadow || (mesh as THREE.InstancedMesh).isInstancedMesh) return;
-      const g = mesh.geometry;
-      if (!g.boundingSphere) g.computeBoundingSphere();
-      const r = (g.boundingSphere?.radius ?? 0) * mesh.matrixWorld.getMaxScaleOnAxis();
-      if (r >= 1.5) return;
-      mesh.getWorldPosition(p);
-      const d = Math.min(...spots.map((s) => p.distanceTo(s.at) - s.reach - r));
-      if (d < 0) near.push({ mesh, d, tris: (g.index ? g.index.count : g.getAttribute('position').count) / 3 });
-    });
-  }
-  near.sort((a, b) => a.d - b.d);
-  let budget = LAMP_TRIANGLES;
-  for (const n of near) {
-    if (n.tris > budget) continue;
-    budget -= n.tris;
-    n.mesh.layers.enable(LAMP_LAYER);
-  }
+/** Puts every static caster (not under `skip`: the figures) in the lamps' layer. */
+export function markLampCasters(root: THREE.Object3D, skip: (o: THREE.Object3D) => boolean): void {
+  const visit = (o: THREE.Object3D): void => {
+    if (skip(o)) return;
+    const mesh = o as THREE.Mesh;
+    if (mesh.isMesh) {
+      if (mesh.castShadow) mesh.layers.enable(LAMP_LAYER);
+      else mesh.layers.disable(LAMP_LAYER);
+    }
+    for (const c of o.children) visit(c);
+  };
+  visit(root);
 }

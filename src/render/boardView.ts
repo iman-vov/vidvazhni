@@ -46,9 +46,17 @@ const SUN_DIRECTION = new THREE.Vector3(0.7, -1, 0.5).normalize();
  *  image light and lamps, so its shadows hardly show. It is made stronger and the fill weaker, about
  *  as bright overall, so a shadow keeps ~2/3 of the light. */
 const KEY_GAIN = 4;
+/** …but never past this: a location with a strong sun already (the warm low sun of the mountain
+ *  pass) would burn out. */
+const KEY_MAX = 4.8;
 const FILL_GAIN = 0.55;
+/** How much darker a shadow on the floor gets on top of the light it loses (ShadowMaterial over the
+ *  floor): lamps and sky still fill a shadowed floor to ~2/3 indoors, which reads too pale. */
+const FLOOR_SHADE: Record<GraphicsQuality, number> = { low: 0, medium: 0.25, high: 0.32 };
 /** How long the board stays still before the low level re-bakes its floor shadows (ms). */
 const BAKE_DELAY = 250;
+/** How long after a change the lamps' static shadow maps are redrawn (ms). */
+const LAMP_DELAY = 600;
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
 const LABELS: Record<
@@ -152,7 +160,12 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   const parts = createFigureParts();
   scene.add(environment.root, tiles.root, effects.root);
   const bake = new ShadowBake();
-  scene.add(bake.decal);
+  // Real-time levels: a shadow catcher over the floor deepens the shadows that fall on it.
+  const floorShade = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.ShadowMaterial({ opacity: 0, depthWrite: false }));
+  floorShade.name = 'floor-shade';
+  floorShade.receiveShadow = true;
+  floorShade.renderOrder = -0.5;
+  scene.add(bake.decal, floorShade);
 
   // Highlights: hex fills and frames (instanced), path dots.
   const fillGeo = new THREE.CircleGeometry(0.86 * HEX_SIZE, 6, Math.PI / 6).rotateX(-Math.PI / 2);
@@ -253,6 +266,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     renderer.shadowMap.enabled = shadows;
     sun.castShadow = shadows;
     sun.shadow.radius = tier.radius;
+    floorShade.visible = shadows;
+    floorShade.material.opacity = FLOOR_SHADE[quality];
     if (shadows) {
       bake.clear();
       bakeKey = '';
@@ -317,6 +332,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
 
   let shadowsDirty = true;
   let bakeTimer: ReturnType<typeof setTimeout> | 0 = 0;
+  let lampTimer: ReturnType<typeof setTimeout> | 0 = 0;
   let lampLights: THREE.PointLight[] = [];
   /** What the last bake drew (its casters and where they stood). */
   let bakeKey = '';
@@ -329,7 +345,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
 
   function isFigurePart(o: THREE.Object3D): boolean {
     for (const fv of figures.values()) if (o === fv.root) return true;
-    return o === bake.decal;
+    return o === bake.decal || o === floorShade;
   }
 
   function refreshShadows(): void {
@@ -339,7 +355,15 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (tier.mode === 'realtime') {
       const centre = sun.target.position;
       lampLights = tier.lamps > 0 ? setupLampShadows(scene, tier.lamps, centre) : [];
-      markLampCasters([scene], lampLights);
+      markLampCasters(scene, isFigurePart);
+      // Lamp maps are redrawn once things settle (models keep loading for a while after a build).
+      if (lampLights.length && !lampTimer) {
+        lampTimer = setTimeout(() => {
+          lampTimer = 0;
+          for (const l of lampLights) l.shadow.needsUpdate = true;
+          requestRender();
+        }, LAMP_DELAY);
+      }
       return;
     }
     // At most one bake per BAKE_DELAY (loads keep coming in for a while), and none when the
@@ -527,6 +551,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const wallRing = 3 * HEX_SIZE;
     const area = new THREE.Box3(new THREE.Vector3(b.min.x - wallRing, PLATE_HEIGHT - 0.05, b.min.y - wallRing), new THREE.Vector3(b.max.x + wallRing, PLATE_HEIGHT + 2.6, b.max.y + wallRing));
     fitSunShadow(sun, area, SUN_DIRECTION);
+    floorShade.position.set((area.min.x + area.max.x) / 2, PLATE_HEIGHT + 0.004, (area.min.z + area.max.z) / 2);
+    floorShade.scale.set(area.max.x - area.min.x, 1, area.max.z - area.min.z);
     shadowsChanged();
   }
 
@@ -621,7 +647,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     if (scenario) {
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
-      sun.intensity *= KEY_GAIN;
+      sun.intensity = Math.max(sun.intensity, Math.min(sun.intensity * KEY_GAIN, KEY_MAX));
       hemi.intensity *= FILL_GAIN;
       scene.environmentIntensity *= FILL_GAIN;
       post.setGrade(environment.grade);
@@ -1599,7 +1625,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     document.removeEventListener('visibilitychange', onVisibility);
     stopQuality();
     if (bakeTimer) clearTimeout(bakeTimer);
+    if (lampTimer) clearTimeout(lampTimer);
     bake.dispose();
+    floorShade.geometry.dispose();
+    floorShade.material.dispose();
     camera.dispose();
     for (const fv of [...figures.values()]) removeFigure(fv);
     for (const m of [fills, frames, dots, edges]) m?.dispose();
