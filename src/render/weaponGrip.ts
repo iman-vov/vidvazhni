@@ -46,9 +46,10 @@ export const WEAPON_GRIPS: Record<string, WeaponGrip> = {
   // Door shield, emblem on +Z, bowed: its middle sits at the front of the box (z ≈ 0.36), so the fist
   // closes just behind it there. Upright on the forearm, face forward and a little outward.
   'warden-shield': { size: 0.55, grip: [0, 0, 0.2], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [0, 1, 0], faceDir: [0.35, 0, 1] },
-  // Blender-made (art/blender/weapons): blade at +Y, guard along X, flats on ±Z, leather grip low on
-  // -Y. Through the fist, blade out of the thumb side and a little forward, edge leading.
-  'warden-sword': { size: 0.55, grip: [0, -0.66, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.25, 0], faceDir: [0, 0, 1], frame: 'hand' },
+  // Blender-made (art/blender/weapons): blade at +Y, guard along X, flats on ±Z, wrapped grip low on
+  // -Y (-0.6..-0.85 of the box, wheel pommel below). Through the fist, blade out of the thumb side
+  // and a little forward, edge leading.
+  'warden-sword': { size: 0.55, grip: [0, -0.72, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.25, 0], faceDir: [0, 0, 1], frame: 'hand' },
   // Spiked head at -X, wrapped handle at +X sloping down a little: held at the handle's end, head out of the thumb side.
   'bandit-club': { size: 0.5, grip: [0.7, -0.46, 0], tip: [-1, 0.29, 0], face: [0, 0, 1], tipDir: [1, 0.3, 0], faceDir: [0, 0, 1], frame: 'hand' },
   // Prod (bow) at -X, butt at +X, rail on +Y. The bandit shoots with Meshy's Gun_Hold (stock to the
