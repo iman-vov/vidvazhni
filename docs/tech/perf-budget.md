@@ -88,13 +88,22 @@ Screenshots, before and after on high: `docs/art/perf/s1-high-*.jpg`, `s3-high-*
 
 ## Results
 
-### PC counts (device-independent), high
+### Counts (device-independent): iPad before → PC now, 1366×892
 
-| mission | before calls / tris | after calls / tris |
-|---|---|---|
-| s1 cellar | 659 / 1.49M | 401 / 0.75M |
-| s3 flooded mill | 890 / 3.31M | 465 / 1.29M |
-| s7 mountain pass | 596 / 2.42M | 361 / 1.13M |
+| mission | quality | calls | tris |
+|---|---|---|---|
+| s0 | high | 337 → 192 | 1.11M → 0.56M |
+| s1 | high | 659 → 383 | 1.49M → 0.75M |
+| s2 | high | 1152 → 353 | 3.55M → 1.70M |
+| s3 | high | 894 → 465 | 3.32M → 1.29M |
+| s6 | high | 1509 → 369 | 1.48M → 0.84M |
+| s6 | medium | 568 → 324 | 0.65M → 0.74M |
+| s7 | high | 598 → 361 | 2.43M → 1.13M |
+| s9 | high | 1351 → 287 | 3.40M → 0.67M |
+
+s1, s3 and s7 were measured before the per-room merge; their calls are lower now. The iPad's before
+numbers are in `docs/tech/bench/2026-10-25-ipad-air-m2.json`
+(`node tools/bench-table.mjs <before> <after>` prints the table).
 
 ### iPad Air 13" (M2), fps
 
@@ -102,7 +111,9 @@ Filled in from `docs/tech/bench/` after the before and after runs.
 
 ## Still open
 
-- **Draw calls on high are ~350–480, over the ~200 budget.** The main pass alone is 170–280: obstacle
-  litter and cluster items are separate meshes (~70), and each figure is several meshes. Instancing
-  or merging the static obstacle pieces per room (`environment/obstacles.ts`) would halve that.
-- **Low is over 100 calls** for the same reason (~220–240), though its triangles are within budget.
+- **s2 high is ~1.7M triangles.** The forest flora alone is ~290k in the scene plus ~320k in the
+  sun's map. It is the art density of the forest edge, so it stays until the iPad numbers say
+  otherwise.
+- **Calls on high are ~190–370** against ~200. Most of what remains are the figures: each monster
+  is several skinned meshes, drawn again in the shadow map. Merging them would need atlased
+  materials per figure.
