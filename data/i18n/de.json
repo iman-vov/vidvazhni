@@ -1491,5 +1491,15 @@
   "event.s18.alarm": "Ein Buch ist aufgewacht und kreischt! Ein Geist fliegt aus dem Regal, und der ganze Saal wacht auf.",
   "event.s18.quiet": "Bis zur 5. Runde kein Mucks. Jemand hat ein paar Münzen auf dem Fensterbrett vergessen.",
   "event.s18.page": "Aus dem Regal fällt eine Seite aus Lumos Tagebuch.",
-  "event.s18.key": "In der Truhe im Lesesaal liegt ein Kristallschlüssel, in den ein Spiegel graviert ist."
+  "event.s18.key": "In der Truhe im Lesesaal liegt ein Kristallschlüssel, in den ein Spiegel graviert ist.",
+  "scenario.s19": "Der Spiegelsaal",
+  "scenario.s19.goal": "Die 3 Spiegel so drehen, dass der Strahl die Kristalltür öffnet, und hinausgehen",
+  "scenario.s19.intro": "Der Kristallschlüssel öffnet einen alten Saal voller Spiegel. Lumo hat ihn gebaut, um die Sonne aus dem Fenster einzufangen. Dreht die drei Spiegel, dann öffnet der Strahl die Kristalltür. Aber dunkle Spiegel rufen Falter.",
+  "scenario.s19.outro": "Der Strahl hat die Tür erreicht. Die Spiegel zeigten, wie Lumo das Licht für immer einfangen wollte, doch die Sonne ging unter, und er blieb wieder im Dunkeln. Tief unter dem Berg klirrte es: Der Schild des Gläsernen Wächters ist gesprungen.",
+  "room.s19.hall": "A. Spiegelsaal",
+  "room.s19.vault": "B. Kammer",
+  "event.s19.mirror-turn": "Der Spiegel dreht sich, und der Strahl fällt anders.",
+  "event.s19.shard-moth": "Ein dunkler Spiegel zerspringt, und ein Falter fliegt heraus!",
+  "event.s19.beam": "Alle drei Spiegel stehen richtig! Der Strahl hat die Kristalltür geöffnet.",
+  "event.s19.die": "In der Kammer liegt ein Kristallwürfel auf einem Kissen."
 }

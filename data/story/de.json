@@ -1273,6 +1273,83 @@
         ]
       },
       "epilogue": { "id": "s18.epilogue", "speaker": "marta", "text": "Das Tagebuch habe ich in eine Truhe gesperrt. Es gehört seinem Besitzer zurück, und ich glaube, dem begegnen wir noch." }
+    },
+    "s19": {
+      "intro": [
+        { "id": "s19.intro.1", "speaker": "narrator", "text": "Der Kristallschlüssel hat die Tür eines alten Turms geöffnet. Drinnen ist ein Saal voller Spiegel, und durchs Fenster fällt ein einziger Sonnenstrahl." },
+        { "id": "s19.intro.2", "speaker": "ida", "text": "Lumo hat diesen Saal gebaut, damit die Sonne aus dem Fenster jede Ecke erreicht. Dreht die Spiegel richtig, dann öffnet der Strahl die Kristalltür." },
+        { "id": "s19.intro.3", "speaker": "marta", "text": "Aber trödelt nicht: Spiegel ohne Licht zerspringen, und Falter fliegen heraus." },
+        {
+          "id": "s19.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Fangen wir den Strahl!",
+          "variants": {
+            "warden": "Einen Spiegel drehen kann ich. Hauptsache, ich muss mich nicht früh am Morgen darin sehen.",
+            "wind-archer": "Licht fliegt geradeaus, ohne Wind und ohne Launen. Leichter als ein Pfeil.",
+            "herbalist": "So viele Spiegel! Wer sich noch nicht gekämmt hat, jetzt ist die Gelegenheit.",
+            "rogue": "Ein geheimer Saal hinter einem geheimen Schlüssel. Das nenne ich ein Abenteuer.",
+            "elementalist": "Einfallswinkel gleich Ausfallswinkel! Ich wusste, dass das mal nützlich wird.",
+            "tinker": "Spiegel an Scharnieren. Und die Scharniere sind geölt. Wer kümmert sich wohl noch darum?"
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s19.aim",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s19.aim.1", "speaker": "narrator", "text": "Der Strahl zittert auf dem Boden wie ein goldener Faden." },
+            { "id": "s19.aim.2", "speaker": "wind-archer", "text": "Wartet. Ich sehe, wohin er fliegt: vom Fenster zum Spiegel, vom Spiegel zur Tür. Wie beim Zielen mit dem Pfeil." }
+          ]
+        },
+        {
+          "id": "s19.shards",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s19.shards.1", "speaker": "narrator", "text": "Ein dunkler Spiegel ist zersprungen, und aus den Scherben flattert ein Falter." },
+            { "id": "s19.shards.2", "speaker": "glass-guardian", "text": "Pling. Die Spiegel des Meisters nicht drehen. Er hat sie selbst aufgestellt. Er kommt bald zurück." }
+          ]
+        },
+        {
+          "id": "s19.sunset",
+          "trigger": { "on": "round", "arg": 7 },
+          "lines": [
+            { "id": "s19.sunset.1", "speaker": "narrator", "text": "Die Sonne sinkt zu den Bergen, und der Strahl kriecht die Wand immer tiefer hinab. Beeilt euch." }
+          ]
+        },
+        {
+          "id": "s19.door",
+          "trigger": { "on": "doorOpened", "arg": "s19.vault" },
+          "lines": [
+            { "id": "s19.door.1", "speaker": "narrator", "text": "Der Strahl traf die Kristalltür, sie leuchtete auf und schwang auf. In der Kammer dahinter liegt ein Kristallwürfel auf einem Kissen." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s19.win.1", "speaker": "narrator", "text": "Alle drei Spiegel stehen richtig. Der Strahl lief durch den Saal, und für einen Augenblick leuchtete jeder Spiegel hell auf." },
+          { "id": "s19.win.2", "speaker": "narrator", "text": "Dann erschien in den Spiegeln ein Bild. Der junge Lumo dreht die Spiegel, damit das Licht aus dem Fenster bis in die dunkelste Ecke reicht." },
+          { "id": "s19.win.3", "speaker": "narrator", "text": "Doch die Sonne geht unter, der Strahl erlischt, und die Spiegel werden schwarz. Lumo setzt sich auf den Boden und umarmt seine Knie." },
+          { "id": "s19.win.4", "speaker": "ida", "text": "Er wollte das Licht für immer einfangen. Ich habe ihm gesagt, dass auch die Nacht vorbeigeht. Er hat mir nicht geglaubt." },
+          {
+            "id": "s19.win.5", "speaker": "hero", "pick": "random",
+            "text": "Auch die Nacht geht vorbei.",
+            "variants": {
+              "warden": "Die Nacht geht vorbei, und der Wächter bleibt. So hat man es mich gelehrt.",
+              "wind-archer": "Nach der Nacht kommt immer der Morgen. Die Vögel wissen das, darum singen sie so früh.",
+              "herbalist": "Gut, dass Spiegel nicht nur leuchten, sondern auch zeigen, wer neben einem steht.",
+              "rogue": "Ein Kristallwürfel! Ups. Entschuldigung. Eine traurige Erinnerung, ich weiß. Aber trotzdem, ein Würfel.",
+              "elementalist": "Licht kann man nicht im Spiegel aufbewahren. Man kann es nur weitergeben.",
+              "tinker": "Vierzig Jahre und kein einziges Quietschen. Jemand hat sich die ganze Zeit um diese Scharniere gekümmert."
+            }
+          },
+          { "id": "s19.win.6", "speaker": "narrator", "text": "Irgendwo tief unter dem Berg machte es pling, als wäre ein gläserner Schild gesprungen." }
+        ],
+        "defeat": [
+          { "id": "s19.lose.1", "speaker": "marta", "text": "Die Falter aus den Scherben haben euch ganz erschöpft. Macht nichts, die Spiegel laufen nicht weg." },
+          { "id": "s19.lose.2", "speaker": "marta", "text": "Schaut erst, wohin der Strahl fällt, und dreht dann. Jeder Spiegel hat drei Stellungen, und ein dunkler Spiegel ruft einen Falter." }
+        ]
+      },
+      "epilogue": { "id": "s19.epilogue", "speaker": "marta", "text": "Der Kristallwürfel funkelt wie ein Tautropfen. Es heißt, er kann Pech auf den Kopf stellen." }
     }
   }
 }

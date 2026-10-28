@@ -1273,6 +1273,83 @@
         ]
       },
       "epilogue": { "id": "s18.epilogue", "speaker": "marta", "text": "I’ve locked the diary away in a chest. It ought to go back to its owner, and I have a feeling we’ll meet him yet." }
+    },
+    "s19": {
+      "intro": [
+        { "id": "s19.intro.1", "speaker": "narrator", "text": "The crystal key opened the door of an old tower. Inside is a hall full of mirrors, and a single sunbeam falls through the window." },
+        { "id": "s19.intro.2", "speaker": "ida", "text": "Lumo built this hall so the sun from the window would reach every corner. Turn the mirrors the right way, and the beam will open the crystal door." },
+        { "id": "s19.intro.3", "speaker": "marta", "text": "Just don’t dawdle: mirrors left without light crack, and moths come flying out." },
+        {
+          "id": "s19.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Let’s catch the beam!",
+          "variants": {
+            "warden": "I can turn a mirror. As long as I don’t have to look at myself first thing in the morning.",
+            "wind-archer": "Light flies straight, no wind, no tricks. Easier than an arrow.",
+            "herbalist": "So many mirrors! If you haven’t brushed your hair yet, now’s your chance.",
+            "rogue": "A secret hall behind a secret key. Now that’s what I call an adventure.",
+            "elementalist": "The angle of incidence equals the angle of reflection! I knew that would come in handy one day.",
+            "tinker": "Mirrors on hinges. And the hinges are oiled. I wonder who still looks after them?"
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s19.aim",
+          "trigger": { "on": "round", "arg": 2 },
+          "lines": [
+            { "id": "s19.aim.1", "speaker": "narrator", "text": "The beam trembles on the floor like a golden thread." },
+            { "id": "s19.aim.2", "speaker": "wind-archer", "text": "Wait. I can see where it’ll go: window to mirror, mirror to door. Just like aiming an arrow." }
+          ]
+        },
+        {
+          "id": "s19.shards",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s19.shards.1", "speaker": "narrator", "text": "A dark mirror cracked, and a moth fluttered out of the shards." },
+            { "id": "s19.shards.2", "speaker": "glass-guardian", "text": "Ding. Do not turn the master’s mirrors. He set them himself. He will be back soon." }
+          ]
+        },
+        {
+          "id": "s19.sunset",
+          "trigger": { "on": "round", "arg": 7 },
+          "lines": [
+            { "id": "s19.sunset.1", "speaker": "narrator", "text": "The sun is sinking towards the mountains, and the beam creeps lower and lower down the wall. Hurry." }
+          ]
+        },
+        {
+          "id": "s19.door",
+          "trigger": { "on": "doorOpened", "arg": "s19.vault" },
+          "lines": [
+            { "id": "s19.door.1", "speaker": "narrator", "text": "The beam struck the crystal door, which shone and swung open. In the little room behind, a crystal die rests on a cushion." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s19.win.1", "speaker": "narrator", "text": "All three mirrors face the right way. The beam ran through the hall, and for a moment every mirror shone bright." },
+          { "id": "s19.win.2", "speaker": "narrator", "text": "Then a picture appeared in the mirrors. Young Lumo is turning the mirrors so the light from the window reaches the darkest corner." },
+          { "id": "s19.win.3", "speaker": "narrator", "text": "But the sun sets, the beam fades, and the mirrors turn black. Lumo sits down on the floor and hugs his knees." },
+          { "id": "s19.win.4", "speaker": "ida", "text": "He wanted to catch the light forever. I told him the night passes too. He didn’t believe me." },
+          {
+            "id": "s19.win.5", "speaker": "hero", "pick": "random",
+            "text": "The night passes too.",
+            "variants": {
+              "warden": "The night passes, and the guard stays. That’s what I was taught.",
+              "wind-archer": "Morning always comes after night. The birds know it, that’s why they sing so early.",
+              "herbalist": "It’s good that mirrors don’t just shine, they also show you who’s standing beside you.",
+              "rogue": "A crystal die! Oops. Sorry. A sad memory, I know. But still, a die.",
+              "elementalist": "You can’t keep light in a mirror. You can only pass it on.",
+              "tinker": "Forty years and not a single squeak. Someone has been caring for these hinges all this time."
+            }
+          },
+          { "id": "s19.win.6", "speaker": "narrator", "text": "Somewhere deep under the mountain something went ding, like a glass shield cracking." }
+        ],
+        "defeat": [
+          { "id": "s19.lose.1", "speaker": "marta", "text": "The moths from the shards have worn you out. Never mind, the mirrors aren’t going anywhere." },
+          { "id": "s19.lose.2", "speaker": "marta", "text": "First look where the beam will land, then turn. Each mirror has three positions, and a dark mirror calls a moth." }
+        ]
+      },
+      "epilogue": { "id": "s19.epilogue", "speaker": "marta", "text": "The crystal die sparkles like a drop of dew. They say it can turn bad luck upside down." }
     }
   }
 }

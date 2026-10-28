@@ -1491,5 +1491,15 @@
   "event.s18.alarm": "A book woke up and shrieked! A ghost flies out of the shelf, and the whole hall wakes up.",
   "event.s18.quiet": "Not a sound until round 5. Someone left a few coins on the windowsill.",
   "event.s18.page": "A page from Lumo’s diary falls out of the shelf.",
-  "event.s18.key": "In the reading room chest lies a crystal key with a mirror engraved on it."
+  "event.s18.key": "In the reading room chest lies a crystal key with a mirror engraved on it.",
+  "scenario.s19": "The Mirror Hall",
+  "scenario.s19.goal": "Turn the 3 mirrors so the beam opens the crystal door, then get out",
+  "scenario.s19.intro": "The crystal key opens an old hall full of mirrors. Lumo built it to catch the sun from the window. Turn the three mirrors and the beam will open the crystal door. But dark mirrors call moths.",
+  "scenario.s19.outro": "The beam reached the door. The mirrors showed how Lumo wanted to catch the light forever, but the sun set and he was left in the dark again. Deep under the mountain something chimed: the Glass Guardian’s shield has cracked.",
+  "room.s19.hall": "A. Mirror Hall",
+  "room.s19.vault": "B. Back Room",
+  "event.s19.mirror-turn": "The mirror turns, and the beam falls a new way.",
+  "event.s19.shard-moth": "A dark mirror cracks, and a moth flies out!",
+  "event.s19.beam": "All three mirrors face the right way! The beam has opened the crystal door.",
+  "event.s19.die": "A crystal die rests on a cushion in the back room."
 }
