@@ -26,6 +26,7 @@ import {
 } from './support';
 import { performForced } from './forced';
 import { rerollStepX } from '../dice';
+import { withMirrorLight } from '../mirrors';
 
 /** The step with a consume bonus folded in. */
 export function withConsumeBonus(step: Step, bonus: ConsumeBonus): { step: Step; extraTargets: number } {
@@ -74,6 +75,8 @@ export function performStep(ctx: Ctx, f: Figure, step: Step, choice: StepChoice,
     const folded = withConsumeBonus(step, xBest ? { ...bonus, add: { ...bonus.add, value: 0 } } : bonus);
     actual = folded.step;
     if (xBest) rerollStepX(ctx, f, actual);
+    // s16: an attack with Light from a mirror reaches further.
+    if (actual.type === 'attack' && paid.includes('light')) actual = withMirrorLight(ctx, f, actual);
     src = { ...src, extraTargets: (src.extraTargets ?? 0) + folded.extraTargets };
   }
   // Infusing with an `any` element uses `choice.element`; a consume of `any` must not reuse it.

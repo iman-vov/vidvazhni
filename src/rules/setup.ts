@@ -194,8 +194,9 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     t.object = { id: o.id, kind: o.kind, ...(o.state !== undefined ? { state: o.state } : {}) };
     // Lever, brazier, millstones: impassable like an obstacle; a hero acts from a neighbouring hex.
     if (o.blocks) t.obstacle = true;
-    // A totem: breakable like a crate.
-    if (o.hp) {
+    // A totem: breakable like a crate. A floor mirror (s16) is stood on and breaks only under an
+    // area attack (mirrors.ts).
+    if (o.hp && !(o.kind === 'mirror' && !o.blocks)) {
       t.obstacle = true;
       t.breakable = { hp: o.hp, maxHp: o.hp };
     }

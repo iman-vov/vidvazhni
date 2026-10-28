@@ -10,6 +10,8 @@
 //                         Light (fork: a Fire orb); while not every brazier burns the goal boss
 //                         takes half damage (rounded down); a wraith ending its turn next to a lit
 //                         brazier puts it out.
+//   mirrorHexes      (s16) floor mirrors: see mirrors.ts.
+//   beamMirrors      (s19) turning mirrors and the beam that opens the crystal door: see mirrors.ts.
 
 import type { Content, DropDef, RoomDef, ScenarioDef, ScenarioGoal, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
@@ -21,6 +23,7 @@ import { loseScenario } from './damage';
 import { activeGoal, goalZone, inZone, npcId, raceWinner } from './objectives';
 import { winScenario } from './round';
 import { hasLineOfSight } from './geometry';
+import { checkBeam, turnRule } from './mirrors';
 import { areAdjacent, distance, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
 import type { Figure, GameState, HeroState, MonsterState, SummonState, Tile } from './state';
@@ -115,6 +118,12 @@ function goalOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioGoal | undefined {
   return scenario && activeGoal(ctx.s, scenario);
 }
 
+/** s19: a mirror with `turns` turns to its next state with a top action, and round again. */
+function mirrorRule(ctx: Pick<Ctx, 's' | 'c'>, objectId: string, state: string | undefined): ObjectRule | undefined {
+  const turn = turnRule(scenarioOf(ctx), objectId, state);
+  return turn && { special: 'beamMirrors', kind: turn.kind, half: 'top', from: turn.from, to: turn.to };
+}
+
 /** `collect` goal: the objects of its kind are picked up with a bottom action. */
 function pickupRule(ctx: Pick<Ctx, 's' | 'c'>, kind: string): ObjectRule | undefined {
   const goal = goalOf(ctx);
@@ -144,7 +153,7 @@ export function interactionFor(
 ): { rule: ObjectRule; hex: Hex; tile: Tile & { object: NonNullable<Tile['object']> } } | string {
   const found = boardObjects(ctx.s).find((o) => o.tile.object.id === objectId);
   if (!found) return 'no such object';
-  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special)) ?? dataRule(ctx, objectId) ?? pickupRule(ctx, found.tile.object.kind);
+  const rule = INTERACTIONS.find((r) => r.kind === found.tile.object.kind && hasSpecial(ctx, r.special)) ?? mirrorRule(ctx, objectId, found.tile.object.state) ?? dataRule(ctx, objectId) ?? pickupRule(ctx, found.tile.object.kind);
   if (!rule) return 'nothing to do with this object';
   if (rule.half !== half) return `this needs a ${rule.half} action`;
   if ((found.tile.object.state ?? '') !== rule.from) return 'already done';
@@ -162,6 +171,7 @@ export function applyInteraction(ctx: Ctx, h: HeroState, found: Exclude<ReturnTy
   }
   if (found.rule.kind === 'brazier') infuse(ctx, ctx.s.variants.orbs ? BRAZIER_ORB : BRAZIER_ELEMENT, h.id);
   for (const hex of found.rule.opens ?? []) openDoor(ctx, hex);
+  if (found.rule.special === 'beamMirrors') checkBeam(ctx);
 }
 
 /** s3: the Miller's «Потоп» does nothing once the sluice lever is down. */

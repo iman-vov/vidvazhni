@@ -10,6 +10,7 @@ import type { Content, ScenarioGoal } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
+import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import { availableCards, recommendedHand } from '../../src/rules/setup';
@@ -158,7 +159,15 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   if (goal?.type === 'objectStates') {
     const scenario = content!.scenarios[s.scenarioId]!;
     v += 30 * goal.objects.filter((o) => objectState(s, scenario, o.id) === o.state).length;
+    // s19's turning mirrors: every turn still needed counts against, so a mirror two turns off is
+    // worth turning once.
+    for (const o of goal.objects) {
+      const turns = scenario.rooms.flatMap((r) => r.objects ?? []).find((x) => x.id === o.id)?.turns;
+      if (turns) v -= 10 * Math.max(0, turnsBetween(turns, objectState(s, scenario, o.id), o.state));
+    }
   }
+  // s16: a broken mirror costs the secondary goal.
+  if (mirrorBroken(s)) v -= 15;
   if (goal?.type === 'protect') {
     const tile = Object.values(s.board.tiles).find((t) => t.object?.id === goal.object);
     v += 10 * (tile?.breakable?.hp ?? 0);

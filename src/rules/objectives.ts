@@ -4,6 +4,7 @@
 import type { Content, ObjectDef, ScenarioDef, ScenarioGoal, SecondaryGoalDef } from './content';
 import { activeHeroes, emit, heroes, isPresent, monsters, type Ctx } from './effects/context';
 import { distance, hexEquals, type Hex } from './hex';
+import { mirrorBroken } from './mirrors';
 import type { FigureId, GameState } from './state';
 
 // ─── Zones ─────────────────────────────────────────────────────────────────
@@ -188,6 +189,8 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   objectState: (s, p) => Object.values(s.board.tiles).some((t) => t.object?.id === String(p?.object) && t.object.state === String(p?.state)),
   /** «До N-го раунду»: the scenario ends no later than round `params.rounds`. */
   withinRounds: (s, p) => s.round <= Number(p?.rounds),
+  /** «Не розбито жодного дзеркала» (s16, mirrors.ts). */
+  noMirrorBroken: (s) => !mirrorBroken(s),
 };
 
 export function isSecondaryCheck(check: string): boolean {

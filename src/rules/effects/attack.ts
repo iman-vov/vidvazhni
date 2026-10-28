@@ -5,6 +5,7 @@
 import type { AttackBonus, AttackBonusCondition, ConditionId, Step } from '../content';
 import { addCondition } from '../conditions';
 import { areaHexes } from '../geometry';
+import { breakMirrors, mirrorDisadvantage } from '../mirrors';
 import { areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { applyModifier, drawForAttack } from '../modifiers';
 import { findCard } from '../damage';
@@ -136,6 +137,7 @@ export function attackSpecFor(ctx: Ctx, attacker: Figure, target: Figure, step: 
     if (traits.some((t) => t.trait === 'rangedAttacksAgainstHaveDisadvantage')) disadvantage = true;
   }
   if (target.kind === 'hero' && target.attackedDisadvantage) disadvantage = true;
+  if (mirrorDisadvantage(ctx, target, ranged)) disadvantage = true;
   const followUp =
     ctx.s.variants.followUp && attacker.kind === 'hero' && target.kind === 'monster' && target.attackedBy.some((id) => id !== attacker.id);
   if (followUp) value += FOLLOW_UP_BONUS;
@@ -167,6 +169,8 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
   let targets: Figure[];
   // Breakable obstacles hit by this attack (heroes only; no modifier, see obstacles.ts).
   let obstacles: Hex[] = [];
+  // Hexes an area covers (it breaks the mirrors there, mirrors.ts).
+  let areaCovered: Hex[] | null = null;
   if (step.targetAll === 'adjacentEnemies') {
     targets = enemiesOf(ctx.s, f).filter((e) => areAdjacent(e.hex, f.hex) && !wallBetween(ctx.s, e.hex, f.hex) && !e.conditions.invisible);
   } else if (step.area) {
@@ -175,6 +179,7 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
     if (!anchor) return 'choose where the area goes';
     if (!fromSelf && !inRangeWithSight(ctx, f.hex, anchor, step.range ?? 1)) return 'area out of range';
     const hexes = areaHexes(step.area, f.hex, anchor, choice.direction ?? 0);
+    areaCovered = hexes;
     targets = hexes
       .map((h) => figureAt(ctx.s, h))
       .filter((t): t is Figure => !!t && enemiesOf(ctx.s, f).some((e) => e.id === t.id) && !t.conditions.invisible);
@@ -220,6 +225,7 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
       schedule(ctx, { t: 'attackTarget', attackerId: f.id, targetId: t.id, spec: attackSpecFor(ctx, f, t, step), ...(path ? { pushPath: path } : {}) });
     }
     for (const h of obstacles) hitObstacle(ctx, f.id, h, step.value);
+    if (f.kind === 'hero' && areaCovered) breakMirrors(ctx, f.id, areaCovered);
   };
 }
 

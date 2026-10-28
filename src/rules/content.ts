@@ -340,6 +340,10 @@ export interface ObjectDef {
    *  `from` (default: its initial state) to `to`; the doors on `opens` open (a floor lever opening
    *  a locked door on the other side of the room). */
   interact?: { half: 'top' | 'bottom'; from?: string; to: string; opens?: Hex[] };
+  /** `beamMirrors` (s19): the states an adjacent hero turns it through with a top action, in
+   *  order and round again; `aim` = where it sends the beam in that state (a mirror's id, or
+   *  `target` for `ScenarioDef.beam.to`), none = the beam stops here (mirrors.ts). */
+  turns?: { state: string; aim?: string }[];
   /** Heroes break it like a breakable obstacle (a totem, a nest); broken, it leaves the board. */
   hp?: number;
   /** While it stands, a monster of the rank for the party size appears next to it at the start of
@@ -429,6 +433,9 @@ export interface ScenarioDef {
   /** Rule groups this scenario introduces (for hints): `conditions`, `elements`, … */
   introduces: string[];
   specials?: string[];
+  /** `beamMirrors` (s19): the beam enters at the window `from` towards the object `aim`; reaching
+   *  `to` (the crystal door) opens the doors on `opens` (mirrors.ts). */
+  beam?: { from: Hex; aim: string; to: Hex; opens?: Hex[] };
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
   /** `closes`: the other options of a story choice (s6 or s7), dropped from the unlocked list on a win. */

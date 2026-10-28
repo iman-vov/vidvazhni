@@ -661,6 +661,17 @@
     "startHexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 4, "maxItems": 4 },
     "introduces": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "specials": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "beam": {
+      "type": "object",
+      "properties": {
+        "from": { "$ref": "#/definitions/hex" },
+        "aim": { "type": "string", "minLength": 1 },
+        "to": { "$ref": "#/definitions/hex" },
+        "opens": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 }
+      },
+      "required": ["from", "aim", "to"],
+      "additionalProperties": false
+    },
     "forkOrbs": {
       "type": "object",
       "properties": {
@@ -832,6 +843,16 @@
                   },
                   "required": ["half", "to"],
                   "additionalProperties": false
+                },
+                "turns": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": { "state": { "type": "string", "minLength": 1 }, "aim": { "type": "string", "minLength": 1 } },
+                    "required": ["state"],
+                    "additionalProperties": false
+                  },
+                  "minItems": 2
                 },
                 "hp": { "type": "integer", "minimum": 1 },
                 "spawn": {

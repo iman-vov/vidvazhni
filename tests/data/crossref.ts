@@ -240,6 +240,7 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
         const o = objects.find((x) => x.id === want.id);
         if (!o) err(`goal object ${want.id} missing`);
         else if (o.interact && o.state !== want.state && o.interact.to !== want.state) err(`goal object ${want.id} never gets to state ${want.state}`);
+        else if (o.turns && !o.turns.some((x) => x.state === want.state)) err(`goal object ${want.id} never turns to state ${want.state}`);
       }
     }
     if (g.type === 'collect') {
@@ -252,6 +253,16 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
   }
   for (const o of s.rooms.flatMap((r) => r.objects ?? [])) {
     for (const h of o.interact?.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`object ${o.id} opens ${hexKey(h)}, which is no door`);
+    for (const turn of o.turns ?? []) {
+      if (turn.aim && turn.aim !== 'target' && !objects.some((x) => x.id === turn.aim)) err(`mirror ${o.id} aims at missing object ${turn.aim}`);
+    }
+    if (o.turns && o.state !== undefined && !o.turns.some((x) => x.state === o.state)) err(`mirror ${o.id} starts in state ${o.state}, not among its turns`);
+  }
+  if (s.beam) {
+    if (!s.specials?.includes('beamMirrors')) err('beam without the beamMirrors special');
+    if (!objects.some((o) => o.id === s.beam!.aim)) err(`beam aims at missing object ${s.beam.aim}`);
+    for (const h of [s.beam.from, s.beam.to]) if (!owner.has(hexKey(h))) err(`beam hex ${hexKey(h)} is outside every room`);
+    for (const h of s.beam.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`beam opens ${hexKey(h)}, which is no door`);
   }
 
   const tags = new Set(s.rooms.flatMap((r) => (r.spawns ?? []).flatMap((sp) => (sp.tag ? [sp.tag] : []))));

@@ -306,6 +306,9 @@ export function doorPose(p: Pick<PropView, 'doorKind' | 'panel' | 'wings' | 'bod
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
+/** The beam between mirrors (s19): height above the plate and thickness. */
+const BEAM_HEIGHT = 0.55 * HEX_SIZE;
+const BEAM_RADIUS = 0.035 * HEX_SIZE;
 
 export class TileLayer {
   readonly root = new THREE.Group();
@@ -367,6 +370,10 @@ export class TileLayer {
   propModel: ((key: string, defaultHeight: number) => Required<PropModelSpec> | null) | null = null;
   /** Glowing bits (a brazier's fire) to keep on top of a prop model of that key. */
   propGlow: ((key: string, height: number) => THREE.Object3D | null) | null = null;
+  /** Where a turning mirror (s19) sends the beam in a state: it is drawn facing that hex. */
+  mirrorAim: ((objectId: string, state: string | undefined) => Hex | null) | null = null;
+  /** The beam (s19): one thin bar per leg, rebuilt when its path changes. */
+  private beam: { key: string; group: THREE.Group } | null = null;
   private readonly blobTexture = blobShadowTexture();
   private readonly blobGeometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
   private readonly blobMaterial = new THREE.MeshBasicMaterial({ map: this.blobTexture, color: '#000000', transparent: true, opacity: 0.6, depthWrite: false });
@@ -851,7 +858,19 @@ export class TileLayer {
         // The state is part of the key, so a lever pulled or a brazier lit is rebuilt in its new look.
         const look = tile.object.state ? `${tile.object.kind}:${tile.object.state}` : tile.object.kind;
         const key = `${k}:object:${look}`;
-        wanted.push([key, () => this.makeSimple(key, hex, tile.room, look, (this.obstacleFactory?.(look) as THREE.Group | null) ?? this.propParts.rune(), 'object')]);
+        const object = tile.object;
+        // Mirrors (s16, s19) have no GLB yet: a flat pane on the floor, or a pane on a stand
+        // turned towards where it sends the beam.
+        const mirror = object.kind === 'mirror';
+        wanted.push([
+          key,
+          () => {
+            const part = (this.obstacleFactory?.(look) as THREE.Group | null) ?? (mirror ? this.propParts.mirror(object.state, !!tile.obstacle) : this.propParts.rune());
+            const view = this.makeSimple(key, hex, tile.room, look, part, 'object');
+            if (mirror) this.aimMirror(view.object, hex, this.mirrorAim?.(object.id, object.state) ?? null);
+            return view;
+          },
+        ]);
       }
       for (const [key, make] of wanted) {
         seen.add(key);
@@ -869,6 +888,41 @@ export class TileLayer {
       p.object.removeFromParent();
       this.props.delete(key);
     }
+  }
+
+  /** Turns a standing mirror's front (+Z) towards the hex it sends the beam to. */
+  private aimMirror(object: THREE.Object3D, hex: Hex, aim: Hex | null): void {
+    if (!aim) return;
+    const from = hexToWorld(hex[0], hex[1]);
+    const to = hexToWorld(aim[0], aim[1]);
+    object.rotation.y = Math.atan2(to.x - from.x, to.z - from.z);
+  }
+
+  /** The beam (s19) through `hexes` in order, at a mirror's height; `reached`: it hits the door. */
+  setBeam(hexes: readonly Hex[] | null, reached = false): void {
+    const key = hexes && hexes.length > 1 ? `${reached}:${hexes.map((h) => h.join(',')).join('|')}` : '';
+    if ((this.beam?.key ?? '') === key) return;
+    if (this.beam) {
+      this.beam.group.removeFromParent();
+      this.beam.group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+      this.beam = null;
+    }
+    if (!key || !hexes) return;
+    const group = new THREE.Group();
+    group.name = 'beam';
+    const y = PLATE_HEIGHT + BEAM_HEIGHT;
+    for (let i = 1; i < hexes.length; i++) {
+      const a = hexToWorld(hexes[i - 1]![0], hexes[i - 1]![1]);
+      const b = hexToWorld(hexes[i]![0], hexes[i]![1]);
+      const from = new THREE.Vector3(a.x, y, a.z);
+      const to = new THREE.Vector3(b.x, y, b.z);
+      const bar = new THREE.Mesh(new THREE.CylinderGeometry(BEAM_RADIUS, BEAM_RADIUS, from.distanceTo(to), 6, 1, true), this.propParts.beamMaterial(reached));
+      bar.position.copy(from).add(to).multiplyScalar(0.5);
+      bar.quaternion.setFromUnitVectors(UP, to.clone().sub(from).normalize());
+      group.add(bar);
+    }
+    this.root.add(group);
+    this.beam = { key, group };
   }
 
   prop(key: string): PropView | undefined {
@@ -1195,6 +1249,7 @@ export class TileLayer {
     this.blockTexture.dispose();
     this.wallMaterial.dispose();
     this.kerbMaterial.dispose();
+    this.setBeam(null);
     this.propParts.dispose();
     this.blobTexture.dispose();
     this.blobGeometry.dispose();
@@ -1282,6 +1337,13 @@ class PropParts {
   private readonly trapRing = this.keep(new THREE.TorusGeometry(0.3, 0.04, 6, 20).rotateX(Math.PI / 2));
   private readonly toothGeo = this.keep(new THREE.ConeGeometry(0.035, 0.12, 4));
   private readonly runeGeo = this.keep(new THREE.DodecahedronGeometry(0.28));
+  // Mirror placeholders until act3-props models them (matte; a broken one is darker).
+  private readonly glass = this.keep(new THREE.MeshStandardMaterial({ color: '#a8d8e8', roughness: 0.25, metalness: 0.3, side: THREE.DoubleSide }));
+  private readonly brokenGlass = this.keep(new THREE.MeshStandardMaterial({ color: '#5a7480', roughness: 0.7, side: THREE.DoubleSide }));
+  private readonly frameMat = this.keep(new THREE.MeshStandardMaterial({ color: '#b8b4c8', roughness: 0.6, metalness: 0.4 }));
+  private readonly paneGeo = this.keep(new THREE.CircleGeometry(0.36, 6).rotateX(-Math.PI / 2));
+  private readonly beamLit = this.keep(new THREE.MeshBasicMaterial({ color: '#fff1b0' }));
+  private readonly beamDone = this.keep(new THREE.MeshBasicMaterial({ color: '#ffffff' }));
 
   private keep<T extends { dispose(): void }>(x: T): T {
     this.disposables.push(x);
@@ -1430,6 +1492,48 @@ class PropParts {
     plate.position.y = 0.03;
     g.add(plate);
     return g;
+  }
+
+  /** A mirror: a hexagonal pane flat on the floor (s16), or a pane on a stand facing +Z with a
+   *  pointer on the floor towards +Z (s19's turning mirrors). */
+  mirror(state: string | undefined, standing: boolean): THREE.Group {
+    const g = new THREE.Group();
+    const broken = state === 'broken';
+    const mat = broken ? this.brokenGlass : this.glass;
+    if (!standing) {
+      const pane = new THREE.Mesh(this.paneGeo, mat);
+      pane.position.y = 0.02;
+      g.add(pane);
+      if (broken) {
+        // Shards: the pane split in two, the halves apart.
+        pane.scale.set(0.55, 1, 1);
+        pane.position.x = -0.12;
+        const other = pane.clone();
+        other.position.x = 0.14;
+        other.rotation.y = 0.5;
+        g.add(other);
+      }
+      return g;
+    }
+    const post = new THREE.Mesh(this.box, this.frameMat);
+    post.scale.set(0.08, 0.5, 0.08);
+    post.position.y = 0.25;
+    const frame = new THREE.Mesh(this.box, this.frameMat);
+    frame.scale.set(0.62, 0.62, 0.06);
+    frame.position.y = 0.62;
+    const pane = new THREE.Mesh(this.box, mat);
+    pane.scale.set(0.52, 0.52, 0.02);
+    pane.position.set(0, 0.62, 0.035);
+    const pointer = new THREE.Mesh(this.toothGeo, this.frameMat);
+    pointer.scale.setScalar(2.2);
+    pointer.rotation.x = Math.PI / 2;
+    pointer.position.set(0, 0.04, 0.36);
+    g.add(post, frame, pane, pointer);
+    return g;
+  }
+
+  beamMaterial(reached: boolean): THREE.Material {
+    return reached ? this.beamDone : this.beamLit;
   }
 
   rune(): THREE.Group {

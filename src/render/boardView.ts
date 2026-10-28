@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ConditionId, Content, OrbId } from '../rules/content';
 import { eventWarnings } from '../rules/events';
+import { beamPath, mirrorAimHex } from '../rules/mirrors';
 import { DIRECTIONS, hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
@@ -573,6 +574,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);
   tiles.dividerFactory = (rooms, frames) => environment.divider(rooms, frames);
   tiles.pieceFactory = (id) => environment.makePiece(id);
+  tiles.mirrorAim = (id, st) => mirrorAimHex(state && content ? content.scenarios[state.scenarioId] : undefined, id, st);
   // Blender kit pieces arrive after the first build: rebuild door bodies and obstacles with them.
   environment.onKit = () => {
     tiles.resetProps();
@@ -702,6 +704,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     setBoardWater(s.board.tiles);
     for (const id of tiles.revealed) tiles.setRoomRise(id, 1, null);
     tiles.syncProps(s);
+    const beam = beamPath(s, scenario);
+    tiles.setBeam(beam?.hexes ?? null, !!beam?.reached);
     const seen = new Set<FigureId>();
     const created: FigureView[] = [];
     for (const f of Object.values(s.figures)) {
