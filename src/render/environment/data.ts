@@ -30,5 +30,7 @@ export const DEFAULT_ENVIRONMENT: EnvironmentDef = {
 };
 
 export function environmentFor(scenarioId: string): EnvironmentDef {
-  return ENVIRONMENTS.find((e) => e.scenarios.includes(scenarioId)) ?? DEFAULT_ENVIRONMENT;
+  const def = ENVIRONMENTS.find((e) => e.scenarios.includes(scenarioId)) ?? DEFAULT_ENVIRONMENT;
+  const own = def.byScenario?.[scenarioId];
+  return own?.propModels ? { ...def, propModels: { ...def.propModels, ...own.propModels } } : def;
 }

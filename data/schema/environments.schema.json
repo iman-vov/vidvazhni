@@ -125,6 +125,15 @@
         "additionalProperties": false
       }
     },
+    "byScenario": {
+      "description": "Per scenario on top of propModels (Glass Town's glassware in a shared location).",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": { "propModels": { "$ref": "#/properties/propModels" } },
+        "additionalProperties": false
+      }
+    },
     "propModels": {
       "description": "Prop models (assets/models/<model>/) that replace a piece, obstacle, object look or tile thing (chest, door, trap) once the model exists; procedural otherwise.",
       "type": "object",

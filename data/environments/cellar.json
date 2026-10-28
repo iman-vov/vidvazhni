@@ -18,6 +18,7 @@
   },
   "fog": { "color": "#1d1612", "glow": "#2c2018", "start": 2.0, "end": 6, "morok": "#aba8b2", "morokOpacity": 0.35 },
   "entrance": "stairs",
+  "byScenario": { "s18": { "propModels": {"barrel": {"model": "glass-crystals", "height": 0.8}, "crate": {"model": "glass-panes", "height": 0.55}, "crate-stack": {"model": "glass-crystals-2", "height": 1.05}, "sacks": {"model": "glass-panes", "height": 0.6}, "sack": {"model": "glass-crystals", "height": 0.5}, "crate-broken": {"model": "glass-panes", "height": 0.55}, "shelf": {"model": "glass-workbench", "height": 1.25}, "wine-rack": {"model": "glass-workbench", "height": 1.3}, "keg-rack": {"model": "glass-workbench", "height": 0.95}, "table": {"model": "glass-workbench", "height": 0.62}, "brazier": {"model": "glass-lantern", "height": 0.68}} } },
   "propModels": {
     "barrel": { "model": "barrel", "height": 0.8 },
     "crate": { "model": "crate", "height": 0.55 },

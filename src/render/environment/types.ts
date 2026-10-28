@@ -107,6 +107,9 @@ export interface EnvironmentDef {
    * `door`, `trap`. Missing models fall back to the procedural piece. A plain string is the model id.
    */
   propModels?: Record<string, string | PropModelSpec>;
+  /** Per scenario on top of `propModels`: the same location dressed for one map (Glass Town's
+   *  glassware in place of the kits' barrels and crates), the other maps of the location unchanged. */
+  byScenario?: Record<string, { propModels?: Record<string, string | PropModelSpec> }>;
   /** Set pieces that stand on scenario obstacles of a model (`barrel`), picked per hex by a seeded
    *  random so neighbouring obstacles differ: barrels here, a table there, a stack of crates. */
   obstacles?: Record<string, string[]>;
