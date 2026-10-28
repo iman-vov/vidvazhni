@@ -32,8 +32,9 @@ import { BoardPost } from './post';
 import { loadPropPrototype } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
-import { capturePerf, type PerfBreakdown } from './perfStats';
-import { applyShadowFlags, bakeCaster, fitSunShadow, fitSunToView, markLampCasters, setupLampShadows, SHADOW_TIERS } from './shadows';
+import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
+import { nextAssetGeneration, releaseUnusedAssets } from './assetRelease';
+import { applyShadowFlags, bakeCaster, fitSunShadow, fitSunToView, markLampCasters, passLampMaps, setupLampShadows, SHADOW_TIERS } from './shadows';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
 
@@ -65,6 +66,8 @@ const FLOOR_SHADE: Record<GraphicsQuality, number> = { low: 0, medium: 0.25, hig
 const BAKE_DELAY = 250;
 /** How long after a change the lamps' static shadow maps are redrawn (ms). */
 const LAMP_DELAY = 600;
+/** When cached models and kits the last map or quality used are freed, after a switch (ms). */
+const RELEASE_AFTER = [20_000, 60_000];
 
 /** Floating words and the reset button's label; everything else on the board is digits or icons. */
 const LABELS: Record<
@@ -253,15 +256,35 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
 
   // ─── Renderer & quality ─────────────────────────────────────────────────
 
-  function makeRenderer(q: GraphicsQuality): THREE.WebGLRenderer {
+  /** The canvas itself is multisampled only when nothing draws over it: with a post chain the scene
+   *  is antialiased in the chain's target and the canvas gets one full-screen quad, so its samples
+   *  would only cost memory (~100 MB at 2048×1536). */
+  function canvasAntialias(q: GraphicsQuality): boolean {
     const preset = rendererPreset(q);
-    const r = new THREE.WebGLRenderer({ antialias: preset.antialias, powerPreference: 'high-performance' });
+    return preset.antialias && preset.post === 'none';
+  }
+
+  function makeRenderer(q: GraphicsQuality): THREE.WebGLRenderer {
+    const r = new THREE.WebGLRenderer({ antialias: canvasAntialias(q), powerPreference: 'high-performance' });
     r.shadowMap.type = THREE.PCFShadowMap;
     const c = r.domElement;
+    c.addEventListener('webglcontextrestored', onContextRestored);
     c.style.display = 'block';
     c.style.width = '100%';
     c.style.height = '100%';
     return r;
+  }
+
+  /** The browser took the GPU context away (memory pressure, a tab in the background on iOS) and gave
+   *  it back. three keeps the context lost event from killing it and uploads geometry, textures and
+   *  shaders again on the next draw; what was drawn into targets once has to be drawn again. */
+  function onContextRestored(): void {
+    if (disposed) return;
+    buildEnvironment();
+    bake.clear();
+    bakeKey = '';
+    // Lamp maps are drawn again by the lamp timer that the shadow refresh sets.
+    shadowsChanged();
   }
 
   function buildEnvironment(): void {
@@ -288,7 +311,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       bake.clear();
       bakeKey = '';
     }
-    else for (const l of lampLights.splice(0)) l.castShadow = false;
+    else {
+      for (const l of lampLights) l.castShadow = false;
+      passLampMaps(lampLights.splice(0), [], spareLampMaps);
+    }
     shadowsDirty = true;
     post.configure(renderer, preset);
     post.setSize(root.clientWidth, root.clientHeight, renderer.getPixelRatio());
@@ -305,11 +331,29 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     });
   }
 
+  /** The map the board was last built for: another one starts a new asset generation. */
+  let builtScenario: string | null = null;
+  let releaseTimers: ReturnType<typeof setTimeout>[] = [];
+
+  /** Another map or quality: once its models and kits are in, the cached ones of the last board that
+   *  nothing draws any more are freed (assetRelease.ts). Twice, as models keep arriving for a while
+   *  and a figure shows its old tier until the new one is in. */
+  function newAssetGeneration(): void {
+    nextAssetGeneration();
+    for (const t of releaseTimers) clearTimeout(t);
+    releaseTimers = RELEASE_AFTER.map((ms) =>
+      setTimeout(() => {
+        if (!disposed) releaseUnusedAssets(scene);
+      }, ms),
+    );
+  }
+
   function setQuality(q: GraphicsQuality): void {
     if (q === quality) return;
-    const oldAA = rendererPreset(quality).antialias;
+    newAssetGeneration();
+    const oldAA = canvasAntialias(quality);
     quality = q;
-    if (rendererPreset(q).antialias !== oldAA) {
+    if (canvasAntialias(q) !== oldAA) {
       // WebGL fixes antialiasing when the context is created: swap in a new renderer.
       const old = renderer;
       renderer = makeRenderer(q);
@@ -351,6 +395,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   let bakeTimer: ReturnType<typeof setTimeout> | 0 = 0;
   let lampTimer: ReturnType<typeof setTimeout> | 0 = 0;
   let lampLights: THREE.PointLight[] = [];
+  /** Cube maps of lamps that stopped casting, for the next lamps (passLampMaps in shadows.ts). */
+  const spareLampMaps: THREE.RenderTarget[] = [];
   /** What the last bake drew (its casters and where they stood). */
   let bakeKey = '';
 
@@ -373,7 +419,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     tiles.batchObstacles();
     if (tier.mode === 'realtime') {
       const centre = sun.target.position;
+      const before = lampLights;
       lampLights = tier.lamps > 0 ? setupLampShadows(scene, tier.lamps, centre) : [];
+      // Lamps of the last map are gone from the scene with their cube maps: the new lamps take them.
+      passLampMaps(before, lampLights, spareLampMaps);
       markLampCasters(scene, isFigurePart);
       // A lamp new to shadows draws its map at once (setupLampShadows asks for it), from the static things.
       if (lampLights.some((l) => l.shadow.needsUpdate)) redrawLamps();
@@ -692,6 +741,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     content = c;
     const scenario = c.scenarios[s.scenarioId];
     if (scenario) {
+      if (builtScenario !== null && builtScenario !== s.scenarioId) newAssetGeneration();
+      builtScenario = s.scenarioId;
       environment.build(scenario, s.board.revealedRooms);
       environment.applyLighting(scene, hemi, sun);
       sun.intensity = Math.max(sun.intensity, Math.min(sun.intensity * KEY_GAIN, KEY_MAX));
@@ -1699,6 +1750,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     stopQuality();
     if (bakeTimer) clearTimeout(bakeTimer);
     if (lampTimer) clearTimeout(lampTimer);
+    for (const t of releaseTimers) clearTimeout(t);
     bake.dispose();
     floorShade.geometry.dispose();
     floorShade.material.dispose();
@@ -1715,6 +1767,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     post.dispose();
     lampTarget.dispose();
     lampOverride.dispose();
+    for (const m of spareLampMaps) m.dispose();
     renderer.dispose();
     root.remove();
     hexListeners.clear();
@@ -1774,7 +1827,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     },
     perf() {
       const t = performance.now();
-      return capturePerf(renderer, scene, () => drawFrame(t, 0));
+      const out = capturePerf(renderer, scene, () => drawFrame(t, 0));
+      out.memory = readMemory(renderer, scene, [...post.targets(), lampTarget]);
+      return out;
     },
     spin(on: boolean) {
       spinning = on;

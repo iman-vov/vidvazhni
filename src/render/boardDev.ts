@@ -30,6 +30,7 @@ import type { BoardHighlights } from './view';
 import type { IconName } from '../ui/icons/names';
 import { iconSvg } from '../ui/icons/svg';
 import { formatPerf } from './perfStats';
+import { releaseUnusedAssets } from './assetRelease';
 
 const params = new URLSearchParams(location.search);
 if (params.get('props') === 'fixture') {
@@ -656,7 +657,17 @@ async function shot(name: string): Promise<string> {
   return res.text();
 }
 
-Object.assign(window, { board, devBoard: { shot, get state() { return state; }, content, perf: () => board.perf(), playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
+/** For memory checks: a new game on another map in the same board view, as the game does between
+ *  missions (Act II maps are in the content when the page opened on s6–s10). */
+async function load(id: string): Promise<void> {
+  board.skip();
+  setup.scenarioId = id;
+  state = freshGame();
+  board.sync(state, content);
+  await modelsReady();
+}
+
+Object.assign(window, { board, devBoard: { shot, load, release: () => releaseUnusedAssets(board.scene), get state() { return state; }, content, perf: () => board.perf(), playAll, playBeat, playMoves, moveBeats, seek, modelsReady, BEATS } });
 // dev/bench.html loads this page in a frame and measures it: no panel or info line on top.
 if (params.get('bench') === '1') panel.hidden = info.hidden = true;
 if (params.get('play') === '1') void playAll();

@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const local = new THREE.Matrix4();
+/** Marks a mesh whose geometry mergeStaticParts made (and freeMergedParts frees). */
+const OWN_GEOMETRY = 'mergedGeometry';
 
 /** Replaces the plain meshes under `group` that share a material (and the same attributes, draw
  *  order and flags) with one merged mesh each. Skinned, instanced, morphing and multi-material meshes
@@ -44,11 +46,20 @@ export function mergeStaticParts(group: THREE.Object3D): number {
     mesh.renderOrder = first.renderOrder;
     mesh.castShadow = first.castShadow;
     mesh.receiveShadow = first.receiveShadow;
+    mesh.userData[OWN_GEOMETRY] = true;
     for (const m of list) m.removeFromParent();
     group.add(mesh);
     merged += list.length - 1;
   }
   return merged;
+}
+
+/** Frees the geometry mergeStaticParts made under `root` (the parts' own geometry belongs to their
+ *  model or kit). Call when the prop goes for good. */
+export function freeMergedParts(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    if (o.userData[OWN_GEOMETRY]) (o as THREE.Mesh).geometry.dispose();
+  });
 }
 
 /** Marks a mesh hidden because a batch draws it (it still counts as shown for the next batch). */

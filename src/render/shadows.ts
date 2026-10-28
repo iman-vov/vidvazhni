@@ -254,6 +254,25 @@ export function setupLampShadows(scene: THREE.Scene, count: number, centre: THRE
   return on;
 }
 
+/**
+ * Hands the cube maps of lamps that stopped casting (gone with the last map, or turned off) to the
+ * lamps that cast now and have none, and keeps the rest for later. Freeing them would not give the
+ * memory back: three r186 deletes a point light's cube depth texture only from the render target's
+ * properties, not from the GPU (~6 MB per lamp at 512², at every map change).
+ */
+export function passLampMaps(before: readonly THREE.PointLight[], now: readonly THREE.PointLight[], spare: THREE.RenderTarget[]): void {
+  for (const l of before) {
+    if (now.includes(l) || !l.shadow.map) continue;
+    spare.push(l.shadow.map);
+    l.shadow.map = null;
+  }
+  for (const l of now) {
+    if (l.shadow.map || !spare.length) continue;
+    l.shadow.map = spare.pop()!;
+    l.shadow.needsUpdate = true;
+  }
+}
+
 /** Puts every static caster (not under `skip`: the figures) in the lamps' layer. */
 export function markLampCasters(root: THREE.Object3D, skip: (o: THREE.Object3D) => boolean): void {
   const visit = (o: THREE.Object3D): void => {

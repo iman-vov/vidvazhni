@@ -30,6 +30,20 @@ export interface PerfBreakdown {
    *  that keeps compiling is a material whose defines change every frame). */
   programs: number;
   compiled: number;
+  memory?: PerfMemory;
+}
+
+/** What the board holds in memory. The GPU numbers are estimates from sizes (drivers pad and keep
+ *  more), good for comparing qualities and boards, not for an exact count. */
+export interface PerfMemory {
+  /** renderer.info.memory: geometries and textures uploaded to the GPU. */
+  geometries: number;
+  textures: number;
+  /** JS heap in MB (performance.memory, Chrome only; null elsewhere). */
+  heapMB: number | null;
+  /** Estimated GPU MB: the canvas's own buffers, render targets (post chain, shadow maps), textures
+   *  and vertex data of what is in the scene. */
+  gpuMB: { canvas: number; targets: number; textures: number; geometry: number; total: number };
 }
 
 /** The bucket a mesh belongs to, from the names of it and its ancestors. */
@@ -99,6 +113,82 @@ export function capturePerf(renderer: THREE.WebGLRenderer, scene: THREE.Scene, d
   return out;
 }
 
+const MB = 1024 * 1024;
+const round1 = (x: number) => Math.round(x * 10) / 10;
+
+/** Bytes per pixel of a colour target or texture of `type` (RGBA). */
+function texelBytes(type: number | undefined): number {
+  // three's HalfFloatType is 1016, FloatType 1015.
+  return type === 1016 ? 8 : type === 1015 ? 16 : 4;
+}
+
+/** Estimated bytes of a render target: colour (a multisampled buffer plus the resolved texture when
+ *  it has samples), depth buffer and depth texture; a cube target has six faces. */
+export function targetBytes(t: THREE.RenderTarget): number {
+  const px = t.width * t.height * ((t as { isWebGLCubeRenderTarget?: boolean }).isWebGLCubeRenderTarget ? 6 : 1);
+  const samples = t.samples > 0 ? t.samples : 0;
+  const colour = texelBytes(t.texture.type) * (samples ? samples + 1 : 1) * t.textures.length;
+  const depth = t.depthBuffer ? 4 * Math.max(1, samples) : 0;
+  return px * (colour + depth + (t.depthTexture ? 4 : 0));
+}
+
+/** Memory of the board: `targets` are the render targets the scene does not reach from its lights
+ *  (post chain, lamp redraw target). */
+export function readMemory(renderer: THREE.WebGLRenderer, scene: THREE.Scene, targets: THREE.RenderTarget[]): PerfMemory {
+  const all = new Set(targets);
+  scene.traverse((o) => {
+    const light = o as THREE.DirectionalLight;
+    if (light.isLight && light.shadow?.map) all.add(light.shadow.map);
+  });
+  const targetTextures = new Set<THREE.Texture>();
+  let targetsB = 0;
+  for (const t of all) {
+    targetsB += targetBytes(t);
+    for (const tex of t.textures) targetTextures.add(tex);
+    if (t.depthTexture) targetTextures.add(t.depthTexture);
+  }
+  const textures = new Set<THREE.Texture>();
+  const geometries = new Set<THREE.BufferGeometry>();
+  const addTex = (v: unknown) => {
+    const tex = v as THREE.Texture | null;
+    if (tex?.isTexture && !targetTextures.has(tex)) textures.add(tex);
+  };
+  addTex(scene.background);
+  addTex(scene.environment);
+  scene.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.geometry || !mesh.material) return;
+    geometries.add(mesh.geometry);
+    for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      for (const v of Object.values(m)) addTex(v);
+      const uniforms = (m as THREE.ShaderMaterial).uniforms;
+      if (uniforms) for (const u of Object.values(uniforms)) addTex(u?.value);
+    }
+  });
+  let texB = 0;
+  for (const tex of textures) {
+    const img = (tex.image ?? {}) as { width?: number; height?: number; depth?: number };
+    const faces = Array.isArray(tex.image) ? tex.image.length : 1;
+    const first = (Array.isArray(tex.image) ? tex.image[0] : img) as { width?: number; height?: number } | undefined;
+    const px = (first?.width ?? 0) * (first?.height ?? 0) * faces * (img.depth ?? 1);
+    texB += px * texelBytes(tex.type) * (tex.generateMipmaps || tex.mipmaps?.length ? 4 / 3 : 1);
+  }
+  let geoB = 0;
+  for (const g of geometries) {
+    for (const a of Object.values(g.attributes)) geoB += (a as THREE.BufferAttribute).array?.byteLength ?? 0;
+    geoB += g.index?.array.byteLength ?? 0;
+  }
+  const gl = renderer.getContext();
+  const attrs = gl.getContextAttributes();
+  const px = gl.drawingBufferWidth * gl.drawingBufferHeight;
+  // Back buffer (multisampled when antialiased) with depth-stencil, its resolve, and the display copy.
+  const canvasB = px * (8 * (attrs?.antialias ? 4 : 1) + (attrs?.antialias ? 4 : 0) + 4);
+  const heap = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize;
+  const gpu = { canvas: round1(canvasB / MB), targets: round1(targetsB / MB), textures: round1(texB / MB), geometry: round1(geoB / MB), total: 0 };
+  gpu.total = round1(gpu.canvas + gpu.targets + gpu.textures + gpu.geometry);
+  return { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, heapMB: heap ? round1(heap / MB) : null, gpuMB: gpu };
+}
+
 /** A few lines for the dev page: passes, then the biggest categories. */
 export function formatPerf(p: PerfBreakdown, top = 12): string {
   const fmt = (k: string, c: PerfCount) => `${k} ${c.calls}/${Math.round(c.tris / 1000)}k`;
@@ -109,5 +199,9 @@ export function formatPerf(p: PerfBreakdown, top = 12): string {
     .map(([k, c]) => fmt(k, c));
   const lines: string[] = [];
   for (let i = 0; i < cats.length; i += 4) lines.push(cats.slice(i, i + 4).join('  '));
-  return `perf calls/tris: total ${p.total.calls}/${Math.round(p.total.tris / 1000)}k  |  ${passes}  |  maps ${p.shadowMaps.join(', ') || '—'}\n${lines.join('\n')}`;
+  const m = p.memory;
+  const mem = m
+    ? `\nmemory: gpu ~${m.gpuMB.total} MB (canvas ${m.gpuMB.canvas}, targets ${m.gpuMB.targets}, textures ${m.gpuMB.textures}, geometry ${m.gpuMB.geometry})  |  ${m.geometries} geometries, ${m.textures} textures${m.heapMB !== null ? `  |  heap ${m.heapMB} MB` : ''}`
+    : '';
+  return `perf calls/tris: total ${p.total.calls}/${Math.round(p.total.tris / 1000)}k  |  ${passes}  |  maps ${p.shadowMaps.join(', ') || '—'}\n${lines.join('\n')}${mem}`;
 }

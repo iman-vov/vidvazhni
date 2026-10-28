@@ -24,6 +24,9 @@ interface Run {
   env: Record<string, unknown>;
   perf?: PerfBreakdown;
   error?: string;
+  /** Times the run was started: more than 1 when the page died during it (iOS kills a tab that
+   *  runs out of memory) or the GPU context was lost and it was measured again. */
+  tries?: number;
 }
 
 interface Saved {
@@ -31,6 +34,9 @@ interface Saved {
   started: string;
   plan: { board: string; quality: GraphicsQuality }[];
   runs: Run[];
+  /** The run in progress and how many times it was started. Still set after a reload means the
+   *  page died during that run. */
+  pending?: { index: number; tries: number };
 }
 
 interface BoardWindow extends Window {
@@ -55,6 +61,10 @@ const start = document.getElementById('start')!;
 const result = document.getElementById('result')!;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** A run that brought the page down this many times is written down as failed and skipped. */
+const MAX_TRIES = 2;
+/** Set when the board's GPU context is lost during a run. */
+let contextLost = false;
 
 function load(): Saved | null {
   try {
@@ -114,6 +124,13 @@ async function openBoard(board: string, quality: GraphicsQuality): Promise<Board
   const url = `board.html?board=${board}&quality=${quality}&bench=1`;
   for (let attempt = 0; attempt < 3; attempt++) {
     release();
+    // An empty page and a pause first, so the last board's memory can go before the next one loads
+    // (two boards at once is what pushes a tablet over its limit when high starts).
+    await new Promise<void>((resolve) => {
+      frame.onload = () => resolve();
+      frame.src = 'about:blank';
+    });
+    await sleep(1500);
     await new Promise<void>((resolve) => {
       frame.onload = () => resolve();
       frame.src = attempt ? `${url}&try=${attempt}` : url;
@@ -121,6 +138,8 @@ async function openBoard(board: string, quality: GraphicsQuality): Promise<Board
     const win = frame.contentWindow as BoardWindow;
     for (let i = 0; i < 300 && !(win.board && win.devBoard); i++) await sleep(100);
     if (!win.board || !win.devBoard) continue;
+    contextLost = false;
+    for (const c of win.document.querySelectorAll('canvas')) c.addEventListener('webglcontextlost', () => (contextLost = true));
     await win.devBoard.modelsReady(20000);
     return win;
   }
@@ -145,6 +164,7 @@ async function measure(win: BoardWindow, run: Pick<Run, 'board' | 'quality'>, la
       stableSince = performance.now();
     }
     if (performance.now() > warmEnd + 30000) break;
+    if (contextLost) throw new Error('webgl context lost');
     status(`${label}  розігрів…  tris ${tris}  shaders ${programs}`);
     await sleep(250);
   }
@@ -174,6 +194,7 @@ async function measure(win: BoardWindow, run: Pick<Run, 'board' | 'quality'>, la
     win.requestAnimationFrame(tick);
   });
   board.spin(false);
+  if (contextLost) throw new Error('webgl context lost');
   const deltas = times.slice(1).map((t, i) => t - times[i]!).sort((a, b) => a - b);
   const total = times.length > 1 ? times[times.length - 1]! - times[0]! : 0;
   const p95 = deltas[Math.min(deltas.length - 1, Math.floor(deltas.length * 0.95))] ?? 0;
@@ -218,15 +239,31 @@ async function runAll(saved: Saved): Promise<void> {
   for (let i = saved.runs.length; i < saved.plan.length; i++) {
     const job = saved.plan[i]!;
     const label = `${i + 1}/${saved.plan.length}  ${job.board} ${job.quality}`;
-    status(`${label}  завантаження…`);
-    let run: Run;
-    try {
-      const win = await openBoard(job.board, job.quality);
-      run = await measure(win, job, label);
-    } catch (err) {
-      run = { ...job, fps: 0, p5: 0, frames: 0, calls: 0, tris: 0, canvas: [0, 0], pixelRatio: 0, env: {}, error: String(err) };
+    const failed = (error: string, tries: number): Run => ({ ...job, fps: 0, p5: 0, frames: 0, calls: 0, tris: 0, canvas: [0, 0], pixelRatio: 0, env: {}, error, tries });
+    let run: Run | null = null;
+    // Started before and never finished: the page died during it.
+    let tries = saved.pending?.index === i ? saved.pending.tries : 0;
+    while (!run) {
+      if (tries >= MAX_TRIES) {
+        run = failed(`the page died or lost the GPU ${tries}×`, tries);
+        break;
+      }
+      tries++;
+      saved.pending = { index: i, tries };
+      save(saved);
+      status(`${label}  завантаження…${tries > 1 ? ` (спроба ${tries})` : ''}`);
+      try {
+        const win = await openBoard(job.board, job.quality);
+        run = await measure(win, job, label);
+        if (tries > 1) run.tries = tries;
+      } catch (err) {
+        // A lost context is measured again on a fresh page; anything else is written down.
+        if (!String(err).includes('context lost')) run = failed(String(err), tries);
+        else release();
+      }
     }
     saved.runs.push(run);
+    delete saved.pending;
     save(saved);
   }
   release();
@@ -280,7 +317,7 @@ function showTable(runs: Run[], title: string, where: string, report: unknown): 
     };
     cell(r.board);
     cell(r.quality);
-    cell(r.error ? 'помилка' : String(r.fps), r.error ? 'bad' : r.fps >= 30 ? 'ok' : 'bad');
+    cell((r.error ? 'помилка' : String(r.fps)) + (r.tries ? ` (спроб ${r.tries})` : ''), r.error ? 'bad' : r.fps >= 30 ? 'ok' : 'bad');
     cell(String(r.p5));
     cell(String(r.calls), r.calls > budget.calls ? 'bad' : 'ok');
     cell(r.tris.toLocaleString('uk'), r.tris > budget.tris ? 'bad' : 'ok');
@@ -320,9 +357,29 @@ function showStart(): void {
   start.append(h, about, input, go);
   if (previous && previous.runs.length < previous.plan.length) {
     const resume = document.createElement('button');
-    resume.textContent = `Продовжити (${previous.runs.length}/${previous.plan.length})`;
-    resume.onclick = () => void runAll(previous);
+    const label = `Продовжити (${previous.runs.length}/${previous.plan.length})`;
+    resume.textContent = label;
+    let timer = 0;
+    resume.onclick = () => {
+      clearInterval(timer);
+      void runAll(previous);
+    };
     start.appendChild(resume);
+    // The page died mid-run (Safari reloads a tab it killed): carry on by itself after a countdown.
+    if (previous.pending) {
+      let left = 5;
+      const tick = () => {
+        resume.textContent = `${label} — сама через ${left} с`;
+        if (left-- <= 0) resume.click();
+      };
+      tick();
+      timer = window.setInterval(tick, 1000);
+      go.addEventListener('click', () => clearInterval(timer));
+      input.addEventListener('focus', () => {
+        clearInterval(timer);
+        resume.textContent = label;
+      });
+    }
   }
   if (params.get('auto') === '1') go.click();
 }

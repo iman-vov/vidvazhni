@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { freeParts, onAssetRelease, partsInUse, StampedCache } from '../assetRelease';
 import { listModels, modelUrl, resolveTier } from '../models';
 import type { GraphicsQuality } from '../quality';
 import type { Part } from './pieces';
@@ -19,8 +20,20 @@ import type { Part } from './pieces';
 const KIT_URLS = import.meta.glob<string>('/assets/environment/**/*.glb', { query: '?url', import: 'default', eager: true });
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-const cache = new Map<string, Promise<Part[] | null>>();
-const kitCache = new Map<string, Promise<Map<string, Part[]>>>();
+const cache = new StampedCache<Part[] | null>();
+const kitCache = new StampedCache<Map<string, Part[]>>();
+// Kits of earlier boards that the scene no longer draws (assetRelease.ts). Callers clone a part's
+// geometry, so its material and textures tell whether a kit is still on the board.
+onAssetRelease(
+  (used) =>
+    cache.release((parts) => !!parts && partsInUse(parts, used), (parts) => parts && freeParts(parts)) +
+    kitCache.release(
+      (kit) => [...kit.values()].some((parts) => partsInUse(parts, used)),
+      (kit) => {
+        for (const parts of kit.values()) freeParts(parts);
+      },
+    ),
+);
 
 /** URL of the kit GLB for a piece in a location, if the build has one. */
 export function kitUrl(location: string, piece: string): string | undefined {

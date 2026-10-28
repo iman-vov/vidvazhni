@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import type { EnvironmentDef, PropModelSpec } from './environment/types';
+import { onAssetRelease, partsInUse, partsOf, StampedCache } from './assetRelease';
 import { loadModel } from './models';
 import type { GraphicsQuality } from './quality';
 
@@ -62,7 +63,10 @@ export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   blueprint: 0.75,
 };
 
-const cache = new Map<string, Promise<PropPrototype | null>>();
+const cache = new StampedCache<PropPrototype | null>();
+// Prototypes of earlier boards that nothing drawn shares geometry or materials with; their model's
+// GPU copies go with the model (models.ts).
+onAssetRelease((used) => cache.release((proto) => !!proto && partsInUse(partsOf(proto.object), used), () => {}));
 
 /** Loads and normalises a prop model (cached per model, height, turn and quality); null if it fails. */
 export function loadPropPrototype(spec: Required<PropModelSpec>, quality: GraphicsQuality): Promise<PropPrototype | null> {

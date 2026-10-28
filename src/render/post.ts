@@ -108,10 +108,15 @@ export class BoardPost {
     this.renderer = renderer;
     this.mode = preset.post;
     if (this.mode === 'none') return;
-    // AO reads the scene pass's depth (each of the composer's two targets has its own).
+    // The scene pass draws into the multisampled target with depth (AO reads that depth); the AO pass
+    // writes into a plain one. render() keeps them in those roles: the composer would swap them every
+    // frame, and both would then need samples and depth (~160 MB more at 2048×1536 on the iPad).
     const depthTexture = this.mode === 'ao' ? new THREE.DepthTexture(1, 1) : null;
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: preset.antialias ? 4 : 0, depthTexture });
-    const composer = new EffectComposer(renderer, target);
+    const plain = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
+    const composer = new EffectComposer(renderer, plain);
+    composer.renderTarget2.dispose();
+    composer.renderTarget2 = target;
     composer.addPass(new RenderPass(this.scene, this.camera));
     if (this.mode === 'ao') {
       this.ao = new BoardAOPass(this.scene, this.camera, 1, 1);
@@ -155,6 +160,8 @@ export class BoardPost {
     const info = this.renderer.info;
     info.autoReset = false;
     info.reset();
+    this.composer.writeBuffer = this.composer.renderTarget1;
+    this.composer.readBuffer = this.composer.renderTarget2;
     this.composer.render();
     info.autoReset = true;
   }
@@ -162,6 +169,15 @@ export class BoardPost {
   dispose(): void {
     this.disposeChain();
     this.grade.dispose();
+  }
+
+  /** The chain's render targets, for the memory readout. A target never drawn into (the plain one
+   *  without AO) holds no GPU memory and is left out. */
+  targets(): THREE.WebGLRenderTarget[] {
+    if (!this.composer) return [];
+    const out = [this.composer.renderTarget2];
+    if (this.ao) out.push(this.composer.renderTarget1, this.ao.gtaoRenderTarget, this.ao.pdRenderTarget);
+    return out;
   }
 
   private applySize(): void {

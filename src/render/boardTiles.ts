@@ -23,7 +23,7 @@ import { walledRuns } from './environment/plan';
 import { environmentFor } from './environment/data';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
 import { patchWater, setWaterMap } from './environment/life';
-import { batchSignature, batchStatic, mergeStaticParts, unbatch } from './mergeParts';
+import { batchSignature, batchStatic, freeMergedParts, mergeStaticParts, unbatch } from './mergeParts';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const WALL_HEIGHT = 0.62;
@@ -552,7 +552,11 @@ export class TileLayer {
       for (const mesh of room.plates) mesh.dispose();
       for (const d of room.edgeDisposables) d.dispose();
       this.rooms.delete(id);
-      for (const [k, p] of this.props) if (p.room === id) this.props.delete(k);
+      for (const [k, p] of this.props) if (p.room === id) this.dropProp(k, p);
+      for (const key of [id, `${id}:walls`]) {
+        unbatch(this.batches.get(key)?.batch);
+        this.batches.delete(key);
+      }
     }
     const byRoom = new Map<string, [HexKey, Tile][]>();
     for (const [k, tile] of Object.entries(s.board.tiles)) {
@@ -885,8 +889,7 @@ export class TileLayer {
     }
     for (const [key, p] of this.props) {
       if (seen.has(key) || (onlyRoom && p.room !== onlyRoom)) continue;
-      p.object.removeFromParent();
-      this.props.delete(key);
+      this.dropProp(key, p);
     }
   }
 
@@ -937,8 +940,13 @@ export class TileLayer {
 
   removeProp(key: string): void {
     const p = this.props.get(key);
-    if (!p) return;
+    if (p) this.dropProp(key, p);
+  }
+
+  /** Takes a prop off the board for good, with the geometry its parts were merged into. */
+  private dropProp(key: string, p: PropView): void {
     p.object.removeFromParent();
+    freeMergedParts(p.object);
     this.props.delete(key);
   }
 
@@ -984,8 +992,7 @@ export class TileLayer {
 
   /** Drops every prop so the next syncProps builds them again (new art-kit pieces arrived). */
   resetProps(): void {
-    for (const p of this.props.values()) p.object.removeFromParent();
-    this.props.clear();
+    for (const [k, p] of this.props) this.dropProp(k, p);
   }
 
   /** Room rise: k from 0 (below the board) to 1 (in place); `origin` = where the reveal starts. */
@@ -1163,6 +1170,7 @@ export class TileLayer {
 
       placeholder.parent.add(model);
       placeholder.removeFromParent();
+      freeMergedParts(placeholder);
       const glow = this.propGlow?.(key, spec.height);
       if (glow) model.add(glow);
       // A modelled chest opens by vanishing (it has no lid of its own).
@@ -1238,7 +1246,9 @@ export class TileLayer {
       for (const d of room.edgeDisposables) d.dispose();
     }
     this.rooms.clear();
-    this.props.clear();
+    for (const [k, p] of this.props) this.dropProp(k, p);
+    for (const { batch } of this.batches.values()) unbatch(batch);
+    this.batches.clear();
     this.root.clear();
     for (const m of [...this.materials.values()].flat()) m.dispose();
     for (const t of [...this.textures, ...this.surfaceTextures.values()]) t.dispose();

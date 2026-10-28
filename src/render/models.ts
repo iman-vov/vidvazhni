@@ -2,7 +2,7 @@
 // three tiers, picked by the graphics quality (render/quality.ts):
 //   low    assets/models/<id>/<id>.low.glb  textures ≤ 512, mesh simplified to ~50%; precached by the PWA
 //   medium assets/models/<id>/<id>.glb      textures ≤ 1024
-//   high   assets/models/<id>/<id>.hq.glb   source textures up to 4096
+//   high   assets/models/<id>/<id>.hq.glb   textures ≤ 2048 (props and weapons ≤ 1024)
 // Each GLB is fetched and parsed once; every loadModel call returns its own clone with its own
 // skeleton and AnimationMixer, sharing geometry, textures and clips with the other clones.
 
@@ -11,6 +11,7 @@ import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { placeWeapon, weaponGrip } from './weaponGrip';
+import { freeParts, onAssetRelease, partsInUse, partsOf, StampedCache } from './assetRelease';
 import { castsShadow, getGraphicsQuality, GRAPHICS_QUALITIES, rendererPreset, type GraphicsQuality } from './quality';
 
 /** The game's clip names; `npm run models` renames Meshy's clips to these. */
@@ -77,7 +78,14 @@ const FALLBACK: Record<GraphicsQuality, GraphicsQuality[]> = {
 export const MODEL_CACHE = 'vidvazhni-models';
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-const cache = new Map<string, Promise<GLTF>>();
+const cache = new StampedCache<GLTF>();
+// Models of earlier boards that the scene no longer draws (assetRelease.ts).
+onAssetRelease((used) =>
+  cache.release(
+    (gltf) => partsInUse(partsOf(gltf.scene), used),
+    (gltf) => freeParts(partsOf(gltf.scene)),
+  ),
+);
 
 /** Models added at run time (dev pages and tests: fixtures outside assets/models), by id and tier. */
 const EXTRA_URLS = new Map<string, Partial<Record<GraphicsQuality, string>>>();

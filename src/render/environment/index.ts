@@ -213,6 +213,8 @@ export class BoardEnvironment {
   private blobTexture: THREE.Texture | null = null;
   private readonly veil = new Map<string, number>();
   private obstacleGeometries: THREE.BufferGeometry[] = [];
+  /** Made for tile props that the next onKit replaces. */
+  private staleObstacleGeometries: THREE.BufferGeometry[] = [];
   /** Which set piece stands on each scenario obstacle hex (see `obstacles` in the location data). */
   private obstacleLooks = new Map<HexKey, string>();
   /** Clusters of things standing on obstacle hexes, and set pieces across touching ones (obstacles.ts). */
@@ -273,6 +275,7 @@ export class BoardEnvironment {
     this.kitParts.clear();
     this.propProtos.clear();
     this.loadToken++;
+    this.retireObstacleGeometries();
     this.rebuild();
     this.loadKit();
     this.loadMarsh();
@@ -285,6 +288,7 @@ export class BoardEnvironment {
     if (!this.layout) return;
     this.loadToken++;
     this.propProtos.clear();
+    this.retireObstacleGeometries();
     this.rebuild();
     this.loadKit();
     this.loadMarsh();
@@ -626,6 +630,19 @@ export class BoardEnvironment {
 
   private palette(key: MaterialKey): string {
     return this.def?.palette?.[key] ?? PALETTE_DEFAULTS[key];
+  }
+
+  /** The obstacles, litter and glows made for the tile layer belong to the build they were made for:
+   *  when the kit arrives the tile layer builds them all again (onKit), and the old ones are freed.
+   *  Kept to the end, every map played and quality tried added its litter to the GPU. */
+  private retireObstacleGeometries(): void {
+    this.staleObstacleGeometries.push(...this.obstacleGeometries);
+    this.obstacleGeometries = [];
+  }
+
+  private freeStaleObstacleGeometries(): void {
+    for (const g of this.staleObstacleGeometries) g.dispose();
+    this.staleObstacleGeometries = [];
   }
 
   private clear(): void {
@@ -1257,7 +1274,9 @@ export class BoardEnvironment {
       this.kitParts = found;
       this.rebuild();
       // Tile props built from pieces (obstacles, door bodies) pick the kit up on the next sync.
+      this.retireObstacleGeometries();
       this.onKit();
+      this.freeStaleObstacleGeometries();
     })();
   }
 
@@ -1271,8 +1290,8 @@ export class BoardEnvironment {
     this.blobTexture?.dispose();
     this.blobTexture = null;
 
-    for (const g of this.obstacleGeometries) g.dispose();
-    this.obstacleGeometries = [];
+    this.retireObstacleGeometries();
+    this.freeStaleObstacleGeometries();
     this.fieldTex?.dispose();
     this.fieldTex = null;
   }

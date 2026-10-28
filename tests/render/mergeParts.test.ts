@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { batchSignature, batchStatic, mergeStaticParts, unbatch } from '../../src/render/mergeParts';
+import { batchSignature, batchStatic, freeMergedParts, mergeStaticParts, unbatch } from '../../src/render/mergeParts';
 
 const red = new THREE.MeshStandardMaterial({ color: 'red' });
 const blue = new THREE.MeshStandardMaterial({ color: 'blue' });
@@ -25,6 +25,18 @@ describe('mergeStaticParts', () => {
     expect(mergeStaticParts(g)).toBe(1);
     expect(g.children).toHaveLength(2);
     expect(box(g).equals(before)).toBe(true);
+  });
+
+  it('frees only the geometry it made when the prop goes', () => {
+    const g = new THREE.Group();
+    const blue1 = part(blue, -2);
+    g.add(part(red, 0), part(red, 3), blue1);
+    mergeStaticParts(g);
+    const disposed: THREE.BufferGeometry[] = [];
+    for (const c of g.children) (c as THREE.Mesh).geometry.addEventListener('dispose', (e) => disposed.push(e.target));
+    freeMergedParts(g);
+    expect(disposed).toHaveLength(1);
+    expect(disposed[0]).not.toBe(blue1.geometry);
   });
 });
 
