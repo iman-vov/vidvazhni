@@ -12,7 +12,7 @@ import { hexToWorld } from '../hexLayout';
 import type { GraphicsQuality } from '../quality';
 import { atmosphereFor, pick, type Atmosphere, type FloorDecal, type WallDecal, type WallVariant } from './atmosphere';
 import { patchMaterial, type EnvUniforms } from './field';
-import { seededRandom, valueNoise, type EnvLayout } from './layout';
+import { onWoodFloor, seededRandom, valueNoise, type EnvLayout } from './layout';
 import { STYLE_PIECES, type Placement } from './plan';
 import { pieceMeta, type MaterialKey } from './pieces';
 import type { EnvironmentDef } from './types';
@@ -619,6 +619,9 @@ export function buildAtmosphere(input: AtmosphereInput): AtmosphereBuild {
 
 const UP = new THREE.Vector3(0, 1, 0);
 
+/** What a stone-looking floor decal becomes on planks. */
+const WOOD_DECAL: Partial<Record<FloorDecal, FloorDecal>> = { slab: 'planks', crack: 'stain', rubble: 'debris' };
+
 function buildFloor(input: AtmosphereInput, atm: Atmosphere, dry: Quads, wet: Quads): void {
   const { layout, quality } = input;
   const rnd = seededRandom(`grime:${layout.scenarioId}`);
@@ -632,11 +635,15 @@ function buildFloor(input: AtmosphereInput, atm: Atmosphere, dry: Quads, wet: Qu
   const hexes: [string, boolean][] = [...[...layout.footprint.keys()].map((k): [string, boolean] => [k, true]), ...[...layout.ring.keys()].map((k): [string, boolean] => [k, false])];
   for (const [key, playable] of hexes) {
     const centre = hexToWorld(...parseHexKey(key));
+    const wood = onWoodFloor(layout, key);
     const count = Math.floor(density + rnd());
     for (let i = 0; i < count; i++) {
       let kind = pick(atm.floor.kinds, rnd());
       if (playable && kind === 'rubble') kind = 'debris';
-      const info = FLOOR_CELLS[kind];
+      // A wooden floor gets no stone on it: its slabs, cracks and rubble turn to wood and dirt
+      // (the same draws from the seed, so the rest of the floor keeps its decals).
+      const look = wood ? (WOOD_DECAL[kind] ?? kind) : kind;
+      const info = FLOOR_CELLS[look];
       const [s0, s1] = FLOOR_SIZE[kind];
       const size = (s0 + rnd() * (s1 - s0)) * (playable ? 0.85 : 1);
       const a = rnd() * Math.PI * 2;
@@ -647,7 +654,7 @@ function buildFloor(input: AtmosphereInput, atm: Atmosphere, dry: Quads, wet: Qu
       v.set(Math.sin(rot), 0, Math.cos(rot)).multiplyScalar(-size / 2);
       let color = info.tinted ? grime : white;
       // Some slabs are darker than the floor, some lighter.
-      if (kind === 'slab' && rnd() < 0.5) color = new THREE.Color(0.25, 0.22, 0.2);
+      if (kind === 'slab' && rnd() < 0.5) color = look === 'slab' ? new THREE.Color(0.25, 0.22, 0.2) : white.clone().multiplyScalar(0.9);
       else if (!info.tinted) color = white.clone().multiplyScalar(0.8 + rnd() * 0.25);
       (info.wet ? wet : dry).add(c, u, v, UP, info.cell, color, playable ? 0.8 : 1, rnd() < 0.5);
     }

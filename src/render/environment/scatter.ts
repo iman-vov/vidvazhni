@@ -18,7 +18,7 @@ import { hexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
 import { floorDetail, type FloorDetail } from '../floorDetail';
 import type { GraphicsQuality } from '../quality';
-import { distanceToOutline, seededRandom, valueNoise, type EnvLayout } from './layout';
+import { distanceToOutline, onWoodFloor, seededRandom, valueNoise, type EnvLayout } from './layout';
 import { pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { Placement } from './plan';
 import type { EdgeStyle, EnvironmentDef, Season } from './types';
@@ -221,6 +221,8 @@ export function planScatter(input: ScatterInput): ScatterSpot[] {
     for (const [k, w] of profile.kinds) if ((r -= w) <= 0) return k;
     return profile.kinds[0]![0];
   };
+  // No pebbles on a room's wooden floor: wood chips there instead.
+  const onFloor = (kind: ScatterKind, x: number, z: number): ScatterKind => (kind === 'pebbles' && onWoodFloor(layout, hexKey(worldToHex(x, z))) ? 'chips' : kind);
   const props = placements.map((p) => ({ x: p.x, z: p.z, r: (pieceMeta(p.piece)?.radius ?? 0.3) * (p.scale ?? 1) + 0.06 }));
   const out: ScatterSpot[] = [];
   const ok = (kind: ScatterKind, x: number, z: number, scale: number, rimMin: number): boolean => {
@@ -260,7 +262,7 @@ export function planScatter(input: ScatterInput): ScatterSpot[] {
       const x = cx + Math.cos(a) * d;
       const z = cz + Math.sin(a) * d;
       // Mostly the clump's kind, now and then a neighbour of another.
-      const kk = rnd() < 0.75 ? kind : pickKind();
+      const kk = onFloor(rnd() < 0.75 ? kind : pickKind(), x, z);
       const scale = (0.75 + rnd() * 0.55) * SIZE;
       const rot = rnd() * Math.PI * 2;
       const tint = 0.86 + rnd() * 0.24;
@@ -284,7 +286,7 @@ export function planScatter(input: ScatterInput): ScatterSpot[] {
       const bits = level.bits > 1 && lr() < 0.4 ? 2 : 1;
       for (let b = 0, tries = 0; b < bits && tries < 8; tries++) {
         let pick = lr() * sum;
-        const kind = kinds.find(([, w]) => (pick -= w) <= 0)?.[0] ?? kinds[0]![0];
+        const kind = onFloor(kinds.find(([, w]) => (pick -= w) <= 0)?.[0] ?? kinds[0]![0], c.x, c.z);
         // As big as reads from the board camera, but never so big that it cannot lie between the
         // middle and the outline; then anywhere in what is left of the band.
         const reach = KINDS[kind].reach;

@@ -18,6 +18,9 @@ import { hexVariation, loadPropPrototype, propModelFor, type PropPrototype } fro
 import type { GraphicsQuality } from './quality';
 import type { PropModelSpec } from './environment/types';
 import type { Partition } from './environment/walls';
+import { buildLayout } from './environment/layout';
+import { walledRuns } from './environment/plan';
+import { environmentFor } from './environment/data';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
 import { patchWater, setWaterMap } from './environment/life';
 import { batchSignature, batchStatic, mergeStaticParts, unbatch } from './mergeParts';
@@ -57,12 +60,19 @@ function gridHexGeometry(radius: number): THREE.BufferGeometry {
   return g;
 }
 
-/** The grid: crisp thin rim lines and a very faint fill, transparent over the floor. */
+/** Depth pull of the floor patches, and of the terrain and grid above them: stronger, so a patch
+ *  pulled over the location's ground never hides them at a low camera angle. */
+const PATCH_OFFSET = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
+const OVER_PATCH_OFFSET = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -3 };
+
+/** The grid: crisp thin rim lines and a very faint fill, transparent over the floor. A thin dark
+ *  band inside the light line keeps it readable on light floors (planks) as on dark stone. */
 function gridMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
-    uniforms: { uColor: { value: new THREE.Color('#fff2d2') } },
+    ...OVER_PATCH_OFFSET,
+    uniforms: { uColor: { value: new THREE.Color('#fff2d2') }, uShade: { value: new THREE.Color('#2a1c10') } },
     vertexShader: `
       attribute float aRim;
       varying float vRim;
@@ -76,12 +86,17 @@ function gridMaterial(): THREE.ShaderMaterial {
       }`,
     fragmentShader: `
       uniform vec3 uColor;
+      uniform vec3 uShade;
       varying float vRim;
       void main() {
         float w = fwidth(vRim);
         float line = smoothstep(1.0 - 0.03 - w, 1.0 - 0.03 + w * 0.5, vRim);
-        float fill = 0.035 + 0.05 * pow(vRim, 6.0);
-        gl_FragColor = vec4(uColor, max(line * 0.78, fill));
+        float shade = smoothstep(1.0 - 0.06 - w, 1.0 - 0.06 + w * 0.5, vRim) * (1.0 - line);
+        float fill = (0.035 + 0.05 * pow(vRim, 6.0)) * (1.0 - line) * (1.0 - shade);
+        float aLine = line * 0.78 + fill;
+        float aShade = shade * 0.34;
+        float a = aLine + aShade;
+        gl_FragColor = vec4((uColor * aLine + uShade * aShade) / max(a, 1e-4), a);
       }`,
   });
 }
@@ -336,7 +351,10 @@ export class TileLayer {
   /** Off-map hexes inside the walls beside each room → that room's floor, so a room is one floor
    *  from wall to wall. */
   private roomOfHex = new Map<HexKey, string>();
-  private ringFloor = new Map<string, { hexes: { hex: Hex; owned: boolean }[]; surface: SurfaceId }>();
+  private ringFloor = new Map<string, { hexes: RingHex[]; surface: SurfaceId }>();
+  /** Door hexes whose two rooms have different floors: each room floors its own side of the wall
+   *  through the door (ringFloorMesh), so the door's room has no whole patch there. */
+  private splitDoors = new Set<HexKey>();
 
   /** The walls between rooms as polylines from outer wall to outer wall (environment/walls.ts). */
   partitionLines: (() => readonly Partition[]) | null = null;
@@ -395,7 +413,7 @@ export class TileLayer {
       }
       const floor = worldUvMaterial(tex, '#ffffff');
       floor.roughness = surfaceRoughness(surface);
-      Object.assign(floor, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+      Object.assign(floor, PATCH_OFFSET);
       m = floor;
     } else if (key.startsWith('overlay:')) {
       const terrain = key.slice(8) as Overlay;
@@ -403,7 +421,7 @@ export class TileLayer {
         const fallback = noiseTexture('#5a8a96');
         this.textures.push(fallback);
         const water = worldUvMaterial(fallback, '#cfe6ea');
-        Object.assign(water, { transparent: true, opacity: 0.72, depthWrite: false, roughness: 0.15, metalness: 0.1 });
+        Object.assign(water, { transparent: true, opacity: 0.72, depthWrite: false, roughness: 0.15, metalness: 0.1, ...OVER_PATCH_OFFSET });
         const url = textureUrl('shallow-water', this.quality);
         if (url) {
           new THREE.TextureLoader().load(url, (tex) => {
@@ -421,7 +439,7 @@ export class TileLayer {
         const tex = terrainOverlayTexture(terrain, this.quality);
         this.textures.push(tex);
         const overlay = worldUvMaterial(tex, '#ffffff');
-        Object.assign(overlay, { transparent: true, depthWrite: false, roughness: 0.9 });
+        Object.assign(overlay, { transparent: true, depthWrite: false, roughness: 0.9, ...OVER_PATCH_OFFSET });
         if (terrain === 'hazardous') {
           overlay.emissive.set('#ff5a20');
           overlay.emissiveIntensity = 0.55;
@@ -486,6 +504,39 @@ export class TileLayer {
           const best = [...count].sort((x, y) => y[1] - x[1] || Number(y[0].kind === 'indoor') - Number(x[0].kind === 'indoor'))[0]![0];
           for (const r of count.keys()) this.ringFloor.get(r.id)!.hexes.push({ hex: n, owned: r === best });
         }
+    // The outer walls run straight along the ring's zigzag outline, out to its outermost corners
+    // (plan.ts): the hexes beyond the outline floor the strip up to the wall's line, within the run.
+    const scenario = content.scenarios[s.scenarioId];
+    if (scenario) {
+      const layout = buildLayout(scenario);
+      for (const run of walledRuns(layout, environmentFor(scenario.id))) {
+        const len = Math.hypot(run.bx - run.ax, run.bz - run.az) || 1;
+        const [dx, dz] = [(run.bx - run.ax) / len, (run.bz - run.az) / len];
+        const keep: RingHex['keep'] = [
+          (q) => -((q.x - run.ax) * run.nx + (q.z - run.az) * run.nz),
+          (q) => (q.x - run.ax) * dx + (q.z - run.az) * dz,
+          (q) => (run.bx - q.x) * dx + (run.bz - q.z) * dz,
+        ];
+        for (const i of run.edges) {
+          // The room whose hex is nearest: a run along two rooms floors each one's own stretch.
+          const c = hexToWorld(...layout.edges[i]!.outer);
+          const near = layout.centres.reduce((b, p) => (Math.hypot(p.x - c.x, p.z - c.z) < Math.hypot(b.x - c.x, b.z - c.z) ? p : b));
+          this.ringFloor.get(near.room)?.hexes.push({ hex: layout.edges[i]!.outer, owned: true, keep });
+        }
+      }
+    }
+    // A door between floors of two kinds: the floor changes on the wall's line through the door.
+    this.splitDoors = new Set();
+    for (const room of rooms)
+      for (const d of room.doors ?? []) {
+        const k = rulesHexKey(d.hex);
+        const own = roomOf.get(k);
+        const other = rooms.find((r) => r.id === (own?.id === room.id ? d.to : room.id));
+        if (!own || !other || other === own || this.surfaceByHex.get(k) === (other.surface ?? this.defaultSurface)) continue;
+        this.splitDoors.add(k);
+        this.ringFloor.get(own.id)!.hexes.push({ hex: d.hex, owned: true });
+        this.ringFloor.get(other.id)!.hexes.push({ hex: d.hex, owned: false });
+      }
     const wanted = only ? [...new Set([...this.rooms.keys(), only])] : s.board.revealedRooms;
     const added: string[] = [];
     for (const [id, room] of this.rooms) {
@@ -520,12 +571,20 @@ export class TileLayer {
     const ring = this.ringFloor.get(id);
     if (!ring || ring.surface === this.defaultSurface || !ring.hexes.length) return null;
     const mine = parts.filter((p) => p.rooms.includes(id));
+    // A wall between rooms may run through hexes only the room beyond it floors: this room takes
+    // its own side of them too.
+    const hexes = [...ring.hexes];
+    for (const p of mine)
+      for (const other of p.rooms)
+        if (other !== id) for (const h of this.ringFloor.get(other)?.hexes ?? []) hexes.push({ ...h, owned: false });
     const positions: number[] = [];
-    for (const { hex, owned } of ring.hexes) {
+    const own = [...this.roomOfHex].filter(([, r]) => r === id).map(([k]) => hexToWorld(...parseHexKey(k)));
+    for (const { hex, owned, keep } of hexes) {
       const c = hexToWorld(...hex);
-      // A hex of this room beside it: the side of a wall this room is on.
-      const inside = neighbors(hex).map((n) => this.surfaceByHex.has(rulesHexKey(n)) && this.roomOfHex.get(rulesHexKey(n)) === id ? hexToWorld(...n) : null).find(Boolean)!;
+      // The hex of this room nearest to it: the side of a wall this room is on.
+      const inside = own.reduce((b, p) => (Math.hypot(p.x - c.x, p.z - c.z) < Math.hypot(b.x - c.x, b.z - c.z) ? p : b));
       let poly = Array.from({ length: 6 }, (_, i) => ({ x: c.x + HEX_SIZE * 1.004 * Math.cos((i * Math.PI) / 3), z: c.z + HEX_SIZE * 1.004 * Math.sin((i * Math.PI) / 3) }));
+      for (const side of keep ?? []) poly = clipHalfPlane(poly, side, 1);
       let cut = false;
       for (const p of mine)
         for (let i = 0; i + 1 < p.points.length; i++) {
@@ -533,10 +592,16 @@ export class TileLayer {
           const b = p.points[i + 1]!;
           const side = (q: { x: number; z: number }) => (b.x - a.x) * (q.z - a.z) - (b.z - a.z) * (q.x - a.x);
           if (!poly.some((q) => side(q) > 0) || !poly.some((q) => side(q) < 0) || segmentDistance(c, a, b) > HEX_SIZE) continue;
+          // Only where the wall itself runs through the hex: past a wall's end (at the outer wall)
+          // its line says nothing about which room a hex is in.
+          if (chordCover(poly, a, b) < 0.35) continue;
           poly = clipHalfPlane(poly, side, side(inside) >= 0 ? 1 : -1);
           cut = true;
         }
       if ((!cut && !owned) || poly.length < 3) continue;
+      // Still this room's: no wall between rooms stands between the piece and the room's hex.
+      const mid = { x: poly.reduce((t, q) => t + q.x, 0) / poly.length, z: poly.reduce((t, q) => t + q.z, 0) / poly.length };
+      if (parts.some((p) => p.points.some((a, i) => i > 0 && segmentsCross(mid, inside, p.points[i - 1]!, a)))) continue;
       for (let i = 1; i + 1 < poly.length; i++) {
         const [a, b, d] = [poly[0]!, poly[i]!, poly[i + 1]!];
         // Wound to face up (+Y): (b − a) × (d − a) has a positive y.
@@ -581,7 +646,7 @@ export class TileLayer {
     const byKey = new Map<string, Hex[]>();
     for (const [k] of tiles) {
       const surface = this.surfaceByHex.get(k) ?? this.defaultSurface;
-      if (surface === this.defaultSurface) continue;
+      if (surface === this.defaultSurface || this.splitDoors.has(k)) continue;
       const key = `floor:${surface}`;
       let list = byKey.get(key);
       if (!list) byKey.set(key, (list = []));
@@ -1381,12 +1446,49 @@ class PropParts {
   }
 }
 
+/** An off-map hex (or a door hex) a room floors: `owned` floors it whole when no wall between rooms
+ *  crosses it; `keep` clips it to where each function is ≥ 0 (the inner side of an outer wall). */
+interface RingHex {
+  hex: Hex;
+  owned: boolean;
+  keep?: ((q: { x: number; z: number }) => number)[];
+}
+
 /** Distance from a point to a segment (world XZ). */
 function segmentDistance(p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): number {
   const dx = b.x - a.x;
   const dz = b.z - a.z;
   const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / (dx * dx + dz * dz || 1)));
   return Math.hypot(p.x - a.x - t * dx, p.z - a.z - t * dz);
+}
+
+/** Whether segments p–q and a–b cross (world XZ). */
+function segmentsCross(p: { x: number; z: number }, q: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): boolean {
+  const side = (u: { x: number; z: number }, v: { x: number; z: number }, w: { x: number; z: number }) => (v.x - u.x) * (w.z - u.z) - (v.z - u.z) * (w.x - u.x);
+  return side(p, q, a) * side(p, q, b) < 0 && side(a, b, p) * side(a, b, q) < 0;
+}
+
+/** How much of the chord that the line through a–b cuts across a convex polygon lies on the
+ *  segment a–b itself (0..1). */
+function chordCover(poly: { x: number; z: number }[], a: { x: number; z: number }, b: { x: number; z: number }): number {
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  const ts: number[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]!;
+    const q = poly[(i + 1) % poly.length]!;
+    const sp = dx * (p.z - a.z) - dz * (p.x - a.x);
+    const sq = dx * (q.z - a.z) - dz * (q.x - a.x);
+    if (sp >= 0 === sq >= 0) continue;
+    const k = sp / (sp - sq);
+    const x = p.x + k * (q.x - p.x);
+    const z = p.z + k * (q.z - p.z);
+    ts.push(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1));
+  }
+  if (ts.length < 2) return 0;
+  const t0 = Math.min(...ts);
+  const t1 = Math.max(...ts);
+  return t1 > t0 ? Math.max(0, Math.min(1, t1) - Math.max(0, t0)) / (t1 - t0) : 0;
 }
 
 /** The part of a convex polygon where `sign * side(q) >= 0` (Sutherland–Hodgman, one edge). */

@@ -3,7 +3,7 @@
 // props stand, and the outline of footprint + ring as hex edges, which is where walls, thickets or
 // rock close the map. Walls between the camera and the board are marked `front` (cut away low).
 
-import type { ScenarioDef, Terrain } from '../../rules/content';
+import type { ScenarioDef, SurfaceId, Terrain } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type Hex, type HexKey } from '../../rules/hex';
 import { goalZone } from '../../rules/objectives';
 import { HEX_SIZE, hexToWorld, worldToHex } from '../hexLayout';
@@ -58,6 +58,18 @@ export interface EnvLayout {
   centre: { x: number; z: number };
   /** Ring hexes next to a doorway: kept clear of props. */
   clear: Set<HexKey>;
+  /** Room → its own floor, for rooms floored unlike the location (planks in a storeroom). */
+  floors: Map<string, SurfaceId>;
+}
+
+/** Floors of wood: no stone litter or stone decals on them. */
+const WOOD_FLOORS: ReadonlySet<SurfaceId> = new Set(['planks', 'walkway']);
+
+/** Whether a playable or ring hex lies on a room's wooden floor. */
+export function onWoodFloor(layout: Pick<EnvLayout, 'footprint' | 'ring' | 'floors'>, k: HexKey): boolean {
+  const room = layout.footprint.get(k) ?? layout.ring.get(k);
+  const floor = room ? layout.floors.get(room) : undefined;
+  return !!floor && WOOD_FLOORS.has(floor);
 }
 
 /** Angle (XZ, from +X toward +Z) of the direction to each neighbour, in neighbors() order. */
@@ -108,6 +120,7 @@ export function buildLayout(scenario: ScenarioDef): EnvLayout {
     max,
     centre: { x: (min.x + max.x) / 2, z: (min.z + max.z) / 2 },
     clear: new Set(),
+    floors: new Map(scenario.rooms.flatMap((r) => (r.surface ? [[r.id, r.surface] as const] : []))),
   };
 
   // Outline: every edge between a ring hex and a hex outside both.

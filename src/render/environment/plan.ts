@@ -10,7 +10,7 @@ import type { GraphicsQuality } from '../quality';
 import { distanceToFootprint, hidesBoard, seededRandom, type EnvLayout, type OutlineEdge } from './layout';
 import { FootprintRegistry, pieceBox, placementFootprint, WALL_BACKED, wallSegments } from './footprint';
 import { pieceMeta } from './pieces';
-import { straightRuns } from './walls';
+import { straightRuns, type WallRun } from './walls';
 import type { EdgeStyle, EnvironmentDef, Weighted } from './types';
 
 export type Band = 'edge' | 'corner' | 'door' | 'feature' | 'ring' | 'outside' | 'far';
@@ -90,6 +90,16 @@ export function styleOf(def: EnvironmentDef, room: string): EdgeStyle {
 }
 
 /** `partitions`: the walls between rooms as polylines (walls.ts); nothing is put on them. */
+/** The outline's straight runs that get a straight wall (one walled style along the whole run, no
+ *  doorway): the wall stands on the run's line, out at the zigzag's outermost corners. */
+export function walledRuns(layout: EnvLayout, def: EnvironmentDef): WallRun[] {
+  return straightRuns(layout).filter((r) => {
+    if (r.door) return false;
+    const style = styleOf(def, layout.edges[r.edges[0]!]!.room);
+    return STYLE_PIECES[style].walled && r.edges.every((i) => styleOf(def, layout.edges[i]!.room) === style);
+  });
+}
+
 export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality: GraphicsQuality, partitions: { x: number; z: number }[][] = []): Placement[] {
   const rnd = seededRandom(`${def.id}:${layout.scenarioId}`);
   const out: Placement[] = [];
@@ -197,11 +207,7 @@ export function planEnvironment(layout: EnvLayout, def: EnvironmentDef, quality:
   };
   // Walled edges run straight: segments fitted along each run, pillars where runs turn.
   const straight = new Set<number>();
-  const runs = straightRuns(layout).filter((r) => {
-    if (r.door) return false;
-    const style = styleOf(def, layout.edges[r.edges[0]!]!.room);
-    return STYLE_PIECES[style].walled && r.edges.every((i) => styleOf(def, layout.edges[i]!.room) === style);
-  });
+  const runs = walledRuns(layout, def);
   for (const r of runs) {
     for (const i of r.edges) straight.add(i);
     const len = Math.hypot(r.bx - r.ax, r.bz - r.az);
