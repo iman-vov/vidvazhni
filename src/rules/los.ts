@@ -230,5 +230,38 @@ export function lineOfSight(walls: WallIndex, a: Hex, b: Hex): boolean {
 }
 
 export function hasLineOfSight(state: GameState, a: Hex, b: Hex): boolean {
-  return lineOfSight(wallIndex(state.board), a, b);
+  return lineOfSight(wallIndex(state.board), a, b) && !fogBetween(state, a, b);
+}
+
+/** Fog banks (s12, terrain `fog`): no sight into, out of or through a fog hex, except to a
+ *  neighbour; Fire or Air next to it clears it until `fogClearedUntil` (marsh.ts). */
+export function fogBetween(state: GameState, a: Hex, b: Hex): boolean {
+  const n = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[0] + a[1] - b[0] - b[1]));
+  if (n <= 1) return false;
+  const fog = (h: Hex) => {
+    const t = state.board.tiles[hexKey(h)];
+    return t?.terrain === 'fog' && !((t.fogClearedUntil ?? 0) >= state.round);
+  };
+  // The hexes on the straight line, nudged off the edges between two hexes (both count).
+  for (let i = 0; i <= n; i++) {
+    for (const eps of [1e-6, -1e-6]) {
+      const q = a[0] + ((b[0] - a[0]) * i) / n + eps;
+      const r = a[1] + ((b[1] - a[1]) * i) / n + eps;
+      if (fog(roundHex(q, r))) return true;
+    }
+  }
+  return false;
+}
+
+function roundHex(q: number, r: number): Hex {
+  const s = -q - r;
+  let rq = Math.round(q);
+  let rr = Math.round(r);
+  const rs = Math.round(s);
+  const dq = Math.abs(rq - q);
+  const dr = Math.abs(rr - r);
+  const ds = Math.abs(rs - s);
+  if (dq > dr && dq > ds) rq = -rr - rs;
+  else if (dr > ds) rr = -rq - rs;
+  return [rq, rr];
 }

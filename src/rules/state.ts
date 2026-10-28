@@ -168,7 +168,9 @@ export type Figure = HeroState | MonsterState | SummonState;
 
 export interface Tile {
   room: string;
-  terrain: 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep';
+  terrain: 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep' | 'fog';
+  /** A fog bank cleared by Fire or Air next to it, through this round (s12, marsh.ts). */
+  fogClearedUntil?: number;
   obstacle?: boolean;
   /** A breakable obstacle (mining crate, rubble): heroes attack it; at 0 hp it is gone. */
   breakable?: { hp: number; maxHp: number };
@@ -557,6 +559,8 @@ export type GameEvent =
   | { type: 'allyJoined'; figureId: FigureId }
   /** A sleeping monster woke up (sleep.ts). */
   | { type: 'monsterWoke'; figureId: FigureId }
+  /** Fog banks cleared by Fire or Air through round `until` (s12, marsh.ts). */
+  | { type: 'fogCleared'; hexes: Hex[]; until: number }
   /** Hexes turned to another terrain (s14's rising water, marsh.ts). */
   | { type: 'terrainChanged'; hexes: Hex[]; terrain: 'water' | 'deep' }
   /** A living shelf raised the alarm (books.ts). */

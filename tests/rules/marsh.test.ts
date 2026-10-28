@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import type { BossType, Content } from '../../src/rules/content';
 import { takeDamage } from '../../src/rules/damage';
 import { hitObstacle } from '../../src/rules/obstacles';
-import { floodedRows, loomDisadvantage } from '../../src/rules/marsh';
+import { clearFog, floodedRows, loomDisadvantage } from '../../src/rules/marsh';
+import { hasLineOfSight } from '../../src/rules/los';
+import { inRangeWithSight } from '../../src/rules/effects/support';
 import { secondaryMet } from '../../src/rules/objectives';
 import type { GameState } from '../../src/rules/state';
 import { act, finishRound, makeContent, monsterType, newGame, playHalf, selectAll } from '../helpers/engineFixtures';
@@ -111,5 +113,41 @@ describe('risingWater', () => {
     expect([terrain('1,0'), terrain('1,1'), terrain('2,0')]).toEqual(['water', 'water', 'normal']);
     for (let r = 3; r <= 4; r++) s = finishRound(selectAll(s, c, pick(r)), c);
     expect([terrain('1,0'), terrain('1,1'), terrain('2,0')]).toEqual(['deep', 'deep', 'water']);
+  });
+});
+
+describe('fogBanks', () => {
+  function fogGame(): { c: Content; s: GameState } {
+    const c = makeContent({
+      secondRoom: false,
+      monsters: [monsterType('rat', 'tidle')],
+      decks: [{ id: 'tidle', cards: [{ id: 'i.99', initiative: 99, steps: [] }] }],
+      spawns: [{ monster: 'rat', hex: [6, 4] }],
+      room: { terrain: [{ hex: [2, 2], terrain: 'fog' }] },
+      scenario: { specials: ['fogBanks'] },
+    });
+    return { c, s: newGame(c) };
+  }
+
+  it('no sight through, into or out of fog; a neighbour still sees', () => {
+    const { c, s } = fogGame();
+    const ctx = { s, c, ev: [], out: [] };
+    expect(hasLineOfSight(s, [1, 2], [3, 2])).toBe(false); // through
+    expect(hasLineOfSight(s, [0, 2], [2, 2])).toBe(false); // into
+    expect(hasLineOfSight(s, [2, 2], [4, 2])).toBe(false); // out of
+    expect(hasLineOfSight(s, [0, 0], [4, 0])).toBe(true); // past it
+    expect(inRangeWithSight(ctx, [1, 2], [2, 2], 3)).toBe(true); // a neighbour
+    expect(inRangeWithSight(ctx, [0, 2], [2, 2], 3)).toBe(false);
+  });
+
+  it('Fire or Air made next to the fog clears it through the next round', () => {
+    const { c, s } = fogGame();
+    const ctx = { s, c, ev: [], out: [] };
+    s.figures['hero:alpha']!.hex = [1, 2];
+    clearFog(ctx, 'hero:alpha');
+    expect(s.board.tiles['2,2']?.fogClearedUntil).toBe(2);
+    expect(hasLineOfSight(s, [1, 2], [3, 2])).toBe(true);
+    s.round = 3;
+    expect(hasLineOfSight(s, [1, 2], [3, 2])).toBe(false);
   });
 });

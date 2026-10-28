@@ -7,6 +7,9 @@
 //                  half health (and it did).
 //   deepWater (s11) A figure that walks or is pushed into deep water (terrain `deep`) stops there
 //                  and moves 1 less on its next turn. Flying and jumping pass over it.
+//   fogBanks (s12) Terrain `fog`: no line of sight into, out of or through it, only neighbours
+//                  can attack a figure in it (los.ts). A figure that makes Fire or Air (an infusion
+//                  or an orb) clears the fog on and next to its hex through the next round.
 //   risingWater (s14) `ScenarioDef.rising {from, every, rows}`: at the start of round `from`, then
 //                  every `every` rounds, the next row turns to water and the row before it to deep
 //                  water (the last row deepens one step after it floods). Rooms not revealed yet
@@ -14,7 +17,7 @@
 //                  on the board each time.
 
 import { emit, tileAt, type Ctx } from './effects/context';
-import type { Hex } from './hex';
+import { neighbors, type Hex } from './hex';
 import { boardObjects, hasSpecial, scenarioOf } from './scenarioRules';
 import type { Figure, GameState } from './state';
 
@@ -66,4 +69,18 @@ export function riseWater(ctx: Ctx): void {
     });
     if (changed.length) emit(ctx, { type: 'terrainChanged', hexes: changed.map((h) => [h[0], h[1]] as Hex), terrain });
   });
+}
+
+/** Fire or Air made by `byId`: the fog on and next to it clears through the next round. */
+export function clearFog(ctx: Ctx, byId?: string): void {
+  const f = byId ? ctx.s.figures[byId] : undefined;
+  if (!f) return;
+  const cleared: Hex[] = [];
+  for (const h of [f.hex, ...neighbors(f.hex)]) {
+    const t = tileAt(ctx.s, h);
+    if (t?.terrain !== 'fog') continue;
+    t.fogClearedUntil = ctx.s.round + 1;
+    cleared.push([h[0], h[1]]);
+  }
+  if (cleared.length) emit(ctx, { type: 'fogCleared', hexes: cleared, until: ctx.s.round + 1 });
 }

@@ -288,7 +288,7 @@ export interface BossType {
 }
 
 /** `deep` (s11, marsh.ts): entering it ends the move, and the next turn moves 1 less. */
-export type Terrain = 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep';
+export type Terrain = 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep' | 'fog';
 
 /** What a hex looks like underfoot (cosmetic; the rules use `Terrain`). The board draws the surface
  *  and shows difficult, hazardous and water terrain on top of it. */

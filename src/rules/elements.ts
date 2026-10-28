@@ -10,6 +10,7 @@
 import type { ElementId, OrbId } from './content';
 import { emit, type Ctx } from './effects/context';
 import type { Hex } from './hex';
+import { clearFog } from './marsh';
 import type { ElementLevel, FigureId, GameState } from './state';
 
 export const ELEMENTS: readonly ElementId[] = ['fire', 'ice', 'air', 'earth', 'light', 'dark'];
@@ -37,6 +38,7 @@ function setLevel(ctx: Ctx, e: ElementId, level: ElementLevel): void {
 /** Infuses an element. `byId` = the infusing figure (the orb's owner with the orbs fork);
  *  with orbs, an element that is not an orb (ice, light, dark) does nothing. */
 export function infuse(ctx: Ctx, e: ElementId, byId?: FigureId, hex?: Hex): void {
+  if (e === 'fire' || e === 'air') clearFog(ctx, byId);
   if (ctx.s.variants.orbs) {
     if (!isOrb(e)) return;
     putOrb(ctx, e, byId ?? 'scenario', hex);
