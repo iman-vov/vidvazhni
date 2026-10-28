@@ -16,7 +16,7 @@ describe('loadContent', () => {
     expect(Object.keys(content.decks).sort()).toEqual(
       ['archer', 'boss.glass-guardian', 'boss.hammerfist', 'boss.miller', 'boss.mist-queen', 'boss.shadowhand', 'caster', 'ghost', 'guard', 'melee'],
     );
-    expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's16', 's17']);
+    expect(Object.keys(content.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's16', 's17', 's18']);
     // The catalog grows (docs/design/items.md): at least the 50 data items, each id once in data/items.json.
     expect(Object.keys(content.items).length).toBeGreaterThanOrEqual(50);
     expect(new Set(rawItems.map((it) => it.id)).size).toBe(rawItems.length);

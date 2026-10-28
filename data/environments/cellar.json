@@ -1,6 +1,6 @@
 {
   "id": "cellar",
-  "scenarios": ["s0", "s1"],
+  "scenarios": ["s0", "s1", "s18"],
   "edge": "stone",
   "surface": "flagstones",
   "boundary": "walls",
