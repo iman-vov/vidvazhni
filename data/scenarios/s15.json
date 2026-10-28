@@ -1,0 +1,98 @@
+{
+  "id": "s15",
+  "number": 15,
+  "draft": true,
+  "goal": { "type": "killBoss", "boss": "mist-queen" },
+  "startRoom": "s15.alley",
+  "startHexes": [[0, 2], [0, 3], [0, 4], [1, 3]],
+  "introduces": ["fogLooms"],
+  "specials": ["fogLooms"],
+  "forkOrbs": { "eachRound": [{ "orb": "air", "source": "s15.loom-1" }] },
+  "rooms": [
+    {
+      "id": "s15.alley",
+      "kind": "outdoor",
+      "hexes": [
+        [0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5],
+        [2, 1], [2, 2], [2, 3], [2, 4], [3, 1], [3, 2], [3, 3], [3, 4],
+        [4, 0], [4, 1], [4, 2], [4, 3], [5, 0], [5, 1], [5, 2], [5, 3],
+        [6, 1]
+      ],
+      "obstacles": [{ "hex": [2, 1], "model": "tree" }, { "hex": [3, 4], "model": "tree" }],
+      "doors": [{ "hex": [6, 1], "to": "s15.heart" }],
+      "spawns": [
+        { "monster": "marsh-hopper", "hex": [4, 1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "marsh-hopper", "hex": [4, 3], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "marsh-hopper", "hex": [5, 2], "by": { "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [5, 0], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "shadow-wraith", "hex": [5, 3], "by": { "4": "normal" } }
+      ],
+      "coins": [[1, 5]]
+    },
+    {
+      "id": "s15.heart",
+      "kind": "outdoor",
+      "hexes": [
+        [7, -3], [7, -2], [7, -1], [7, 0], [7, 1], [7, 2], [7, 3], [7, 4],
+        [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [8, 1], [8, 2], [8, 3],
+        [9, -4], [9, -3], [9, -2], [9, -1], [9, 0], [9, 1], [9, 2], [9, 3],
+        [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [10, 0], [10, 1], [10, 2],
+        [11, -5], [11, -4], [11, -3], [11, -2], [11, -1], [11, 0], [11, 1], [11, 2],
+        [12, -6], [12, -5], [12, -4], [12, -3], [12, -2], [12, -1], [12, 0], [12, 1],
+        [13, -6], [13, -5], [13, -4], [13, -3], [13, -2], [13, -1], [13, 0], [13, 1],
+        [14, -7], [14, -6], [14, -5], [14, -4], [14, -3], [14, -2], [14, -1], [14, 0]
+      ],
+      "spawns": [
+        { "monster": "mist-queen", "hex": [11, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } }
+      ],
+      "chests": [{ "hex": [14, 0], "id": "s15.chest", "loot": { "coins": 4 } }],
+      "objects": [
+        {
+          "hex": [9, -2],
+          "id": "s15.loom-1",
+          "kind": "loom",
+          "hp": 6,
+          "blocks": true,
+          "spawn": { "monster": "night-moth", "by": { "2": "normal", "3": "normal", "4": "normal" } }
+        },
+        {
+          "hex": [13, -3],
+          "id": "s15.loom-2",
+          "kind": "loom",
+          "hp": 6,
+          "blocks": true,
+          "spawn": { "monster": "night-moth", "by": { "3": "normal", "4": "normal" } }
+        },
+        {
+          "hex": [10, 1],
+          "id": "s15.loom-3",
+          "kind": "loom",
+          "hp": 6,
+          "blocks": true,
+          "spawn": { "monster": "night-moth", "by": { "4": "normal" } }
+        }
+      ]
+    }
+  ],
+  "reward": { "goldEach": 35, "unlock": ["s21"] },
+  "secondary": [
+    { "id": "s15.nine-rounds", "check": "withinRounds", "params": { "rounds": 9 }, "reward": { "gold": 5 } },
+    { "id": "s15.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } }
+  ],
+  "events": [
+    {
+      "id": "s15.last-thread",
+      "trigger": { "type": "bossHalfHp", "boss": "mist-queen" },
+      "actions": [
+        { "type": "story", "text": "event.s15.last-thread" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[10, -2], [12, -1], [12, -3]],
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

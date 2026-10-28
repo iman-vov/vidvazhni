@@ -97,7 +97,7 @@ describe('applyScenarioResult', () => {
       ok(applyScenarioResult(c, s, { id: scenarioId, scenarioId, won: true, heroes, secondaryMet }));
     const afterS10 = win({ ...fresh(), unlocked: ['s10'] }, 's10');
     expect(afterS10.unlocked).toEqual(['s11', 's16']);
-    // The marsh has no data yet: s11 waits in the list but is not offered.
+    // An unlocked id is offered only once its scenario has data.
     expect(playableScenarios(afterS10, c.scenarios).includes('s11')).toBe(!!c.scenarios['s11']);
     expect(playableScenarios(afterS10, c.scenarios)).toContain('s16');
     const afterS16 = win(afterS10, 's16');
@@ -110,6 +110,21 @@ describe('applyScenarioResult', () => {
     expect(end.flags).toEqual(['blueprint', 'mirrors.aligned', 'ally.guardian']);
     expect(end.unlocked).toEqual(['s21']);
     expect(playableScenarios(end, c.scenarios)).not.toContain('s21');
+  });
+
+  it('Act III, Sleepy Marsh: s11 closes s16 and opens s12 or s13, the bell-ringer map opens s14, flags stay', () => {
+    const win = (s: CampaignState, scenarioId: string, secondaryMet?: string[]) =>
+      ok(applyScenarioResult(c, s, { id: scenarioId, scenarioId, won: true, heroes, secondaryMet }));
+    const afterS11 = win(win({ ...fresh(), unlocked: ['s10'] }, 's10'), 's11');
+    expect(afterS11.unlocked).toEqual(['s12', 's13']);
+    const afterS12 = win(afterS11, 's12', ['s12.bell-map']);
+    expect(afterS12.unlocked).toEqual(['s15', 's14']);
+    expect(afterS12.flags).toEqual(['heron.saved']);
+    expect(win(afterS11, 's13').unlocked).toEqual(['s15']);
+    expect(win(afterS11, 's13').flags).toEqual(['fireflies']);
+    const end = win(win(afterS12, 's14'), 's15');
+    expect(end.flags).toEqual(['heron.saved', 'bells.rung']);
+    expect(end.unlocked).toEqual(['s21']);
   });
 
   it('refuses unknown scenarios and heroes', () => {
