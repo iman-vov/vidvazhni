@@ -77,13 +77,31 @@
       "trigger": { "type": "bossHalfHp", "boss": "glass-guardian" },
       "actions": [
         { "type": "story", "text": "event.s20.ally" },
-        { "type": "setGoal", "goal": { "type": "protect", "object": "s20.heart", "rounds": 3 } },
+        { "type": "setGoal", "goal": { "type": "protect", "object": "s20.heart", "rounds": 3 } }
+      ]
+    },
+    {
+      "id": "s20.wave",
+      "trigger": { "type": "goalRound", "round": 1, "every": 1 },
+      "actions": [
+        { "type": "story", "text": "event.s20.wave" },
         {
           "type": "spawn",
           "monster": "night-moth",
           "by": { "2": "normal", "3": "normal", "4": "normal" },
-          "hexes": [[8, -4], [13, -6], [13, 1], [8, -3], [13, -5], [14, -1]],
-          "count": 3
+          "hexes": [[8, -4], [8, -3]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[13, -6], [13, -5]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[13, 1], [14, -1]]
         },
         {
           "type": "spawn",
