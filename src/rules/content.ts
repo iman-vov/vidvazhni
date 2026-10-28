@@ -483,7 +483,9 @@ export type EventTrigger =
    *  runs there instead of fighting. */
   | { type: 'objectReached'; tag: string; hex: Hex }
   /** The boss (`boss`, default any) drops to half its health or below (s20's second phase). */
-  | { type: 'bossHalfHp'; boss?: string };
+  | { type: 'bossHalfHp'; boss?: string }
+  /** A living shelf (`object`, default any) raised the alarm (s18, books.ts). */
+  | { type: 'alarm'; object?: string };
 
 export type EventAction =
   /** `count` figures (default 1) of the rank for the party size (`by`, like room spawns) on the
@@ -507,7 +509,9 @@ export type EventAction =
   | { type: 'coins'; coins: number }
   /** The scenario's goal becomes `goal` (s20: kill the Guardian → protect its heart). Its rounds
    *  count from the next round, or from this one when it switches at the round's start. */
-  | { type: 'setGoal'; goal: ScenarioGoal };
+  | { type: 'setGoal'; goal: ScenarioGoal }
+  /** The sleeping monsters wake (in `room`, default everywhere; s18's alarm, sleep.ts). */
+  | { type: 'wake'; room?: string };
 
 export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';
 

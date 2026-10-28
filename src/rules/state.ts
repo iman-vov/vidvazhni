@@ -312,6 +312,8 @@ export interface GameState {
   /** Scenario events: the round each one last fired; `0` = prevented (its tagged monster died
    *  first). Absent = none yet. */
   firedEvents?: Record<string, number>;
+  /** s18: the round a living shelf first raised the alarm (books.ts). */
+  alarmRound?: number;
   /** `collect` goal: objects carried into the goal zone so far. */
   delivered?: number;
   /** Objects broken (`objects[].hp`), by id. */
@@ -549,6 +551,8 @@ export type GameEvent =
   | { type: 'allyJoined'; figureId: FigureId }
   /** A sleeping monster woke up (sleep.ts). */
   | { type: 'monsterWoke'; figureId: FigureId }
+  /** A living shelf raised the alarm (books.ts). */
+  | { type: 'alarm'; objectId: string }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }
   /** A scenario event's story line (i18n key). */

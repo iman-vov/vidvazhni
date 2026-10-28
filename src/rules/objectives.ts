@@ -5,6 +5,7 @@ import type { Content, ObjectDef, ScenarioDef, ScenarioGoal, SecondaryGoalDef } 
 import { activeHeroes, emit, heroes, isPresent, monsters, type Ctx } from './effects/context';
 import { distance, hexEquals, type Hex } from './hex';
 import { objectIntact } from './allies';
+import { noAlarm } from './books';
 import { mirrorBroken } from './mirrors';
 import type { FigureId, GameState } from './state';
 
@@ -194,6 +195,8 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   noMirrorBroken: (s) => !mirrorBroken(s),
   /** «Серце без жодної подряпини» (s20): the object `params.object` stands at full health (allies.ts). */
   objectIntact: (s, p) => objectIntact(s, String(p?.object)),
+  /** «Без тривоги» (s18): no living shelf woke (before the end of round `params.rounds`, books.ts). */
+  noAlarm: (s, p) => noAlarm(s, p?.rounds === undefined ? undefined : Number(p.rounds)),
 };
 
 export function isSecondaryCheck(check: string): boolean {

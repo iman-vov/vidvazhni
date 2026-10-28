@@ -12,6 +12,7 @@ import { areAdjacent, distance, hexEquals, hexKey, neighbors, parseHexKey, type 
 import { switchGoal } from './objectives';
 import { addNewGroupsToOrder } from './round';
 import { spawnKey, spawnMonster } from './setup';
+import { sleepersNear, wake } from './sleep';
 import type { FigureId, GameState, HeroState, MonsterState } from './state';
 
 function eventsOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioEventDef[] {
@@ -47,6 +48,10 @@ function runAction(ctx: Ctx, ev: ScenarioEventDef, a: EventAction, origin?: Hex)
     openDoor(ctx, a.hex);
   } else if (a.type === 'setGoal') {
     switchGoal(ctx, a.goal);
+  } else if (a.type === 'wake') {
+    const room = a.room ? ctx.c.scenarios[s.scenarioId]?.rooms.find((r) => r.id === a.room) : undefined;
+    const inRoom = (h: Hex) => !room || room.hexes.some((x) => x[0] === h[0] && x[1] === h[1]);
+    for (const m of sleepersNear(ctx)) if (inRoom(m.hex)) wake(ctx, m);
   } else if (a.type === 'coins') {
     const tile = origin && tileAt(s, origin);
     if (!origin || !tile) return;
@@ -156,6 +161,11 @@ export function onMonsterTurnEnd(ctx: Ctx, m: MonsterState): void {
     if (t.type === 'monsterTurnsAlive' && t.tag === m.tag && m.turnCount >= t.turns) fire(ctx, ev, ev.actions, m.hex);
     else if (t.type === 'objectReached' && t.tag === m.tag && reached(ctx.s, m, t.hex)) fire(ctx, ev, ev.actions, m.hex);
   }
+}
+
+/** `alarm`: the living shelf `objectId` at `hex` woke (s18, books.ts). */
+export function onAlarm(ctx: Ctx, objectId: string, hex: Hex): void {
+  for (const ev of pendingOf(ctx, 'alarm')) if (!ev.trigger.object || ev.trigger.object === objectId) fire(ctx, ev, ev.actions, hex);
 }
 
 /** `bossHalfHp`: a boss's health just fell to half or below (s20's second phase). */

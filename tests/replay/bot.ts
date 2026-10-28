@@ -11,6 +11,7 @@ import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
 import { objectHex, WIND_UP_KEY } from '../../src/rules/allies';
+import { BOOKSHELF, SHELF_ASLEEP } from '../../src/rules/books';
 import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
@@ -178,6 +179,11 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   }
   // s16: a broken mirror costs the secondary goal.
   if (mirrorBroken(s)) v -= 15;
+  // s18: a hero ending its turn next to a sleeping shelf raises the alarm.
+  for (const o of scenarioObjects(s)) {
+    if (o.kind !== BOOKSHELF || o.state !== SHELF_ASLEEP) continue;
+    for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted && !f.conditions.invisible && distance(f.hex, o.hex) === 1) v -= 25;
+  }
   if (goal?.type === 'protect') {
     const tile = Object.values(s.board.tiles).find((t) => t.object?.id === goal.object);
     v += 10 * (tile?.breakable?.hp ?? 0);

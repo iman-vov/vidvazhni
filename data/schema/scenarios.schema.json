@@ -50,6 +50,12 @@
           "properties": { "type": { "const": "setGoal" }, "goal": { "$ref": "#/properties/goal" } },
           "required": ["type", "goal"],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "wake" }, "room": { "type": "string", "minLength": 1 } },
+          "required": ["type"],
+          "additionalProperties": false
         }
       ]
     },
@@ -646,7 +652,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken", "objectIntact"] },
+          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken", "objectIntact", "noAlarm"] },
           "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
           "reward": {
             "type": "object",
@@ -966,6 +972,12 @@
               {
                 "type": "object",
                 "properties": { "type": { "const": "bossHalfHp" }, "boss": { "type": "string", "minLength": 1 } },
+                "required": ["type"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": { "type": { "const": "alarm" }, "object": { "type": "string", "minLength": 1 } },
                 "required": ["type"],
                 "additionalProperties": false
               }

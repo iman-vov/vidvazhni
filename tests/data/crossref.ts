@@ -3,6 +3,7 @@
 // deliberately broken content.
 
 import type { Content, DropDef, RoomDef, ScenarioDef, Step } from '../../src/rules/content';
+import { BOOKSHELF, SHELF_ASLEEP } from '../../src/rules/books';
 import { areAdjacent, hexKey } from '../../src/rules/hex';
 import type { Hex } from '../../src/rules/hex';
 import { eventHexes } from '../../src/rules/events';
@@ -274,11 +275,16 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     const t = ev.trigger;
     if (t.type === 'doorOpened' && !rooms.has(t.room)) err(`event ${ev.id} waits for missing room ${t.room}`);
     if (t.type === 'heroEnters' && !t.hexes?.length && !t.adjacent) err(`event ${ev.id} has no hexes to enter`);
+    if (t.type === 'alarm') {
+      if (!s.specials?.includes('livingBooks')) err(`event ${ev.id} waits for an alarm without the livingBooks special`);
+      if (t.object && !objects.some((o) => o.id === t.object && o.kind === BOOKSHELF && o.state === SHELF_ASLEEP)) err(`event ${ev.id} waits for ${t.object}, which is no sleeping bookshelf`);
+    }
     if ((t.type === 'monsterTurnsAlive' || t.type === 'objectReached') && !tags.has(t.tag)) err(`event ${ev.id} waits for untagged ${t.tag}`);
     for (const key of eventHexes(ev)) if (!owner.has(key)) err(`event ${ev.id} hex ${key} is outside every room`);
     for (const a of [...ev.actions, ...(ev.prevented ?? [])]) {
       if (a.type === 'spawn' && !content.monsters[a.monster]) err(`event ${ev.id} spawns unknown ${a.monster}`);
       if (a.type === 'openDoor' && !doorHexes.has(hexKey(a.hex))) err(`event ${ev.id} opens no door at ${hexKey(a.hex)}`);
+      if (a.type === 'wake' && a.room && !rooms.has(a.room)) err(`event ${ev.id} wakes missing room ${a.room}`);
     }
   }
   return errors;

@@ -25,6 +25,7 @@ import { winScenario } from './round';
 import { hasLineOfSight } from './geometry';
 import { checkBeam, turnRule } from './mirrors';
 import { windUpKey, WIND_UP_KEY } from './allies';
+import { wakeShelves } from './books';
 import { areAdjacent, distance, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
 import type { Figure, GameState, HeroState, MonsterState, SummonState, Tile } from './state';
@@ -215,6 +216,7 @@ const BRAZIER_SNUFFER = 'shadow-wraith';
  *  next to a lit brazier puts it out. */
 export function onFigureTurnEnd(ctx: Ctx, f: Figure): void {
   if (f.kind === 'hero') deliver(ctx, f);
+  if (f.kind === 'hero') wakeShelves(ctx, f);
   finishRace(ctx);
   if (f.kind !== 'monster' || f.typeId !== BRAZIER_SNUFFER || !hasSpecial(ctx, 'braziers')) return;
   for (const o of boardObjects(ctx.s)) {
