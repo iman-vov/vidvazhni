@@ -1273,8 +1273,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     const after = ctx.job.after;
     const c = ctx.job.content;
     tiles.syncRooms(after, c, roomId);
-    tiles.syncProps(after, roomId);
     setBoardWater(after.board.tiles);
+    tiles.syncProps(after, roomId);
     tiles.setRoomRise(roomId, 0, null);
     updateBounds(true, after);
     // Doors into the new room swing open first; the room rises from where the door is.
