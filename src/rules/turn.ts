@@ -3,6 +3,7 @@
 // and sets `pending`. Tasks scheduled by a task run before the rest of the queue (depth first).
 
 import { planRun, planTurn } from './ai';
+import { soakPenalty } from './marsh';
 import { allyTargetGoal, allyTargetHex, hitTarget } from './allies';
 import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
@@ -459,7 +460,7 @@ function absoluteSteps(ctx: Ctx, m: MonsterState, steps: Step[], xRoll?: number)
   return steps.map((raw): Step => {
     const st = withX(raw, xRoll);
     if (st.type === 'move') {
-      return { ...st, value: Math.max(0, stats.move + st.value), ...(stats.flying ? { fly: true } : stats.jumps ? { jump: true } : {}) };
+      return { ...st, value: Math.max(0, stats.move + st.value - soakPenalty(m)), ...(stats.flying ? { fly: true } : stats.jumps ? { jump: true } : {}) };
     }
     if (st.type === 'attack') {
       // Areas drawn from the monster itself (arc, line, all adjacent) and «по всіх сусідніх» are

@@ -5,6 +5,8 @@
 //                  at the start of a round through its own `spawn` (scenarioRules.objectSpawns).
 //                  Secondary check `loomsBrokenBeforeHalf`: no loom stood when the boss fell to
 //                  half health (and it did).
+//   deepWater (s11) A figure that walks or is pushed into deep water (terrain `deep`) stops there
+//                  and moves 1 less on its next turn. Flying and jumping pass over it.
 
 import type { Ctx } from './effects/context';
 import { boardObjects, hasSpecial } from './scenarioRules';
@@ -24,4 +26,14 @@ export function loomDisadvantage(ctx: Pick<Ctx, 's' | 'c'>, target: Figure, rang
 /** The boss just fell to half health: remember how many looms stood. */
 export function noteLoomsAtHalf(ctx: Pick<Ctx, 's' | 'c'>): void {
   if (hasSpecial(ctx, 'fogLooms') && ctx.s.loomsAtHalf === undefined) ctx.s.loomsAtHalf = loomsStanding(ctx.s);
+}
+
+/** Deep water: the figure's next turn moves 1 less. */
+export function soak(f: Figure): void {
+  f.soakedTurn = f.turnCount + 1;
+}
+
+/** What deep water takes off this turn's move. */
+export function soakPenalty(f: Figure): number {
+  return f.soakedTurn === f.turnCount ? 1 : 0;
 }

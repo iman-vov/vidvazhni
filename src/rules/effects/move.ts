@@ -8,6 +8,7 @@ import { moveObstacleError, pushObstacleAside } from '../obstacles';
 import { onHeroEnters } from '../events';
 import { addNewGroupsToOrder } from '../round';
 import { doorLocked } from '../scenarioRules';
+import { soak, soakPenalty } from '../marsh';
 import { revealRoom } from '../setup';
 import type { EngineTask, Figure, FigureId, StepChoice } from '../state';
 import { emit, hazardDamage, isFreeHex, isPresent, schedule, tileAt, wallBetween, type Ctx } from './context';
@@ -29,7 +30,7 @@ export function performMove(ctx: Ctx, f: Figure, step: S<'move'>, choice: StepCh
   }
   const path = choice.path ?? [];
   if (path.length === 0) return 'choose a path';
-  const penalty = f.kind === 'hero' ? passiveItemValue(ctx, f, 'movePenalty') : 0;
+  const penalty = (f.kind === 'hero' ? passiveItemValue(ctx, f, 'movePenalty') : 0) + soakPenalty(f);
   const result = validatePath(ctx.s, path, Math.max(0, step.value + bonus - penalty), {
     figureId: f.id,
     ...(step.jump ? { jump: true } : {}),
@@ -84,6 +85,13 @@ export function runMove(ctx: Ctx, task: MoveTask): void {
       damage = { t: 'damage', targetId: f.id, amount: trap.damage, source: 'trap', avoidable: true, conditions: trap.conditions };
     } else if (touches && tile?.terrain === 'hazardous') {
       damage = { t: 'damage', targetId: f.id, amount: hazardDamage(ctx.s), source: 'hazard', avoidable: true };
+    }
+    // Deep water (s11): the move ends here, pushed or walking, and the next turn is 1 shorter.
+    if (touches && tile?.terrain === 'deep') {
+      soak(f);
+      emit(ctx, moved(f.id, walked, task));
+      if (damage) schedule(ctx, damage);
+      return;
     }
     if (f.kind === 'hero' && !task.forced && tile?.door && !tile.door.open) {
       emit(ctx, moved(f.id, walked, task));

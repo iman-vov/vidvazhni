@@ -758,7 +758,7 @@
               "type": "object",
               "properties": {
                 "hex": { "$ref": "#/definitions/hex" },
-                "terrain": { "enum": ["normal", "difficult", "hazardous", "water"] }
+                "terrain": { "enum": ["normal", "difficult", "hazardous", "water", "deep"] }
               },
               "required": ["hex", "terrain"],
               "additionalProperties": false

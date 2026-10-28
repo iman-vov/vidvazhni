@@ -99,6 +99,8 @@ export function buildMoveModel(state: GameState, opts: MoveOptions): MoveModel {
     avoid: opts.avoidNegativeHexes === true,
     walls,
     steps(key) {
+      // Deep water (s11): a walker who steps in goes no further this move.
+      if (mode === 'walk' && key !== startKey && tiles[key]?.terrain === 'deep') return [];
       const h = parseHexKey(key);
       const out: HexKey[] = [];
       for (const d of DIRECTIONS) {

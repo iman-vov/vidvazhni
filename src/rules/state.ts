@@ -30,6 +30,8 @@ export interface FigureBase {
   shields: ShieldEffect[];
   /** `rangedOnly` (Скляний щит): answers only attacks from 2+ hexes away, at any range in sight. */
   retaliates: { value: number; range: number; source: string; until: 'round' | 'scenario' | { uses: number }; rangedOnly?: boolean }[];
+  /** Deep water (s11, marsh.ts): on its turn with this `turnCount` the figure moves 1 less. */
+  soakedTurn?: number;
   /** Incremented each time the figure starts a turn; used for condition expiry. */
   turnCount: number;
 }
@@ -166,7 +168,7 @@ export type Figure = HeroState | MonsterState | SummonState;
 
 export interface Tile {
   room: string;
-  terrain: 'normal' | 'difficult' | 'hazardous' | 'water';
+  terrain: 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep';
   obstacle?: boolean;
   /** A breakable obstacle (mining crate, rubble): heroes attack it; at 0 hp it is gone. */
   breakable?: { hp: number; maxHp: number };

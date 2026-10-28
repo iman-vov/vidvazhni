@@ -30,7 +30,7 @@ interface SurfaceDef {
 }
 
 /** Colour multiplied over the surface per terrain; difficult and hazardous also get an overlay. */
-export const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#d9cdb6', hazardous: '#ffc4ae', water: '#8fa6a8' };
+export const TERRAIN_TINT: Record<Terrain, string> = { normal: '#ffffff', difficult: '#d9cdb6', hazardous: '#ffc4ae', water: '#8fa6a8', deep: '#4f6c78' };
 /** Water hexes sit lower than the others, under their water. */
 export const WATER_DROP = 0.05;
 /** World units per repeat of a surface texture by default (boardTiles TEXTURE_WORLD_SIZE). */
