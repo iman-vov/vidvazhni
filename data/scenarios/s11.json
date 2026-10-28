@@ -93,7 +93,7 @@
         [24, -12], [24, -11], [24, -10], [24, -9], [25, -12], [25, -11], [25, -10], [25, -9],
         [26, -13], [26, -12], [26, -11], [26, -10]
       ],
-      "obstacles": [{ "hex": [26, -13], "model": "hut" }],
+      "obstacles": [{ "hex": [26, -13], "model": "crate" }],
       "spawns": [
         { "monster": "grey-wolf", "hex": [25, -11], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "grey-wolf", "hex": [24, -9], "by": { "3": "normal", "4": "normal" } },

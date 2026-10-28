@@ -29,6 +29,7 @@
         [8, -3], [8, -2], [8, -1], [8, 0], [9, -4], [9, -3], [9, -2], [9, -1],
         [9, 0], [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [11, -3]
       ],
+      "obstacles": [{ "hex": [7, 1], "model": "tree" }],
       "doors": [{ "hex": [11, -3], "to": "s12.reeds" }],
       "spawns": [
         { "monster": "thornling", "hex": [8, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
@@ -97,6 +98,7 @@
         { "hex": [17, -5], "terrain": "water" },
         { "hex": [18, -9], "terrain": "water" }
       ],
+      "obstacles": [{ "hex": [12, -3], "model": "rock" }],
       "doors": [{ "hex": [19, -7], "to": "s12.pier" }],
       "spawns": [
         { "monster": "shadow-wraith", "hex": [16, -7], "by": { "2": "normal", "3": "elite", "4": "elite" } },
