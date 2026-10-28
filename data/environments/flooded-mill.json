@@ -1,6 +1,6 @@
 {
   "id": "flooded-mill",
-  "scenarios": ["s3", "s11"],
+  "scenarios": ["s3", "s11", "s12"],
   "edge": "shore",
   "kits": ["env-thorn-path", "env-flora"],
   "surface": "mud",

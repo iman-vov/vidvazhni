@@ -30,8 +30,8 @@ const content: Content = { ...base, scenarios };
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 describe('scenario files', () => {
-  it('are s1–s10, s11–s11 and s16–s20', () => {
-    expect(Object.keys(scenarios).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 's16', 's17', 's18', 's19', 's20']);
+  it('are s1–s10, s11–s12 and s16–s20', () => {
+    expect(Object.keys(scenarios).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 's12', 's16', 's17', 's18', 's19', 's20']);
   });
 
   for (const [id, s] of Object.entries(scenarios))
@@ -48,7 +48,7 @@ describe('scenario files', () => {
     });
 
   it('loadContent() serves every scenario file as it is on disk', () => {
-    expect(Object.keys(base.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 's16', 's17', 's18', 's19', 's20']);
+    expect(Object.keys(base.scenarios)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 's12', 's16', 's17', 's18', 's19', 's20']);
     for (const id of Object.keys(base.scenarios)) expect(base.scenarios[id]).toEqual(scenarios[id]);
   });
 });
