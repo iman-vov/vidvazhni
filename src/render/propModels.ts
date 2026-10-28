@@ -32,7 +32,7 @@ export function propModelFor(def: Pick<EnvironmentDef, 'propModels'> | null, key
     if (!available.has(spec.model)) continue;
     return { model: spec.model, height: spec.height ?? defaultHeight, rotY: spec.rotY ?? 0, stack: spec.stack ?? 1 };
   }
-  for (const key of keys) if (available.has(key)) return { model: key, height: defaultHeight, rotY: 0, stack: 1 };
+  for (const key of keys) if (available.has(key)) return { model: key, height: MODEL_HEIGHT[key] ?? defaultHeight, rotY: 0, stack: 1 };
   return null;
 }
 
@@ -47,6 +47,20 @@ export function fitToHeight(box: THREE.Box3, height: number): { scale: number; o
     radius: (Math.max(size.x, size.z) / 2) * scale,
   };
 }
+
+/**
+ * Heights (hex units) for props found by their own id rather than a location's table, where the
+ * caller's generic default would size them wrong (a bookshelf shown at a barrel's height).
+ * The Glass Town props of Act III are Blender-made (art/blender/act3-props).
+ */
+export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
+  mirror: 1.15,
+  bookshelf: 1.35,
+  'glass-cart': 0.85,
+  'crystal-heart': 1.0,
+  'wind-up-key': 0.85,
+  blueprint: 0.75,
+};
 
 const cache = new Map<string, Promise<PropPrototype | null>>();
 

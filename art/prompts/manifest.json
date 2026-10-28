@@ -2926,6 +2926,169 @@
       },
       "textureMax": 256,
       "attachTo": null
+    },
+    {
+      "id": "mirror",
+      "nameUk": "Поворотне дзеркало на стійці (Скляне місто; 3 положення повороту задає код)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 81,
+      "wave": 6,
+      "scenarios": [
+        16,
+        19
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/mirror/mirror.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "bookshelf",
+      "nameUk": "Книжкова шафа з книжками та скляною кулею",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 82,
+      "wave": 6,
+      "scenarios": [
+        18
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/bookshelf/bookshelf.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "glass-cart",
+      "nameUk": "Візок зі скляними шибками (Іда, Скляне місто)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 83,
+      "wave": 6,
+      "scenarios": [
+        16
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-cart/glass-cart.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "crystal-heart",
+      "nameUk": "Кришталеве серце на постаменті",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 84,
+      "wave": 6,
+      "scenarios": [
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/crystal-heart/crystal-heart.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "wind-up-key",
+      "nameUk": "Заводний ключ у шестерні",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 85,
+      "wave": 6,
+      "scenarios": [
+        17
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/wind-up-key/wind-up-key.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "blueprint",
+      "nameUk": "Креслення в рулоні на підставці",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 86,
+      "wave": 6,
+      "scenarios": [
+        17
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/blueprint/blueprint.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }

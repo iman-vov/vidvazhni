@@ -28,6 +28,12 @@ describe('prop models', () => {
     expect(propModelFor(null, ['crate'], new Set(['barrel']), 0.8)).toBeNull();
   });
 
+  it('a Glass Town prop found by its id keeps its own height', () => {
+    const glass = new Set(['mirror', 'bookshelf']);
+    expect(propModelFor(null, ['mirror:dark', 'mirror'], glass, 0.9)).toEqual({ model: 'mirror', height: 1.15, rotY: 0, stack: 1 });
+    expect(propModelFor(null, ['bookshelf'], glass, 0.9)?.height).toBe(1.35);
+  });
+
   it('every location maps only to planned prop models', () => {
     for (const env of ENVIRONMENTS) {
       for (const [key, entry] of Object.entries(env.propModels ?? {})) {
