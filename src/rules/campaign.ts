@@ -385,6 +385,7 @@ export function setupFromCampaign(
       seed: o.seed,
       difficulty: s.difficulty,
       variants: { ...o.variants },
+      ...(s.flags?.length ? { flags: [...s.flags] } : {}),
       heroes: s.heroes.map((h) => ({
         classId: h.classId,
         playerId: h.playerId,

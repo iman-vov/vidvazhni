@@ -672,6 +672,24 @@
     "startHexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 4, "maxItems": 4 },
     "introduces": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "specials": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "flagEffects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "flag": { "type": "string", "minLength": 1 },
+          "bossShield": {
+            "type": "object",
+            "properties": { "boss": { "type": "string", "minLength": 1 }, "shield": { "type": "integer", "minimum": 0 } },
+            "required": ["boss", "shield"],
+            "additionalProperties": false
+          },
+          "brokenObjects": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+        },
+        "required": ["flag"],
+        "additionalProperties": false
+      }
+    },
     "beam": {
       "type": "object",
       "properties": {

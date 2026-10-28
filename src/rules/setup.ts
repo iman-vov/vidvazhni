@@ -11,6 +11,7 @@ import { MONSTER_HP_BONUS_WITH_INTENTS } from './variants';
 import { hexKey, type Hex } from './hex';
 import { createModifierDeck, perkedCards } from './modifiers';
 import { shuffle } from './rng';
+import { brokenByFlag, flagBossShield } from './flags';
 import type { GameSetup, GameState, HeroState, MonsterState, Tile } from './state';
 
 const DIFFICULTY_OFFSET = { easy: -1, normal: 0, hard: 1 } as const;
@@ -83,6 +84,7 @@ export function createGame(setup: GameSetup, content: Content): GameState {
     ),
     difficulty: setup.difficulty,
     variants: { ...setup.variants },
+    ...(setup.flags?.length ? { flags: [...setup.flags] } : {}),
     rng,
     round: 1,
     phase: 'selectCards',
@@ -190,6 +192,11 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
   }
   for (const c of room.chests ?? []) tile(c.hex).chest = c.id;
   for (const o of room.objects ?? []) {
+    // A secret mission broke it already (flags.ts).
+    if (brokenByFlag(s, ctx.c, o.id)) {
+      (s.destroyedObjects ??= []).push(o.id);
+      continue;
+    }
     const t = tile(o.hex);
     t.object = { id: o.id, kind: o.kind, ...(o.state !== undefined ? { state: o.state } : {}) };
     // Lever, brazier, millstones: impassable like an obstacle; a hero acts from a neighbouring hex.
@@ -274,7 +281,7 @@ export function spawnMonster(
   if (boss) {
     const n = heroCount(s);
     hp = boss.hpPerHero * n + boss.hpPerHeroPerLevel * n * Math.max(0, s.level - 1);
-    shield = boss.shield ?? 0;
+    shield = flagBossShield(s, ctx.c, typeId) ?? boss.shield ?? 0;
   } else {
     const stats = scaleMonsterStats(rank === 'elite' ? type!.elite : type!.normal, s.level);
     hp = stats.hp;

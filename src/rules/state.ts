@@ -312,6 +312,8 @@ export interface GameState {
   /** Scenario events: the round each one last fired; `0` = prevented (its tagged monster died
    *  first). Absent = none yet. */
   firedEvents?: Record<string, number>;
+  /** The campaign's story flags at the start (flags.ts). */
+  flags?: string[];
   /** s18: the round a living shelf first raised the alarm (books.ts). */
   alarmRound?: number;
   /** `collect` goal: objects carried into the goal zone so far. */
@@ -577,6 +579,8 @@ export interface GameSetup {
   heroes: { classId: string; playerId: string; level: number; perks?: string[]; items?: string[]; cards?: string[]; hand?: string[] }[];
   difficulty: 'easy' | 'normal' | 'hard';
   variants: Variants;
+  /** The campaign's story flags (`mirrors.aligned`), read by `ScenarioDef.flagEffects`. */
+  flags?: string[];
 }
 
 export type ApplyResult = { ok: true; state: GameState; events: GameEvent[] } | { ok: false; error: string };

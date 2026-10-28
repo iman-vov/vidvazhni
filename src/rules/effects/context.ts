@@ -4,6 +4,7 @@
 import type { Content, MonsterStats } from '../content';
 import { distance, hexEquals, hexKey, type Hex } from '../hex';
 import type { EngineTask, Figure, FigureId, GameEvent, GameState, HeroState, MonsterState, Tile } from '../state';
+import { flagBossShield } from '../flags';
 
 export interface Ctx {
   s: GameState;
@@ -144,7 +145,8 @@ export function monsterStats(ctx: { s: GameState; c: Content }, m: MonsterState)
     const phaseBonus = (m.bossPhase ?? 1) >= 2 && boss.special?.includes('secondPhase') ? 1 : 0;
     const stats: MonsterStats = { hp: m.maxHp, move: boss.move, attack: boss.attack + phaseBonus };
     if (boss.range !== undefined) stats.range = boss.range;
-    if (boss.shield !== undefined) stats.shield = boss.shield;
+    const shield = flagBossShield(ctx.s, ctx.c, m.typeId) ?? boss.shield;
+    if (shield !== undefined) stats.shield = shield;
     if (boss.flying) stats.flying = true;
     return stats;
   }

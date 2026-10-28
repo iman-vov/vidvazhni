@@ -266,6 +266,11 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     for (const h of s.beam.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`beam opens ${hexKey(h)}, which is no door`);
   }
 
+  for (const e of s.flagEffects ?? []) {
+    if (e.bossShield && !content.bosses[e.bossShield.boss]) err(`flag ${e.flag} shields unknown boss ${e.bossShield.boss}`);
+    for (const id of e.brokenObjects ?? []) if (!objects.some((o) => o.id === id)) err(`flag ${e.flag} breaks missing object ${id}`);
+  }
+
   const tags = new Set(s.rooms.flatMap((r) => (r.spawns ?? []).flatMap((sp) => (sp.tag ? [sp.tag] : []))));
   for (const ev of s.events ?? []) for (const a of ev.actions) if (a.type === 'spawn' && a.tag) tags.add(a.tag);
   const eventIds = new Set<string>();

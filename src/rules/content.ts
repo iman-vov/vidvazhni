@@ -445,6 +445,8 @@ export interface ScenarioDef {
   /** `beamMirrors` (s19): the beam enters at the window `from` towards the object `aim`; reaching
    *  `to` (the crystal door) opens the doors on `opens` (mirrors.ts). */
   beam?: { from: Hex; aim: string; to: Hex; opens?: Hex[] };
+  /** What a campaign flag changes here (the secret missions, flags.ts). */
+  flagEffects?: { flag: string; bossShield?: { boss: string; shield: number }; brokenObjects?: string[] }[];
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
   /** `closes`: the other options of a story choice (s6 or s7), dropped from the unlocked list on a win.
