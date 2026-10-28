@@ -1,0 +1,149 @@
+{
+  "id": "s19",
+  "number": 19,
+  "draft": true,
+  "goal": {
+    "type": "objectStates",
+    "objects": [
+      { "id": "s19.mirror-1", "state": "lit" },
+      { "id": "s19.mirror-2", "state": "lit" },
+      { "id": "s19.mirror-3", "state": "lit" }
+    ],
+    "zone": "s19.exit"
+  },
+  "startRoom": "s19.hall",
+  "startHexes": [[2, 1], [2, 2], [2, 3], [3, 2]],
+  "introduces": ["beamMirrors"],
+  "specials": ["beamMirrors"],
+  "rooms": [
+    {
+      "id": "s19.hall",
+      "kind": "indoor",
+      "hexes": [
+        [2, -1], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [3, -1],
+        [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [4, -2], [4, -1],
+        [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [5, -2], [5, -1], [5, 0],
+        [5, 1], [5, 2], [5, 3], [5, 4], [6, -3], [6, -2], [6, -1], [6, 0],
+        [6, 1], [6, 2], [6, 3], [7, -3], [7, -2], [7, -1], [7, 0], [7, 1],
+        [7, 2], [7, 3], [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [8, 1],
+        [8, 2], [9, -4], [9, -3], [9, -2], [9, -1], [9, 0], [9, 1], [9, 2],
+        [10, -1]
+      ],
+      "obstacles": [{ "hex": [6, 0], "model": "pillar" }, { "hex": [3, 5], "model": "pillar" }],
+      "doors": [{ "hex": [10, -1], "to": "s19.vault" }],
+      "spawns": [
+        { "monster": "brass-automaton", "hex": [8, -2], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "brass-automaton", "hex": [9, 0], "by": { "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [7, -3], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "shadow-wraith", "hex": [6, 3], "by": { "4": "normal" } }
+      ],
+      "coins": [[9, -4]],
+      "objects": [
+        { "hex": [2, -1], "id": "s19.window", "kind": "window", "blocks": true },
+        {
+          "hex": [5, -1],
+          "id": "s19.mirror-1",
+          "kind": "mirror",
+          "state": "dark",
+          "blocks": true,
+          "turns": [
+            { "state": "dark" },
+            { "state": "astray", "aim": "s19.mirror-3" },
+            { "state": "lit", "aim": "s19.mirror-2" }
+          ]
+        },
+        {
+          "hex": [4, 2],
+          "id": "s19.mirror-2",
+          "kind": "mirror",
+          "state": "dark",
+          "blocks": true,
+          "turns": [
+            { "state": "dark" },
+            { "state": "lit", "aim": "s19.mirror-3" },
+            { "state": "astray", "aim": "s19.mirror-1" }
+          ]
+        },
+        {
+          "hex": [8, 1],
+          "id": "s19.mirror-3",
+          "kind": "mirror",
+          "state": "dark",
+          "blocks": true,
+          "turns": [{ "state": "dark" }, { "state": "astray" }, { "state": "lit", "aim": "target" }]
+        }
+      ]
+    },
+    {
+      "id": "s19.vault",
+      "kind": "indoor",
+      "hexes": [[11, -2], [11, -1], [11, 0], [12, -3], [12, -2], [12, -1], [13, -3], [13, -2], [13, -1]],
+      "chests": [{ "hex": [13, -1], "id": "s19.die-chest", "loot": { "coins": 3 } }]
+    }
+  ],
+  "reward": { "goldEach": 25, "flags": ["mirrors.aligned"] },
+  "beam": { "from": [2, -1], "aim": "s19.mirror-1", "to": [10, -1], "opens": [[10, -1]] },
+  "zones": [{ "id": "s19.exit", "hexes": [[11, -2], [12, -3], [11, -1], [12, -2]] }],
+  "secondary": [
+    { "id": "s19.eight-rounds", "check": "withinRounds", "params": { "rounds": 8 }, "reward": { "gold": 5 } }
+  ],
+  "events": [
+    {
+      "id": "s19.shard-moth-3",
+      "trigger": { "type": "round", "round": 3 },
+      "actions": [
+        { "type": "story", "text": "event.s19.shard-moth" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[5, 0], [4, 1], [8, 0]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [5, 0]]
+        }
+      ]
+    },
+    {
+      "id": "s19.shard-moth-5",
+      "trigger": { "type": "round", "round": 5 },
+      "actions": [
+        { "type": "story", "text": "event.s19.shard-moth" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[5, 0], [4, 1], [8, 0]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [5, 0]]
+        }
+      ]
+    },
+    {
+      "id": "s19.shard-moth-7",
+      "trigger": { "type": "round", "round": 7 },
+      "actions": [
+        { "type": "story", "text": "event.s19.shard-moth" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[5, 0], [4, 1], [8, 0]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [5, 0]]
+        }
+      ]
+    }
+  ]
+}
