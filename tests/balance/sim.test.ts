@@ -3,7 +3,7 @@
 // results as JSON lines. Off by default; run one scenario per process, e.g.
 //   SIM=1 SIM_SCENARIO=s2 SIM_SEEDS=20 SIM_OUT=out/s2.jsonl npx vitest run tests/balance/sim.test.ts
 // SIM_LEVELS (default 1,2,3), SIM_PARTIES ('pairs', 'big', 'all' or 'warden,rogue;herbalist,tinker'), SIM_VARIANTS (JSON merged
-// over FULL_FORK, e.g. {"dodgeDie":false}).
+// over FULL_FORK, e.g. {"dodgeDie":false}), SIM_FLAGS (campaign flags, e.g. mirrors.aligned).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -166,6 +166,7 @@ describe.skipIf(!process.env.SIM)('balance simulator', () => {
             heroes: party.map((classId, i) => ({ classId, playerId: `p${i + 1}`, level, items: KIT[level] })),
             difficulty: 'normal',
             variants,
+            ...(process.env.SIM_FLAGS ? { flags: process.env.SIM_FLAGS.split(',') } : {}),
           };
           fs.appendFileSync(out, JSON.stringify(play(setup, content)) + '\n');
         }
