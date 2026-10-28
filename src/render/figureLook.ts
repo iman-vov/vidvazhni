@@ -74,10 +74,11 @@ export const PROJECTILE: Record<string, ProjectileKind> = {
 
 /** Yaw offset (radians) while the attack clip plays: Meshy's «Archery Shot» aims ~60° to the left
  *  of where the archer faces (docs/art/meshy-batch-1.md), so she turns right to shoot. The crossbow
- *  bandit shoots with the same clip (Meshy has no crossbow one). */
+ *  bandit's Gun_Hold stance aims ~60° to his right (the left fist's fingers, which carry the crossbow,
+ *  point 62° right), so he turns left. */
 export const ATTACK_YAW: Record<string, number> = {
   'wind-archer': (-60 * Math.PI) / 180,
-  'bandit-crossbow': (-60 * Math.PI) / 180,
+  'bandit-crossbow': (60 * Math.PI) / 180,
 };
 
 /** Hero colour codes from the style guide; monsters are fog-grey, elites gold. */

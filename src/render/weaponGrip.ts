@@ -51,10 +51,10 @@ export const WEAPON_GRIPS: Record<string, WeaponGrip> = {
   'warden-sword': { size: 0.55, grip: [0, -0.66, 0], tip: [0, 1, 0], face: [0, 0, 1], tipDir: [1, 0.25, 0], faceDir: [0, 0, 1], frame: 'hand' },
   // Spiked head at -X, wrapped handle at +X sloping down a little: held at the handle's end, head out of the thumb side.
   'bandit-club': { size: 0.5, grip: [0.7, -0.46, 0], tip: [-1, 0.29, 0], face: [0, 0, 1], tipDir: [1, 0.3, 0], faceDir: [0, 0, 1], frame: 'hand' },
-  // Prod (bow) at -X, butt at +X, rail on +Y. The bandit shoots with the archer's clip: the left arm
-  // reaches toward the target, the right hand comes to the cheek. So the left fist holds the fore-stock
-  // with the prod along the forearm and the rail on the thumb side, and the butt comes back to the face.
-  crossbow: { size: 0.6, grip: [-0.3, 0.1, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0], faceDir: [1, 0, 0], frame: 'hand', bone: 'mixamorig:LeftHand' },
+  // Prod (bow) at -X, butt at +X, rail on +Y. The bandit shoots with Meshy's Gun_Hold (stock to the
+  // shoulder, docs/art/animations-sources.md): the left fist holds the fore-stock with the prod out past
+  // the fingers and the rail toward the back of the hand (up when he aims), the right hand on the stock.
+  crossbow: { size: 0.6, grip: [-0.3, 0.1, 0], tip: [-1, 0, 0], face: [0, 1, 0], tipDir: [0, 1, 0], faceDir: [0, 0, -1], frame: 'hand', bone: 'mixamorig:LeftHand' },
   // Fork at +Y, handle at -Y and toward +Z (the bands and pouch hang back to -Z, so the wooden frame
   // sits at the front of the box): upright in the fist, pouch toward the gremlin. Kept in the
   // hero's frame: his attack is a throw, not an aimed shot, and the upright Y reads better in idle.
