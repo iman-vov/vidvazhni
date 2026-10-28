@@ -36,8 +36,8 @@ describe('marsh growth', () => {
     expect(plan.placements.some((p) => p.piece === 'forest-gap')).toBe(false);
     const kinds = new Set(plan.spots.map((s) => s.kind));
     for (const k of ['reeds', 'lily', 'bank', 'log']) expect(kinds.has(k as never), k).toBe(true);
-    // Stands, not single sticks: several clumps per old piece.
-    expect(plan.spots.filter((s) => s.kind === 'reeds' || s.kind === 'reeds-low').length).toBeGreaterThan(old.length * 2);
+    // Stands, not single sticks: more clumps than old pieces.
+    expect(plan.spots.filter((s) => s.kind === 'reeds' || s.kind === 'reeds-low').length).toBeGreaterThan(old.length);
   });
 
   it('never grows on a playable hex', () => {

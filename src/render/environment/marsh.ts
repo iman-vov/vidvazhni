@@ -146,6 +146,12 @@ export function planMarsh(input: MarshInput): { spots: MarshSpot[]; placements: 
       }
       continue;
     }
+    // The forest kit's faceted stone post at the entrance: a boulder of the shared rock kit.
+    if (p.piece === 'lantern-post') {
+      kept.push({ ...p, piece: 'boulder', height: 0.75 });
+      taken.push({ x: p.x, z: p.z, r: 0.4 * p.scale });
+      continue;
+    }
     kept.push(p);
     // Other pieces keep their ground (crates, posts, rocks).
     if (p.band !== 'far') taken.push({ x: p.x, z: p.z, r: 0.3 * p.scale });
@@ -415,6 +421,8 @@ export function wetRock(c: THREE.Color, y: number, ny: number, wet: number): voi
   // Tops (moss) toward dark olive rather than lime.
   const top = Math.min(1, Math.max(0, (ny - 0.4) * 2)) * (0.55 + wet * 0.3);
   c.multiply(tmp.setRGB(1 - top * 0.3, 1 - top * 0.4, 1 - top * 0.32)).multiplyScalar(0.9);
+  // The kit's painted moss is lime: pull every face (moss sits on the sides too) toward olive.
+  c.multiply(tmp.setRGB(0.96, 0.8, 0.74));
 }
 const tmp = new THREE.Color();
 
