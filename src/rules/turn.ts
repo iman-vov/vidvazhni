@@ -3,6 +3,7 @@
 // and sets `pending`. Tasks scheduled by a task run before the rest of the queue (depth first).
 
 import { planRun, planTurn } from './ai';
+import { allyTargetGoal, allyTargetHex, hitTarget } from './allies';
 import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
 import { findCard, runDamage } from './damage';
@@ -73,7 +74,8 @@ function runTask(ctx: Ctx, task: EngineTask): boolean {
     case 'figureStep': {
       const f = ctx.s.figures[task.figureId];
       if (!isPresent(f)) return true;
-      if (task.step.type === 'attack') figureAttack(ctx, f, task.step, task.targets);
+      if (task.hits) hitTarget(ctx, f, task.hits, task.step);
+      else if (task.step.type === 'attack') figureAttack(ctx, f, task.step, task.targets);
       else performStep(ctx, f, task.step, {});
       return true;
     }
@@ -485,9 +487,11 @@ function figureAct(ctx: Ctx, figureId: string): void {
   const steps = figureSteps(ctx, f);
   // Consume the elements whose bonuses were folded in.
   for (const st of steps) if (st.consume && st.consume.element !== 'any' && canConsume(ctx, st.consume.element)) consume(ctx, st.consume.element);
-  const goal = f.kind === 'monster' ? runnerGoal(ctx, f) : f.kind === 'summon' && f.npc ? npcGoal(ctx, f) : null;
-  // An NPC with nowhere to go stays put (no attack).
-  const stay = !goal && f.kind === 'summon' && !!f.npc;
+  // `allyPhase`: every monster goes for the object the heroes protect and hits it.
+  const target = f.kind === 'monster' && !f.tag ? allyTargetHex(ctx) : null;
+  const goal = target ? allyTargetGoal(ctx) : f.kind === 'monster' ? runnerGoal(ctx, f) : f.kind === 'summon' && f.npc && !f.npc.fights ? npcGoal(ctx, f) : null;
+  // An NPC with nowhere to go stays put (no attack); a fighting one plays like a summon.
+  const stay = !goal && f.kind === 'summon' && !!f.npc && !f.npc.fights;
   const plan = goal || stay ? planRun(ctx.s, figureId, steps, goal ?? [f.hex]) : planTurn(ctx.s, figureId, steps);
   let attackIndex = 0;
   let moved = false;
@@ -498,6 +502,10 @@ function figureAct(ctx: Ctx, figureId: string): void {
       }
       moved = true;
     } else if (st.type === 'attack') {
+      if (target) {
+        if (!st.area && !st.targetAll) schedule(ctx, { t: 'figureStep', figureId, step: st, targets: [], hits: target });
+        continue;
+      }
       const targets = plan.attackTargets[attackIndex++] ?? [];
       if (plan.focusId === null) continue;
       if (targets.length > 0) schedule(ctx, { t: 'figureStep', figureId, step: st, targets });

@@ -645,7 +645,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken"] },
+          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken", "objectIntact"] },
           "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
           "reward": {
             "type": "object",

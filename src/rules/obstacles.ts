@@ -13,7 +13,8 @@ import { areAdjacent, hexKey, type Hex } from './hex';
 import { emit, tileAt, wallBetween, type Ctx } from './effects/context';
 import { inRangeWithSight } from './effects/support';
 import { openDoor } from './effects/move';
-import { onObjectDestroyed } from './scenarioRules';
+import { keptObjects } from './allies';
+import { onObjectDestroyed, scenarioOf } from './scenarioRules';
 import type { Figure, GameState, Tile } from './state';
 
 /** The hit points of a breakable obstacle or closed breakable door on the tile. */
@@ -34,6 +35,7 @@ export function isMovable(tile: Tile | undefined): boolean {
 export function obstacleTargetError(ctx: Ctx, f: Figure, hex: Hex, range: number): string | null {
   if (f.kind !== 'hero') return 'only heroes break obstacles';
   if (!breakableOf(tileAt(ctx.s, hex))) return `nothing to break at ${hexKey(hex)}`;
+  if (keptObjects(scenarioOf(ctx)).has(tileAt(ctx.s, hex)?.object?.id ?? '')) return `the heroes keep the object at ${hexKey(hex)}`;
   return inRangeWithSight(ctx, f.hex, hex, range) ? null : `obstacle at ${hexKey(hex)} out of range`;
 }
 

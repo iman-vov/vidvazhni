@@ -12,7 +12,8 @@ import { findCard } from '../damage';
 import { isAttackedItem, passiveItemValue, readyItems } from '../items';
 import { moveActiveOut } from '../round';
 import { breakableOf, hitObstacle, obstacleTargetError } from '../obstacles';
-import { scenarioShield } from '../scenarioRules';
+import { keptObjects } from '../allies';
+import { scenarioOf, scenarioShield } from '../scenarioRules';
 import { FOLLOW_UP_BONUS } from '../variants';
 import type { AttackSpec, EngineTask, Figure, HeroState, ModifierDeck, StepChoice } from '../state';
 import { emit, enemiesOf, figureAt, isPresent, schedule, tileAt, wallBetween, type Ctx } from './context';
@@ -187,8 +188,12 @@ export function performAttack(ctx: Ctx, f: Figure, baseStep: AttackStep, choice:
     // Ranged areas: the anchor is in range; every target needs line of sight.
     if (!fromSelf) targets = targets.filter((t) => hexEquals(t.hex, anchor) || inRangeWithSight(ctx, f.hex, t.hex, Infinity));
     if (f.kind === 'hero') {
+      const kept = keptObjects(scenarioOf(ctx));
       obstacles = hexes.filter(
-        (h) => !!breakableOf(tileAt(ctx.s, h)) && (fromSelf || hexEquals(h, anchor) || inRangeWithSight(ctx, f.hex, h, Infinity)),
+        (h) =>
+          !!breakableOf(tileAt(ctx.s, h)) &&
+          !kept.has(tileAt(ctx.s, h)?.object?.id ?? '') &&
+          (fromSelf || hexEquals(h, anchor) || inRangeWithSight(ctx, f.hex, h, Infinity)),
       );
     }
   } else {

@@ -4,6 +4,7 @@ import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
 import { canDodge, coverAllies } from './defense';
+import { becomeAlly } from './allies';
 import { onBossHalfHp } from './events';
 import { isShieldItem, readyItems } from './items';
 import { adjustDamage, checkBossPhase, npcLost, onHeroExhausted, onMonsterDied } from './scenarioRules';
@@ -105,6 +106,7 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
     if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) {
       emit(ctx, { type: 'bossHalfHp', figureId: f.id });
       onBossHalfHp(ctx, f);
+      becomeAlly(ctx, f);
     }
     if (f.kind === 'monster') checkBossPhase(ctx, f);
     return;
@@ -130,7 +132,7 @@ export function killFigure(ctx: Ctx, f: Figure): void {
   delete ctx.s.figures[f.id];
   emit(ctx, { type: 'figureDied', figureId: f.id });
   if (f.kind === 'monster') onMonsterDied(ctx, f);
-  if (f.kind === 'summon' && f.npc) return npcLost(ctx, f.id) ? loseScenario(ctx) : undefined;
+  if (f.kind === 'summon' && f.npc) return !f.npc.fights && npcLost(ctx, f.id) ? loseScenario(ctx) : undefined;
   if (f.kind === 'summon') {
     // The persistent card that keeps the summon goes to the lost pile.
     const owner = ctx.s.figures[f.ownerId];

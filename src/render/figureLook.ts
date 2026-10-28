@@ -208,11 +208,13 @@ export function figureKind(f: Figure): FigureKind {
  *  the data gives as `assets/models/<id>.glb`), summon id with `.` → `-`. */
 export function modelIdOf(f: Figure, content?: Content): string {
   if (f.kind === 'hero') return f.classId;
-  if (f.kind === 'summon') return f.summonId.replace(/\./g, '-');
-  const restyle = RESTYLES[f.typeId];
+  // An ally that was a monster (allies.ts) keeps its monster's model.
+  if (f.kind === 'summon' && !f.monsterType) return f.summonId.replace(/\./g, '-');
+  const typeId = f.kind === 'summon' ? f.monsterType! : f.typeId;
+  const restyle = RESTYLES[typeId];
   if (restyle) return restyle.model;
-  const model = content?.monsters[f.typeId]?.model;
-  return model ? model.replace(/^.*\//, '').replace(/\.glb$/, '') : f.typeId;
+  const model = content?.monsters[typeId]?.model;
+  return model ? model.replace(/^.*\//, '').replace(/\.glb$/, '') : typeId;
 }
 
 /** Height on the board for a model id and kind. */
@@ -229,7 +231,8 @@ export function modelScale(height: number, measuredHeight: number): number {
 export function lookOf(f: Figure, content?: Content): FigureLook {
   const modelId = modelIdOf(f, content);
   const kind = figureKind(f);
-  const restyleId = f.kind === 'monster' && RESTYLES[f.typeId] ? f.typeId : undefined;
+  const typeId = f.kind === 'monster' ? f.typeId : f.kind === 'summon' ? f.monsterType : undefined;
+  const restyleId = typeId && RESTYLES[typeId] ? typeId : undefined;
   const color =
     kind === 'hero'
       ? (HERO_COLORS[modelId] ?? '#4a7fd0')

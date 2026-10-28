@@ -149,8 +149,12 @@ export interface SummonState extends FigureBase {
   /** An NPC (`ScenarioDef.npcs`) is its own owner. */
   ownerId: FigureId;
   summonId: string;
-  /** An NPC: acts on its own initiative, walks to the goal zone, never attacks; its death loses. */
-  npc?: { initiative: number };
+  /** An NPC: acts on its own initiative, walks to the goal zone, never attacks; its death loses.
+   *  `fights` (an ally, allies.ts): it fights monsters like a hero's summon instead, and its death
+   *  does not lose. */
+  npc?: { initiative: number; fights?: true };
+  /** Drawn as this monster type (an ally that was a monster, allies.ts). */
+  monsterType?: string;
   move: number;
   attack: number;
   range?: number;
@@ -342,7 +346,8 @@ export type EngineTask =
   | { t: 'monsterGroup'; typeId: string }
   | { t: 'figureTurn'; figureId: FigureId }
   | { t: 'figureAct'; figureId: FigureId }
-  | { t: 'figureStep'; figureId: FigureId; step: Step; targets: FigureId[] }
+  /** `hits`: an attack on the object at that hex instead of figures (`allyPhase`, allies.ts). */
+  | { t: 'figureStep'; figureId: FigureId; step: Step; targets: FigureId[]; hits?: Hex }
   | { t: 'endFigureTurn'; figureId: FigureId }
   | { t: 'move'; figureId: FigureId; path: Hex[]; jump?: boolean; fly?: boolean; forced?: 'push' | 'pull' }
   /** `reacted`: the target hero's before-attacked window is over. */
@@ -538,6 +543,8 @@ export type GameEvent =
   | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
   /** A boss's health fell to half or below (story beats and `bossHalfHp` scenario events listen to it). */
   | { type: 'bossHalfHp'; figureId: FigureId }
+  /** A monster turned into an allied NPC under the same id (`allyPhase`, allies.ts). */
+  | { type: 'allyJoined'; figureId: FigureId }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }
   /** A scenario event's story line (i18n key). */
