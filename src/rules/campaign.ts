@@ -106,12 +106,16 @@ export function furthestScenario(c: CampaignContent, s: CampaignState): number {
   return Math.max(0, ...s.completed.map((id) => c.scenarios[id]?.number ?? 0));
 }
 
-/** Items on sale: unlocked by the story (`unlockedAfter` ≤ the furthest won scenario); copies are unlimited.
+/** Items on sale: unlocked by the story (`unlockedAfter` ≤ the furthest won scenario, and `unlockFlag` set); copies are unlimited.
  *  Chest, drop, boss, secret and gift items are only found. Without «Предмети кубика» (`diceGear`) the dice items are not sold. */
 export function shopStock(c: CampaignContent, s: CampaignState, variants: Pick<Variants, 'diceGear'> = FULL_FORK): ItemDef[] {
   const furthest = furthestScenario(c, s);
   return Object.values(c.items).filter(
-    (it) => (it.source?.type ?? 'shop') === 'shop' && it.unlockedAfter <= furthest && (variants.diceGear || !isDiceItemDef(it)),
+    (it) =>
+      (it.source?.type ?? 'shop') === 'shop' &&
+      it.unlockedAfter <= furthest &&
+      (!it.unlockFlag || !!s.flags?.includes(it.unlockFlag)) &&
+      (variants.diceGear || !isDiceItemDef(it)),
   );
 }
 

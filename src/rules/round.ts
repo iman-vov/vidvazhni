@@ -346,6 +346,7 @@ export function endRound(ctx: Ctx): void {
       f.provokeRadius = null;
       delete f.surgeGrants;
       delete f.attackedDisadvantage;
+      delete f.rangedAttackedDisadvantage;
       delete f.coverUsed;
       for (const a of [...f.active]) {
         if (activeEndsWithRound(ctx, f, a.cardId, a.half, a.usesLeft)) moveActiveOut(ctx, f, a.cardId);

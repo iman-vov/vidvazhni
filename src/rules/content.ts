@@ -524,6 +524,8 @@ export interface ItemDef {
   price: number;
   /** 0 = in the shop from the start; N = after scenario N. */
   unlockedAfter: number;
+  /** Sold only once the campaign has this story flag (`heron.saved`: Чай Чаплі, Болотяні чоботи). */
+  unlockFlag?: string;
   /** Absent = `shop`. */
   source?: ItemSource;
   /** `spent` is restored by a long rest, `lost` after the scenario, `passive` is always on. */

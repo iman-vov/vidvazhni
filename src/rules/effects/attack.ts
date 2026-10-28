@@ -137,6 +137,7 @@ export function attackSpecFor(ctx: Ctx, attacker: Figure, target: Figure, step: 
     if (traits.some((t) => t.trait === 'rangedAttacksAgainstHaveDisadvantage')) disadvantage = true;
   }
   if (target.kind === 'hero' && target.attackedDisadvantage) disadvantage = true;
+  if (ranged && target.kind === 'hero' && target.rangedAttackedDisadvantage) disadvantage = true;
   if (mirrorDisadvantage(ctx, target, ranged)) disadvantage = true;
   const followUp =
     ctx.s.variants.followUp && attacker.kind === 'hero' && target.kind === 'monster' && target.attackedBy.some((id) => id !== attacker.id);
@@ -302,6 +303,7 @@ export function runAttackTarget(ctx: Ctx, task: AttackTask): boolean {
     for (const g of grants) if (g.cardId) spendActiveUse(ctx, target, g.cardId);
     spendSurgeGrants(target, grants.flatMap((g) => (g.surge !== undefined ? [g.surge] : [])));
     delete target.attackedDisadvantage;
+    if (spec.ranged) delete target.rangedAttackedDisadvantage;
   }
   if (target.kind === 'monster' && attacker.kind === 'hero' && !target.attackedBy.includes(attacker.id)) target.attackedBy.push(attacker.id);
   schedule(
@@ -364,6 +366,7 @@ export function runRetaliate(ctx: Ctx, attackerId: string, targetId: string): vo
   if (!isPresent(attacker) || !isPresent(target)) return;
   let total = 0;
   for (const r of [...target.retaliates]) {
+    if (r.rangedOnly && distance(attacker.hex, target.hex) < 2) continue;
     if (distance(attacker.hex, target.hex) > r.range) continue;
     if (r.range > 1 ? !inRangeWithSight(ctx, target.hex, attacker.hex, r.range) : wallBetween(ctx.s, target.hex, attacker.hex)) continue;
     total += r.value;

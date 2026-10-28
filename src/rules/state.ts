@@ -28,7 +28,8 @@ export interface FigureBase {
   maxHp: number;
   conditions: Partial<Record<ConditionId, ConditionState>>;
   shields: ShieldEffect[];
-  retaliates: { value: number; range: number; source: string; until: 'round' | 'scenario' | { uses: number } }[];
+  /** `rangedOnly` (Скляний щит): answers only attacks from 2+ hexes away, at any range in sight. */
+  retaliates: { value: number; range: number; source: string; until: 'round' | 'scenario' | { uses: number }; rangedOnly?: boolean }[];
   /** Incremented each time the figure starts a turn; used for condition expiry. */
   turnCount: number;
 }
@@ -99,6 +100,10 @@ export interface HeroState extends FigureBase {
   surgeGrants?: SurgeGrant[];
   /** Item «Шкіряний шолом»: the next attack against this hero this round has disadvantage. */
   attackedDisadvantage?: boolean;
+  /** Item «Серпанок Королеви»: the next ranged attack against this hero this round has disadvantage. */
+  rangedAttackedDisadvantage?: boolean;
+  /** Item «Болотяні чоботи»: on the turn with this `turnCount` difficult terrain and water cost 1. */
+  ignoreTerrainTurn?: number;
   /** «Прикрий друга»: the hero already took a hit for an ally this round. */
   coverUsed?: boolean;
 }

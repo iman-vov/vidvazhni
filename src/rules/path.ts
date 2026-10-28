@@ -127,6 +127,7 @@ export function buildMoveModel(state: GameState, opts: MoveOptions): MoveModel {
     },
     enterCost(key) {
       if (mode !== 'walk') return 1;
+      if (me.kind === 'hero' && me.ignoreTerrainTurn === me.turnCount) return 1;
       const t = tiles[key];
       return t && (t.terrain === 'difficult' || t.terrain === 'water') ? 2 : 1;
     },

@@ -9,7 +9,7 @@ import type { ItemDef, Step } from '../../src/rules/content';
 import { createGame } from '../../src/rules/engine';
 import { firstFreeNeighbor } from '../../src/rules/effects/support';
 import { DICE_ITEM_SPECIALS } from '../../src/rules/diceItems';
-import { STEP_ITEM_SPECIALS } from '../../src/rules/items';
+import { SELF_ITEM_SPECIALS, STEP_ITEM_SPECIALS } from '../../src/rules/items';
 import { loadContent } from '../../src/rules/load';
 import { act, fillerCards, makeContent, selectAll, setupFor } from '../helpers/engineFixtures';
 
@@ -62,7 +62,7 @@ function effectError(def: ItemDef, steps: Step[]): string | null {
     if (st.type !== 'special') {
       const err = plainStepError(st);
       if (err) return err;
-    } else if (dice.length > 0 ? !DICE_ITEM_SPECIALS.includes(st.name) : ![...STEP_ITEM_SPECIALS, 'nextAttackAgainstSelfDisadvantage'].includes(st.name)) {
+    } else if (dice.length > 0 ? !DICE_ITEM_SPECIALS.includes(st.name) : ![...STEP_ITEM_SPECIALS, ...SELF_ITEM_SPECIALS].includes(st.name)) {
       return `special ${st.name} is not an item special here`;
     }
   }

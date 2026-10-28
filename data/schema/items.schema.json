@@ -394,6 +394,7 @@
       "rarity": { "enum": ["common", "rare", "legendary"] },
       "price": { "type": "integer", "minimum": 1 },
       "unlockedAfter": { "type": "integer", "minimum": 0 },
+      "unlockFlag": { "description": "Sold only once the campaign has this story flag.", "type": "string", "minLength": 1 },
       "source": {
         "description": "Where the item comes from; only `shop` items are sold. `at`: scenario id, or the monster id for `drop`.",
         "type": "object",

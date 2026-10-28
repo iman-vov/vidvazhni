@@ -503,10 +503,11 @@
     "rarity": "common",
     "price": 15,
     "unlockedAfter": 12,
+    "unlockFlag": "heron.saved",
     "source": { "type": "shop" },
     "use": "lost",
-    "effect": [{ "type": "heal", "value": 3, "target": "self", "removeNegative": 1 }],
-    "upgrade": { "price": 15, "effect": [{ "type": "heal", "value": 4, "target": "self", "removeNegative": 1 }] }
+    "effect": [{ "type": "special", "name": "curePoison" }, { "type": "heal", "value": 3, "target": "self" }],
+    "upgrade": { "price": 15, "effect": [{ "type": "special", "name": "curePoison" }, { "type": "heal", "value": 4, "target": "self" }] }
   },
   {
     "id": "pepper-pouch",
@@ -568,5 +569,52 @@
     "effect": [{ "type": "infuse", "element": "light" }],
     "forkEffect": [{ "type": "infuse", "element": "air" }],
     "upgrade": { "price": 25, "effect": [{ "type": "infuse", "element": "light" }, { "type": "heal", "value": 2, "target": "self" }], "forkEffect": [{ "type": "infuse", "element": "air" }, { "type": "heal", "value": 2, "target": "self" }] }
+  },
+  {
+    "id": "marsh-boots",
+    "slot": "legs",
+    "rarity": "common",
+    "price": 25,
+    "unlockedAfter": 12,
+    "unlockFlag": "heron.saved",
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "ignoreTerrain" }],
+    "upgrade": { "price": 25, "effect": [{ "type": "special", "name": "ignoreTerrain" }, { "type": "special", "name": "moveBonus", "params": { "value": 1 } }] }
+  },
+  {
+    "id": "queen-veil",
+    "slot": "body",
+    "rarity": "legendary",
+    "price": 45,
+    "unlockedAfter": 15,
+    "source": { "type": "boss", "at": "s15" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "firstRangedAgainstDisadvantage" }],
+    "upgrade": { "price": 45, "effect": [{ "type": "special", "name": "firstRangedAgainstDisadvantage" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "prism-lens",
+    "slot": "small",
+    "kind": "charm",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 18,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "infuse", "element": "light" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 1 } }],
+    "forkEffect": [{ "type": "infuse", "element": "earth" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 1 } }],
+    "upgrade": { "price": 30, "effect": [{ "type": "infuse", "element": "light" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 2 } }], "forkEffect": [{ "type": "infuse", "element": "earth" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 2 } }] }
+  },
+  {
+    "id": "glass-shield",
+    "slot": "hand",
+    "rarity": "legendary",
+    "price": 45,
+    "unlockedAfter": 20,
+    "source": { "type": "boss", "at": "s20" },
+    "use": "spent",
+    "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "scenario" }, { "type": "special", "name": "reflectRanged", "params": { "value": 1 } }],
+    "upgrade": { "price": 45, "effect": [{ "type": "shield", "value": 1, "target": "self", "duration": "scenario" }, { "type": "special", "name": "reflectRanged", "params": { "value": 2 } }] }
   }
 ]

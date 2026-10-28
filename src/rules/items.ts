@@ -12,11 +12,18 @@
 //   moveBonus{value}         — Чоботи: +value to a pending move
 //   jumpOnMove               — Мотузка з гаком: the pending move becomes a jump
 //   nextAttackAgainstSelfDisadvantage — Шолом: the next attack against the hero this round has disadvantage
+//   firstRangedAgainstDisadvantage — Серпанок Королеви: the next ranged attack against the hero this
+//                              round has disadvantage
+//   curePoison               — Чай Чаплі: removes poison first, so the heal after it restores health
+//   ignoreTerrain            — Болотяні чоботи: this turn difficult terrain and water cost 1 to enter
+//   nextRangedRangeBonus{value} — Призма: the hero's next ranged attack this round gets range +value
+//   reflectRanged{value}     — Скляний щит: retaliate `value` for the scenario, only against attackers
+//                              2+ hexes away (in sight, at any range)
 // Passive specials read where they apply: rangedRangeBonus (attack.ts), movePenalty (move.ts);
 // a passive `shield … persistent` is put on the hero when the game starts.
 
 import type { ItemDef, Step } from './content';
-import { addCondition } from './conditions';
+import { addCondition, removeCondition } from './conditions';
 import { emit, hero, type Ctx } from './effects/context';
 import { performStep } from './effects/index';
 import { attackDamage } from './defense';
@@ -36,6 +43,18 @@ type SpecialStep = Extract<Step, { type: 'special' }>;
 
 /** Item specials that change the pending step instead of doing something on their own. */
 export const STEP_ITEM_SPECIALS: readonly string[] = ['meleeAttackBonus', 'moveBonus', 'jumpOnMove'];
+/** Item specials that mark the hero (useItem): defences, terrain, a grant for the next ranged attack. */
+export const SELF_ITEM_SPECIALS: readonly string[] = [
+  'nextAttackAgainstSelfDisadvantage',
+  'firstRangedAgainstDisadvantage',
+  'ignoreTerrain',
+  'curePoison',
+  'nextRangedRangeBonus',
+  'reflectRanged',
+];
+
+/** Reach of «Скляний щит»: any ranged attacker in sight. */
+const REFLECT_RANGE = 99;
 
 /** Suffix of an upgraded (★) item id: `dagger+`. */
 export const UPGRADED = '+';
@@ -195,6 +214,15 @@ export function useItem(ctx: Ctx, heroId: string, itemId: string, opts: DiceItem
   for (const st of itemEffect(ctx, def)) {
     if (st.type === 'special' && STEP_ITEM_SPECIALS.includes(st.name)) changePendingStep(ctx, st);
     else if (st.type === 'special' && st.name === 'nextAttackAgainstSelfDisadvantage') h.attackedDisadvantage = true;
+    else if (st.type === 'special' && st.name === 'firstRangedAgainstDisadvantage') h.rangedAttackedDisadvantage = true;
+    else if (st.type === 'special' && st.name === 'ignoreTerrain') h.ignoreTerrainTurn = h.turnCount;
+    else if (st.type === 'special' && st.name === 'curePoison') removeCondition(ctx, h, 'poison');
+    else if (st.type === 'special' && st.name === 'nextRangedRangeBonus') {
+      (h.surgeGrants ??= []).push({ on: 'rangedAttack', usesLeft: 1, grant: { range: numberParam(st, 'value') } });
+    }
+    else if (st.type === 'special' && st.name === 'reflectRanged') {
+      h.retaliates.push({ value: numberParam(st, 'value') || 1, range: REFLECT_RANGE, source: `item:${itemId}`, until: 'scenario', rangedOnly: true });
+    }
     else {
       const stepErr = performStep(ctx, h, st, {});
       if (stepErr) return stepErr;
