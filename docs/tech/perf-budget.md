@@ -128,11 +128,78 @@ High went from 1–16 fps to 28–37 with the same look. Medium holds 48–57 (s
 on its slowest frames), and low stays at 60. The full table with calls and tris:
 `node tools/bench-table.mjs docs/tech/bench/2026-10-25-ipad-air-m2.json docs/tech/bench/2026-10-28-ipad-air-m2.json`.
 
+## Memory (the iPad tab crashing on high)
+
+During the after-run the iPad's Safari killed the page several times, nearly always as a high run was
+starting. Medium and low never crashed. `board.perf().memory` (and the `?perf=1` line) now shows what
+the board holds: renderer.info's geometry and texture counts, the JS heap (Chrome only), and an
+estimate of GPU memory from sizes (canvas, render targets, textures and vertex data in the scene).
+
+What it showed, and what changed:
+
+- **High textures were most of it.** Every Meshy model's `.hq.glb` had a 4096² metallic-roughness map
+  next to 2048² colour and normal maps: ~128 MB of GPU memory per model once decoded, ~1.8–3 GB for
+  the two dozen models on a board (medium's ≤1024 maps are a few hundred MB). Safari also keeps the
+  decoded images. Now high is ≤2048 for figures and ≤1024 for props and weapons
+  (`tools/optimize-models.mjs`, the 51 hq models resized in place). All hq textures: 6.8 → 1.9 GB.
+  s6 high on screen: ~1820 → ~700 MB, with the same look (`docs/art/perf/s6-high-memory.jpg` next to
+  `s6-high-after.jpg`).
+- **Render targets on high were ~500 MB at the iPad's 2048×1536.** The canvas was multisampled although
+  the post chain draws the scene into its own multisampled target, and both of the chain's targets had
+  samples and depth because the composer swapped them every frame. Now the canvas is plain under a
+  post chain, the scene always goes into the one multisampled target with depth, and AO writes a plain
+  one (`post.ts`): ~250 MB less.
+- **Nothing a board loaded was ever freed while the page lived.** The game keeps one board view for
+  every mission, and the model, prop and kit caches kept every model ever shown (and on a quality
+  switch both tiers). Merged obstacle geometry, room batches of removed rooms and the litter made for
+  each build were never freed either. Now each cache stamps entries with the board that last asked
+  for them, and 20 s and 60 s after a new map or quality, entries of earlier boards that nothing in
+  the scene draws are dropped and their GPU copies freed (`assetRelease.ts`). Freeing is safe: three
+  uploads a geometry or texture again if something still draws it.
+- **The bench survives a crash.** Between boards it loads an empty page and waits 1.5 s, so the last
+  board can go before the next one loads. A lost GPU context measures the run again on a fresh page.
+  After Safari reloads a killed tab, the run carries on by itself after a 5 s countdown, and a run
+  that killed the page twice is written down as failed (`tries` in the JSON). A lost and restored
+  context on the board redraws the environment map, the floor bake and the lamp maps.
+
+### One board view, s6 → s1…s10 → s6 → low/medium/high → s1 → s6 (PC, high)
+
+Counts after each board settled (dev page, `devBoard.load(id)` and `devBoard.release()`): renderer.info
+geometries / textures, and the estimated GPU MB of what the scene draws (textures + targets + vertex
+data; the PC canvas was tiny in a hidden pane, so the canvas is left out). Before = the old models and no
+release; the run was stopped after s7, since it only went up.
+
+| board | before: geo / tex | before: GPU | after: geo / tex | after: GPU |
+|---|---|---|---|---|
+| s6 (start) | 127 / 87 | ~1920 MB | 133 / 95 | ~810 MB |
+| s1 | 322 / 143 | ~3110 MB | 92 / 131 | ~775 MB |
+| s2 | 442 / 177 | ~1930 MB | 176 / 123 | ~765 MB |
+| s3 | 607 / 213 | ~2615 MB | 173 / 144 | ~870 MB |
+| s4 | 591 / 232 | ~3380 MB | 108 / 167 | ~965 MB |
+| s5 | 626 / 242 | ~2230 MB | 79 / 141 | ~775 MB |
+| s7 | 696 / 262 | ~2405 MB | 131 / 159 | ~835 MB |
+| s8, s9, s10 | — | — | 218 / 202, 113 / 192, 166 / 191 | ~940, ~930, ~785 MB |
+| s6 again | — | — | 135 / 209 | ~810 MB |
+| s6 low, medium, high | — | — | 118 / 198, 140 / 228, 140 / 260 | ~120, ~220, ~810 MB |
+
+Before, geometries and textures only went up (the JS heap went 130 → 480 MB by s7). After, geometries
+come back to where they started, and textures follow the scene. three's texture counter still creeps
+up (a render target counts again each time it is set up), so the last check counted at the WebGL level
+instead, over s1 ↔ s6 three times: s6 came back to the same ~741 MB of live GL textures and 1023
+buffers every time, and s1 to ~739 MB. Of the GL textures a visit to s1 made, only ~23 tiny ones
+(12–20 px canvas textures, a few KB in all) outlive it.
+
+On the iPad (2048×1536 at DPR 1.5) high should now take ~250 MB less for targets and ~1 GB less
+for textures than in the run that crashed. The next bench on the iPad will tell (crashed runs show as
+`tries` in the JSON).
+
 ## Still open
 
 - **s2 high is ~1.7M triangles.** The forest flora alone is ~290k in the scene plus ~320k in the
   sun's map. It is the art density of the forest edge, so it stays until the iPad numbers say
   otherwise.
+- **Tiny canvas textures (12–20 px) made per map are never freed**, ~23 for s1: a few KB, but they
+  add up over a long session. Not found yet which builder makes them.
 - **Calls on high are ~190–370** against ~200. Most of what remains are the figures: each monster
   is several skinned meshes, drawn again in the shadow map. Merging them would need atlased
   materials per figure.
