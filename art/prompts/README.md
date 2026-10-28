@@ -75,28 +75,28 @@ art/concepts/<id>/portrait.png   (лише герої й боси)
 | 5 | [`cellar-rat`](monsters/cellar-rat.md) | Пацюк-злодюжка | монстр | B | усі ракурси прийняті |
 | 6 | [`gremlin`](monsters/gremlin.md) | Гремлін-пакостник | монстр | A | усі ракурси прийняті |
 | 7 | [`gremlin-slingshot`](weapons/gremlin-slingshot.md) | Рогатка гремліна ✱ | зброя | D | усі ракурси готові |
-| 8 | [`herbalist`](heroes/herbalist.md) | Травниця | герой | A | фронт прийнято |
+| 8 | [`herbalist`](heroes/herbalist.md) | Травниця | герой | A | усі ракурси готові |
 | 9 | [`herbalist-staff`](weapons/herbalist-staff.md) | Терновий посох Травниці | зброя | D | усі ракурси готові |
-| 10 | [`rogue`](heroes/rogue.md) | Пройда | герой | A | фронт прийнято |
+| 10 | [`rogue`](heroes/rogue.md) | Пройда | герой | A | усі ракурси готові |
 | 11 | [`rogue-dagger`](weapons/rogue-dagger.md) | Кинджал Пройди ✱ | зброя | D | усі ракурси готові |
-| 12 | [`elementalist`](heroes/elementalist.md) | Стихійник | герой | A | фронт прийнято |
-| 13 | [`tinker`](heroes/tinker.md) | Майстер | герой | A | фронт прийнято |
+| 12 | [`elementalist`](heroes/elementalist.md) | Стихійник | герой | A | усі ракурси готові |
+| 13 | [`tinker`](heroes/tinker.md) | Майстер | герой | A | усі ракурси готові |
 | 14 | [`tinker-wrench`](weapons/tinker-wrench.md) | Гайковий ключ Майстра | зброя | D | усі ракурси готові |
-| 15 | [`tinker-button`](heroes/tinker-button.md) | Ґудзик | герой (виклик) | B | фронт прийнято |
-| 16 | [`thornling`](monsters/thornling.md) | Терновик | монстр | A | фронт прийнято |
-| 17 | [`grey-wolf`](monsters/grey-wolf.md) | Сірий вовк | монстр | B | фронт прийнято |
-| 18 | [`bandit-brute`](monsters/bandit-brute.md) | Розбійник-громило | монстр | A | фронт прийнято |
+| 15 | [`tinker-button`](heroes/tinker-button.md) | Ґудзик | герой (виклик) | B | усі ракурси готові |
+| 16 | [`thornling`](monsters/thornling.md) | Терновик | монстр | A | усі ракурси готові |
+| 17 | [`grey-wolf`](monsters/grey-wolf.md) | Сірий вовк | монстр | B | усі ракурси готові |
+| 18 | [`bandit-brute`](monsters/bandit-brute.md) | Розбійник-громило | монстр | A | усі ракурси готові |
 | 19 | [`bandit-club`](weapons/bandit-club.md) | Кийок розбійника ✱ | зброя | D | усі ракурси готові |
-| 20 | [`bandit-crossbow`](monsters/bandit-crossbow.md) | Розбійник-арбалетник | монстр | A | фронт прийнято |
+| 20 | [`bandit-crossbow`](monsters/bandit-crossbow.md) | Розбійник-арбалетник | монстр | A | усі ракурси готові |
 | 21 | [`crossbow`](weapons/crossbow.md) | Арбалет розбійника ✱ | зброя | D | усі ракурси готові |
-| 22 | [`bog-slime`](monsters/bog-slime.md) | Болотяний слиз | монстр | C | фронт прийнято |
-| 23 | [`stone-sentinel`](monsters/stone-sentinel.md) | Кам'яний вартовий | монстр | A | фронт прийнято |
-| 24 | [`gloom-cultist`](monsters/gloom-cultist.md) | Культист Мороку | монстр | A | фронт прийнято |
+| 22 | [`bog-slime`](monsters/bog-slime.md) | Болотяний слиз | монстр | C | усі ракурси готові |
+| 23 | [`stone-sentinel`](monsters/stone-sentinel.md) | Кам'яний вартовий | монстр | A | front, side, back готові й перевірені |
+| 24 | [`gloom-cultist`](monsters/gloom-cultist.md) | Культист Мороку | монстр | A | усі ракурси готові |
 | 25 | [`cultist-staff`](weapons/cultist-staff.md) | Посох культиста ✱ | зброя | D | усі ракурси готові |
-| 26 | [`shadow-wraith`](monsters/shadow-wraith.md) | Тіньовий привид | монстр | C | фронт прийнято |
-| 27 | [`bog-miller`](bosses/bog-miller.md) | Мірошник-Болотяник | бос | A | фронт прийнято |
+| 26 | [`shadow-wraith`](monsters/shadow-wraith.md) | Тіньовий привид | монстр | C | усі ракурси готові; хвіст side — див. QA |
+| 27 | [`bog-miller`](bosses/bog-miller.md) | Мірошник-Болотяник | бос | A | усі ракурси готові |
 | 28 | [`flour-sack`](weapons/flour-sack.md) | Мішок Мірошника ✱ | зброя | D | усі ракурси готові |
-| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | перегенерувати фронт |
+| 29 | [`shadowhand`](bosses/shadowhand.md) | Тінерук | бос | A | усі ракурси готові |
 | 30 | [`barrel`](props/barrel.md) | Бочка | пропс | D | усі ракурси готові |
 | 31 | [`crate`](props/crate.md) | Ящик | пропс | D | усі ракурси готові |
 | 32 | [`chest`](props/chest.md) | Скриня | пропс | D | усі ракурси готові |

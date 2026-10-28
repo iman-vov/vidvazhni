@@ -59,7 +59,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a12-66a0-7f11-9fd0-fc74a79ccffd",
     "archived": true
   },
@@ -123,7 +123,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a12-7977-7761-ba04-5137aad30848",
     "archived": true
   },
@@ -215,7 +215,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a12-9027-7802-95c1-d6630fe05229",
     "archived": true
   },
@@ -235,14 +235,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\herbalist\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\herbalist\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\herbalist\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a14-8392-7a60-8236-547054b9e7a3",
     "archived": true
   },
@@ -262,7 +279,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a14-94ed-7db2-8d15-6c9e49442c63",
     "archived": true
   },
@@ -282,14 +299,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\rogue\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\rogue\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\rogue\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a14-aba0-7a32-a3e6-31d38a3c933d",
     "archived": true
   },
@@ -309,7 +343,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a14-bfe1-72a0-a08b-283f2b8c8c40",
     "archived": true
   },
@@ -329,14 +363,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\elementalist\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\elementalist\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\elementalist\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a14-dbf6-7740-a052-1c0fa78e86f7",
     "archived": true
   },
@@ -356,14 +407,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\tinker\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\tinker\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\tinker\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a14-f7d3-7b81-9730-844f8901ece3",
     "archived": true
   },
@@ -383,7 +451,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a15-1e74-7913-9fce-4cf8550e3b9e",
     "archived": true
   },
@@ -403,14 +471,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\tinker-button\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\tinker-button\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\tinker-button\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a15-397e-7191-94d3-0ac0e136c9a5",
     "archived": true
   },
@@ -429,13 +514,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\thornling\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\thornling\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a17-ef77-75b1-82dc-42596437df21",
     "archived": true
   },
@@ -454,13 +550,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\grey-wolf\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\grey-wolf\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-00e7-7823-8f4e-4b06b38c3d86",
     "archived": true
   },
@@ -479,13 +586,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\bandit-brute\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\bandit-brute\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-1433-74f3-b554-828552a1f684",
     "archived": true
   },
@@ -505,7 +623,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a18-2745-7581-86c3-3f6c0d6cfd67",
     "archived": true
   },
@@ -524,13 +642,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\bandit-crossbow\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\bandit-crossbow\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-3f43-7c93-841b-0e7096d68611",
     "archived": true
   },
@@ -550,7 +679,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a18-5675-7e73-b287-95cbe7f87dd0",
     "archived": true
   },
@@ -569,13 +698,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\bog-slime\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\bog-slime\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-73f4-7281-8ecf-60ce00fa86fa",
     "archived": true
   },
@@ -594,13 +734,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\stone-sentinel\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\stone-sentinel\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-8f56-7082-9bfa-6bece1c29b87",
     "archived": true
   },
@@ -619,13 +770,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\gloom-cultist\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\gloom-cultist\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-adc0-7252-ba24-f4468d72dfb6",
     "archived": true
   },
@@ -645,7 +807,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a18-cb27-7d21-8c96-40ea81af76ee",
     "archived": true
   },
@@ -664,13 +826,24 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\shadow-wraith\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\shadow-wraith\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a18-f0a9-7c83-904f-de6c7474bb2a",
     "archived": true
   },
@@ -690,14 +863,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\bog-miller\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\bog-miller\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\bog-miller\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a1c-3750-7ed0-a8f7-ef6eefcace9c",
     "archived": true
   },
@@ -717,7 +907,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a1c-a570-7980-b03f-7ccbc657ae3b",
     "archived": true
   },
@@ -737,14 +927,31 @@
         "width": 1254,
         "height": 1254,
         "square": true
+      },
+      {
+        "view": "side",
+        "path": "C:\\Braves\\art\\concepts\\shadowhand\\side.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "back",
+        "path": "C:\\Braves\\art\\concepts\\shadowhand\\back.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
+      },
+      {
+        "view": "portrait",
+        "path": "C:\\Braves\\art\\concepts\\shadowhand\\portrait.png",
+        "width": 1254,
+        "height": 1254,
+        "square": true
       }
     ],
-    "missingViews": [
-      "side",
-      "back",
-      "portrait"
-    ],
-    "frontApproved": false,
+    "missingViews": [],
+    "frontApproved": true,
     "threadId": "01a16a1d-32a2-7381-99ab-6e77fb5728bf",
     "archived": true
   },
@@ -764,7 +971,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a20-a162-7f92-9f98-2586ec0b72d7",
     "archived": true
   },
@@ -784,7 +991,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a20-ce54-7583-95bc-f6a3aeafd9b5",
     "archived": true
   },
@@ -804,7 +1011,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a21-056a-7373-ae44-b67a45e3a76f",
     "archived": true
   },
@@ -824,7 +1031,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a21-55a2-7550-bc08-a711c8b2a234",
     "archived": true
   },
@@ -844,7 +1051,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a21-8491-7372-8f64-f05ff513c07c",
     "archived": true
   },
@@ -864,7 +1071,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a21-dac8-7c21-9d6b-7e3bf59f0bdb",
     "archived": true
   },
@@ -884,7 +1091,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a23-e320-73f2-8372-cedc5e30286f",
     "archived": true
   },
@@ -904,7 +1111,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a23-f683-7d42-95b4-896f54c46db9",
     "archived": true
   },
@@ -924,7 +1131,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a24-0a4c-7d41-9474-31e49fcb890e",
     "archived": true
   },
@@ -944,7 +1151,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a24-1dc3-7ff1-8c0c-4fc760bf3a0e",
     "archived": true
   },
@@ -964,7 +1171,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a24-32f0-7c81-b7c3-e37f2ad70e77",
     "archived": true
   },
@@ -984,7 +1191,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a24-4d2a-7c22-9e3b-28f2f353cd37",
     "archived": true
   },
@@ -1004,7 +1211,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a26-92ff-7343-93fa-b692ca5394fc",
     "archived": true
   },
@@ -1024,7 +1231,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a26-a6b5-76f2-b122-a72e48bd1e0a",
     "archived": true
   },
@@ -1044,7 +1251,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a26-bbe1-7e52-a0a1-ecaaf02893d6",
     "archived": true
   },
@@ -1064,7 +1271,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a26-d50d-7b83-a12d-1de67fc07a92",
     "archived": true
   },
@@ -1084,7 +1291,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a26-f044-7380-8d66-3c40d57c07d6",
     "archived": true
   },
@@ -1104,7 +1311,7 @@
       }
     ],
     "missingViews": [],
-    "frontApproved": false,
+    "frontApproved": true,
     "threadId": "01a16a27-0c55-7153-b9c3-f6e275f4a750",
     "archived": true
   }

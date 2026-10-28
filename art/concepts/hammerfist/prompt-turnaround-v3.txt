@@ -1,0 +1,6 @@
+Turnaround set: premium hand-sculpted and hand-painted fantasy board-game miniature, true matte sculpted 3D volume, soft even studio light, subtle ambient occlusion, no outline or cel shading. Hammerfist is a friendly sleepy old blacksmith giant: grey stone/copper, huge barrel chest, short thick legs, small head, huge forearms, square stone beard, thick leather apron, chest forge with a 3-bar grate, right arm ending in a stone hammer with two copper bands, left open empty stone hand. Palette: stone #8E8A82/#6B675F; copper #B8733E/#8A5530; hammer #7C7870; apron #6B4A32/#4E3524; beard #A39E94; forge #C8642E/#8A3E1E, matte/no glow; eyes #B9B3C4. All images: isolated full body, neutral A-pose, plain #D9D9D9 background, no floor/shadow/scene/text, no moths/butterflies/insects.
+
+front.png: perfectly straight symmetric front.
+back.png: perfectly straight back; no face or chest forge, rear straps/belt visible.
+left.png: strict 90° left profile; only the near left open hand visible, right arm and hammer fully hidden behind torso.
+right.png: strict 90° right profile; near right hammer arm visible, far left open hand hidden.
