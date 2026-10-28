@@ -30,7 +30,7 @@
         [10, -1]
       ],
       "obstacles": [{ "hex": [6, 0], "model": "pillar" }, { "hex": [3, 5], "model": "pillar" }],
-      "doors": [{ "hex": [10, -1], "to": "s19.vault" }],
+      "doors": [{ "hex": [10, -1], "to": "s19.vault", "key": "beam" }],
       "spawns": [
         { "monster": "brass-automaton", "hex": [8, -2], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "brass-automaton", "hex": [9, 0], "by": { "4": "normal" } },
