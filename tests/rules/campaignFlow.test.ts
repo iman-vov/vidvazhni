@@ -13,6 +13,7 @@ import {
   levelUpCards,
   newCampaign,
   pickHand,
+  playableScenarios,
   setupFromCampaign,
   upgrade,
 } from '../../src/rules/campaign';
@@ -89,6 +90,26 @@ describe('applyScenarioResult', () => {
       expect(end.completed).toEqual(['s5', pick, 's8', 's9', 's10']);
       expect(end.partyChest).toContain('hammerfist-hammer');
     }
+  });
+
+  it('Act III, Glass Town: s10 opens s11 and s16, s16 closes s11, a secondary goal opens s19, flags stay', () => {
+    const win = (s: CampaignState, scenarioId: string, secondaryMet?: string[]) =>
+      ok(applyScenarioResult(c, s, { id: scenarioId, scenarioId, won: true, heroes, secondaryMet }));
+    const afterS10 = win({ ...fresh(), unlocked: ['s10'] }, 's10');
+    expect(afterS10.unlocked).toEqual(['s11', 's16']);
+    // The marsh has no data yet: s11 waits in the list but is not offered.
+    expect(playableScenarios(afterS10, c.scenarios).includes('s11')).toBe(!!c.scenarios['s11']);
+    expect(playableScenarios(afterS10, c.scenarios)).toContain('s16');
+    const afterS16 = win(afterS10, 's16');
+    expect(afterS16.unlocked).toEqual(['s17', 's18']);
+    const afterS17 = win(afterS16, 's17', ['s17.mirror-key']);
+    expect(afterS17.unlocked).toEqual(['s20', 's19']);
+    expect(afterS17.flags).toEqual(['blueprint']);
+    expect(win(afterS16, 's18').unlocked).toEqual(['s20']);
+    const end = win(win(afterS17, 's19'), 's20');
+    expect(end.flags).toEqual(['blueprint', 'mirrors.aligned', 'ally.guardian']);
+    expect(end.unlocked).toEqual(['s21']);
+    expect(playableScenarios(end, c.scenarios)).not.toContain('s21');
   });
 
   it('refuses unknown scenarios and heroes', () => {

@@ -68,6 +68,7 @@ import s16 from '../../data/scenarios/s16.json';
 import s17 from '../../data/scenarios/s17.json';
 import s18 from '../../data/scenarios/s18.json';
 import s19 from '../../data/scenarios/s19.json';
+import s20 from '../../data/scenarios/s20.json';
 
 import items from '../../data/items.json';
 import battleGoals from '../../data/battle-goals.json';
@@ -117,7 +118,7 @@ export function loadContent(): LoadedContent {
       meleeDeck, guardDeck, archerDeck, casterDeck, ghostDeck, bossMillerDeck, bossShadowhandDeck, bossHammerfistDeck,
       bossMistQueenDeck, bossGlassGuardianDeck,
     ]),
-    scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s16, s17, s18, s19]),
+    scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s16, s17, s18, s19, s20]),
     items: indexById<ItemDef>(items),
     battleGoals: indexById<BattleGoalDef>(battleGoals),
     perks: indexById<PerkDef>(perks),

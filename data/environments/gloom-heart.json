@@ -1,6 +1,6 @@
 {
   "id": "gloom-heart",
-  "scenarios": ["s5"],
+  "scenarios": ["s5", "s20"],
   "edge": "cave",
   "surface": "rock",
   "boundary": "rocks",

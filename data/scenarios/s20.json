@@ -1,0 +1,92 @@
+{
+  "id": "s20",
+  "number": 20,
+  "draft": true,
+  "goal": { "type": "killBoss", "boss": "glass-guardian" },
+  "startRoom": "s20.gallery",
+  "startHexes": [[0, 2], [0, 3], [0, 4], [1, 3]],
+  "introduces": ["allyPhase"],
+  "specials": ["allyPhase"],
+  "forkOrbs": { "eachRound": [{ "orb": "earth", "source": "s20.column-1" }] },
+  "rooms": [
+    {
+      "id": "s20.gallery",
+      "kind": "outdoor",
+      "hexes": [
+        [0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5],
+        [2, 1], [2, 2], [2, 3], [2, 4], [3, 1], [3, 2], [3, 3], [3, 4],
+        [4, 0], [4, 1], [4, 2], [4, 3], [5, 0], [5, 1], [5, 2], [5, 3],
+        [6, 1]
+      ],
+      "obstacles": [{ "hex": [2, 1], "model": "rock" }, { "hex": [2, 4], "model": "rock" }],
+      "doors": [{ "hex": [6, 1], "to": "s20.dome" }],
+      "spawns": [
+        { "monster": "brass-automaton", "hex": [4, 1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "brass-automaton", "hex": [4, 3], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "gremlin", "hex": [5, 0], "by": { "3": "normal", "4": "elite" } },
+        { "monster": "gremlin", "hex": [3, 3], "by": { "4": "normal" } }
+      ],
+      "coins": [[1, 5]]
+    },
+    {
+      "id": "s20.dome",
+      "kind": "outdoor",
+      "hexes": [
+        [7, -3], [7, -2], [7, -1], [7, 0], [7, 1], [7, 2], [7, 3], [7, 4],
+        [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [8, 1], [8, 2], [8, 3],
+        [9, -4], [9, -3], [9, -2], [9, -1], [9, 0], [9, 1], [9, 2], [9, 3],
+        [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [10, 0], [10, 1], [10, 2],
+        [11, -5], [11, -4], [11, -3], [11, -2], [11, -1], [11, 0], [11, 1], [11, 2],
+        [12, -6], [12, -5], [12, -4], [12, -3], [12, -2], [12, -1], [12, 0], [12, 1],
+        [13, -6], [13, -5], [13, -4], [13, -3], [13, -2], [13, -1], [13, 0], [13, 1],
+        [14, -7], [14, -6], [14, -5], [14, -4], [14, -3], [14, -2], [14, -1], [14, 0]
+      ],
+      "spawns": [
+        {
+          "monster": "glass-guardian",
+          "hex": [11, -1],
+          "by": { "2": "normal", "3": "normal", "4": "normal" }
+        }
+      ],
+      "chests": [{ "hex": [13, 1], "id": "s20.chest", "loot": { "coins": 4 } }],
+      "objects": [
+        { "hex": [12, -2], "id": "s20.heart", "kind": "crystal-heart", "hp": 8, "blocks": true },
+        { "hex": [7, -3], "id": "s20.window-1", "kind": "window", "blocks": true },
+        { "hex": [14, -7], "id": "s20.window-2", "kind": "window", "blocks": true },
+        { "hex": [14, 0], "id": "s20.window-3", "kind": "window", "blocks": true },
+        { "hex": [9, -2], "id": "s20.column-1", "kind": "crystal", "blocks": true },
+        { "hex": [12, -4], "id": "s20.column-2", "kind": "crystal", "blocks": true },
+        { "hex": [9, 2], "id": "s20.column-3", "kind": "crystal", "blocks": true },
+        { "hex": [12, 0], "id": "s20.column-4", "kind": "crystal", "blocks": true }
+      ]
+    }
+  ],
+  "reward": { "goldEach": 35, "unlock": ["s21"], "flags": ["ally.guardian"] },
+  "secondary": [
+    { "id": "s20.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } },
+    { "id": "s20.ten-rounds", "check": "withinRounds", "params": { "rounds": 10 }, "reward": { "gold": 5 } }
+  ],
+  "events": [
+    {
+      "id": "s20.ally",
+      "trigger": { "type": "bossHalfHp", "boss": "glass-guardian" },
+      "actions": [
+        { "type": "story", "text": "event.s20.ally" },
+        { "type": "setGoal", "goal": { "type": "protect", "object": "s20.heart", "rounds": 3 } },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[8, -4], [13, -6], [13, 1], [8, -3], [13, -5], [14, -1]],
+          "count": 3
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "4": "elite" },
+          "hexes": [[8, -4], [13, -6], [13, 1], [8, -3], [13, -5], [14, -1]]
+        }
+      ]
+    }
+  ]
+}
