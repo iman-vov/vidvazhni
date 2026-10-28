@@ -468,6 +468,167 @@
           }
         ]
       }
+    },
+    {
+      "id": "tinker.bolt-two",
+      "level": 6,
+      "initiative": 29,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "summon"
+          },
+          {
+            "type": "condition",
+            "condition": "strengthen",
+            "target": "summon"
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "summon",
+            "duration": {
+              "uses": 3
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "x": 0,
+            "range": 3,
+            "consume": {
+              "element": "fire",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.minefield",
+      "level": 6,
+      "initiative": 47,
+      "top": {
+        "steps": [
+          {
+            "type": "trap",
+            "damage": 2
+          },
+          {
+            "type": "trap",
+            "damage": 2
+          },
+          {
+            "type": "trap",
+            "damage": 2
+          },
+          {
+            "type": "infuse",
+            "element": "fire",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "tinker.repair-shop",
+      "level": 7,
+      "initiative": 30,
+      "top": {
+        "steps": [
+          {
+            "type": "special",
+            "name": "recoverLastLost"
+          },
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "summon",
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "trap",
+            "damage": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "tinker.flying-machine",
+      "level": 7,
+      "initiative": 77,
+      "top": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 5,
+            "fly": true
+          },
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 2,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "consume": {
+              "element": "fire",
+              "conditions": [
+                "wound"
+              ]
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": "round"
+          },
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
     }
   ]
 }

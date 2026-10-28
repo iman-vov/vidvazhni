@@ -8,6 +8,7 @@ import type { Figure, StepChoice } from '../state';
 import { elementalSphere } from './elementalSphere';
 import { fadeOut } from './fadeOut';
 import { flood } from './flood';
+import { recoverLastLost } from './recoverLastLost';
 import { retreat } from './retreat';
 import { transmuteOrb } from './transmuteOrb';
 
@@ -16,6 +17,7 @@ export type SpecialFn = (ctx: Ctx, f: Figure, step: SpecialStep, choice: StepCho
 
 export const SPECIALS: Record<string, SpecialFn> = {
   recoverLost: elementalSphere,
+  recoverLastLost,
   elementalSphere,
   transmuteOrb,
   retreat,

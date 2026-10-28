@@ -112,7 +112,7 @@ describe('«Карти з X» (dieCards)', () => {
     expect(fine).toBeGreaterThan(0);
   });
 
-  it('the X cards (six of levels 2–5, three extra level-1 ones) carry x, with the fixed average in value', () => {
+  it('the X cards (six of levels 2–5, eight of levels 6–7, three extra level-1 ones) carry x, with the fixed average in value', () => {
     const heroes = loadContent().heroes;
     const xCards = Object.values(heroes).flatMap((h) => h.cards.filter((cd) => [...cd.top.steps, ...cd.bottom.steps].some((st) => st.x !== undefined)));
     expect(xCards.map((cd) => cd.id).sort()).toEqual(
@@ -121,6 +121,7 @@ describe('«Карти з X» (dieCards)', () => {
         'rogue.lucky-throw', 'elementalist.wild-spark', 'tinker.crossbow',
         'rogue.shadow-behind', 'rogue.full-pockets', 'rogue.moonless-night',
         'elementalist.elemental-shield', 'elementalist.star-rain', 'elementalist.elements-heart',
+        'tinker.bolt-two', 'tinker.flying-machine',
       ].sort(),
     );
     for (const cd of xCards) {

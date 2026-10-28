@@ -195,4 +195,17 @@ describe('specials', () => {
     expect(heroOf(s, 'alpha').hand).toEqual(expect.arrayContaining(['f.c4', 'f.c5']));
     s = takeAllDamage(s, content);
   });
+
+  it('«Ремонтна майстерня»: only the most recently lost card returns to the hand', () => {
+    const { content, s: s0 } = game({ spawns: [{ monster: 'rat', hex: [5, 2] }] });
+    content.heroes.alpha!.cards.find((c) => c.id === 'f.sphere')!.bottom.steps = [{ type: 'special', name: 'recoverLastLost' }];
+    const h = heroOf(s0, 'alpha');
+    h.hand = h.hand.filter((c) => c !== 'f.c4' && c !== 'f.c5');
+    h.lost = ['f.c4', 'f.c5'];
+    let s = selectAll(s0, content, { alpha: ['f.sphere', 'f.c1'] });
+    s = playHalf(s, content, 'alpha', 'f.sphere', 'bottom', [{}]);
+    expect(heroOf(s, 'alpha').lost).toContain('f.c4');
+    expect(heroOf(s, 'alpha').lost).not.toContain('f.c5');
+    expect(heroOf(s, 'alpha').hand).toContain('f.c5');
+  });
 });
