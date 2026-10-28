@@ -1123,6 +1123,82 @@
         ]
       },
       "epilogue": { "id": "s16.epilogue", "speaker": "marta", "text": "Ida left me a little glass ball. Give it a shake, and snow falls over a tiny town inside." }
+    },
+    "s17": {
+      "intro": [
+        { "id": "s17.intro.1", "speaker": "narrator", "text": "Lumo’s workshop stands on the hill above Glass Town. Downstairs is a glassworks with two furnaces, and his drawings still lie up in the attic." },
+        { "id": "s17.intro.2", "speaker": "ida", "text": "This is where he worked. I haven’t been inside for forty years. The Lantern drawing is in the attic. Bring it out before the moths get their little feet on it." },
+        { "id": "s17.intro.3", "speaker": "marta", "text": "The drawing is big, and whoever carries it walks slower. If you get tired, put it down and let someone else pick it up." },
+        {
+          "id": "s17.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Into the workshop!",
+          "variants": {
+            "warden": "The furnaces are still warm. Someone’s been keeping house here without the master.",
+            "wind-archer": "Hear that? Ticking. Something in the storeroom ticks like a heart.",
+            "herbalist": "So much dust! Whoever sneezes gets chamomile. Whoever doesn’t, gets some too.",
+            "rogue": "A workshop full of knick-knacks and nobody saying “don’t touch”. Almost paradise.",
+            "elementalist": "Glass is blown with fire. I can do fire. Glass, not yet.",
+            "tinker": "Bolt, this is Lumo’s own workshop. Wipe your paws. Both of them. No, all four."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s17.storeroom",
+          "trigger": { "on": "doorOpened", "arg": "s17.storeroom" },
+          "lines": [
+            { "id": "s17.storeroom.1", "speaker": "narrator", "text": "Brass automatons stand in the storeroom, ticking softly in their sleep. Each has a winding key in its side." },
+            { "id": "s17.storeroom.2", "speaker": "tinker", "text": "Clean gears, not a speck of rust. Someone loved him. Bolt, stop growling, you’re a good boy too." }
+          ]
+        },
+        {
+          "id": "s17.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s17.whisper.1", "speaker": "narrator", "text": "A soft glassy chime drifts down from the attic, as if someone had tapped a goblet." },
+            { "id": "s17.whisper.2", "speaker": "glass-guardian", "text": "Ding. Do not touch the drawings. The master will be back soon, and he will be sad." }
+          ]
+        },
+        {
+          "id": "s17.attic",
+          "trigger": { "on": "doorOpened", "arg": "s17.attic" },
+          "lines": [
+            { "id": "s17.attic.1", "speaker": "narrator", "text": "Under the roof stands a workbench. On it lie the Lantern drawing and a little candle burned right down to its saucer." }
+          ]
+        },
+        {
+          "id": "s17.first-automaton",
+          "trigger": { "on": "monsterKilled", "arg": "brass-automaton" },
+          "lines": [
+            { "id": "s17.first-automaton.1", "speaker": "narrator", "text": "The automaton clicked, the key in its side stopped turning, and it sat down on the floor like a tired puppy." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s17.win.1", "speaker": "narrator", "text": "The drawing is at the door. The party unrolls it on the floor, and Ida bends over it." },
+          { "id": "s17.win.2", "speaker": "narrator", "text": "There is the Guardian Lantern, every gear and every pane. And in the margin, a little sketch: a crystal automaton with a heart like a tiny lamp." },
+          { "id": "s17.win.3", "speaker": "ida", "text": "That’s the Guardian. Lumo built him as a helper, so the workshop wouldn’t be lonely. I thought he was long gone." },
+          { "id": "s17.win.4", "speaker": "narrator", "text": "Under the sketch, in Lumo’s hand, it says: “Light for everyone. And a little for me.”" },
+          {
+            "id": "s17.win.5", "speaker": "hero", "pick": "random",
+            "text": "A little for himself.",
+            "variants": {
+              "warden": "A little light for himself. Is that so much? No. Not at all.",
+              "wind-archer": "An animal digs its burrow for itself. Lumo built for everyone.",
+              "herbalist": "Someone who looks after everyone needs someone to look after them.",
+              "rogue": "“A little for me.” You know, I understand that better than I’d like to.",
+              "elementalist": "So many formulas! I’m copying them. Just don’t call it cheating.",
+              "tinker": "I’ve never seen a drawing like this. Bolt and I will build something good from it, I promise."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s17.lose.1", "speaker": "marta", "text": "The drawing is still in the attic. Never mind, it’s waited forty years, it can wait one more day." },
+          { "id": "s17.lose.2", "speaker": "marta", "text": "Pass the drawing along before its carrier gets worn out. And turn the keys in the storeroom: a brass helper is handy in a fight." }
+        ]
+      },
+      "epilogue": { "id": "s17.epilogue", "speaker": "marta", "text": "The drawing is spread out on my table. Now I chop onions on one end, because the Lantern is on the other." }
     }
   }
 }

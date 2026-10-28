@@ -1123,6 +1123,82 @@
         ]
       },
       "epilogue": { "id": "s16.epilogue", "speaker": "marta", "text": "Ida hat mir eine kleine Glaskugel dagelassen. Wenn man sie schüttelt, schneit es drinnen über einer winzigen Stadt." }
+    },
+    "s17": {
+      "intro": [
+        { "id": "s17.intro.1", "speaker": "narrator", "text": "Lumos Werkstatt steht am Hang über der Glasstadt. Unten ist eine Glasbläserei mit zwei Öfen, und oben auf dem Dachboden liegen noch seine Pläne." },
+        { "id": "s17.intro.2", "speaker": "ida", "text": "Hier hat er gearbeitet. Ich war seit vierzig Jahren nicht mehr drin. Der Plan der Laterne liegt auf dem Dachboden. Holt ihn raus, bevor die Falter ihre Füßchen draufsetzen." },
+        { "id": "s17.intro.3", "speaker": "marta", "text": "Der Plan ist groß, und wer ihn trägt, geht langsamer. Wer müde wird, legt ihn ab, und jemand anderes hebt ihn auf." },
+        {
+          "id": "s17.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Ab in die Werkstatt!",
+          "variants": {
+            "warden": "Die Öfen sind noch warm. Hier wirtschaftet jemand ohne den Hausherrn.",
+            "wind-archer": "Hört ihr das? Es tickt. Irgendwas im Lager tickt wie ein Herz.",
+            "herbalist": "So viel Staub! Wer niest, kriegt Kamille. Wer nicht niest, auch.",
+            "rogue": "Eine Werkstatt voller Krimskrams, und keiner sagt „Finger weg“. Fast das Paradies.",
+            "elementalist": "Glas bläst man mit Feuer. Feuer kann ich. Glas noch nicht.",
+            "tinker": "Bolt, das ist Lumos eigene Werkstatt. Pfoten abputzen. Beide. Nein, alle vier."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s17.storeroom",
+          "trigger": { "on": "doorOpened", "arg": "s17.storeroom" },
+          "lines": [
+            { "id": "s17.storeroom.1", "speaker": "narrator", "text": "Im Lager stehen Messingautomaten und ticken leise im Schlaf. Jeder hat einen Aufziehschlüssel in der Seite." },
+            { "id": "s17.storeroom.2", "speaker": "tinker", "text": "Saubere Zahnräder, kein bisschen Rost. Den hat jemand liebgehabt. Bolt, hör auf zu knurren, du bist auch ein Guter." }
+          ]
+        },
+        {
+          "id": "s17.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s17.whisper.1", "speaker": "narrator", "text": "Vom Dachboden klingt es leise und gläsern, als hätte jemand an ein Kelchglas getippt." },
+            { "id": "s17.whisper.2", "speaker": "glass-guardian", "text": "Pling. Die Pläne nicht anfassen. Der Meister kommt bald zurück, und dann ist er traurig." }
+          ]
+        },
+        {
+          "id": "s17.attic",
+          "trigger": { "on": "doorOpened", "arg": "s17.attic" },
+          "lines": [
+            { "id": "s17.attic.1", "speaker": "narrator", "text": "Unterm Dach steht eine Werkbank. Darauf liegen der Plan der Laterne und eine kleine Kerze, ganz bis zum Tellerchen heruntergebrannt." }
+          ]
+        },
+        {
+          "id": "s17.first-automaton",
+          "trigger": { "on": "monsterKilled", "arg": "brass-automaton" },
+          "lines": [
+            { "id": "s17.first-automaton.1", "speaker": "narrator", "text": "Der Automat klickte, der Schlüssel in seiner Seite blieb stehen, und er setzte sich auf den Boden wie ein müder Welpe." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s17.win.1", "speaker": "narrator", "text": "Der Plan ist an der Tür. Die Gruppe rollt ihn auf dem Boden aus, und Ida beugt sich darüber." },
+          { "id": "s17.win.2", "speaker": "narrator", "text": "Darauf ist die Schutzlaterne, jedes Zahnrad und jede Scheibe. Und am Rand eine kleine Zeichnung: ein Kristallautomat mit einem Herzen wie ein Lämpchen." },
+          { "id": "s17.win.3", "speaker": "ida", "text": "Das ist der Wächter. Lumo hat ihn sich als Gehilfen gebaut, damit es in der Werkstatt nicht so einsam ist. Ich dachte, den gibt es längst nicht mehr." },
+          { "id": "s17.win.4", "speaker": "narrator", "text": "Unter der Zeichnung steht in Lumos Handschrift: „Licht für alle. Und ein bisschen für mich.“" },
+          {
+            "id": "s17.win.5", "speaker": "hero", "pick": "random",
+            "text": "Ein bisschen für sich.",
+            "variants": {
+              "warden": "Ein bisschen Licht für sich selbst. Ist das zu viel? Nein. Überhaupt nicht.",
+              "wind-archer": "Ein Tier gräbt seinen Bau für sich. Lumo hat für alle gebaut.",
+              "herbalist": "Wer sich um alle kümmert, um den muss sich auch jemand kümmern.",
+              "rogue": "„Ein bisschen für mich.“ Wisst ihr, das verstehe ich besser, als mir lieb ist.",
+              "elementalist": "So viele Formeln! Ich zeichne sie ab. Sagt bloß nicht, das sei Abschreiben.",
+              "tinker": "So einen Plan habe ich noch nie gesehen. Bolt und ich bauen daraus etwas Gutes, versprochen."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s17.lose.1", "speaker": "marta", "text": "Der Plan liegt noch auf dem Dachboden. Macht nichts, er hat vierzig Jahre gewartet, da wartet er noch einen Tag." },
+          { "id": "s17.lose.2", "speaker": "marta", "text": "Gebt den Plan weiter, bevor der Träger erschöpft ist. Und dreht die Schlüssel im Lager: Ein Messinghelfer kommt im Kampf gerade recht." }
+        ]
+      },
+      "epilogue": { "id": "s17.epilogue", "speaker": "marta", "text": "Der Plan liegt ausgebreitet auf meinem Tisch. Jetzt schneide ich die Zwiebeln am einen Ende, weil am anderen die Laterne ist." }
     }
   }
 }

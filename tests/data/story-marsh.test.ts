@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const LANGS = ['uk', 'de', 'en'] as const;
 const REGIONS: Record<string, string[]> = {
   'Sleepy Marsh': ['s11', 's12', 's13', 's14', 's15'],
-  'Glass Town': ['s16'],
+  'Glass Town': ['s16', 's17'],
 };
 
 type Line = { id: string; speaker: string; text: string; variants?: Record<string, string> };

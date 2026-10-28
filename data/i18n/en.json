@@ -1466,5 +1466,18 @@
   "event.s16.mirror-broken": "Ding! A mirror cracked and went dark.",
   "event.s16.crate": "Ida opens a crate on her cart: “For your trouble.” There are coins inside.",
   "story.speaker.ida": "Master Ida",
-  "story.speaker.glass-guardian": "Glass Guardian"
+  "story.speaker.glass-guardian": "Glass Guardian",
+  "scenario.s17": "The Lamplighter’s Workshop",
+  "scenario.s17.goal": "Carry the Lantern drawing from the attic to the workshop door",
+  "scenario.s17.intro": "Lumo’s workshop still stands on the hill above Glass Town. The Guardian Lantern drawing lies in the attic, and brass automatons sleep in the storeroom. Carry the drawing out to the door.",
+  "scenario.s17.outro": "The party has the drawing. In its margin Lumo sketched the Glass Guardian, a helper automaton, so the workshop wouldn’t be lonely.",
+  "room.s17.glassworks": "A. Glassworks",
+  "room.s17.storeroom": "B. Storeroom",
+  "room.s17.stairs": "C. Stairs",
+  "room.s17.attic": "D. Attic",
+  "event.s17.blueprint-up": "The drawing is lifted, and gremlins come running into the glassworks!",
+  "event.s17.automatons-wake": "The brass automatons wake up and start ticking.",
+  "event.s17.lever": "The winding key turns, and a helper automaton joins your side!",
+  "event.s17.dropped": "The carrier is worn out and puts the drawing down on the floor.",
+  "event.s17.key": "In the attic chest lies a crystal key with a mirror engraved on it."
 }

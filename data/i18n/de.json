@@ -1466,5 +1466,18 @@
   "event.s16.mirror-broken": "Pling! Ein Spiegel ist zersprungen und erloschen.",
   "event.s16.crate": "Ida öffnet eine Kiste auf dem Karren: „Für eure Mühe.“ Darin liegen Münzen.",
   "story.speaker.ida": "Meisterin Ida",
-  "story.speaker.glass-guardian": "Gläserner Wächter"
+  "story.speaker.glass-guardian": "Gläserner Wächter",
+  "scenario.s17": "Die Werkstatt des Laternenmachers",
+  "scenario.s17.goal": "Den Plan der Laterne vom Dachboden zur Werkstatttür tragen",
+  "scenario.s17.intro": "Lumos Werkstatt steht noch am Hang über der Glasstadt. Auf dem Dachboden liegt der Plan der Schutzlaterne, und im Lager schlafen Messingautomaten. Tragt den Plan hinaus zur Tür.",
+  "scenario.s17.outro": "Die Gruppe hat den Plan. Am Rand hat Lumo den Gläsernen Wächter gezeichnet, einen Gehilfen-Automaten, damit es in der Werkstatt nicht einsam ist.",
+  "room.s17.glassworks": "A. Glasbläserei",
+  "room.s17.storeroom": "B. Lager",
+  "room.s17.stairs": "C. Treppe",
+  "room.s17.attic": "D. Dachboden",
+  "event.s17.blueprint-up": "Der Plan ist aufgehoben, und Gremlins rennen in die Glasbläserei!",
+  "event.s17.automatons-wake": "Die Messingautomaten wachen auf und fangen an zu ticken.",
+  "event.s17.lever": "Der Aufziehschlüssel dreht sich, und ein Helfer-Automat steht jetzt auf eurer Seite!",
+  "event.s17.dropped": "Der Träger ist erschöpft und legt den Plan auf den Boden.",
+  "event.s17.key": "In der Truhe auf dem Dachboden liegt ein Kristallschlüssel, in den ein Spiegel graviert ist."
 }
