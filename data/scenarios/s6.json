@@ -54,7 +54,11 @@
       "traps": [{ "hex": [11, -3] }],
       "doors": [{ "hex": [15, -5], "to": "s6.lift" }, { "hex": [10, -1], "to": "s6.cart-niche" }],
       "spawns": [
-        { "monster": "stone-sentinel", "hex": [13, -4], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        {
+          "monster": "stone-sentinel",
+          "hex": [13, -4],
+          "by": { "2": "normal", "3": "normal", "4": "normal" }
+        },
         { "monster": "stone-sentinel", "hex": [14, -6], "by": { "4": "normal" } },
         { "monster": "night-moth", "hex": [10, -4], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "night-moth", "hex": [12, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
