@@ -542,6 +542,177 @@
           }
         ]
       }
+    },
+    {
+      "id": "elementalist.three-elements",
+      "level": 6,
+      "initiative": 67,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "consume": {
+              "element": "any",
+              "count": 2,
+              "area": {
+                "shape": "targetAndAdjacent"
+              },
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "any"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.elemental-shield",
+      "level": 6,
+      "initiative": 26,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 2,
+            "target": "allyOrSelf",
+            "range": 3,
+            "duration": "round",
+            "consume": {
+              "element": "earth",
+              "extraTarget": true
+            }
+          },
+          {
+            "type": "retaliate",
+            "value": 2,
+            "duration": "round",
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "x": 0,
+            "range": 3
+          },
+          {
+            "type": "infuse",
+            "element": "any"
+          }
+        ]
+      }
+    },
+    {
+      "id": "elementalist.star-rain",
+      "level": 7,
+      "initiative": 88,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 4,
+            "area": {
+              "shape": "targetAndAdjacent"
+            }
+          },
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 4,
+            "area": {
+              "shape": "targetAndAdjacent"
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "infuse",
+            "element": "fire"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "elementalist.elements-heart",
+      "level": 7,
+      "initiative": 14,
+      "top": {
+        "steps": [
+          {
+            "type": "infuse",
+            "element": "fire"
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": {
+              "uses": 3
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "range": 3,
+            "consume": {
+              "element": "any",
+              "add": {
+                "value": 1
+              }
+            }
+          }
+        ]
+      }
     }
   ]
 }
