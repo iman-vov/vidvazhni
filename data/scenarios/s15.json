@@ -84,7 +84,7 @@
   "flagEffects": [{ "flag": "bells.rung", "brokenObjects": ["s15.loom-1"] }],
   "secondary": [
     { "id": "s15.nine-rounds", "check": "withinRounds", "params": { "rounds": 9 }, "reward": { "gold": 5 } },
-    { "id": "s15.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } }
+    { "id": "s15.looms-down", "check": "loomsBrokenBeforeHalf", "reward": { "xp": 3 } }
   ],
   "events": [
     {
