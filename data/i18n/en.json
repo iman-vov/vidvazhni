@@ -1479,5 +1479,17 @@
   "event.s17.automatons-wake": "The brass automatons wake up and start ticking.",
   "event.s17.lever": "The winding key turns, and a helper automaton joins your side!",
   "event.s17.dropped": "The carrier is worn out and puts the drawing down on the floor.",
-  "event.s17.key": "In the attic chest lies a crystal key with a mirror engraved on it."
+  "event.s17.key": "In the attic chest lies a crystal key with a mirror engraved on it.",
+  "scenario.s18": "The Library of Light",
+  "scenario.s18.goal": "Get all heroes to the reading room with Lumo’s diary",
+  "scenario.s18.intro": "Lumo’s diary is kept in the Library of Light. The shelves there are alive: at night the books whisper, and anyone who makes a noise near them wakes the ghosts. Reach the reading room with the whole party.",
+  "scenario.s18.outro": "The party has the diary. Lumo wrote about the evening the Guardian Lantern was taken to Alba: he gave the town all his lights and was left in the dark workshop himself.",
+  "room.s18.lobby": "A. Entrance Hall",
+  "room.s18.stacks": "B. Hall of Shelves",
+  "room.s18.gallery": "C. Gallery",
+  "room.s18.reading-room": "D. Reading Room",
+  "event.s18.alarm": "A book woke up and shrieked! A ghost flies out of the shelf, and the whole hall wakes up.",
+  "event.s18.quiet": "Not a sound until round 5. Someone left a few coins on the windowsill.",
+  "event.s18.page": "A page from Lumo’s diary falls out of the shelf.",
+  "event.s18.key": "In the reading room chest lies a crystal key with a mirror engraved on it."
 }

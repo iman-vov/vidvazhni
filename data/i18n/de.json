@@ -1479,5 +1479,17 @@
   "event.s17.automatons-wake": "Die Messingautomaten wachen auf und fangen an zu ticken.",
   "event.s17.lever": "Der Aufziehschlüssel dreht sich, und ein Helfer-Automat steht jetzt auf eurer Seite!",
   "event.s17.dropped": "Der Träger ist erschöpft und legt den Plan auf den Boden.",
-  "event.s17.key": "In der Truhe auf dem Dachboden liegt ein Kristallschlüssel, in den ein Spiegel graviert ist."
+  "event.s17.key": "In der Truhe auf dem Dachboden liegt ein Kristallschlüssel, in den ein Spiegel graviert ist.",
+  "scenario.s18": "Die Bibliothek des Lichts",
+  "scenario.s18.goal": "Alle Helden in den Lesesaal mit Lumos Tagebuch bringen",
+  "scenario.s18.intro": "In der Bibliothek des Lichts liegt Lumos Tagebuch. Die Regale dort leben: Nachts flüstern die Bücher, und wer bei ihnen Lärm macht, weckt die Geister. Erreicht mit der ganzen Gruppe den Lesesaal.",
+  "scenario.s18.outro": "Die Gruppe hat das Tagebuch. Lumo schrieb über den Abend, an dem die Schutzlaterne nach Alba gebracht wurde: Er gab der Stadt all seine Lichter und blieb selbst in der dunklen Werkstatt zurück.",
+  "room.s18.lobby": "A. Eingangshalle",
+  "room.s18.stacks": "B. Regalsaal",
+  "room.s18.gallery": "C. Galerie",
+  "room.s18.reading-room": "D. Lesesaal",
+  "event.s18.alarm": "Ein Buch ist aufgewacht und kreischt! Ein Geist fliegt aus dem Regal, und der ganze Saal wacht auf.",
+  "event.s18.quiet": "Bis zur 5. Runde kein Mucks. Jemand hat ein paar Münzen auf dem Fensterbrett vergessen.",
+  "event.s18.page": "Aus dem Regal fällt eine Seite aus Lumos Tagebuch.",
+  "event.s18.key": "In der Truhe im Lesesaal liegt ein Kristallschlüssel, in den ein Spiegel graviert ist."
 }

@@ -1199,6 +1199,80 @@
         ]
       },
       "epilogue": { "id": "s17.epilogue", "speaker": "marta", "text": "Der Plan liegt ausgebreitet auf meinem Tisch. Jetzt schneide ich die Zwiebeln am einen Ende, weil am anderen die Laterne ist." }
+    },
+    "s18": {
+      "intro": [
+        { "id": "s18.intro.1", "speaker": "narrator", "text": "Die Bibliothek des Lichts steht neben der Akademie. Tagsüber strömt die Sonne durch hohe Fenster, und nachts flüstern die Bücher in den Regalen." },
+        { "id": "s18.intro.2", "speaker": "ida", "text": "Lumos Aufzeichnungen sind im Lesesaal, in einem alten Tagebuch. Aber geht leise: Die lebenden Bücher mögen keinen Lärm und rufen sofort die Wache." },
+        { "id": "s18.intro.3", "speaker": "elementalist", "text": "Das ist die Bibliothek meiner Akademie. Sagt bloß der Bibliothekarin nicht, dass ich hier bin. Ich schulde ihr noch drei Bücher." },
+        {
+          "id": "s18.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Ganz leise, auf Zehenspitzen.",
+          "variants": {
+            "warden": "Ich bin leise. Na gut, meine Rüstung nicht, aber ich schon.",
+            "wind-archer": "Geht wie ein Fuchs im Schnee. Erst die Ferse, dann die Zehen.",
+            "herbalist": "Hier riecht es nach Staub und altem Leim. Wer niesen muss, niest in den Ärmel.",
+            "rogue": "Schleichen kann ich. Endlich mal für eine gute Sache.",
+            "elementalist": "Ich kenne hier jedes Regal. Na ja, fast jedes. Na ja, die beim Ausgang.",
+            "tinker": "Bolt, kein einziges Bellen. Kein einziges. Nicht mal geflüstert."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s18.stacks",
+          "trigger": { "on": "doorOpened", "arg": "s18.stacks" },
+          "lines": [
+            { "id": "s18.stacks.1", "speaker": "narrator", "text": "Ein langer Saal voller Regale. Die Bücher rascheln leise mit den Seiten und murmeln im Schlaf, und zwischen den Regalen dösen Geister." }
+          ]
+        },
+        {
+          "id": "s18.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s18.whisper.1", "speaker": "glass-guardian", "text": "Pling. Wer geht zum Tagebuch des Meisters? Es gehört euch nicht. Der Meister kommt bald zurück." }
+          ]
+        },
+        {
+          "id": "s18.gallery",
+          "trigger": { "on": "doorOpened", "arg": "s18.gallery" },
+          "lines": [
+            { "id": "s18.gallery.1", "speaker": "narrator", "text": "Durch die Fenster der Galerie zieht es kalt. Seiten rascheln, als würde der Wind sie umblättern." }
+          ]
+        },
+        {
+          "id": "s18.reading",
+          "trigger": { "on": "doorOpened", "arg": "s18.reading-room" },
+          "lines": [
+            { "id": "s18.reading.1", "speaker": "narrator", "text": "Im Lesesaal liegt ein dickes Tagebuch auf dem Tisch. Auf den Deckel ist eine kleine Laterne gemalt." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s18.win.1", "speaker": "narrator", "text": "Die Gruppe steht am Tisch. Ida schlägt das Tagebuch auf, und Staub steigt auf, leicht wie Schneeflocken." },
+          { "id": "s18.win.2", "speaker": "ida", "text": "Das ist Lumos Handschrift. Hört zu." },
+          { "id": "s18.win.3", "speaker": "narrator", "text": "„Heute haben sie die Schutzlaterne nach Alba gebracht. Alle haben gesungen und gejubelt. Ich auch. Aber am Abend wurde es in der Werkstatt sehr dunkel.“" },
+          { "id": "s18.win.4", "speaker": "narrator", "text": "„Der Wächter fragt, warum ich keine Kerze anzünde. Ich habe gesagt, dass ich all meine Lichter der Laterne gegeben habe. Ich habe Angst.“" },
+          {
+            "id": "s18.win.5", "speaker": "hero", "pick": "random",
+            "text": "Er hatte Angst.",
+            "variants": {
+              "warden": "Er hat sein ganzes Licht der Stadt gegeben und nichts behalten. Ich hätte an dem Abend bei ihm gesessen.",
+              "wind-archer": "Eulen haben keine Angst vor der Nacht, weil sie darin sehen. Lumo hat darin gar nichts gesehen.",
+              "herbalist": "Jemand hätte mit einer Tasse heißem Tee vorbeikommen sollen. Keiner kam.",
+              "rogue": "Ich kenne das: allein im Dunkeln, und keiner klopft. Lies weiter.",
+              "elementalist": "Eines Tages geben wir ihm dieses Tagebuch zurück. Soll er selbst lesen, dass er nicht böse ist.",
+              "tinker": "Er hat seine eigenen Lichter in die Laterne gesteckt. Das machen Tüftler oft, und dann sind sie traurig."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s18.lose.1", "speaker": "marta", "text": "Die Bücher haben so einen Lärm gemacht, dass man euch hinausgeworfen hat. Macht nichts, die Bücher schlafen wieder ein, und ihr versucht es noch mal." },
+          { "id": "s18.lose.2", "speaker": "marta", "text": "Bleibt nicht neben den lebenden Regalen stehen, sonst wachen die Bücher auf. Geht auf Zehenspitzen und haltet euch in der Mitte des Saals." }
+        ]
+      },
+      "epilogue": { "id": "s18.epilogue", "speaker": "marta", "text": "Das Tagebuch habe ich in eine Truhe gesperrt. Es gehört seinem Besitzer zurück, und ich glaube, dem begegnen wir noch." }
     }
   }
 }

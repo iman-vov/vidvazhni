@@ -1199,6 +1199,80 @@
         ]
       },
       "epilogue": { "id": "s17.epilogue", "speaker": "marta", "text": "The drawing is spread out on my table. Now I chop onions on one end, because the Lantern is on the other." }
+    },
+    "s18": {
+      "intro": [
+        { "id": "s18.intro.1", "speaker": "narrator", "text": "The Library of Light stands next to the academy. By day the sun pours in through tall windows, and at night the books on the shelves whisper." },
+        { "id": "s18.intro.2", "speaker": "ida", "text": "Lumo’s notes are in the reading room, in an old diary. But go quietly: the living books hate noise and call the guards at once." },
+        { "id": "s18.intro.3", "speaker": "elementalist", "text": "This is my academy’s library. Just don’t tell the librarian I’m here. I still owe her three books." },
+        {
+          "id": "s18.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Quietly now, on tiptoe.",
+          "variants": {
+            "warden": "I’m quiet. Well, my armour isn’t, but I am.",
+            "wind-archer": "Walk like a fox on snow. Heel first, then toes.",
+            "herbalist": "It smells of dust and old glue in here. If you need to sneeze, sneeze into your sleeve.",
+            "rogue": "Sneaking I can do. At last it’s for a good cause.",
+            "elementalist": "I know every shelf here. Well, almost every one. Well, the ones near the exit.",
+            "tinker": "Bolt, not one bark. Not one. Not even a whisper of one."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s18.stacks",
+          "trigger": { "on": "doorOpened", "arg": "s18.stacks" },
+          "lines": [
+            { "id": "s18.stacks.1", "speaker": "narrator", "text": "A long hall of shelves. The books stir their pages and mumble in their sleep, and ghosts doze between the shelves." }
+          ]
+        },
+        {
+          "id": "s18.whisper",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s18.whisper.1", "speaker": "glass-guardian", "text": "Ding. Who goes to the master’s diary? It is not yours. The master will be back soon." }
+          ]
+        },
+        {
+          "id": "s18.gallery",
+          "trigger": { "on": "doorOpened", "arg": "s18.gallery" },
+          "lines": [
+            { "id": "s18.gallery.1", "speaker": "narrator", "text": "A cold draught blows through the gallery windows. Pages rustle, as if the wind were turning them." }
+          ]
+        },
+        {
+          "id": "s18.reading",
+          "trigger": { "on": "doorOpened", "arg": "s18.reading-room" },
+          "lines": [
+            { "id": "s18.reading.1", "speaker": "narrator", "text": "On the reading room table lies a thick diary with a little lantern drawn on the cover." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s18.win.1", "speaker": "narrator", "text": "The party is at the table. Ida opens the diary, and dust rises from it, light as snowflakes." },
+          { "id": "s18.win.2", "speaker": "ida", "text": "That’s Lumo’s handwriting. Listen." },
+          { "id": "s18.win.3", "speaker": "narrator", "text": "“Today they took the Guardian Lantern to Alba. Everyone sang and cheered. I cheered too. But in the evening the workshop got very dark.”" },
+          { "id": "s18.win.4", "speaker": "narrator", "text": "“The Guardian asks why I don’t light a candle. I told him I gave all my lights to the Lantern. I’m scared.”" },
+          {
+            "id": "s18.win.5", "speaker": "hero", "pick": "random",
+            "text": "He was scared.",
+            "variants": {
+              "warden": "He gave all his light to the town and kept none. I’d have sat with him that evening.",
+              "wind-archer": "Owls aren’t afraid of the night, because they can see in it. Lumo couldn’t see a thing.",
+              "herbalist": "Someone should have dropped by with a cup of hot tea. Nobody did.",
+              "rogue": "I know what that’s like: alone in the dark, and no one knocks. Read on.",
+              "elementalist": "One day we’ll give this diary back to him. Let him read for himself that he isn’t bad.",
+              "tinker": "He put his own lights in the Lantern instead of keeping them. Makers often do that, and then they’re sad."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s18.lose.1", "speaker": "marta", "text": "The books made such a racket that you were shown the door. Never mind, the books will fall asleep again, and you can try once more." },
+          { "id": "s18.lose.2", "speaker": "marta", "text": "Don’t stop next to the living shelves, or the books wake up. Tiptoe and keep to the middle of the hall." }
+        ]
+      },
+      "epilogue": { "id": "s18.epilogue", "speaker": "marta", "text": "I’ve locked the diary away in a chest. It ought to go back to its owner, and I have a feeling we’ll meet him yet." }
     }
   }
 }
