@@ -1,0 +1,24 @@
+{
+  "assets": [
+    { "file": "marta-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 } },
+    { "file": "bruno.png", "size": [1024, 1024], "use": "story scene portrait, waist-up" },
+    { "file": "bruno-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 } },
+    { "file": "bog-miller.png", "size": [1024, 1024], "use": "story scene portrait, waist-up" },
+    { "file": "shadowhand.png", "size": [1024, 1024], "use": "story scene portrait, waist-up" },
+    { "file": "lumo.png", "size": [1024, 1024], "use": "story scene portrait, waist-up", "status": "newlyDesignedPerUserClarification" },
+    { "file": "lumo-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 }, "status": "newlyDesignedPerUserClarification" },
+    { "file": "lina.png", "size": [1024, 1024], "use": "story scene portrait, waist-up", "status": "newlyDesignedPerUserClarification" },
+    { "file": "lina-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 }, "status": "newlyDesignedPerUserClarification" }
+    ,{ "file": "theo.png", "size": [1024, 1024], "use": "story scene portrait, waist-up", "status": "newlyDesignedPerUserClarification" }
+    ,{ "file": "theo-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 }, "status": "newlyDesignedPerUserClarification" }
+    ,{ "file": "heron.png", "size": [1024, 1024], "use": "story scene portrait, waist-up", "status": "newlyDesignedPerUserClarification" }
+    ,{ "file": "heron-token.png", "size": [512, 512], "use": "round speaker badge", "circle": { "cx": 256, "cy": 256, "r": 235 }, "status": "newlyDesignedPerUserClarification" }
+  ],
+  "references": {
+    "marta": "../../../camp/assets/marta.png",
+    "bruno": "../../../../../docs/art/meshy-batch-3/bog-miller-meshy.png",
+    "bog-miller": "../../../../../docs/art/meshy-batch-3/bog-miller-meshy.png",
+    "shadowhand": "../../../../../docs/art/meshy-batch-3/shadowhand-meshy.png"
+  },
+  "needsIdentityReference": []
+}

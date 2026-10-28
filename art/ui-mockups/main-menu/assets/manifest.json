@@ -11,6 +11,18 @@
     "size": [2172, 724],
     "alpha": true
   },
+  "buttonStates": {
+    "source": "../../pause-menu/assets/",
+    "size": [600, 112],
+    "alpha": true,
+    "nineSlice": { "left": 28, "top": 24, "right": 28, "bottom": 24 },
+    "items": {
+      "normal": "../../pause-menu/assets/button-normal.png",
+      "pressed": "../../pause-menu/assets/button-pressed.png",
+      "disabled": "../../pause-menu/assets/button-disabled.png"
+    },
+    "runtime": "Labels and icons are separate runtime layers."
+  },
   "icons": {
     "size": [128, 128],
     "alpha": true,
@@ -52,15 +64,24 @@
   "logos": {
     "uk": {
       "name": "Відважні",
-      "files": ["../../logos/uk/final.png"]
+      "file": "logo-uk.png",
+      "source": "../../logos/uk/final.png",
+      "size": [1774, 887],
+      "alpha": true
     },
     "en": {
       "name": "The Braveheart Guild",
-      "files": ["../../logos/en/v1.png", "../../logos/en/v2.png", "../../logos/en/v3.png"]
+      "file": "logo-en.png",
+      "source": "../../logos/en/v2.png",
+      "size": [1774, 887],
+      "alpha": true
     },
     "de": {
       "name": "Die Mutherzen",
-      "files": ["../../logos/de/v1.png", "../../logos/de/v2.png", "../../logos/de/v3.png"]
+      "file": "logo-de.png",
+      "source": "../../logos/de/v1.png",
+      "size": [1881, 836],
+      "alpha": true
     }
   }
 }

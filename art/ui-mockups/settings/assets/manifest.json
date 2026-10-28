@@ -1,0 +1,58 @@
+{
+  "screen": {
+    "generalPreview": "../v1.png",
+    "rulesPreview": "../rules-v1.png",
+    "canvas": { "width": 1448, "height": 1086 },
+    "format": "PNG RGBA",
+    "style": "flat matte slate #2C3A55, thin gold #D8A93A, even dark outline #2B2A33; one shadow tone; no gradient, bevel, or glow",
+    "previewNote": "Preview is a clean blank composition only. Runtime replaces its neutral panel/button surfaces with the available shared pause-menu PNGs below; no text, numbers, icons, or character art are baked into either preview.",
+    "sharedPanelPlacement": { "rect": [168, 100, 1112, 886], "source": "sharedComponents.panel", "scale": "9-slice; preserve pause-menu source corners and top well" },
+    "sharedActionButtonPlacement": { "rect": [994, 888, 216, 72], "source": "sharedComponents.buttonNormal", "scale": "9-slice; use pressed/disabled companions by state" }
+  },
+  "sharedComponents": {
+    "panel": { "path": "../../pause-menu/assets/panel.png", "status": "available", "use": "center settings container; preserve its published 9-slice" },
+    "buttonNormal": { "path": "../../pause-menu/assets/button-normal.png", "status": "available", "use": "runtime action buttons" },
+    "buttonPressed": { "path": "../../pause-menu/assets/button-pressed.png", "status": "available", "use": "pressed state" },
+    "buttonDisabled": { "path": "../../pause-menu/assets/button-disabled.png", "status": "available", "use": "disabled state" }
+  },
+  "assets": {
+    "toggleOn": { "path": "toggle-on.png", "size": [160, 72], "alpha": true, "purpose": "independent enabled boolean control; same footprint as off", "contentInset": [4, 4, 4, 4] },
+    "toggleOff": { "path": "toggle-off.png", "size": [160, 72], "alpha": true, "purpose": "independent disabled boolean control; same footprint as on", "contentInset": [4, 4, 4, 4] },
+    "sliderTrack": { "path": "slider-track.png", "size": [320, 24], "alpha": true, "purpose": "stretch-free volume/hint track; draw fill and clip thumb at runtime", "contentInset": [12, 0, 12, 0] },
+    "sliderThumb": { "path": "slider-thumb.png", "size": [56, 56], "alpha": true, "purpose": "volume/hint slider handle", "contentInset": [4, 4, 4, 4] },
+    "tabNormal": { "path": "tab-normal.png", "size": [300, 72], "alpha": true, "purpose": "unselected General/Sound/Rules tab", "nineSlice": { "left": 18, "top": 18, "right": 18, "bottom": 18 }, "textZone": [24, 12, 252, 48] },
+    "tabSelected": { "path": "tab-selected.png", "size": [300, 72], "alpha": true, "purpose": "selected tab", "nineSlice": { "left": 18, "top": 18, "right": 18, "bottom": 18 }, "textZone": [24, 12, 252, 48] },
+    "tabDisabled": { "path": "tab-disabled.png", "size": [300, 72], "alpha": true, "purpose": "disabled tab", "nineSlice": { "left": 18, "top": 18, "right": 18, "bottom": 18 }, "textZone": [24, 12, 252, 48] }
+  },
+  "runtimeContent": {
+    "tabs": [
+      { "id": "general", "rect": [238, 178, 300, 72], "label": "General", "selected": true },
+      { "id": "sound", "rect": [574, 178, 300, 72], "label": "Sound", "selected": false },
+      { "id": "rules", "rect": [910, 178, 300, 72], "label": "Rules", "selected": false }
+    ],
+    "general": {
+      "language": { "labelRect": [238, 304, 220, 64], "options": ["UK", "EN", "DE"], "optionRects": [[494, 304, 188, 64], [690, 304, 188, 64], [886, 304, 188, 64]] },
+      "quality": { "labelRect": [238, 396, 220, 64], "options": ["minimum", "medium", "maximum"], "optionRects": [[494, 396, 188, 64], [690, 396, 188, 64], [886, 396, 188, 64]] },
+      "heroHints": { "labelRect": [238, 496, 260, 48], "rows": [[238, 562, 464, 72], [746, 562, 464, 72], [238, 664, 464, 72], [746, 664, 464, 72], [238, 766, 464, 72], [746, 766, 464, 72]], "heroPortraitSlots": [[258, 570, 56, 56], [766, 570, 56, 56], [258, 672, 56, 56], [766, 672, 56, 56], [258, 774, 56, 56], [766, 774, 56, 56]], "controlType": "slider track + thumb or segmented hint level" },
+      "applyButton": [994, 912, 216, 72]
+    },
+    "sound": {
+      "rows": [{ "id": "music", "rect": [238, 354, 972, 72] }, { "id": "effects", "rect": [238, 476, 972, 72] }, { "id": "voice", "rect": [238, 598, 972, 72] }],
+      "sliderGeometry": { "coordinateSpace": "local-to-each-row", "labelRect": [20, 12, 532, 48], "trackRect": [632, 24, 320, 24], "thumbSize": [56, 56], "thumbCenterXRange": [660, 924] },
+      "applyButton": [994, 912, 216, 72]
+    },
+    "rules": {
+      "allDefault": true,
+      "rows": [
+        { "id": "elemental-orbs", "rect": [238, 346, 464, 80], "default": true },
+        { "id": "monster-intents", "rect": [746, 346, 464, 80], "default": true },
+        { "id": "initiative-die", "rect": [238, 478, 464, 80], "default": true },
+        { "id": "pick-up", "rect": [746, 478, 464, 80], "default": true },
+        { "id": "inspiration", "rect": [238, 610, 464, 80], "default": true },
+        { "id": "revive-friend", "rect": [746, 610, 464, 80], "default": true }
+      ],
+      "toggleRectWithinRow": [294, 4, 160, 72],
+      "applyButton": [994, 912, 216, 72]
+    }
+  }
+}

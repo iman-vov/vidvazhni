@@ -1,0 +1,54 @@
+{
+  "screen": "pass-curtain",
+  "format": "4:3",
+  "mockup": "../v1.png",
+  "integration": {
+    "purpose": "Opaque privacy curtain between players during secret card selection.",
+    "drawOrder": "Draw background first. Do not render the prior scene, HUD, hand, cards, card backs, or selection state beneath it.",
+    "contentPolicy": "All labels, names, counts, icons, intents, button text, and state indicators are runtime content."
+  },
+  "assets": [
+    {
+      "file": "background.png",
+      "size": [1448, 1086],
+      "transparent": false,
+      "purpose": "Opaque flat-matte warm parchment, timber, and slate privacy backdrop. Contains no UI, text, numbers, or gameplay data.",
+      "history": "history/background-pre-style-lock.png"
+    },
+    {
+      "file": "portrait-frame.png",
+      "size": [1254, 1254],
+      "transparent": true,
+      "purpose": "Neutral empty portrait frame; tint its slate fill at runtime with the selected hero color. Transparent center and exterior.",
+      "nineSlice": {
+        "capInsets": [155, 155, 155, 155],
+        "center": "transparent portrait aperture"
+      }
+    }
+  ],
+  "sharedComponents": {
+    "intentPanel": "../../pause-menu/assets/panel.png",
+    "readyButton": {
+      "normal": "../../pause-menu/assets/button-normal.png",
+      "pressed": "../../pause-menu/assets/button-pressed.png",
+      "disabled": "../../pause-menu/assets/button-disabled.png"
+    },
+    "icons": "../../../../docs/ui/icons.md",
+    "note": "Reuse existing SVG icons only. Do not copy, alter, or regenerate SVGs."
+  },
+  "heroSources": [
+    { "id": "warden", "file": "../../camp/assets/heroes/warden.png", "tint": "#3B6FB6" },
+    { "id": "wind-archer", "file": "../../camp/assets/heroes/wind-archer.png", "tint": "#2FA36B" },
+    { "id": "herbalist", "file": "../../camp/assets/heroes/herbalist.png", "tint": "#E0B040" },
+    { "id": "rogue", "file": "../../camp/assets/heroes/rogue.png", "tint": "#7E4FC4" },
+    { "id": "elementalist", "file": "../../camp/assets/heroes/elementalist.png", "tint": "#C23B4E" },
+    { "id": "tinker", "file": "../../camp/assets/heroes/tinker.png", "tint": "#A65E2E" }
+  ],
+  "runtimeLayout": "LAYOUT.md",
+  "secrecy": {
+    "opaqueBackgroundRequired": true,
+    "forbiddenUnderlay": ["previous scene", "previous HUD", "hand", "cards", "card backs", "selection state"],
+    "intentStripMayShow": ["coarse intent", "player presence", "ready state"],
+    "intentStripMustNotShow": ["card names", "card art", "initiative", "selected cards", "hand contents"]
+  }
+}

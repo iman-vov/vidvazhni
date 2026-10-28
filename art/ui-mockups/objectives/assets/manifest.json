@@ -1,0 +1,136 @@
+{
+  "screen": "objectives",
+  "sourceScreen": "../../scenario-hud/v5.png",
+  "layoutPreview": "../v1.png",
+  "notes": {
+    "integration": "Runtime draws all labels, counters and existing SVG icons over these empty PNG components.",
+    "history": "../history/objective-plate-glossy-v1.png is retained only as a superseded pre-style-lock version.",
+    "sharedComponents": {
+      "scenarioHud": "../../scenario-hud/v5.png",
+      "panelReference": "../../camp/assets/panel.png",
+      "buttonReference": "../../main-menu/assets/button-base.png"
+    },
+    "icons": "Existing SVGs are referenced only. No icon was copied, modified or generated."
+  },
+  "assets": [
+    {
+      "file": "objective-plate.png",
+      "size": [
+        2163,
+        324
+      ],
+      "transparent": true,
+      "purpose": "Primary universal objective plate: empty icon, title and counter zones.",
+      "contentBounds": [
+        4,
+        4,
+        2155,
+        316
+      ],
+      "nineSlice": {
+        "left": 330,
+        "top": 46,
+        "right": 420,
+        "bottom": 46,
+        "stretch": "Stretch only the central title section. Preserve both wells, dividers and outer corners."
+      },
+      "runtimeZones": {
+        "icon": [
+          42,
+          44,
+          245,
+          236
+        ],
+        "title": [
+          350,
+          52,
+          1360,
+          220
+        ],
+        "counter": [
+          1770,
+          52,
+          330,
+          220
+        ]
+      }
+    },
+    {
+      "file": "additional-objective-plate.png",
+      "size": [
+        2058,
+        302
+      ],
+      "transparent": true,
+      "purpose": "Smaller optional-objective plate using shared flat slate-and-gold geometry; empty icon and title zones only.",
+      "contentBounds": [
+        4,
+        4,
+        2050,
+        294
+      ],
+      "nineSlice": {
+        "left": 365,
+        "top": 44,
+        "right": 95,
+        "bottom": 44,
+        "stretch": "Stretch only the centre title section. Preserve the icon well, divider and outer corners."
+      },
+      "runtimeZones": {
+        "icon": [
+          50,
+          45,
+          255,
+          210
+        ],
+        "title": [
+          390,
+          52,
+          1550,
+          196
+        ]
+      }
+    }
+  ],
+  "objectiveMappings": [
+    {
+      "type": "kill-all",
+      "icon": "../../../../src/ui/icons/svg/objective-flag.svg",
+      "runtimeFields": [
+        "title"
+      ]
+    },
+    {
+      "type": "escort-lina-to-exit",
+      "icon": "../../../../src/ui/icons/svg/escort.svg",
+      "runtimeFields": [
+        "title"
+      ]
+    },
+    {
+      "type": "defend-mill-rounds",
+      "icon": "../../../../src/ui/icons/svg/defend-point.svg",
+      "runtimeFields": [
+        "title",
+        "counterCurrent",
+        "counterTotal"
+      ]
+    },
+    {
+      "type": "collect-crystals",
+      "icon": "../../../../src/ui/icons/svg/loot.svg",
+      "runtimeFields": [
+        "title",
+        "counterCurrent",
+        "counterTotal"
+      ]
+    },
+    {
+      "type": "escape",
+      "icon": "../../../../src/ui/icons/svg/door.svg",
+      "runtimeFields": [
+        "title"
+      ]
+    }
+  ]
+}
