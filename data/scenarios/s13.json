@@ -1,0 +1,199 @@
+{
+  "id": "s13",
+  "number": 13,
+  "draft": true,
+  "goal": {
+    "type": "defend",
+    "zone": "s13.pond",
+    "rounds": 7,
+    "counter": 8,
+    "counterName": "objective.fireflies"
+  },
+  "startRoom": "s13.glade",
+  "startHexes": [[3, 6], [4, 5], [5, 5], [4, 4]],
+  "introduces": ["fireflyPond"],
+  "specials": ["fireflyPond"],
+  "forkOrbs": { "atStart": [{ "orb": "air" }] },
+  "rooms": [
+    {
+      "id": "s13.glade",
+      "kind": "outdoor",
+      "hexes": [
+        [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7],
+        [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7],
+        [2, -1], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6],
+        [3, -1], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6],
+        [4, -2], [4, -1], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5],
+        [5, -2], [5, -1], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5],
+        [6, -3], [6, -2], [6, -1], [6, 0], [6, 1], [6, 2], [6, 3], [6, 4],
+        [7, -3], [7, -2], [7, -1], [7, 0], [7, 1], [7, 2], [7, 3], [7, 4],
+        [8, -4], [8, -3], [8, -2], [8, -1], [8, 0], [8, 1], [8, 2], [8, 3]
+      ],
+      "obstacles": [
+        { "hex": [2, 0], "model": "tree" },
+        { "hex": [6, -2], "model": "tree" },
+        { "hex": [1, 6], "model": "rock" },
+        { "hex": [7, 3], "model": "rock" },
+        { "hex": [2, 1], "model": "tree" },
+        { "hex": [6, -1], "model": "tree" }
+      ],
+      "spawns": [
+        { "monster": "night-moth", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [7, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [1, 3], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "night-moth", "hex": [5, -1], "by": { "4": "normal" } }
+      ],
+      "coins": [[4, 0], [8, 3]],
+      "chests": [{ "hex": [0, 0], "id": "s13.hollow", "loot": { "coins": 2 } }]
+    }
+  ],
+  "reward": { "goldEach": 20, "unlock": ["s15"], "closes": ["s12"], "flags": ["fireflies"] },
+  "zones": [
+    { "id": "s13.pond", "hexes": [[3, 2], [3, 3], [3, 4], [4, 1], [4, 2], [4, 3], [5, 1], [5, 2], [5, 3]] }
+  ],
+  "secondary": [
+    { "id": "s13.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } },
+    {
+      "id": "s13.bell-map",
+      "check": "chestOpened",
+      "params": { "chest": "s13.hollow" },
+      "reward": { "unlock": ["s14"] }
+    }
+  ],
+  "events": [
+    {
+      "id": "s13.wave-east",
+      "trigger": { "type": "round", "round": 2 },
+      "actions": [
+        { "type": "story", "text": "event.s13.wave-east" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [8, -1], [8, 1]],
+          "count": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [8, -1], [8, 1]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "4": "normal" },
+          "hexes": [[8, 0], [8, -1], [8, 1]]
+        }
+      ]
+    },
+    {
+      "id": "s13.wave-west",
+      "trigger": { "type": "round", "round": 3 },
+      "actions": [
+        { "type": "story", "text": "event.s13.wave-west" },
+        {
+          "type": "spawn",
+          "monster": "marsh-hopper",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[0, 4], [0, 3], [0, 5]],
+          "count": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "marsh-hopper",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[0, 4], [0, 3], [0, 5]]
+        },
+        {
+          "type": "spawn",
+          "monster": "marsh-hopper",
+          "by": { "4": "normal" },
+          "hexes": [[0, 4], [0, 3], [0, 5]]
+        }
+      ]
+    },
+    {
+      "id": "s13.wave-north",
+      "trigger": { "type": "round", "round": 4 },
+      "actions": [
+        { "type": "story", "text": "event.s13.wave-north" },
+        {
+          "type": "spawn",
+          "monster": "shadow-wraith",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[4, -2], [3, -1], [5, -2]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[4, -2], [3, -1], [5, -2]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "4": "normal" },
+          "hexes": [[4, -2], [3, -1], [5, -2]]
+        }
+      ]
+    },
+    {
+      "id": "s13.wave-all",
+      "trigger": { "type": "round", "round": 5 },
+      "actions": [
+        { "type": "story", "text": "event.s13.wave-all" },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[4, -2], [8, 0], [0, 4], [3, -1]],
+          "count": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[4, -2], [8, 0], [0, 4], [3, -1]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "4": "normal" },
+          "hexes": [[4, -2], [8, 0], [0, 4], [3, -1]]
+        }
+      ]
+    },
+    {
+      "id": "s13.wave-cultist",
+      "trigger": { "type": "round", "round": 6 },
+      "actions": [
+        { "type": "story", "text": "event.s13.wave-cultist" },
+        {
+          "type": "spawn",
+          "monster": "gloom-cultist",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[4, -2], [3, -1], [5, -2]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "2": "normal", "3": "normal", "4": "normal" },
+          "hexes": [[8, 0], [8, -1], [8, 1]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "3": "normal", "4": "normal" },
+          "hexes": [[0, 4], [0, 3], [0, 5]]
+        },
+        {
+          "type": "spawn",
+          "monster": "night-moth",
+          "by": { "4": "normal" },
+          "hexes": [[0, 4], [0, 3], [0, 5]]
+        }
+      ]
+    }
+  ]
+}

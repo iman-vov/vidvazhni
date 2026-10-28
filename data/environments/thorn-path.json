@@ -1,7 +1,7 @@
 {
   "id": "thorn-path",
   "kits": ["env-flora"],
-  "scenarios": ["s2"],
+  "scenarios": ["s2", "s13"],
   "edge": "forest",
   "season": "autumn",
   "surface": "forest-floor",
