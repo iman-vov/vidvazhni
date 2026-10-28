@@ -43,9 +43,19 @@
       "obstacles": [{ "hex": [8, -3], "model": "crate-stack" }],
       "doors": [{ "hex": [12, -4], "to": "s17.stairs" }],
       "spawns": [
-        { "monster": "brass-automaton", "hex": [10, -2], "by": { "2": "normal", "3": "elite", "4": "elite" } },
-        { "monster": "brass-automaton", "hex": [9, -3], "by": { "3": "normal", "4": "normal" } },
-        { "monster": "brass-automaton", "hex": [9, 0], "by": { "4": "normal" } }
+        {
+          "monster": "brass-automaton",
+          "hex": [10, -2],
+          "by": { "2": "normal", "3": "elite", "4": "elite" },
+          "asleep": true
+        },
+        {
+          "monster": "brass-automaton",
+          "hex": [9, -3],
+          "by": { "3": "normal", "4": "normal" },
+          "asleep": true
+        },
+        { "monster": "brass-automaton", "hex": [9, 0], "by": { "4": "normal" }, "asleep": true }
       ],
       "objects": [
         {

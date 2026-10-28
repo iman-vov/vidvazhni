@@ -61,9 +61,14 @@
       ]
     }
   ],
-  "reward": { "goldEach": 35, "unlock": ["s21"], "flags": ["ally.guardian"] },
+  "reward": { "goldEach": 35, "items": ["glass-shield"], "unlock": ["s21"], "flags": ["ally.guardian"] },
   "secondary": [
-    { "id": "s20.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } },
+    {
+      "id": "s20.heart-intact",
+      "check": "objectIntact",
+      "params": { "object": "s20.heart" },
+      "reward": { "xp": 3 }
+    },
     { "id": "s20.ten-rounds", "check": "withinRounds", "params": { "rounds": 10 }, "reward": { "gold": 5 } }
   ],
   "events": [

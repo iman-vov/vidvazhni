@@ -20,7 +20,8 @@
       "obstacles": [{ "hex": [4, -2], "model": "table" }],
       "doors": [{ "hex": [7, -1], "to": "s18.stacks" }],
       "spawns": [
-        { "monster": "gremlin", "hex": [5, 0], "by": { "2": "normal", "3": "normal", "4": "normal" } }
+        { "monster": "gremlin", "hex": [5, 0], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "gremlin", "hex": [5, -2], "by": { "4": "normal" } }
       ],
       "coins": [[6, 0]]
     },
@@ -37,8 +38,19 @@
       ],
       "doors": [{ "hex": [17, -6], "to": "s18.gallery" }],
       "spawns": [
-        { "monster": "shadow-wraith", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "elite" } },
-        { "monster": "shadow-wraith", "hex": [13, -4], "by": { "4": "normal" } }
+        {
+          "monster": "shadow-wraith",
+          "hex": [15, -5],
+          "by": { "2": "normal", "3": "elite", "4": "elite" },
+          "asleep": true
+        },
+        {
+          "monster": "shadow-wraith",
+          "hex": [13, -4],
+          "by": { "3": "normal", "4": "normal" },
+          "asleep": true
+        },
+        { "monster": "shadow-wraith", "hex": [16, -5], "by": { "4": "normal" }, "asleep": true }
       ],
       "coins": [[16, -8]],
       "chests": [
@@ -66,9 +78,9 @@
       "obstacles": [{ "hex": [19, -8], "model": "pillar" }],
       "doors": [{ "hex": [24, -10], "to": "s18.reading-room" }],
       "spawns": [
-        { "monster": "gloom-cultist", "hex": [22, -9], "by": { "2": "normal", "3": "normal", "4": "elite" } },
-        { "monster": "gloom-cultist", "hex": [21, -9], "by": { "4": "normal" } },
-        { "monster": "brass-automaton", "hex": [23, -8], "by": { "3": "elite" } }
+        { "monster": "gloom-cultist", "hex": [22, -9], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "gloom-cultist", "hex": [21, -9], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "brass-automaton", "hex": [23, -8], "by": { "3": "elite", "4": "normal" } }
       ]
     },
     {
@@ -82,7 +94,13 @@
       "chests": [{ "hex": [28, -11], "id": "s18.key-chest", "loot": { "coins": 1 } }]
     }
   ],
-  "reward": { "goldEach": 20, "unlock": ["s20"], "closes": ["s17"], "flags": ["diary"] },
+  "reward": {
+    "goldEach": 20,
+    "items": ["prism-lens"],
+    "unlock": ["s20"],
+    "closes": ["s17"],
+    "flags": ["diary"]
+  },
   "zones": [{ "id": "s18.desk", "hexes": [[28, -13], [28, -12], [27, -12], [27, -11]] }],
   "secondary": [
     { "id": "s18.pages", "check": "chestOpened", "params": { "chest": "s18.page-3" }, "reward": { "xp": 3 } },
@@ -96,15 +114,16 @@
   "events": [
     {
       "id": "s18.alarm",
-      "trigger": { "type": "heroEnters", "hexes": [[11, -3], [13, -4]] },
+      "trigger": { "type": "alarm" },
       "actions": [
         { "type": "story", "text": "event.s18.alarm" },
         {
           "type": "spawn",
           "monster": "shadow-wraith",
           "by": { "2": "normal", "3": "normal", "4": "normal" },
-          "hexes": [[12, -6], [12, -4]]
-        }
+          "hexes": [[12, -4], [11, -3], [13, -5]]
+        },
+        { "type": "wake", "room": "s18.stacks" }
       ]
     }
   ]
