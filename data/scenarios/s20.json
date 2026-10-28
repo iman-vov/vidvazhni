@@ -62,6 +62,7 @@
     }
   ],
   "reward": { "goldEach": 35, "items": ["glass-shield"], "unlock": ["s21"], "flags": ["ally.guardian"] },
+  "flagEffects": [{ "flag": "mirrors.aligned", "bossShield": { "boss": "glass-guardian", "shield": 0 } }],
   "secondary": [
     {
       "id": "s20.heart-intact",

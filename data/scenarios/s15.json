@@ -7,7 +7,7 @@
   "startHexes": [[0, 2], [0, 3], [0, 4], [1, 3]],
   "introduces": ["fogLooms"],
   "specials": ["fogLooms"],
-  "forkOrbs": { "eachRound": [{ "orb": "air", "source": "s15.loom-1" }] },
+  "forkOrbs": { "eachRound": [{ "orb": "air", "source": "s15.loom-2" }] },
   "rooms": [
     {
       "id": "s15.alley",
@@ -81,6 +81,7 @@
     }
   ],
   "reward": { "goldEach": 35, "items": ["mist-pearl", "queen-veil"], "unlock": ["s21"] },
+  "flagEffects": [{ "flag": "bells.rung", "brokenObjects": ["s15.loom-1"] }],
   "secondary": [
     { "id": "s15.nine-rounds", "check": "withinRounds", "params": { "rounds": 9 }, "reward": { "gold": 5 } },
     { "id": "s15.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } }
