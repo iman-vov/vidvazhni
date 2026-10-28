@@ -1350,6 +1350,79 @@
         ]
       },
       "epilogue": { "id": "s19.epilogue", "speaker": "marta", "text": "The crystal die sparkles like a drop of dew. They say it can turn bad luck upside down." }
+    },
+    "s20": {
+      "intro": [
+        { "id": "s20.intro.1", "speaker": "narrator", "text": "Deep beneath Glass Town there is a crystal dome. A steady ticking comes from it: tick-tock, tick-tock, like a glass heart beating." },
+        { "id": "s20.intro.2", "speaker": "ida", "text": "The Guardian is down there. He’s still waiting for Lumo. And a black moth sits in his chest and won’t let him wake up." },
+        { "id": "s20.intro.3", "speaker": "marta", "text": "The Guardian isn’t a villain, he’s just been waiting a very long time. Break through his shield and the moth will fly out. Then protect his heart." },
+        {
+          "id": "s20.intro.4", "speaker": "hero", "pick": "random",
+          "text": "To the dome!",
+          "variants": {
+            "warden": "Guard against guard. I’ll be polite, but I won’t lower my shield.",
+            "wind-archer": "Arrows bounce off glass. I’ll aim for the seams in the crystal.",
+            "herbalist": "I’ve brought bandages, glue and mint tea. I’m not sure which of them mends glass.",
+            "rogue": "A crystal giant. I don’t steal giants. But I can have a close look.",
+            "elementalist": "Crystal loves earth. There’s earth in these columns, I can feel it.",
+            "tinker": "An automaton Lumo made himself. Bolt, when he wakes up, mind your manners."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s20.dome",
+          "trigger": { "on": "doorOpened", "arg": "s20.dome" },
+          "lines": [
+            { "id": "s20.dome.1", "speaker": "narrator", "text": "The Glass Guardian stands in the middle of the dome. A violet heart glows faintly in his chest, and a black moth flutters beside it." },
+            { "id": "s20.dome.2", "speaker": "glass-guardian", "text": "Ding. The workshop is closed. Master Lumo will be back soon. Please go away." },
+            { "id": "s20.dome.3", "speaker": "warden", "text": "Colleague, I am the Warden of Alba. I salute you. And now, forgive me, I’ll have to knock on your shield." }
+          ]
+        },
+        {
+          "id": "s20.half",
+          "trigger": { "on": "bossHalfHp", "arg": "glass-guardian" },
+          "lines": [
+            { "id": "s20.half.1", "speaker": "narrator", "text": "The crystal cracked, and the black moth flew out of the Guardian’s chest. The Guardian shuddered and lowered his arms." },
+            { "id": "s20.half.2", "speaker": "glass-guardian", "text": "Oh. I am awake. The moths are coming for my heart! Please protect it. Three strokes of the clock, and they will give up." }
+          ]
+        },
+        {
+          "id": "s20.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s20.first-moth.1", "speaker": "narrator", "text": "The moth turned pale and settled on the Guardian’s shoulder. He stroked it carefully with a crystal finger." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s20.win.1", "speaker": "narrator", "text": "The last moth turned pale. The Guardian knelt down on one knee, and his heart glowed steady and warm." },
+          { "id": "s20.win.2", "speaker": "glass-guardian", "text": "Thank you. I am the Guardian. Master Lumo made me so the workshop would not be lonely. I have waited for him for forty years." },
+          { "id": "s20.win.3", "speaker": "glass-guardian", "text": "This is the last thing I remember. Look." },
+          { "id": "s20.win.4", "speaker": "narrator", "text": "A picture appears in the crystal. People from Alba are carrying the Guardian Lantern down the crystal road, and everyone is singing." },
+          { "id": "s20.win.5", "speaker": "narrator", "text": "And Lumo stands in the doorway of the dark workshop. He says, “Guard the workshop, Guardian. I’ll be back soon.” And he walks into the night alone, without a single light." },
+          {
+            "id": "s20.win.6", "speaker": "hero", "pick": "random",
+            "text": "He walked into the dark.",
+            "variants": {
+              "warden": "You kept an honest watch, colleague. From now on we keep it together.",
+              "wind-archer": "Forty years waiting by the door. Only the most loyal dogs wait like that. And friends.",
+              "herbalist": "I’ll fill the cracks in your crystal with honey and resin. Don’t worry, it doesn’t sting.",
+              "rogue": "A glass shield as a present? Nobody’s ever given me anything before. Not honestly, anyway.",
+              "elementalist": "Forty years alone in the dark, and his heart never went out. Now that’s real magic.",
+              "tinker": "Your gears are clean, Guardian. You’ve looked after yourself all these years, haven’t you?"
+            }
+          },
+          { "id": "s20.win.7", "speaker": "glass-guardian", "text": "I will come with you. I know where the moths have flown: west, to the Shadow Tower near Alba. The master is there." },
+          { "id": "s20.win.8", "speaker": "narrator", "text": "Black moths rose from under the dome and flew west. Behind them a dark mist creeps down from the mountains. It is heading for the city." }
+        ],
+        "defeat": [
+          { "id": "s20.lose.1", "speaker": "marta", "text": "The Guardian is as strong as a mountain. Rest, then try again: he’s waited forty years, he can wait a day." },
+          { "id": "s20.lose.2", "speaker": "marta", "text": "Ranged attacks bounce back off him, so get in close. And once the moth flies out, stand between the windows and his heart." }
+        ]
+      },
+      "epilogue": { "id": "s20.epilogue", "speaker": "marta", "text": "The moths are flying to the Shadow Tower, and the mist is coming for Alba behind them. Shut the shutters, Brave Ones, and I’ll put on my biggest pot of soup. The Guardian has promised to stand by the door. We’ll defend the town together." }
     }
   }
 }

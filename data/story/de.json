@@ -1350,6 +1350,79 @@
         ]
       },
       "epilogue": { "id": "s19.epilogue", "speaker": "marta", "text": "Der Kristallwürfel funkelt wie ein Tautropfen. Es heißt, er kann Pech auf den Kopf stellen." }
+    },
+    "s20": {
+      "intro": [
+        { "id": "s20.intro.1", "speaker": "narrator", "text": "Tief unter der Glasstadt liegt eine Kristallkuppel. Von dort klingt ein gleichmäßiges Ticken: tick-tack, tick-tack, wie ein schlagendes Glasherz." },
+        { "id": "s20.intro.2", "speaker": "ida", "text": "Dort ist der Wächter. Er wartet immer noch auf Lumo. Und in seiner Brust sitzt ein schwarzer Falter und lässt ihn nicht aufwachen." },
+        { "id": "s20.intro.3", "speaker": "marta", "text": "Der Wächter ist kein Bösewicht, er hat nur sehr lange gewartet. Durchbrecht seinen Schild, dann fliegt der Falter heraus. Und danach beschützt ihr sein Herz." },
+        {
+          "id": "s20.intro.4", "speaker": "hero", "pick": "random",
+          "text": "Auf zur Kuppel!",
+          "variants": {
+            "warden": "Wächter gegen Wächter. Ich bleibe höflich, aber den Schild senke ich nicht.",
+            "wind-archer": "Pfeile prallen von Glas ab. Ich ziele auf die Fugen im Kristall.",
+            "herbalist": "Ich habe Verbände, Leim und Minztee dabei. Ich weiß nur nicht, was davon Glas heilt.",
+            "rogue": "Ein Kristallriese. Riesen klaue ich nicht. Aber anschauen darf man ihn ja.",
+            "elementalist": "Kristall liebt Erde. In den Säulen hier steckt Erde, ich spüre sie.",
+            "tinker": "Ein Automat, den Lumo selbst gebaut hat. Bolt, wenn er aufwacht, benimm dich."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s20.dome",
+          "trigger": { "on": "doorOpened", "arg": "s20.dome" },
+          "lines": [
+            { "id": "s20.dome.1", "speaker": "narrator", "text": "In der Mitte der Kuppel steht der Gläserne Wächter. In seiner Brust glimmt schwach ein violettes Herz, und daneben flattert ein schwarzer Falter." },
+            { "id": "s20.dome.2", "speaker": "glass-guardian", "text": "Pling. Die Werkstatt ist geschlossen. Meister Lumo kommt bald zurück. Bitte geht weg." },
+            { "id": "s20.dome.3", "speaker": "warden", "text": "Herr Kollege, ich bin der Hüter von Alba. Ich salutiere. Und jetzt verzeih, ich muss an deinen Schild klopfen." }
+          ]
+        },
+        {
+          "id": "s20.half",
+          "trigger": { "on": "bossHalfHp", "arg": "glass-guardian" },
+          "lines": [
+            { "id": "s20.half.1", "speaker": "narrator", "text": "Der Kristall bekam einen Sprung, und der schwarze Falter flog aus der Brust des Wächters. Der Wächter zuckte zusammen und ließ die Arme sinken." },
+            { "id": "s20.half.2", "speaker": "glass-guardian", "text": "Oh. Ich bin wach. Die Falter fliegen zu meinem Herzen! Bitte beschützt es. Drei Glockenschläge, dann geben sie auf." }
+          ]
+        },
+        {
+          "id": "s20.first-moth",
+          "trigger": { "on": "monsterKilled", "arg": "night-moth" },
+          "lines": [
+            { "id": "s20.first-moth.1", "speaker": "narrator", "text": "Der Falter wurde blass und setzte sich dem Wächter auf die Schulter. Der streichelte ihn vorsichtig mit einem Kristallfinger." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s20.win.1", "speaker": "narrator", "text": "Der letzte Falter ist blass geworden. Der Wächter ließ sich auf ein Knie nieder, und sein Herz leuchtete ruhig und warm." },
+          { "id": "s20.win.2", "speaker": "glass-guardian", "text": "Danke. Ich bin der Wächter. Meister Lumo hat mich gebaut, damit es in der Werkstatt nicht einsam ist. Ich warte seit vierzig Jahren auf ihn." },
+          { "id": "s20.win.3", "speaker": "glass-guardian", "text": "Das ist das Letzte, woran ich mich erinnere. Seht her." },
+          { "id": "s20.win.4", "speaker": "narrator", "text": "Im Kristall erscheint ein Bild. Leute aus Alba bringen die Schutzlaterne über die Kristallstraße, und alle singen." },
+          { "id": "s20.win.5", "speaker": "narrator", "text": "Und Lumo steht in der Tür der dunklen Werkstatt. Er sagt: „Bewach die Werkstatt, Wächter. Ich bin bald zurück.“ Und er geht allein in die Nacht, ohne ein einziges Licht." },
+          {
+            "id": "s20.win.6", "speaker": "hero", "pick": "random",
+            "text": "Er ist ins Dunkle gegangen.",
+            "variants": {
+              "warden": "Du hast ehrlich Wache gehalten, Kollege. Ab jetzt halten wir sie zusammen.",
+              "wind-archer": "Vierzig Jahre an der Tür warten. So warten nur die treuesten Hunde. Und Freunde.",
+              "herbalist": "Die Risse im Kristall streiche ich mit Honig und Harz zu. Keine Angst, das brennt nicht.",
+              "rogue": "Ein Glasschild als Geschenk? Mir hat noch nie jemand etwas geschenkt. Jedenfalls nicht ehrlich.",
+              "elementalist": "Vierzig Jahre allein im Dunkeln, und sein Herz ist nie erloschen. Das ist echte Magie.",
+              "tinker": "Deine Zahnräder sind sauber, Wächter. Du hast dich all die Jahre selbst gepflegt, stimmt’s?"
+            }
+          },
+          { "id": "s20.win.7", "speaker": "glass-guardian", "text": "Ich komme mit euch. Ich weiß, wohin die Falter geflogen sind: nach Westen, zum Schattenturm bei Alba. Dort ist der Meister." },
+          { "id": "s20.win.8", "speaker": "narrator", "text": "Unter der Kuppel stiegen schwarze Falter auf und flogen nach Westen. Hinter ihnen kriecht dunkler Nebel von den Bergen herab. Er zieht auf die Stadt zu." }
+        ],
+        "defeat": [
+          { "id": "s20.lose.1", "speaker": "marta", "text": "Der Wächter ist stark wie ein Berg. Ruht euch aus und versucht es noch mal: Er hat vierzig Jahre gewartet, da wartet er auch einen Tag." },
+          { "id": "s20.lose.2", "speaker": "marta", "text": "Fernangriffe prallen von ihm zurück, also geht nah ran. Und wenn der Falter herausgeflogen ist, stellt euch zwischen die Fenster und sein Herz." }
+        ]
+      },
+      "epilogue": { "id": "s20.epilogue", "speaker": "marta", "text": "Die Falter fliegen zum Schattenturm, und hinter ihnen zieht der Nebel auf Alba zu. Schließt die Fensterläden, ihr Mutigen, und ich setze den größten Suppenkessel auf. Der Wächter hat versprochen, an der Tür zu stehen. Wir verteidigen die Stadt zusammen." }
     }
   }
 }

@@ -1501,5 +1501,16 @@
   "event.s19.mirror-turn": "The mirror turns, and the beam falls a new way.",
   "event.s19.shard-moth": "A dark mirror cracks, and a moth flies out!",
   "event.s19.beam": "All three mirrors face the right way! The beam has opened the crystal door.",
-  "event.s19.die": "A crystal die rests on a cushion in the back room."
+  "event.s19.die": "A crystal die rests on a cushion in the back room.",
+  "scenario.s20": "The Glass Guardian",
+  "scenario.s20.goal": "Free the Glass Guardian from the moth, then protect his heart for 3 rounds",
+  "scenario.s20.intro": "Under Glass Town, in a crystal dome, stands the Glass Guardian, Lumo’s helper automaton. A black moth in his chest won’t let him wake. Break through his shield, then keep his crystal heart safe from the moths.",
+  "scenario.s20.outro": "The Guardian woke up and showed a memory: the Guardian Lantern was taken to Alba, and Lumo walked out of the dark workshop into the night without a single light. The Guardian joins the party, while the black moths fly to the Shadow Tower and the mist follows them towards the city.",
+  "room.s20.gallery": "A. Automaton Gallery",
+  "room.s20.dome": "B. Crystal Dome",
+  "event.s20.no-shield": "The Mirror Hall has already cracked the Guardian’s shield. He stands without it.",
+  "event.s20.ally": "The moth has flown out of the Guardian’s chest! Now he is your friend. Protect his heart for 3 rounds.",
+  "event.s20.wave": "Moths fly in through the dome windows, straight for the Guardian’s heart!",
+  "event.s20.heart-safe": "The clock strikes for the third time. The moths give up, and the Guardian’s heart is safe.",
+  "event.s20.gift": "The Guardian gives you the Glass Shield."
 }

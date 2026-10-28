@@ -1501,5 +1501,16 @@
   "event.s19.mirror-turn": "Der Spiegel dreht sich, und der Strahl fällt anders.",
   "event.s19.shard-moth": "Ein dunkler Spiegel zerspringt, und ein Falter fliegt heraus!",
   "event.s19.beam": "Alle drei Spiegel stehen richtig! Der Strahl hat die Kristalltür geöffnet.",
-  "event.s19.die": "In der Kammer liegt ein Kristallwürfel auf einem Kissen."
+  "event.s19.die": "In der Kammer liegt ein Kristallwürfel auf einem Kissen.",
+  "scenario.s20": "Der Gläserne Wächter",
+  "scenario.s20.goal": "Den Gläsernen Wächter vom Falter befreien und dann sein Herz 3 Runden lang beschützen",
+  "scenario.s20.intro": "Unter der Glasstadt steht in einer Kristallkuppel der Gläserne Wächter, Lumos Gehilfen-Automat. Ein schwarzer Falter in seiner Brust lässt ihn nicht aufwachen. Durchbrecht seinen Schild und beschützt dann sein Kristallherz vor den Faltern.",
+  "scenario.s20.outro": "Der Wächter ist aufgewacht und hat eine Erinnerung gezeigt: Die Schutzlaterne wurde nach Alba gebracht, und Lumo ging ohne ein einziges Licht aus der dunklen Werkstatt in die Nacht. Der Wächter schließt sich der Gruppe an, die schwarzen Falter fliegen zum Schattenturm, und der Nebel zieht hinter ihnen auf die Stadt zu.",
+  "room.s20.gallery": "A. Automatengalerie",
+  "room.s20.dome": "B. Kristallkuppel",
+  "event.s20.no-shield": "Der Spiegelsaal hat den Schild des Wächters schon zerbrochen. Er steht ohne Schild da.",
+  "event.s20.ally": "Der Falter ist aus der Brust des Wächters geflogen! Jetzt ist er euer Freund. Beschützt sein Herz 3 Runden lang.",
+  "event.s20.wave": "Durch die Fenster der Kuppel fliegen Falter, direkt auf das Herz des Wächters zu!",
+  "event.s20.heart-safe": "Die Uhr schlägt zum dritten Mal. Die Falter geben auf, und das Herz des Wächters ist heil.",
+  "event.s20.gift": "Der Wächter schenkt euch den Glasschild."
 }
