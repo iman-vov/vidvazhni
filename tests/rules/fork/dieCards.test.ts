@@ -119,6 +119,7 @@ describe('«Карти з X» (dieCards)', () => {
       [
         'elementalist.unstable-orb', 'elementalist.wild-surge', 'rogue.dodge', 'rogue.fate-strike', 'rogue.risky-strike', 'tinker.homemade-charge',
         'rogue.lucky-throw', 'elementalist.wild-spark', 'tinker.crossbow',
+        'rogue.shadow-behind', 'rogue.full-pockets', 'rogue.moonless-night',
       ].sort(),
     );
     for (const cd of xCards) {

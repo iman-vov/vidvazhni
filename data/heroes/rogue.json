@@ -500,6 +500,171 @@
           }
         ]
       }
+    },
+    {
+      "id": "rogue.shadow-behind",
+      "level": 6,
+      "initiative": 62,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "bonuses": [
+              {
+                "if": "allyAdjacentToTarget",
+                "attack": 2
+              }
+            ],
+            "consume": {
+              "element": "air",
+              "then": [
+                {
+                  "type": "condition",
+                  "condition": "invisible",
+                  "target": "self"
+                }
+              ]
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4,
+            "jump": true
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.full-pockets",
+      "level": 6,
+      "initiative": 24,
+      "top": {
+        "steps": [
+          {
+            "type": "loot",
+            "range": 3
+          },
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true
+          },
+          {
+            "type": "loot",
+            "range": 1,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "x": 0,
+            "range": 3,
+            "consume": {
+              "element": "air",
+              "add": {
+                "targets": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rogue.shadow-dance",
+      "level": 7,
+      "initiative": 66,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3
+          },
+          {
+            "type": "teleport",
+            "range": 3
+          },
+          {
+            "type": "attack",
+            "value": 3
+          },
+          {
+            "type": "teleport",
+            "range": 3
+          },
+          {
+            "type": "attack",
+            "value": 3,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "air"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "rogue.moonless-night",
+      "level": 7,
+      "initiative": 10,
+      "top": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "invisible",
+            "target": "alliesInRadius",
+            "radius": 3
+          },
+          {
+            "type": "move",
+            "value": 3,
+            "jump": true,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "x": 1,
+            "bonuses": [
+              {
+                "if": "targetHasNoOtherEnemyAdjacent",
+                "attack": 2
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
