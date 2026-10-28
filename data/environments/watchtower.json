@@ -1,6 +1,6 @@
 {
   "id": "watchtower",
-  "scenarios": ["s4", "s19"],
+  "scenarios": ["s4", "s19", "s14"],
   "edge": "tower",
   "surface": "worn-stone",
   "boundary": "walls",

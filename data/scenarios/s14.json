@@ -1,0 +1,122 @@
+{
+  "id": "s14",
+  "number": 14,
+  "draft": true,
+  "goal": {
+    "type": "objectStates",
+    "objects": [
+      { "id": "s14.bell-1", "state": "rung" },
+      { "id": "s14.bell-2", "state": "rung" },
+      { "id": "s14.bell-3", "state": "rung" }
+    ],
+    "zone": "s14.roof"
+  },
+  "startRoom": "s14.porch",
+  "startHexes": [[4, -1], [4, 0], [4, 1], [4, 2]],
+  "introduces": ["risingWater", "deepWater"],
+  "specials": ["risingWater"],
+  "rooms": [
+    {
+      "id": "s14.porch",
+      "kind": "indoor",
+      "hexes": [
+        [4, -1], [4, 0], [4, 1], [4, 2], [5, -1], [5, 0], [5, 1], [5, 2],
+        [6, -2], [6, -1], [6, 0], [6, 1], [7, -2], [7, -1], [7, 0], [7, 1],
+        [8, -3], [8, -2], [8, -1], [8, 0], [9, -1]
+      ],
+      "terrain": [{ "hex": [6, -2], "terrain": "water" }],
+      "doors": [{ "hex": [9, -1], "to": "s14.belfry" }],
+      "spawns": [
+        { "monster": "bog-slime", "hex": [7, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "bog-slime", "hex": [8, -2], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "marsh-hopper", "hex": [8, 0], "by": { "2": "normal", "3": "normal", "4": "elite" } },
+        { "monster": "marsh-hopper", "hex": [7, 1], "by": { "4": "normal" } }
+      ],
+      "coins": [[5, -1]]
+    },
+    {
+      "id": "s14.belfry",
+      "kind": "indoor",
+      "hexes": [
+        [10, -5], [10, -4], [10, -3], [10, -2], [10, -1], [10, 0], [11, -5], [11, -4],
+        [11, -3], [11, -2], [11, -1], [11, 0], [12, -6], [12, -5], [12, -4], [12, -3],
+        [12, -2], [12, -1], [13, -6], [13, -5], [13, -4], [13, -3], [13, -2], [13, -1],
+        [14, -7], [14, -6], [14, -5], [14, -4], [14, -3], [14, -2], [15, -7], [15, -6],
+        [15, -5], [15, -4], [15, -3], [15, -2], [16, -6]
+      ],
+      "obstacles": [{ "hex": [12, -4], "model": "pillar" }, { "hex": [13, -3], "model": "pillar" }],
+      "doors": [{ "hex": [16, -6], "to": "s14.stairs" }],
+      "spawns": [
+        { "monster": "shadow-wraith", "hex": [14, -5], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "shadow-wraith", "hex": [13, -1], "by": { "3": "normal", "4": "normal" } },
+        { "monster": "shadow-wraith", "hex": [15, -3], "by": { "4": "normal" } }
+      ],
+      "objects": [
+        {
+          "hex": [11, -5],
+          "id": "s14.bell-1",
+          "kind": "bell",
+          "state": "still",
+          "blocks": true,
+          "interact": { "half": "top", "to": "rung" }
+        },
+        {
+          "hex": [14, -7],
+          "id": "s14.bell-2",
+          "kind": "bell",
+          "state": "still",
+          "blocks": true,
+          "interact": { "half": "top", "to": "rung" }
+        },
+        {
+          "hex": [12, -1],
+          "id": "s14.bell-3",
+          "kind": "bell",
+          "state": "still",
+          "blocks": true,
+          "interact": { "half": "top", "to": "rung" }
+        }
+      ]
+    },
+    {
+      "id": "s14.stairs",
+      "kind": "indoor",
+      "hexes": [
+        [17, -8], [17, -7], [17, -6], [17, -5], [17, -4], [18, -9], [18, -8], [18, -7],
+        [18, -6], [18, -5], [19, -7]
+      ],
+      "doors": [{ "hex": [19, -7], "to": "s14.roof" }],
+      "spawns": [
+        { "monster": "night-moth", "hex": [18, -8], "by": { "2": "normal", "3": "elite", "4": "elite" } },
+        { "monster": "night-moth", "hex": [17, -5], "by": { "3": "normal", "4": "normal" } }
+      ]
+    },
+    {
+      "id": "s14.roof",
+      "kind": "indoor",
+      "hexes": [
+        [20, -9], [20, -8], [20, -7], [21, -9], [21, -8], [21, -7], [22, -10], [22, -9],
+        [22, -8], [23, -10], [23, -9], [23, -8]
+      ],
+      "chests": [{ "hex": [23, -8], "id": "s14.treasure", "loot": { "coins": 4 } }]
+    }
+  ],
+  "reward": { "goldEach": 25, "flags": ["bells.rung"] },
+  "lose": [{ "type": "roundLimit", "rounds": 12 }],
+  "zones": [{ "id": "s14.roof", "hexes": [[20, -9], [20, -8], [21, -9], [21, -8]] }],
+  "secondary": [
+    { "id": "s14.nine-rounds", "check": "withinRounds", "params": { "rounds": 9 }, "reward": { "xp": 2 } }
+  ],
+  "events": [
+    {
+      "id": "s14.water-rises",
+      "trigger": { "type": "round", "round": 3 },
+      "actions": [{ "type": "story", "text": "event.s14.water-rises" }]
+    },
+    {
+      "id": "s14.water-deep",
+      "trigger": { "type": "round", "round": 7 },
+      "actions": [{ "type": "story", "text": "event.s14.water-deep" }]
+    }
+  ]
+}
