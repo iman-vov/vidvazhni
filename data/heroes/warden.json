@@ -529,6 +529,167 @@
       "fork": {
         "momentum": true
       }
+    },
+    {
+      "id": "warden.mountain-fortress",
+      "level": 6,
+      "initiative": 26,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": {
+              "uses": 2
+            }
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "adjacentAllies",
+            "duration": {
+              "uses": 2
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.ground-slam",
+      "level": 6,
+      "initiative": 64,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 3,
+            "area": {
+              "shape": "allAdjacent"
+            },
+            "push": 1,
+            "xp": 1
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 2
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "self",
+            "duration": "round"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "warden.mountain-heart",
+      "level": 7,
+      "initiative": 22,
+      "top": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "alliesInRadius",
+            "range": 2,
+            "duration": {
+              "uses": 4
+            }
+          },
+          {
+            "type": "provoke",
+            "radius": 2,
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "self"
+          },
+          {
+            "type": "move",
+            "value": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "warden.avalanche",
+      "level": 7,
+      "initiative": 80,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 4,
+            "area": {
+              "shape": "line",
+              "length": 4,
+              "fromSelf": true
+            },
+            "conditions": [
+              "immobilize"
+            ],
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 1
+              },
+              "conditions": [
+                "stun"
+              ]
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 4
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      }
     }
   ]
 }

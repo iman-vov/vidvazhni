@@ -57,6 +57,7 @@ export function stepText(step: Step, orbs: boolean, relative = false): string {
       if (step.area) parts.push(t(`area.${step.area.shape}`, step.area.shape === 'line' ? { length: step.area.length } : {}));
       if (step.targetAll) parts.push(t(`step.targetAll.${step.targetAll}`));
       if (step.pierce) parts.push(t('step.pierce', { value: step.pierce }));
+      if (step.advantage) parts.push(t('step.grant.advantage'));
       if (step.push) parts.push(t('step.push', { value: step.push }));
       if (step.pull) parts.push(t('step.pull', { value: step.pull }));
       for (const c of step.conditions ?? []) parts.push(conditionName(c));
@@ -70,7 +71,9 @@ export function stepText(step: Step, orbs: boolean, relative = false): string {
       if (step.bless) parts.push(t('step.bless'));
       break;
     case 'shield':
-      parts.push(`${t('step.shield', { value: step.value })} ${durationText(step.duration)}`, targetText(step.target));
+      // A shield's `range` is the radius for «alliesInRadius» (resolveTargets) and the reach otherwise.
+      parts.push(`${t('step.shield', { value: step.value })} ${durationText(step.duration)}`, targetText(step.target, step.range));
+      if (step.range && step.target !== 'alliesInRadius') parts.push(t('step.range', { value: step.range }));
       break;
     case 'retaliate':
       parts.push(`${t('step.retaliate', { value: step.value })} ${durationText(step.duration)}`);
