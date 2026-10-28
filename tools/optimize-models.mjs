@@ -29,7 +29,9 @@ const MANIFEST = 'art/prompts/manifest.json';
 const TIERS = [
   { name: 'low', suffix: '.low', textureMax: { weapon: 256, prop: 256, default: 512 }, simplify: 0.5 },
   { name: 'medium', suffix: '', textureMax: { weapon: 512, prop: 512, default: 1024 } },
-  { name: 'high', suffix: '.hq', textureMax: { default: 4096 } },
+  // 2048, not the source's 4096: Meshy's 4096² metallic-roughness maps cost 64 MB of GPU memory per
+  // model (two dozen on a board) and look the same on screen; iOS Safari killed the tab on high.
+  { name: 'high', suffix: '.hq', textureMax: { default: 2048 } },
 ];
 const SIMPLIFY_ERROR = 0.01; // fraction of the mesh radius
 const WEBP_QUALITY = { normalTexture: 90, default: 85 };
@@ -47,6 +49,15 @@ const CLIP_PATTERNS = [
 ];
 /** Clips that may move the root on the horizontal plane; everything else plays in place. */
 const ROOT_MOTION_CLIPS = new Set(['walk', 'run']);
+/**
+ * Wing beats keyed around the wrong axis. The moth stands upright facing +z, and its Blender clips
+ * swung the wings around z (up and down, like wipers); a wing beat sweeps them from belly to back,
+ * around the body's long axis (y). Every key of these bones turns its flap axis from `from` to `to`
+ * (model space, measured in the parent bone's rest frame).
+ */
+const FLAP_AXIS_FIXES = {
+  'night-moth': { bones: /^Bone_0(0[89]|1\d)$/, from: [0, 0, 1], to: [0, 1, 0] },
+};
 
 const argv = process.argv.slice(2);
 const tierArg = argv.find((a) => a.startsWith('--tiers='));
@@ -115,6 +126,7 @@ async function optimize(id) {
   const base = await io.read(src);
   const clips = normaliseClips(base, warnings);
   lockRootMotion(base);
+  if (FLAP_AXIS_FIXES[id]) fixFlapAxis(base, FLAP_AXIS_FIXES[id]);
   await base.transform(dedup(), prune(), weld(), resample());
   // Metadata for the loader: GLTFLoader copies scene extras into scene.userData.
   const attachTo = entry?.attachTo ? { hand: entry.attachTo.hand, bones: entry.attachTo.bones } : null;
@@ -241,6 +253,59 @@ function lockRootMotion(doc) {
       }
     }
   }
+}
+
+/** Turns the rotation keys of the matching bones so they swing around `to` instead of `from`. */
+function fixFlapAxis(doc, fix) {
+  const root = doc.getRoot();
+  const parentOf = new Map();
+  for (const node of root.listNodes()) for (const child of node.listChildren()) parentOf.set(child, node);
+  const worldRest = (node) => {
+    let q = [0, 0, 0, 1];
+    for (let n = node; n; n = parentOf.get(n)) q = qMul(n.getRotation(), q);
+    return q;
+  };
+  // Rotation taking `from` onto `to`, seen from inside the parent's rest frame: C = P⁻¹·M·P.
+  const m = qBetween(fix.from, fix.to);
+  for (const anim of root.listAnimations()) {
+    for (const channel of anim.listChannels()) {
+      const node = channel.getTargetNode();
+      if (!node || channel.getTargetPath() !== 'rotation' || !fix.bones.test(node.getName())) continue;
+      const p = worldRest(parentOf.get(node));
+      const c = qMul(qInv(p), qMul(m, p));
+      const rest = node.getRotation();
+      const sampler = channel.getSampler();
+      const output = sampler.getOutput().clone(); // never edit an accessor another clip may share
+      sampler.setOutput(output);
+      const v = [];
+      // Linear in the key, so CUBICSPLINE tangents take the same map: q' = C·(q·r⁻¹)·C⁻¹·r.
+      for (let i = 0; i < output.getCount(); i++) {
+        output.getElement(i, v);
+        output.setElement(i, qMul(qMul(c, qMul(qMul(v, qInv(rest)), qInv(c))), rest));
+      }
+    }
+  }
+}
+
+/** Quaternions as [x, y, z, w]. */
+function qMul(a, b) {
+  return [
+    a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+    a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+    a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+    a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+  ];
+}
+function qInv(q) {
+  const n = q[0] ** 2 + q[1] ** 2 + q[2] ** 2 + q[3] ** 2;
+  return [-q[0] / n, -q[1] / n, -q[2] / n, q[3] / n];
+}
+/** Shortest rotation from unit vector a to unit vector b (not opposite). */
+function qBetween(a, b) {
+  const cross = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const q = [...cross, 1 + a[0] * b[0] + a[1] * b[1] + a[2] * b[2]];
+  const n = Math.hypot(...q);
+  return q.map((x) => x / n);
 }
 
 /**

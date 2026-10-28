@@ -12,6 +12,7 @@
 //   &env=1                 add a room environment map (metal looks dark without one)
 //   &sheet=1               contact sheet instead of the live view: idle, attack mid-frame and walk,
 //                          front and from the weapon side, close up (window.sheet holds a JPEG data URL)
+//   &frames=0,0.125,0.25   with sheet=1: these seconds of `clip` (default idle) instead (one wing beat)
 //   ?styles=brass-automaton,mist-queen   contact sheet of restyled monsters (figureLook RESTYLES):
 //                          the base model, then the restyle from the front and from behind
 
@@ -228,13 +229,18 @@ async function main(): Promise<void> {
 
 /** Poses the model at a few frames and draws each from two sides onto one canvas. */
 function renderSheet(model: Model, title: string): void {
+  const seconds = params.get('frames');
+  const clipOf = params.get('clip') ?? 'idle';
+  // Explicit seconds become shares of the clip, so they share the loop below.
   const frames = (
-    [
-      ['idle', 0.3],
-      ['attack', 0.35],
-      ['attack', 0.55],
-      ['walk', 0.5],
-    ] as const
+    seconds
+      ? seconds.split(',').map((t) => [clipOf, Number(t) / (model.clips[clipOf]?.duration ?? 1)] as const)
+      : ([
+          ['idle', 0.3],
+          ['attack', 0.35],
+          ['attack', 0.55],
+          ['walk', 0.5],
+        ] as const)
   ).filter(([clip]) => model.clips[clip]);
   const tile = 380;
   const views = 3;
@@ -291,7 +297,7 @@ function renderSheet(model: Model, title: string): void {
       renderer.render(scene, cam);
       ctx.drawImage(renderer.domElement, col * tile, 28 + row * tile);
     });
-    ctx.fillText(`${clip} ${Math.round(at * 100)}%`, col * tile + 8, 28 + 18);
+    ctx.fillText(`${clip} ${(at * model.clips[clip]!.duration).toFixed(2)} s`, col * tile + 8, 28 + 18);
   });
   canvas.style.cssText = 'position:absolute;inset:0;max-width:100%;max-height:100%;margin:auto';
   document.body.appendChild(canvas);
