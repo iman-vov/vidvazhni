@@ -497,6 +497,162 @@
       "fork": {
         "momentum": true
       }
+    },
+    {
+      "id": "herbalist.dawn-dew",
+      "level": 6,
+      "initiative": 30,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "alliesInRadius",
+            "radius": 3,
+            "removeNegative": 1,
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "alliesInRadius",
+            "range": 2,
+            "duration": "round"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.poison-bloom",
+      "level": 6,
+      "initiative": 58,
+      "top": {
+        "steps": [
+          {
+            "type": "attack",
+            "value": 2,
+            "range": 3,
+            "area": {
+              "shape": "triangle",
+              "size": 3
+            },
+            "conditions": [
+              "poison",
+              "wound"
+            ],
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 1
+          }
+        ]
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "heal",
+            "value": 1,
+            "target": "self"
+          }
+        ]
+      },
+      "fork": {
+        "momentum": true
+      }
+    },
+    {
+      "id": "herbalist.forest-light",
+      "level": 7,
+      "initiative": 15,
+      "top": {
+        "steps": [
+          {
+            "type": "heal",
+            "value": 3,
+            "target": "alliesInRadius",
+            "radius": 2
+          },
+          {
+            "type": "shield",
+            "value": 1,
+            "target": "alliesInRadius",
+            "range": 2,
+            "duration": {
+              "uses": 3
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "heal",
+            "value": 2,
+            "target": "self"
+          }
+        ]
+      }
+    },
+    {
+      "id": "herbalist.world-roots",
+      "level": 7,
+      "initiative": 72,
+      "top": {
+        "steps": [
+          {
+            "type": "condition",
+            "condition": "immobilize",
+            "target": "enemiesInRadius",
+            "radius": 3
+          },
+          {
+            "type": "attack",
+            "value": 3,
+            "range": 3,
+            "targets": 2,
+            "consume": {
+              "element": "earth",
+              "add": {
+                "value": 1
+              }
+            },
+            "xp": 2
+          }
+        ],
+        "loss": true
+      },
+      "bottom": {
+        "steps": [
+          {
+            "type": "move",
+            "value": 3
+          },
+          {
+            "type": "infuse",
+            "element": "earth"
+          }
+        ]
+      }
     }
   ]
 }
