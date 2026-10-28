@@ -105,6 +105,10 @@
         { "monster": "shadow-wraith", "hex": [17, -6], "by": { "3": "normal", "4": "normal" } },
         { "monster": "marsh-hopper", "hex": [18, -7], "by": { "2": "normal", "3": "normal", "4": "elite" } },
         { "monster": "marsh-hopper", "hex": [17, -8], "by": { "4": "normal" } }
+      ],
+      "objects": [
+        { "hex": [14, -7], "id": "s12.lily-1", "kind": "lily-pad" },
+        { "hex": [17, -5], "id": "s12.lily-2", "kind": "lily-pad" }
       ]
     },
     {

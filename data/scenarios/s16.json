@@ -18,7 +18,11 @@
         [3, 0], [3, 1], [3, 2], [3, 3], [4, -2], [4, -1], [4, 0], [4, 1],
         [4, 2], [5, 0]
       ],
-      "obstacles": [{ "hex": [2, -1], "model": "rock" }, { "hex": [1, 4], "model": "tree" }],
+      "obstacles": [
+        { "hex": [2, -1], "model": "rock" },
+        { "hex": [1, 4], "model": "tree" },
+        { "hex": [2, 2], "model": "glass-cart" }
+      ],
       "doors": [{ "hex": [5, 0], "to": "s16.road" }],
       "spawns": [
         { "monster": "gremlin", "hex": [4, 0], "by": { "2": "normal", "3": "elite", "4": "elite" } },

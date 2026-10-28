@@ -66,7 +66,13 @@
         { "monster": "night-moth", "hex": [12, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } },
         { "monster": "night-moth", "hex": [15, -4], "by": { "4": "normal" } }
       ],
-      "coins": [[8, -2]]
+      "coins": [[8, -2]],
+      "objects": [
+        { "hex": [7, -2], "id": "s11.lily-1", "kind": "lily-pad" },
+        { "hex": [11, -2], "id": "s11.lily-2", "kind": "lily-pad" },
+        { "hex": [14, -6], "id": "s11.lily-3", "kind": "lily-pad" },
+        { "hex": [8, -1], "id": "s11.lily-4", "kind": "lily-pad" }
+      ]
     },
     {
       "id": "s11.willow",
@@ -76,7 +82,7 @@
         [19, -9], [19, -8], [19, -7], [19, -6], [20, -10], [20, -9], [20, -8], [20, -7],
         [21, -8]
       ],
-      "obstacles": [{ "hex": [18, -9], "model": "tree" }],
+      "obstacles": [{ "hex": [18, -9], "model": "tree" }, { "hex": [20, -10], "model": "cocoon" }],
       "doors": [{ "hex": [21, -8], "to": "s11.ferry" }],
       "spawns": [
         { "monster": "thornling", "hex": [19, -8], "by": { "2": "normal", "3": "normal", "4": "elite" } },

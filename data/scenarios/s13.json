@@ -34,8 +34,9 @@
         { "hex": [6, -2], "model": "tree" },
         { "hex": [1, 6], "model": "rock" },
         { "hex": [7, 3], "model": "rock" },
-        { "hex": [2, 1], "model": "tree" },
-        { "hex": [6, -1], "model": "tree" }
+        { "hex": [2, 1], "model": "cocoon" },
+        { "hex": [6, -1], "model": "cocoon" },
+        { "hex": [8, -3], "model": "cocoon" }
       ],
       "spawns": [
         { "monster": "night-moth", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },

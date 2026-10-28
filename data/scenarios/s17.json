@@ -89,7 +89,7 @@
         [16, -8], [16, -7], [16, -6], [16, -5], [17, -8], [17, -7], [17, -6], [17, -5],
         [18, -9], [18, -8], [18, -7], [18, -6], [19, -9], [19, -8], [19, -7], [19, -6]
       ],
-      "obstacles": [{ "hex": [16, -8], "model": "crate" }],
+      "obstacles": [{ "hex": [16, -8], "model": "blueprint" }],
       "spawns": [
         { "monster": "night-moth", "hex": [17, -7], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "night-moth", "hex": [18, -6], "by": { "3": "normal", "4": "normal" } },
