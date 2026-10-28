@@ -26,5 +26,5 @@
 |---|---|---|---|
 | Meshy Quadruped | лише Walking | Meshy Premium | бігу немає |
 | [Quaternius Ultimate Animated Animals](https://quaternius.com/packs/ultimateanimatedanimals.html) | 12 тварин, Gallop, Walk, Attack, Death тощо | CC0 | у кожної тварини свій скелет, тож переносити на риг Meshy Quadruped треба вручну по кістках, а довжина кроку не збіглася б з нашими пропорціями. Галоп ключуємо в Blender з траєкторій лап (див. [gait/README.md](gait/README.md)) |
-| [OpenGameArt: Animated Animales Low Poly](https://opengameart.org/content/animated-animales-low-poly) | вовк, пес, кіт тощо від Quaternius | CC0 | та сама проблема зі скелетом |
+| [OpenGameArt: Animated Animales Low Poly](https://opengameart.org/content/animated-animales-low-poly) | Animal Pack Vol.2 від Quaternius: вовк, пес, кіт, орел, піранья | CC0 | завантажили 2026-10-28: у FBX і .blend лише Idle та Walking, бігу чи галопу немає. Не використовуємо |
 | Платні або некомерційні набори (CGTrader, Superhive, Unreal Marketplace) | вовки й собаки з риссю та галопом | платні, некомерційні або без чіткої ліцензії | не використовуємо |
