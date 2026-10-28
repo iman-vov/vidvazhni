@@ -68,6 +68,12 @@ export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   'lily-pad': 0.116,
   'lily-pad-2': 0.154,
   'lily-pad-3': 0.054,
+  // Glass Town room dressing (crystals from the floor, lantern post, glassmaker's bench, pane rack)
+  'glass-crystals': 0.85,
+  'glass-crystals-2': 1.15,
+  'glass-lantern': 1.5,
+  'glass-workbench': 1.15,
+  'glass-panes': 0.8,
 };
 
 const cache = new StampedCache<PropPrototype | null>();

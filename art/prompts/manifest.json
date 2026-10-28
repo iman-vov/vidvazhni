@@ -3239,6 +3239,161 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "glass-crystals",
+      "nameUk": "Кристали Скляного міста: блакитне наростання з підлоги",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 93,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props-glass-dressing.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-crystals/glass-crystals.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "glass-crystals-2",
+      "nameUk": "Кристали Скляного міста: високий бузковий шпиль із малими",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 94,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props-glass-dressing.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-crystals-2/glass-crystals-2.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "glass-lantern",
+      "nameUk": "Скляний ліхтар на кованому стовпі",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 95,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props-glass-dressing.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-lantern/glass-lantern.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "glass-workbench",
+      "nameUk": "Верстак склодува з лінзою, пляшками й склодувною трубкою",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 96,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props-glass-dressing.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-workbench/glass-workbench.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "glass-panes",
+      "nameUk": "Стояк зі скляними шибками",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 97,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/props-glass-dressing.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "modelFile": "assets/models/glass-panes/glass-panes.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 1500
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }
