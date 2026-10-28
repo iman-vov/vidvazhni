@@ -312,6 +312,8 @@ export interface GameState {
   /** Scenario events: the round each one last fired; `0` = prevented (its tagged monster died
    *  first). Absent = none yet. */
   firedEvents?: Record<string, number>;
+  /** s15: the looms standing when the boss fell to half health (marsh.ts). */
+  loomsAtHalf?: number;
   /** The campaign's story flags at the start (flags.ts). */
   flags?: string[];
   /** s18: the round a living shelf first raised the alarm (books.ts). */

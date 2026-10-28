@@ -6,6 +6,7 @@ import type { AttackBonus, AttackBonusCondition, ConditionId, Step } from '../co
 import { addCondition } from '../conditions';
 import { areaHexes } from '../geometry';
 import { breakMirrors, mirrorDisadvantage } from '../mirrors';
+import { loomDisadvantage } from '../marsh';
 import { areAdjacent, distance, hexEquals, type Hex } from '../hex';
 import { applyModifier, drawForAttack } from '../modifiers';
 import { findCard } from '../damage';
@@ -140,6 +141,7 @@ export function attackSpecFor(ctx: Ctx, attacker: Figure, target: Figure, step: 
   if (target.kind === 'hero' && target.attackedDisadvantage) disadvantage = true;
   if (ranged && target.kind === 'hero' && target.rangedAttackedDisadvantage) disadvantage = true;
   if (mirrorDisadvantage(ctx, target, ranged)) disadvantage = true;
+  if (loomDisadvantage(ctx, target, ranged)) disadvantage = true;
   const followUp =
     ctx.s.variants.followUp && attacker.kind === 'hero' && target.kind === 'monster' && target.attackedBy.some((id) => id !== attacker.id);
   if (followUp) value += FOLLOW_UP_BONUS;

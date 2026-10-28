@@ -6,6 +6,7 @@ import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context
 import { canDodge, coverAllies } from './defense';
 import { becomeAlly } from './allies';
 import { wake } from './sleep';
+import { noteLoomsAtHalf } from './marsh';
 import { onBossHalfHp } from './events';
 import { isShieldItem, readyItems } from './items';
 import { adjustDamage, checkBossPhase, npcLost, onHeroExhausted, onMonsterDied } from './scenarioRules';
@@ -107,6 +108,7 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
     // A boss crossing half health (again after a heal): story beats, and `bossHalfHp` events once.
     if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) {
       emit(ctx, { type: 'bossHalfHp', figureId: f.id });
+      noteLoomsAtHalf(ctx);
       onBossHalfHp(ctx, f);
       becomeAlly(ctx, f);
     }

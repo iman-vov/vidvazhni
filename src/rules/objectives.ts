@@ -196,6 +196,8 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   /** «Серце без жодної подряпини» (s20): the object `params.object` stands at full health (allies.ts). */
   objectIntact: (s, p) => objectIntact(s, String(p?.object)),
   /** «Без тривоги» (s18): no living shelf woke (before the end of round `params.rounds`, books.ts). */
+  /** «Розбити всі верстати до 2-ї фази» (s15, marsh.ts). */
+  loomsBrokenBeforeHalf: (s) => s.loomsAtHalf === 0,
   noAlarm: (s, p) => noAlarm(s, p?.rounds === undefined ? undefined : Number(p.rounds)),
 };
 
