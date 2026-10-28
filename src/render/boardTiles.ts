@@ -313,6 +313,8 @@ const BEAM_RADIUS = 0.035 * HEX_SIZE;
 export class TileLayer {
   readonly root = new THREE.Group();
   private readonly rooms = new Map<string, RoomView>();
+  /** Each built room's non-normal terrain (`hex:terrain …`), to notice a change mid-game. */
+  private roomTerrain = new Map<string, string>();
   private readonly props = new Map<string, PropView>();
   /** Per room (and its walls): what batchObstacles merged, and what it was merged from. */
   private readonly batches = new Map<string, { sig: string; batch: THREE.Group | null }>();
@@ -546,8 +548,14 @@ export class TileLayer {
       }
     const wanted = only ? [...new Set([...this.rooms.keys(), only])] : s.board.revealedRooms;
     const added: string[] = [];
+    // A room whose terrain changed since it was built (s14's rising water) is built again.
+    const terrainOf = (id: string) =>
+      Object.entries(s.board.tiles)
+        .filter(([, t]) => t.room === id && t.terrain !== 'normal')
+        .map(([k, t]) => `${k}:${t.terrain}`)
+        .join(' ');
     for (const [id, room] of this.rooms) {
-      if (wanted.includes(id)) continue;
+      if (wanted.includes(id) && this.roomTerrain.get(id) === terrainOf(id)) continue;
       this.root.remove(room.group);
       for (const mesh of room.plates) mesh.dispose();
       for (const d of room.edgeDisposables) d.dispose();
@@ -570,6 +578,7 @@ export class TileLayer {
       const tiles = byRoom.get(id);
       if (!tiles) continue;
       this.rooms.set(id, this.buildRoom(id, tiles, s.board.tiles));
+      this.roomTerrain.set(id, terrainOf(id));
       added.push(id);
     }
     this.buildWalls(s, wanted);
