@@ -6,15 +6,27 @@
 // the roll; carried items are weighed like a half. Used by the replay tests and the balance
 // simulator (tests/balance/sim.test.ts).
 
-import type { Content } from '../../src/rules/content';
+import type { Content, ScenarioGoal } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
-import { goalZone, npcId } from '../../src/rules/objectives';
+import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import { availableCards, recommendedHand } from '../../src/rules/setup';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
 import { stepsFrom } from '../../tools/map-editor/checks';
+
+/** The goal in force (an event may have switched it). */
+function goalOf(s: GameState, content: Content | undefined): ScenarioGoal | undefined {
+  const scenario = content?.scenarios[s.scenarioId];
+  return scenario && activeGoal(s, scenario);
+}
+
+/** The goal's zone hexes. */
+function zoneOf(s: GameState, content: Content): Hex[] {
+  const scenario = content.scenarios[s.scenarioId]!;
+  return goalZone(scenario, activeGoal(s, scenario));
+}
 
 /** Walking steps to the nearest of `targets` (walls and obstacles respected), cached per scenario and target set. */
 const stepCache = new Map<string, Map<string, number>>();
@@ -57,14 +69,14 @@ function tilesWith(s: GameState, has: (t: GameState['board']['tiles'][string]) =
 
 /** Where the acting hero should head, by the scenario goal; null = no goal-specific target. */
 function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | null {
-  const goal = content.scenarios[s.scenarioId]?.goal;
+  const goal = goalOf(s, content);
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster').map((f) => f.hex);
   const unlit = scenarioObjects(s).filter((o) => o.kind === 'brazier' && o.state === 'unlit').map((o) => o.hex);
   switch (goal?.type) {
     case 'reachExit': {
       // Clear the way first, then run for the exit (or the next door).
       if (monsters.length > 0) return null;
-      const zone = goalZone(content.scenarios[s.scenarioId]!);
+      const zone = zoneOf(s, content);
       const exits = zone.filter((x) => s.board.tiles[`${x[0]},${x[1]}`]);
       return exits.length > 0 ? exits : doorsTowards(s, content, zone);
     }
@@ -72,14 +84,15 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       const carriers = Object.values(s.figures).filter(
         (f): f is HeroState => f.kind === 'hero' && !f.exhausted && !!f.questItems?.includes(goal.item),
       );
-      if (carriers.some((c) => c.id === me.id)) return goalZone(content.scenarios[s.scenarioId]!);
+      if (carriers.some((c) => c.id === me.id)) return zoneOf(s, content);
       if (carriers.length > 0 || monsters.length > 0) return null;
       const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
       return items.length > 0 ? items : null;
     }
-    case 'escape': {
-      // The cave-in timer runs: run for the lift past the monsters, opening the doors on the way.
-      const zone = goalZone(content.scenarios[s.scenarioId]!);
+    case 'escape':
+    case 'race': {
+      // The cave-in timer (or the rival) runs: run for the lift past the monsters, opening the doors on the way.
+      const zone = zoneOf(s, content);
       return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
     }
     case 'destroy': {
@@ -90,8 +103,23 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
     case 'escort': {
       // Clear the way, then walk ahead of the escorted NPC towards the zone (score() keeps it on a leash).
       if (monsters.length > 0) return null;
-      const zone = goalZone(content.scenarios[s.scenarioId]!);
+      const zone = zoneOf(s, content);
       return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
+    }
+    case 'defend': {
+      // The monsters inside the defended zone first (each one costs a light at the round's end).
+      const zone = zoneOf(s, content);
+      const inside = monsters.filter((m) => inZone(zone, m));
+      return inside.length > 0 ? inside : null;
+    }
+    case 'objectStates': {
+      // Turn the objects not yet in their state (an adjacent hero interacts), then walk into the zone.
+      const scenario = content.scenarios[s.scenarioId]!;
+      const wrong = goal.objects.filter((o) => objectState(s, scenario, o.id) !== o.state);
+      const hexes = scenarioObjects(s).filter((o) => wrong.some((w) => w.id === o.id)).map((o) => o.hex);
+      if (hexes.length > 0) return hexes;
+      const zone = zoneOf(s, content);
+      return zone.length > 0 && monsters.length === 0 ? zone : null;
     }
     default:
       // Light the braziers first (s5); otherwise the plain «nearest monster, then doors» pull.
@@ -116,15 +144,24 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     v -= 2 * f.lost.length;
   }
   for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit')) v += 20;
-  const goal = content?.scenarios[s.scenarioId]?.goal;
+  const goal = goalOf(s, content);
   if (goal?.type === 'carryItem') {
     for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted) v += 30 * (f.questItems?.length ?? 0);
   }
   if (goal?.type === 'destroy') v += 60 * (s.destroyedObjects?.length ?? 0);
-  if (goal?.type === 'reachExit' || goal?.type === 'escape') {
+  if (goal?.type === 'reachExit' || goal?.type === 'escape' || goal?.type === 'race' || goal?.type === 'objectStates') {
     for (const f of Object.values(s.figures)) {
-      if (f.kind === 'hero' && !f.exhausted && goalZone(content!.scenarios[s.scenarioId]!).some((x) => distance(x, f.hex) === 0)) v += 25;
+      if (f.kind === 'hero' && !f.exhausted && inZone(zoneOf(s, content!), f.hex)) v += 25;
     }
+  }
+  if (goal?.type === 'defend' && goal.counter) v += 40 * counterLeft(s, goal);
+  if (goal?.type === 'objectStates') {
+    const scenario = content!.scenarios[s.scenarioId]!;
+    v += 30 * goal.objects.filter((o) => objectState(s, scenario, o.id) === o.state).length;
+  }
+  if (goal?.type === 'protect') {
+    const tile = Object.values(s.board.tiles).find((t) => t.object?.id === goal.object);
+    v += 10 * (tile?.breakable?.hp ?? 0);
   }
   const me = heroId ? hero(s, heroId) : undefined;
   if (goal?.type === 'escort' && me && !me.exhausted) {
@@ -138,7 +175,7 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   const targets = me && content ? goalTargets(s, content, me) : null;
   if (me && content && !me.exhausted && targets && targets.length > 0) {
     // In the last rounds before the cave-in, any step towards the lift beats staying safe.
-    const late = goal?.type === 'escape' && s.round >= goal.rounds - 3;
+    const late = (goal?.type === 'escape' && s.round >= goal.rounds - 3) || goal?.type === 'race';
     v -= (late ? 60 : 3) * pathDistance(s, content, targets, me.hex);
   } else if (me && !me.exhausted) {
     if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
@@ -215,7 +252,8 @@ function bestStep(s: GameState, content: Content, heroId: string): Action {
   let best: Action = { type: 'skipStep' };
   let bestScore = -Infinity;
   // On the escape's timer the party runs past the monsters instead of clearing every room.
-  const fighting = content.scenarios[s.scenarioId]?.goal.type !== 'escape' && Object.values(s.figures).some((f) => f.kind === 'monster');
+  const running = goalOf(s, content)?.type;
+  const fighting = running !== 'escape' && running !== 'race' && Object.values(s.figures).some((f) => f.kind === 'monster');
   for (const { action: a, state } of legalActionResults(s, content)) {
     if (a.type !== 'resolveStep' && a.type !== 'skipStep') continue;
     let t: GameState | null = state;

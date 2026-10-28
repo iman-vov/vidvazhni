@@ -13,6 +13,7 @@ import { areAdjacent, hexKey, type Hex } from './hex';
 import { emit, tileAt, wallBetween, type Ctx } from './effects/context';
 import { inRangeWithSight } from './effects/support';
 import { openDoor } from './effects/move';
+import { onObjectDestroyed } from './scenarioRules';
 import type { Figure, GameState, Tile } from './state';
 
 /** The hit points of a breakable obstacle or closed breakable door on the tile. */
@@ -69,6 +70,7 @@ export function hitObstacle(ctx: Ctx, byId: string, hex: Hex, amount: number): v
       // A totem or a nest: gone for good, counted for the `destroy` goal.
       (ctx.s.destroyedObjects ??= []).push(tile.object.id);
       emit(ctx, { type: 'objectChanged', objectId: tile.object.id, hex: at, state: 'destroyed', byId });
+      onObjectDestroyed(ctx, tile.object.id);
       delete tile.object;
     }
   }

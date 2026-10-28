@@ -4,8 +4,9 @@ import { addCondition, removeCondition } from './conditions';
 import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
 import { canDodge, coverAllies } from './defense';
+import { onBossHalfHp } from './events';
 import { isShieldItem, readyItems } from './items';
-import { adjustDamage, checkBossPhase, onHeroExhausted, onMonsterDied } from './scenarioRules';
+import { adjustDamage, checkBossPhase, npcLost, onHeroExhausted, onMonsterDied } from './scenarioRules';
 import type { CardId, EngineTask, Figure, HeroState } from './state';
 import type { Variants } from './variants';
 
@@ -100,8 +101,11 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
   f.hp -= dealt;
   emit(ctx, { type: 'damaged', figureId: f.id, amount: dealt, source });
   if (f.hp > 0) {
-    // Story beats only: a boss crossing half health (again after a heal), for every boss.
-    if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) emit(ctx, { type: 'bossHalfHp', figureId: f.id });
+    // A boss crossing half health (again after a heal): story beats, and `bossHalfHp` events once.
+    if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) {
+      emit(ctx, { type: 'bossHalfHp', figureId: f.id });
+      onBossHalfHp(ctx, f);
+    }
     if (f.kind === 'monster') checkBossPhase(ctx, f);
     return;
   }
@@ -126,7 +130,7 @@ export function killFigure(ctx: Ctx, f: Figure): void {
   delete ctx.s.figures[f.id];
   emit(ctx, { type: 'figureDied', figureId: f.id });
   if (f.kind === 'monster') onMonsterDied(ctx, f);
-  if (f.kind === 'summon' && f.npc) return loseScenario(ctx);
+  if (f.kind === 'summon' && f.npc) return npcLost(ctx, f.id) ? loseScenario(ctx) : undefined;
   if (f.kind === 'summon') {
     // The persistent card that keeps the summon goes to the lost pile.
     const owner = ctx.s.figures[f.ownerId];

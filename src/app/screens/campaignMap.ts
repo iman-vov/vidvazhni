@@ -39,6 +39,9 @@ const GOAL_ICONS: Record<string, IconName> = {
   survive: 'hp',
   defend: 'defend-point',
   escort: 'escort',
+  race: 'jump',
+  protect: 'shield',
+  objectStates: 'lever',
 };
 
 const MARKER_ICONS: Partial<Record<MarkerState, IconName>> = { completed: 'check', available: 'objective-flag', locked: 'close' };

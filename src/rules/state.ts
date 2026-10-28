@@ -1,7 +1,7 @@
 // Game state, actions and events. The state is plain JSON (no Maps, Sets or classes), so it can be
 // saved to IndexedDB, sent over the network and rebuilt from seed + action log.
 
-import type { ConditionId, DropDef, ElementId, OrbId, Step, TargetSpec } from './content';
+import type { ConditionId, DropDef, ElementId, OrbId, ScenarioGoal, Step, TargetSpec } from './content';
 import type { Hex, HexKey } from './hex';
 import type { RngState } from './rng';
 import type { Variants } from './variants';
@@ -303,6 +303,12 @@ export interface GameState {
   delivered?: number;
   /** Objects broken (`objects[].hp`), by id. */
   destroyedObjects?: string[];
+  /** The goal an event switched to (`setGoal`); absent = the scenario's own. */
+  goal?: ScenarioGoal;
+  /** The round the current goal's rounds count from (0 = the scenario's start). */
+  goalSince?: number;
+  /** `defend` with `counter`: what is left of it; absent = all of it. */
+  goalCounter?: number;
 }
 
 /** Resolved numbers of one attack against one target (after card, item and consume bonuses). */
@@ -523,12 +529,18 @@ export type GameEvent =
   /** `collect` goal: a hero ended its turn in the goal zone and handed over `count` objects. */
   | { type: 'itemsDelivered'; heroId: FigureId; item: string; count: number; total: number }
   | { type: 'bossPhaseChanged'; figureId: FigureId; phase: number }
-  /** A boss's health fell to half or below (no rules effect; story beats listen to it). */
+  /** A boss's health fell to half or below (story beats and `bossHalfHp` scenario events listen to it). */
   | { type: 'bossHalfHp'; figureId: FigureId }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }
   /** A scenario event's story line (i18n key). */
   | { type: 'story'; text: string; eventId: string }
+  /** The scenario's goal switched (`setGoal`); its rounds count from round `since` + 1. */
+  | { type: 'goalChanged'; goal: ScenarioGoal['type']; since: number }
+  /** `defend` with a counter: monsters in the zone took `lost`; `left` remain. */
+  | { type: 'goalCounterChanged'; lost: number; left: number }
+  /** `race`: who got to the zone first (`heroes`, or the rival NPC's figure id). */
+  | { type: 'raceFinished'; winner: 'heroes' | FigureId }
   /** Тінерук «Згасання»: the hero lost a random discarded card (`lost`) or took the damage. */
   | { type: 'fadeOutResolved'; heroId: FigureId; lost?: CardId };
 

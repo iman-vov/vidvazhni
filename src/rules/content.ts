@@ -374,8 +374,11 @@ export type ScenarioGoal =
   | { type: 'carryItem'; item: string; to?: Hex[]; zone?: string }
   /** Hold out until the end of round `rounds`; monsters need not be beaten. */
   | { type: 'survive'; rounds: number }
-  /** Hold out `rounds` rounds; a monster standing in the zone at the end of a round loses it. */
-  | { type: 'defend'; zone: string; rounds: number }
+  /** Hold out `rounds` rounds; a monster standing in the zone at the end of a round loses it.
+   *  With `counter` (s13's 8 fireflies) the zone holds that many lights instead: at the end of
+   *  every round each monster in the zone puts out 1, and 0 loses; `counterName` is the HUD's
+   *  i18n key for them (`{n}`, `{of}`). */
+  | { type: 'defend'; zone: string; rounds: number; counter?: number; counterName?: string }
   /** Every hero on its feet stands in the exit zone by the end of round `rounds`; later loses
    *  (the cave-in). Monsters need not be beaten. */
   | { type: 'escape'; hexes?: Hex[]; zone?: string; rounds: number }
@@ -385,7 +388,18 @@ export type ScenarioGoal =
   /** Bring the NPC `npc` into the zone (it walks there while a hero is near); its death loses. */
   | { type: 'escort'; npc: string; to?: Hex[]; zone?: string }
   /** Break every object of `kind` (`objects[].hp`), the ones in rooms not yet revealed too. */
-  | { type: 'destroy'; kind: string };
+  | { type: 'destroy'; kind: string }
+  /** Get to the zone before the NPC `rival` (s11's frog), which runs there on its own turns
+   *  whether a hero is near or not. Checked at the end of every turn: a hero there first wins
+   *  (with `all`, every hero on its feet), the rival there first loses; both at once go to the
+   *  heroes. The rival's death does not lose. */
+  | { type: 'race'; rival: string; zone?: string; to?: Hex[]; all?: boolean }
+  /** Keep the object `object` (`objects[].hp`, the Guardian's heart) standing for `rounds` rounds;
+   *  broken, it loses at once. */
+  | { type: 'protect'; object: string; rounds: number }
+  /** Every listed object in its `state` at the end of a round (s19's mirrors); with a zone, every
+   *  hero on its feet stands in it too. */
+  | { type: 'objectStates'; objects: { id: string; state: string }[]; zone?: string; hexes?: Hex[] };
 
 /** Ways to lose besides every hero exhausted (always on). `roundLimit`: the goal is not
  *  reached by the end of round `rounds` (the escape's timer). */
@@ -450,7 +464,9 @@ export type EventTrigger =
   | { type: 'monsterTurnsAlive'; tag: string; turns: number }
   /** A monster with `tag` ends its turn on or next to `hex` (the bell, a door). Such a monster
    *  runs there instead of fighting. */
-  | { type: 'objectReached'; tag: string; hex: Hex };
+  | { type: 'objectReached'; tag: string; hex: Hex }
+  /** The boss (`boss`, default any) drops to half its health or below (s20's second phase). */
+  | { type: 'bossHalfHp'; boss?: string };
 
 export type EventAction =
   /** `count` figures (default 1) of the rank for the party size (`by`, like room spawns) on the
@@ -469,7 +485,10 @@ export type EventAction =
   /** A story line (i18n key) shown to the players. */
   | { type: 'story'; text: string }
   /** Coins left where the event's figure stood (the stopped bell runner's hex). */
-  | { type: 'coins'; coins: number };
+  | { type: 'coins'; coins: number }
+  /** The scenario's goal becomes `goal` (s20: kill the Guardian → protect its heart). Its rounds
+   *  count from the next round, or from this one when it switches at the round's start. */
+  | { type: 'setGoal'; goal: ScenarioGoal };
 
 export type ItemSlot = 'head' | 'body' | 'legs' | 'hand' | 'twoHands' | 'small';
 

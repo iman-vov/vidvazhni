@@ -43,6 +43,12 @@
           "properties": { "type": { "const": "coins" }, "coins": { "type": "integer", "minimum": 1 } },
           "required": ["type", "coins"],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "setGoal" }, "goal": { "$ref": "#/properties/goal" } },
+          "required": ["type", "goal"],
+          "additionalProperties": false
         }
       ]
     },
@@ -501,7 +507,9 @@
           "properties": {
             "type": { "const": "defend" },
             "zone": { "type": "string", "minLength": 1 },
-            "rounds": { "type": "integer", "minimum": 1 }
+            "rounds": { "type": "integer", "minimum": 1 },
+            "counter": { "type": "integer", "minimum": 1 },
+            "counterName": { "type": "string", "minLength": 1 }
           },
           "required": ["type", "zone", "rounds"],
           "additionalProperties": false
@@ -547,6 +555,49 @@
           "type": "object",
           "properties": { "type": { "const": "destroy" }, "kind": { "type": "string", "minLength": 1 } },
           "required": ["type", "kind"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "race" },
+            "rival": { "type": "string", "minLength": 1 },
+            "to": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 },
+            "all": { "type": "boolean" }
+          },
+          "required": ["type", "rival"],
+          "oneOf": [{ "required": ["to"] }, { "required": ["zone"] }],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "protect" },
+            "object": { "type": "string", "minLength": 1 },
+            "rounds": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type", "object", "rounds"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "objectStates" },
+            "objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "minLength": 1 }, "state": { "type": "string", "minLength": 1 } },
+                "required": ["id", "state"],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
+            "zone": { "type": "string", "minLength": 1 }
+          },
+          "required": ["type", "objects"],
           "additionalProperties": false
         }
       ]
@@ -882,6 +933,12 @@
                   "hex": { "$ref": "#/definitions/hex" }
                 },
                 "required": ["type", "tag", "hex"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": { "type": { "const": "bossHalfHp" }, "boss": { "type": "string", "minLength": 1 } },
+                "required": ["type"],
                 "additionalProperties": false
               }
             ]

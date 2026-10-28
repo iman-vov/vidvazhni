@@ -213,25 +213,42 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
   }
   for (const id of rooms.keys()) if (!reached.has(id)) err(`room ${id} cannot be reached from the start`);
 
-  const g = s.goal;
-  if (g.type === 'killBoss' && !content.bosses[g.boss]) err(`goal boss ${g.boss} missing`);
   const zones = new Set<string>();
   for (const z of s.zones ?? []) {
     if (zones.has(z.id)) err(`zone ${z.id} twice`);
     zones.add(z.id);
     for (const h of z.hexes) if (!owner.has(hexKey(h))) err(`zone ${z.id} hex ${hexKey(h)} is outside every room`);
   }
-  if ('zone' in g && g.zone && !zones.has(g.zone)) err(`goal zone ${g.zone} missing`);
-  if ((g.type === 'reachExit' || g.type === 'carryItem' || g.type === 'escape' || g.type === 'collect' || g.type === 'escort') && goalZone(s).length === 0) err(`goal ${g.type} has no hexes`);
-  for (const h of goalZone(s)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
   for (const item of s.reward.items ?? []) if (!content.items?.[item]) err(`reward item ${item} missing`);
   for (const n of s.npcs ?? []) if (!owner.has(hexKey(n.hex))) err(`npc ${n.id} hex ${hexKey(n.hex)} is outside every room`);
-  if (g.type === 'escort' && !s.npcs?.some((n) => n.id === g.npc)) err(`goal npc ${g.npc} missing`);
-  if (g.type === 'destroy' && !s.rooms.some((r) => r.objects?.some((o) => o.kind === g.kind && o.hp))) err(`goal destroys ${g.kind}, the map has none with hp`);
-  for (const o of s.rooms.flatMap((r) => r.objects ?? [])) if (o.spawn && !content.monsters[o.spawn.monster]) err(`object ${o.id} calls missing monster ${o.spawn.monster}`);
-  if (g.type === 'collect') {
-    const n = s.rooms.flatMap((r) => r.objects ?? []).filter((o) => o.kind === g.kind).length;
-    if (n < g.count) err(`goal collects ${g.count} ${g.kind}, the map has ${n}`);
+  const objects = s.rooms.flatMap((r) => r.objects ?? []);
+  for (const o of objects) if (o.spawn && !content.monsters[o.spawn.monster]) err(`object ${o.id} calls missing monster ${o.spawn.monster}`);
+  // The scenario's goal and the ones its events switch to (`setGoal`).
+  const switched = (s.events ?? []).flatMap((ev) => [...ev.actions, ...(ev.prevented ?? [])]).flatMap((a) => (a.type === 'setGoal' ? [a.goal] : []));
+  for (const g of [s.goal, ...switched]) {
+    if (g.type === 'killBoss' && !content.bosses[g.boss]) err(`goal boss ${g.boss} missing`);
+    if ('zone' in g && g.zone && !zones.has(g.zone)) err(`goal zone ${g.zone} missing`);
+    const zoned = ['reachExit', 'carryItem', 'escape', 'collect', 'escort', 'race'];
+    if (zoned.includes(g.type) && goalZone(s, g).length === 0) err(`goal ${g.type} has no hexes`);
+    for (const h of goalZone(s, g)) if (!owner.has(hexKey(h))) err(`goal hex ${hexKey(h)} is outside every room`);
+    if (g.type === 'escort' && !s.npcs?.some((n) => n.id === g.npc)) err(`goal npc ${g.npc} missing`);
+    if (g.type === 'race' && !s.npcs?.some((n) => n.id === g.rival)) err(`goal rival ${g.rival} missing`);
+    if (g.type === 'destroy' && !objects.some((o) => o.kind === g.kind && o.hp)) err(`goal destroys ${g.kind}, the map has none with hp`);
+    if (g.type === 'protect' && !objects.some((o) => o.id === g.object && o.hp)) err(`goal protects ${g.object}, the map has no such object with hp`);
+    if (g.type === 'objectStates') {
+      for (const want of g.objects) {
+        const o = objects.find((x) => x.id === want.id);
+        if (!o) err(`goal object ${want.id} missing`);
+        else if (o.interact && o.state !== want.state && o.interact.to !== want.state) err(`goal object ${want.id} never gets to state ${want.state}`);
+      }
+    }
+    if (g.type === 'collect') {
+      const n = objects.filter((o) => o.kind === g.kind).length;
+      if (n < g.count) err(`goal collects ${g.count} ${g.kind}, the map has ${n}`);
+    }
+  }
+  for (const ev of s.events ?? []) {
+    if (ev.trigger.type === 'bossHalfHp' && ev.trigger.boss && !content.bosses[ev.trigger.boss]) err(`event ${ev.id} waits for missing boss ${ev.trigger.boss}`);
   }
   for (const o of s.rooms.flatMap((r) => r.objects ?? [])) {
     for (const h of o.interact?.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`object ${o.id} opens ${hexKey(h)}, which is no door`);

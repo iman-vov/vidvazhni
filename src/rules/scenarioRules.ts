@@ -11,13 +11,15 @@
 //                         takes half damage (rounded down); a wraith ending its turn next to a lit
 //                         brazier puts it out.
 
-import type { Content, DropDef, RoomDef, ScenarioDef, Step } from './content';
+import type { Content, DropDef, RoomDef, ScenarioDef, ScenarioGoal, Step } from './content';
 import { emit, figureAt, heroes, isPresent, monsters, wallBetween, type Ctx } from './effects/context';
 import { openDoor } from './effects/move';
 import { infuse } from './elements';
 import { onTaggedMonsterDied, spawnHex } from './events';
 import { spawnKey, spawnMonster } from './setup';
-import { goalZone, inZone, npcId } from './objectives';
+import { loseScenario } from './damage';
+import { activeGoal, goalZone, inZone, npcId, raceWinner } from './objectives';
+import { winScenario } from './round';
 import { hasLineOfSight } from './geometry';
 import { areAdjacent, distance, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
@@ -107,9 +109,15 @@ function dataRule(ctx: Pick<Ctx, 's' | 'c'>, objectId: string): ObjectRule | und
   return undefined;
 }
 
+/** The goal in force (an event may have switched it). */
+function goalOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioGoal | undefined {
+  const scenario = scenarioOf(ctx);
+  return scenario && activeGoal(ctx.s, scenario);
+}
+
 /** `collect` goal: the objects of its kind are picked up with a bottom action. */
 function pickupRule(ctx: Pick<Ctx, 's' | 'c'>, kind: string): ObjectRule | undefined {
-  const goal = scenarioOf(ctx)?.goal;
+  const goal = goalOf(ctx);
   if (goal?.type !== 'collect' || goal.kind !== kind) return undefined;
   return { special: '', kind, half: 'bottom', from: '', to: 'taken', pickup: true };
 }
@@ -171,7 +179,7 @@ export function litBraziers(s: GameState): number {
 }
 
 function goalBoss(ctx: Pick<Ctx, 's' | 'c'>): string | undefined {
-  const goal = scenarioOf(ctx)?.goal;
+  const goal = goalOf(ctx);
   return goal?.type === 'killBoss' ? goal.boss : undefined;
 }
 
@@ -195,6 +203,7 @@ const BRAZIER_SNUFFER = 'shadow-wraith';
  *  next to a lit brazier puts it out. */
 export function onFigureTurnEnd(ctx: Ctx, f: Figure): void {
   if (f.kind === 'hero') deliver(ctx, f);
+  finishRace(ctx);
   if (f.kind !== 'monster' || f.typeId !== BRAZIER_SNUFFER || !hasSpecial(ctx, 'braziers')) return;
   for (const o of boardObjects(ctx.s)) {
     if (o.tile.object.kind !== 'brazier' || o.tile.object.state !== 'lit') continue;
@@ -235,12 +244,37 @@ export function spawnNpcs(ctx: Ctx, room: RoomDef): void {
   }
 }
 
-/** Where an NPC walks this turn: the goal zone while a hero is near, else nowhere (null). Until the
- *  zone's room is revealed it heads for the revealed hexes nearest the zone (the doorway on the way). */
+/** `race`: the first figure in the zone, checked at the end of every turn, ends the scenario. */
+function finishRace(ctx: Ctx): void {
+  const winner = raceWinner(ctx);
+  if (!winner) return;
+  emit(ctx, { type: 'raceFinished', winner });
+  if (winner === 'heroes') winScenario(ctx);
+  else loseScenario(ctx);
+}
+
+/** An NPC's death loses the scenario, except a race's rival: then the heroes just have to get there. */
+export function npcLost(ctx: Pick<Ctx, 's' | 'c'>, id: string): boolean {
+  const goal = goalOf(ctx);
+  return !(goal?.type === 'race' && id === npcId(goal.rival));
+}
+
+/** An object broken (`objects[].hp`): the one a `protect` goal keeps loses the scenario at once. */
+export function onObjectDestroyed(ctx: Ctx, id: string): void {
+  const goal = goalOf(ctx);
+  if (goal?.type === 'protect' && goal.object === id) loseScenario(ctx);
+}
+
+/** Where an NPC walks this turn: the goal zone while a hero is near, else nowhere (null); a race's
+ *  rival runs there whether a hero is near or not. Until the zone's room is revealed it heads for
+ *  the revealed hexes nearest the zone (the doorway on the way). */
 export function npcGoal(ctx: Pick<Ctx, 's' | 'c'>, npc: SummonState): Hex[] | null {
   const scenario = scenarioOf(ctx);
-  if (!scenario || !heroes(ctx.s).some((h) => isPresent(h) && distance(h.hex, npc.hex) <= NPC_LEAD)) return null;
-  const zone = goalZone(scenario);
+  if (!scenario) return null;
+  const goal = activeGoal(ctx.s, scenario);
+  const rival = goal.type === 'race' && npc.id === npcId(goal.rival);
+  if (!rival && !heroes(ctx.s).some((h) => isPresent(h) && distance(h.hex, npc.hex) <= NPC_LEAD)) return null;
+  const zone = goalZone(scenario, goal);
   if (!zone.length) return null;
   if (zone.some((h) => ctx.s.board.tiles[hexKey(h)])) return zone;
   const toZone = (k: string) => Math.min(...zone.map((h) => distance(h, parseHexKey(k))));
@@ -268,8 +302,8 @@ export function objectSpawns(ctx: Ctx): void {
 
 function deliver(ctx: Ctx, h: HeroState): void {
   const scenario = scenarioOf(ctx);
-  const goal = scenario?.goal;
-  if (goal?.type !== 'collect' || !inZone(goalZone(scenario!), h.hex)) return;
+  const goal = scenario && activeGoal(ctx.s, scenario);
+  if (goal?.type !== 'collect' || !inZone(goalZone(scenario!, goal), h.hex)) return;
   const count = (h.questItems ?? []).filter((x) => x === goal.kind).length;
   if (count === 0) return;
   h.questItems = (h.questItems ?? []).filter((x) => x !== goal.kind);
@@ -367,7 +401,7 @@ export function onHeroExhausted(ctx: Ctx, h: HeroState): void {
     for (const item of carried) dropQuestItem(ctx, item, h.hex, h.id);
   }
   if (!hasSpecial(ctx, 'carriedItemDrops')) return;
-  const goal = scenarioOf(ctx)?.goal;
+  const goal = goalOf(ctx);
   if (goal?.type !== 'carryItem' || !h.questItems?.includes(goal.item)) return;
   h.questItems = h.questItems.filter((x) => x !== goal.item);
   dropQuestItem(ctx, goal.item, h.hex, h.id);

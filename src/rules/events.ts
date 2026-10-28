@@ -9,6 +9,7 @@ import type { EventAction, EventTrigger, ScenarioDef, ScenarioEventDef } from '.
 import { emit, isFreeHex, isPresent, monsters, tileAt, wallBetween, type Ctx } from './effects/context';
 import { openDoor } from './effects/move';
 import { areAdjacent, distance, hexEquals, hexKey, neighbors, parseHexKey, type Hex } from './hex';
+import { switchGoal } from './objectives';
 import { addNewGroupsToOrder } from './round';
 import { spawnKey, spawnMonster } from './setup';
 import type { FigureId, GameState, HeroState, MonsterState } from './state';
@@ -44,6 +45,8 @@ function runAction(ctx: Ctx, ev: ScenarioEventDef, a: EventAction, origin?: Hex)
     emit(ctx, { type: 'story', text: a.text, eventId: ev.id });
   } else if (a.type === 'openDoor') {
     openDoor(ctx, a.hex);
+  } else if (a.type === 'setGoal') {
+    switchGoal(ctx, a.goal);
   } else if (a.type === 'coins') {
     const tile = origin && tileAt(s, origin);
     if (!origin || !tile) return;
@@ -152,6 +155,11 @@ export function onMonsterTurnEnd(ctx: Ctx, m: MonsterState): void {
     if (t.type === 'monsterTurnsAlive' && t.tag === m.tag && m.turnCount >= t.turns) fire(ctx, ev, ev.actions, m.hex);
     else if (t.type === 'objectReached' && t.tag === m.tag && reached(ctx.s, m, t.hex)) fire(ctx, ev, ev.actions, m.hex);
   }
+}
+
+/** `bossHalfHp`: a boss's health just fell to half or below (s20's second phase). */
+export function onBossHalfHp(ctx: Ctx, m: MonsterState): void {
+  for (const ev of pendingOf(ctx, 'bossHalfHp')) if (!ev.trigger.boss || ev.trigger.boss === m.typeId) fire(ctx, ev, ev.actions, m.hex);
 }
 
 /** A tagged monster died: when it was the last with its tag, its pending events are prevented. */
