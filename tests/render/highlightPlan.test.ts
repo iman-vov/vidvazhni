@@ -5,7 +5,26 @@ import { floatPose } from '../../src/render/boardOverlay';
 
 describe('planHighlights', () => {
   it('is empty for no highlights', () => {
-    expect(planHighlights({})).toEqual({ cells: [], targets: [], path: [], range: [], tone: 'enemy' });
+    expect(planHighlights({})).toEqual({ cells: [], targets: [], path: [], range: [], tone: 'enemy', sight: [] });
+  });
+
+  it('card choice: the threat tint sits under the move, sight lines pass through', () => {
+    const plan = planHighlights({
+      threat: [
+        [1, 0],
+        [2, 0],
+      ],
+      reachable: [{ hex: [1, 0], cost: 1 }],
+      sight: [{ from: [0, 0], to: [3, 0], hit: true }, { from: [0, 0], to: [0, 3] }],
+    });
+    expect(plan.cells).toEqual([
+      { hex: [1, 0], kind: 'reach', cost: 1 },
+      { hex: [2, 0], kind: 'threat' },
+    ]);
+    expect(plan.sight).toEqual([
+      { from: [0, 0], to: [3, 0], hit: true },
+      { from: [0, 0], to: [0, 3], hit: false },
+    ]);
   });
 
   it('non-attack targets: the ally tone, a result preview and the range outline', () => {

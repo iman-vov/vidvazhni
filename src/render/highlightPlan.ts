@@ -1,5 +1,5 @@
 // Turns BoardHighlights into per-hex cells and per-figure marks. Pure, so the merge rules are tested:
-// one hex shows one tint (area over the path end over the path over reachable), and a reachable hex
+// one hex shows one tint (area over the path end over the path over reachable over threat), and a reachable hex
 // keeps its cost label under a path dot.
 
 import { DIRECTIONS, distance, hexKey, type Hex, type HexKey } from '../rules/hex';
@@ -7,7 +7,7 @@ import type { IconName } from '../ui/icons/names';
 import type { FigureId, GameState } from '../rules/state';
 import type { BoardHighlights } from './view';
 
-export type CellKind = 'reach' | 'path' | 'pathEnd' | 'area';
+export type CellKind = 'threat' | 'reach' | 'path' | 'pathEnd' | 'area';
 
 export interface HighlightCell {
   hex: Hex;
@@ -38,11 +38,14 @@ export interface HighlightPlan {
   /** Outline of the action's range (edges between a hex in range and one outside it). */
   range: RangeEdge[];
   tone: 'enemy' | 'ally';
+  /** Sight lines, as given. */
+  sight: { from: Hex; to: Hex; hit: boolean }[];
 }
 
-const PRIORITY: Record<CellKind, number> = { reach: 0, path: 1, pathEnd: 2, area: 3 };
+const PRIORITY: Record<CellKind, number> = { threat: -1, reach: 0, path: 1, pathEnd: 2, area: 3 };
 
 export const CELL_COLORS: Record<CellKind, string> = {
+  threat: '#e2483d',
   reach: '#ffd36b',
   path: '#fff1b8',
   pathEnd: '#ffffff',
@@ -78,6 +81,7 @@ export function planHighlights(h: BoardHighlights, onBoard?: (hex: Hex) => boole
       old.cost = cost;
     }
   };
+  for (const hex of h.threat ?? []) put(hex, 'threat');
   for (const r of h.reachable ?? []) put(r.hex, 'reach', r.cost);
   const path = h.path ?? [];
   path.forEach((hex, i) => put(hex, i === path.length - 1 ? 'pathEnd' : 'path'));
@@ -101,6 +105,7 @@ export function planHighlights(h: BoardHighlights, onBoard?: (hex: Hex) => boole
     path: path.map((x) => [x[0], x[1]] as Hex),
     range: h.range ? rangeOutline(h.range.center, h.range.radius, onBoard) : [],
     tone: h.targetTone ?? 'enemy',
+    sight: (h.sight ?? []).map((l) => ({ from: [l.from[0], l.from[1]] as Hex, to: [l.to[0], l.to[1]] as Hex, hit: !!l.hit })),
   };
 }
 

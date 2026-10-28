@@ -33,6 +33,7 @@ import { figureCard, monsterPlan } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
 import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
 import { previewAction, type ActionPreview } from './actionPreview';
+import { allThreats, heroMove, monsterThreat, type MonsterThreat } from './threat';
 import { heroColor } from './boardViewStub';
 import { INTENTS, toggleIntent, type GameController, type IntentId } from './game';
 import { settings } from './settings';
@@ -113,6 +114,16 @@ interface Ui {
   heroInfo: FigureId | null;
   /** Card choice: the board is shown for a moment instead of the hand. */
   peek: boolean;
+  /** Round card choice: the hand docked at the bottom is folded to a strip (the choice is kept). */
+  dockFolded: boolean;
+  /** Round card choice: the tapped monster whose move, reach and sight the board shows. */
+  threatOf: FigureId | null;
+  /** Round card choice: every hex any monster could attack this round is tinted. */
+  allThreats: boolean;
+  /** Round card choice: the own hero was tapped; the board shows its move with this half of the focused card. */
+  moveHalf: 'top' | 'bottom' | null;
+  /** The hand card last tapped or held: the card the move preview reads. */
+  focusCard: CardId | null;
   itemInfo: { heroId: FigureId; itemId: string } | null;
   monsterInfo: string | null;
   busy: boolean;
@@ -157,6 +168,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     figInfo: null,
     heroInfo: null,
     peek: false,
+    dockFolded: false,
+    threatOf: null,
+    allThreats: false,
+    moveHalf: null,
+    focusCard: null,
     busy: false,
     modifier: null,
     toasts: [],
@@ -177,6 +193,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   let focusCache: { state: GameState; value: Record<string, FigureId[]> | null } | null = null;
   let disposed = false;
   let lastFigureTap: { id: FigureId; at: number } | null = null;
+  let threatCache: { state: GameState; id: FigureId; value: MonsterThreat } | null = null;
+  let allThreatCache: { state: GameState; value: Hex[] } | null = null;
 
   const root = h('div', { class: 'gscreen' });
   const top = h('div', { class: 'gtop' });
@@ -202,6 +220,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
   const unsubs: (() => void)[] = [];
   unsubs.push(
     board.onHexTap((hex) => {
+      if (!ui.busy && !ui.modal && game.state.pending?.kind === 'selectCards') return choiceHexTap(hex);
       if (ui.busy || !stepInfo || ui.modal) return;
       const m = stepInfo.model;
       if (m.mode === 'targets') {
@@ -240,6 +259,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function figureTapped(id: FigureId): void {
     if (ui.busy || ui.modal) return;
+    if (game.state.pending?.kind === 'selectCards') return choiceFigureTap(id);
     const m = stepInfo?.model;
     // Area, hex and path steps aim at the figure's hex: the board's hex tap that follows does it
     // (a hold still opens the figure card).
@@ -271,6 +291,153 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     board.onFigureHold((id) => moreAbout({ figureId: id })),
   );
   unsubs.push(onLangChange(render));
+
+  // ─── Round card choice: reading the board ────────────────────────────────
+
+  /** A monster: its threat on the board (again: off). The own hero with the hand open: its move with
+   *  the focused card. Another hero: their hand if none is open, else their stat card. */
+  function choiceFigureTap(id: FigureId): void {
+    const s = game.state;
+    const f = s.figures[id];
+    if (!f) return;
+    if (f.kind === 'monster') {
+      ui.threatOf = ui.threatOf === id ? null : id;
+      ui.moveHalf = null;
+      ui.figInfo = null;
+    } else if (f.kind === 'hero' && id === ui.revealed) {
+      ui.threatOf = null;
+      ui.moveHalf = ui.moveHalf ? null : defaultHalf(id);
+    } else if (f.kind === 'hero' && !ui.revealed && s.pending?.kind === 'selectCards' && s.pending.heroIds.includes(id)) {
+      return revealHero(id);
+    } else {
+      return openFigure({ figureId: id }, true);
+    }
+    renderLayer();
+    updateBoard();
+  }
+
+  /** Empty ground clears what the board shows. */
+  function choiceHexTap(hex: Hex): void {
+    if (lastFigureTap && Date.now() - lastFigureTap.at < 400) return;
+    if (!ui.threatOf && !ui.moveHalf) return;
+    ui.threatOf = null;
+    ui.moveHalf = null;
+    renderLayer();
+    updateBoard();
+  }
+
+  /** The card the move preview reads: the last one tapped, else the leading one. */
+  function moveCard(): CardId | null {
+    const c = ui.focusCard ?? ui.leading ?? ui.pick[0] ?? null;
+    return c && ui.revealed && (game.state.figures[ui.revealed] as HeroState | undefined)?.hand.includes(c) ? c : null;
+  }
+
+  /** The half with a move of its own (the bottom when both or neither have one). */
+  function defaultHalf(heroId: FigureId): 'top' | 'bottom' {
+    const c = moveCard();
+    const hero = game.state.figures[heroId] as HeroState;
+    const card = c ? playedCard(content, hero.classId, c, game.state.variants) : undefined;
+    return card && !card.bottom.steps.some((st) => st.type === 'move') && card.top.steps.some((st) => st.type === 'move') ? 'top' : 'bottom';
+  }
+
+  function threatFor(id: FigureId): MonsterThreat | null {
+    const s = game.state;
+    const f = s.figures[id];
+    if (f?.kind !== 'monster') return null;
+    if (threatCache?.state !== s || threatCache.id !== id) threatCache = { state: s, id, value: monsterThreat(s, content, f) };
+    return threatCache.value;
+  }
+
+  function threatHexes(): Hex[] {
+    const s = game.state;
+    if (allThreatCache?.state !== s) allThreatCache = { state: s, value: allThreats(s, content) };
+    return allThreatCache.value;
+  }
+
+  /** The board while the round's cards are chosen: the tapped monster's move (gold, with the cost),
+   *  the hexes it could attack (red), lines to the heroes it sees; or the own hero's move. */
+  function choiceHighlights(): BoardHighlights | null {
+    const hl: BoardHighlights = {};
+    if (ui.allThreats) hl.threat = threatHexes();
+    const th = ui.threatOf ? threatFor(ui.threatOf) : null;
+    const m = ui.threatOf ? game.state.figures[ui.threatOf] : undefined;
+    if (th && m) {
+      if (!ui.allThreats) hl.threat = th.threatened;
+      hl.reachable = th.reach.filter((r) => r.cost > 0);
+      hl.sight = th.heroes.filter((x) => x.sight).map((x) => ({ from: m.hex, to: x.hex, hit: x.hit }));
+      hl.targets = th.heroes.filter((x) => x.hit).map((x) => x.figureId);
+      hl.selected = m.id;
+      hl.active = null;
+    }
+    const card = moveCard();
+    if (ui.moveHalf && ui.revealed && card) {
+      const mv = heroMove(game.state, content, ui.revealed, card, ui.moveHalf);
+      if (mv) hl.reachable = mv.reach;
+      hl.selected = ui.revealed;
+      hl.active = null;
+    }
+    return Object.keys(hl).length ? hl : null;
+  }
+
+  /** «Усі загрози»: a toggle on the hand's head and on the banner. */
+  function allThreatsButton(): HTMLElement {
+    return h(
+      'button',
+      {
+        class: `gbtn gthreat-all${ui.allThreats ? ' is-on' : ''}`,
+        'aria-pressed': String(ui.allThreats),
+        title: t('game.threat.allHint'),
+        onclick: () => ((ui.allThreats = !ui.allThreats), renderLayer(), updateBoard()),
+      },
+      icon('attack'),
+      h('span', { class: 'gbtn-label' }, t('game.threat.all')),
+    );
+  }
+
+  /** Above the docked hand: the tapped monster (name, hp, shield, conditions, this round's steps or its
+   *  base stats, whom it sees and can hit) or the own hero's move with the focused card. */
+  function choiceChip(): HTMLElement | null {
+    const s = game.state;
+    const close = () => ((ui.threatOf = null), (ui.moveHalf = null), renderLayer(), updateBoard());
+    const closeBtn = h('button', { class: 'gbtn gbtn-icon gthreat-close', 'aria-label': t('game.close'), title: t('game.close'), onclick: close }, icon('close'));
+    const th = ui.threatOf ? threatFor(ui.threatOf) : null;
+    const m = ui.threatOf ? (s.figures[ui.threatOf] as MonsterState | undefined) : undefined;
+    if (th && m) {
+      const names = (ids: FigureId[]) => ids.map((id) => figureName(id)).join(', ');
+      const sees = th.heroes.filter((x) => x.sight).map((x) => x.figureId);
+      const hits = th.heroes.filter((x) => x.hit).map((x) => x.figureId);
+      return h(
+        'div',
+        { class: 'gthreat', role: 'status' },
+        h(
+          'div',
+          { class: 'gthreat-head' },
+          h('b', null, figureName(m.id)),
+          h('span', { class: 'gthreat-hp' }, icon('hp'), `${m.hp}/${m.maxHp}`),
+          h('button', { class: 'gbtn gbtn-small', onclick: () => moreAbout({ figureId: m.id }) }, t('help.more')),
+          closeBtn,
+        ),
+        statusRow(s, m, explain),
+        h('p', { class: 'gthreat-steps' }, h('small', null, th.known ? t('game.threat.card') : t('game.threat.base')), th.steps.length ? th.steps.map((st) => stepText(st, s.variants.orbs)).join('; ') : t('game.monster.nothing')),
+        h('p', { class: `gthreat-line${hits.length ? ' is-hit' : ''}` }, icon('attack'), hits.length ? t('game.threat.hits', { names: names(hits) }) : t('game.threat.hitsNone')),
+        h('p', { class: 'gthreat-line' }, icon('arrow'), sees.length ? t('game.threat.sees', { names: names(sees) }) : t('game.threat.seesNone')),
+        h('small', { class: 'gthreat-legend' }, h('i', { class: 'is-reach' }), t('game.threat.legendMove'), h('i', { class: 'is-hit' }), t('game.threat.legendHit')),
+      );
+    }
+    if (ui.moveHalf && ui.revealed) {
+      const card = moveCard();
+      const mv = card ? heroMove(s, content, ui.revealed, card, ui.moveHalf) : null;
+      const half = (which: 'top' | 'bottom') =>
+        h('button', { class: `gbtn gbtn-chip${ui.moveHalf === which ? ' is-on' : ''}`, 'aria-pressed': String(ui.moveHalf === which), onclick: () => ((ui.moveHalf = which), renderLayer(), updateBoard()) }, icon(which === 'top' ? 'up' : 'down'), t(`game.move.${which}`));
+      return h(
+        'div',
+        { class: 'gthreat', role: 'status' },
+        h('div', { class: 'gthreat-head' }, h('b', null, card ? t('game.move.title', { card: cardName(card) }) : figureName(ui.revealed)), card ? half('top') : null, card ? half('bottom') : null, closeBtn),
+        h('p', { class: 'gthreat-line' }, icon('move'), !card ? t('game.move.pick') : !mv || mv.move === 0 ? t('game.move.none') : mv.fallback ? t('game.move.default') : t('game.move.reach', { n: mv.move })),
+      );
+    }
+    return null;
+  }
 
   // ─── Actions ─────────────────────────────────────────────────────────────
 
@@ -437,6 +604,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     ui.revealed = heroId;
     ui.pick = [];
     ui.leading = null;
+    ui.focusCard = null;
+    ui.moveHalf = null;
     ui.longRest = false;
     ui.intents = game.intentsOf(heroId ?? '');
     ui.pressCard = null;
@@ -480,6 +649,12 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       ui.dodgeItem = null;
     }
     if (s.pending?.kind !== 'selectCards' && s.pending?.kind !== 'chooseHandBeforeScenario') ui.peek = false;
+    if (s.pending?.kind !== 'selectCards') {
+      ui.threatOf = null;
+      ui.moveHalf = null;
+      ui.dockFolded = false;
+    }
+    if (ui.threatOf && s.figures[ui.threatOf]?.kind !== 'monster') ui.threatOf = null;
     const th = turnHero();
     if (th) ui.focusHero = th.id;
   }
@@ -714,7 +889,10 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       // Same height as before, so the board does not refit in the middle of an animation.
       body = h('div', { class: 'gbar is-busy' }, h('span', null, t('game.playing')), h('button', { class: 'gbtn', onclick: skipAnimations }, icon('skip'), t('game.skip')));
       size = ['tall', 'short', 'none'].find((k) => document.body.classList.contains(`g-bottom-${k}`)) ?? 'short';
-    } else if ((p?.kind === 'chooseHandBeforeScenario' || p?.kind === 'selectCards') && ui.revealed) {
+    } else if (p?.kind === 'selectCards' && ui.revealed) {
+      // The hand is docked over this space (renderLayer), so the board fits above it.
+      size = ui.dockFolded ? 'strip' : 'dock';
+    } else if (p?.kind === 'chooseHandBeforeScenario' && ui.revealed) {
       body = ui.peek ? h('div', { class: 'gbar gpeek-bar' }, artButton('hand', t('game.select.back'), () => ((ui.peek = false), render()), { cls: 'is-small' })) : null;
       size = ui.peek ? 'short' : 'none';
     } else if (p?.kind === 'heroTurn' || p?.kind === 'stepChoice') {
@@ -739,7 +917,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       body = longRestPanel();
       size = 'tall';
     }
-    for (const k of ['tall', 'short', 'none']) document.body.classList.toggle(`g-bottom-${k}`, size === k);
+    for (const k of ['tall', 'short', 'none', 'dock', 'strip']) document.body.classList.toggle(`g-bottom-${k}`, size === k);
     bottom.replaceChildren(...(body ? [body] : []));
   }
 
@@ -819,13 +997,17 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
             'button',
             { class: `gbtn gsel-intents${ui.intentsOpen ? ' is-open' : ''}`, 'aria-expanded': String(ui.intentsOpen), onclick: () => ((ui.intentsOpen = !ui.intentsOpen), renderLayer()) },
             ui.intents.length ? ui.intents.map((i) => icon(intentIcon(i))) : icon('approach'),
-            t('game.intents.short'),
+            h('span', { class: 'gbtn-label' }, t('game.intents.short')),
             icon(ui.intentsOpen ? 'up' : 'down'),
           ),
-      h('button', { class: 'gbtn', title: t('game.select.peek'), onclick: () => ((ui.peek = true), render()) }, icon('hint'), t('game.select.peek')),
+      // The hand before the scenario covers the board («Поле» peeks); the round's hand is docked under
+      // it: «Усі загрози» and a fold to a strip instead.
+      choosingHand ? h('button', { class: 'gbtn', title: t('game.select.peek'), onclick: () => ((ui.peek = true), render()) }, icon('hint'), t('game.select.peek')) : allThreatsButton(),
+      choosingHand ? null : foldButton(),
       // Round cards: back to the board, so another player can choose first.
       choosingHand ? null : h('button', { class: 'gbtn gbtn-icon', 'aria-label': t('game.close'), title: t('game.close'), onclick: () => revealHero(null) }, icon('close')),
     );
+    if (!choosingHand) swipeToFold(head);
     const intents =
       !choosingHand && ui.intentsOpen
         ? h(
@@ -913,10 +1095,65 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
       foot.append(
         rest,
         h('div', { class: 'gsel-slots' }, slot(lead, 'lead'), swap, slot(second, 'second')),
-        ready ? artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go' }) : h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : t('game.select.hint2', { n: 2 - ui.pick.length })),
+        // Until «Готово» shows, its place tells how to read the board (the head already says what to pick).
+        ready ? artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go' }) : h('span', { class: 'gsel-sum' }, ui.longRest ? t('ui.longRest') : t('game.threat.tip')),
       );
     }
-    return h('div', { class: 'gsel', role: 'dialog', 'aria-label': hint }, head, intents, hand, foot);
+    if (choosingHand) return h('div', { class: 'gsel', role: 'dialog', 'aria-label': hint }, head, intents, hand, foot);
+    // The docked hand is one row: a mouse wheel scrolls it sideways.
+    hand.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || hand.scrollWidth <= hand.clientWidth) return;
+      e.preventDefault();
+      hand.scrollLeft += e.deltaY;
+    }, { passive: false });
+    return h('div', { class: 'gsel is-dock', role: 'region', 'aria-label': hint }, head, intents, hand, foot);
+  }
+
+  /** The round's hand folded to a strip: who, the two picks, «Готово» once ready; a tap or a swipe up
+   *  opens it again with the choice kept. */
+  function foldedHand(heroId: FigureId): HTMLElement {
+    const lead = ui.longRest ? null : (ui.leading ?? ui.pick[0] ?? null);
+    const second = ui.longRest ? null : (ui.pick.find((c) => c !== lead) ?? null);
+    const ready = ui.longRest || (lead && second);
+    const picks = ui.longRest
+      ? [h('span', { class: 'gstrip-pick' }, icon('rest'), t('ui.longRest'))]
+      : [lead, second].map((c, i) => h('span', { class: `gstrip-pick${c ? '' : ' is-empty'}` }, i === 0 ? icon('initiative') : null, c ? cardName(c) : t(`game.select.slot.${i === 0 ? 'lead' : 'second'}`)));
+    const strip = h(
+      'div',
+      { class: 'gsel is-dock is-folded', role: 'region', 'aria-label': t('game.select.unfold') },
+      h(
+        'button',
+        { class: 'gstrip-open', 'aria-label': t('game.select.unfold'), title: t('game.select.unfold'), onclick: () => ((ui.dockFolded = false), render()) },
+        portrait(heroId, colorOf(heroId), 'sm'),
+        h('b', null, figureName(heroId)),
+        ...picks,
+        icon('up'),
+      ),
+      allThreatsButton(),
+      ready ? artButton('check', t('game.ready'), () => confirmSelection(heroId), { cls: 'is-go is-small' }) : null,
+    );
+    swipeToFold(strip);
+    return strip;
+  }
+
+  function foldButton(): HTMLElement {
+    const label = ui.dockFolded ? t('game.select.unfold') : t('game.select.fold');
+    return h('button', { class: 'gbtn gbtn-icon gsel-fold', 'aria-label': label, title: label, 'aria-expanded': String(!ui.dockFolded), onclick: () => ((ui.dockFolded = !ui.dockFolded), render()) }, icon(ui.dockFolded ? 'up' : 'down'));
+  }
+
+  /** A vertical swipe on the hand's head folds it (down) or opens it (up). */
+  function swipeToFold(el: HTMLElement): void {
+    let y0: number | null = null;
+    el.addEventListener('pointerdown', (e) => (y0 = e.clientY));
+    el.addEventListener('pointerup', (e) => {
+      if (y0 === null) return;
+      const dy = e.clientY - y0;
+      y0 = null;
+      if (Math.abs(dy) < 36 || (dy > 0) === ui.dockFolded) return;
+      ui.dockFolded = dy > 0;
+      render();
+    });
+    el.addEventListener('pointercancel', () => (y0 = null));
   }
 
   /** Sizes the hand's cards (--sel-w) to the biggest that fits all of them without scrolling: the
@@ -943,12 +1180,14 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function openCard(heroId: FigureId, cardId: CardId): void {
     ui.enlarged = { heroId, cardId };
+    ui.focusCard = cardId;
     renderLayer();
   }
 
   function togglePick(cardId: CardId): void {
     playUi('cardPick');
     ui.longRest = false;
+    ui.focusCard = cardId;
     if (ui.pick.includes(cardId)) {
       ui.pick = ui.pick.filter((c) => c !== cardId);
       if (ui.leading === cardId) ui.leading = ui.pick[0] ?? null;
@@ -1432,7 +1671,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     if (ui.modal === 'intro') parts.push(introModal());
     if (ui.modal === 'menu') parts.push(menuModal());
     if (ui.modal === 'settings') parts.push(modalBox(t('ui.settings'), settingsPanel({ heroes: game.heroes().map((x) => x.classId), onQuality: (q) => board.setQuality(q), onSpeed: (n) => board.setSpeed?.(n), story: o.storyMode, onStory: o.onStoryMode }), () => ((ui.modal = 'menu'), render())));
-    if (next && ui.revealed && !ui.busy && !ui.peek && ui.modal !== 'intro') parts.push(selectionOverlay(ui.revealed));
+    if (next && ui.revealed && !ui.busy && !ui.peek && ui.modal !== 'intro') parts.push(ui.dockFolded && s.pending?.kind === 'selectCards' ? foldedHand(ui.revealed) : selectionOverlay(ui.revealed));
+    const chip = s.pending?.kind === 'selectCards' && !ui.busy && !ui.modal ? choiceChip() : null;
+    if (chip) parts.push(chip);
     if (ui.modal === 'monster' && ui.monsterInfo) parts.push(monsterModal(ui.monsterInfo));
     if (ui.modal === 'hero' && ui.heroInfo) parts.push(heroModal(ui.heroInfo));
     if (ui.figInfo && !ui.modal) {
@@ -1563,7 +1804,8 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     return h(
       'div',
       { class: 'gpick gplate', role: 'group', 'aria-label': t('game.select.who') },
-      h('p', { class: 'gpick-text' }, icon('hand'), t('game.select.who')),
+      h('p', { class: 'gpick-text' }, icon('hand'), t('game.select.who'), allThreatsButton()),
+      h('small', { class: 'gpick-tip' }, t('game.threat.tip')),
       h(
         'div',
         { class: 'gpick-heroes' },
@@ -1776,6 +2018,11 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
 
   function updateBoard(): void {
     const s = game.state;
+    const choice = s.pending?.kind === 'selectCards' && !ui.busy ? choiceHighlights() : null;
+    if (choice) {
+      board.highlight(choice);
+      return;
+    }
     // A monster's stat card shows its plan: the path it will walk and whom it goes for.
     const figOpen = ui.figInfo?.figureId ? s.figures[ui.figInfo.figureId] : undefined;
     if (!stepInfo && !ui.busy && figOpen?.kind === 'monster') {
@@ -1852,7 +2099,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     stopRoll();
     document.removeEventListener('pointerdown', skipRoll, true);
     for (const u of unsubs) u();
-    document.body.classList.remove('game', 'g-left-closed', 'g-right-closed', 'g-bottom-tall', 'g-bottom-short', 'g-bottom-none');
+    document.body.classList.remove('game', 'g-left-closed', 'g-right-closed', 'g-bottom-tall', 'g-bottom-short', 'g-bottom-none', 'g-bottom-dock', 'g-bottom-strip');
     overlay.replaceChildren();
   };
 }

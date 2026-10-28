@@ -579,3 +579,323 @@ body.game {
     display: none;
   }
 }
+
+/* ─── Round card choice: the hand docked under the board ─── */
+
+/* The board fits above the dock (--g-bottom), so it stays whole and can be panned, zoomed and tapped. */
+body.game {
+  --sel-dock-h: clamp(340px, 52vh, 560px);
+  --sel-strip-h: 66px;
+}
+
+body.game.g-bottom-dock {
+  --g-bottom: var(--sel-dock-h);
+}
+
+body.game.g-bottom-strip {
+  --g-bottom: calc(var(--sel-strip-h) + env(safe-area-inset-bottom, 0px));
+}
+
+.gsel.is-dock {
+  top: auto;
+  height: var(--g-bottom);
+  gap: 4px;
+  padding-top: 4px;
+  background: linear-gradient(180deg, rgba(20, 38, 66, 0.97), rgba(8, 16, 30, 0.98));
+  border-top: 2px solid var(--hud-gold, #d9ad4f);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* The head takes the swipe (fold / open), so it does not scroll the page. */
+.gsel.is-dock .gsel-head,
+.gsel.is-dock.is-folded {
+  touch-action: none;
+}
+
+/* One row of cards sized by the dock's height (fitHand), scrolling sideways when they do not fit. */
+.gsel.is-dock .gsel-hand {
+  flex-wrap: nowrap;
+  justify-content: safe center;
+  align-content: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  padding: 4px 10px;
+}
+
+.gsel.is-dock .gsel-hand .gcard {
+  touch-action: pan-x;
+}
+
+.gsel-fold .gi {
+  color: var(--hud-gold-hi, #f6d98a);
+}
+
+/* Folded: one strip with who, the two picks, «Усі загрози» and «Готово». */
+.gsel.is-dock.is-folded {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px calc(16px + env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+}
+
+.gstrip-open {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--hud-ink, #f8e8c0);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gstrip-open > b {
+  color: #fff1c8;
+  white-space: nowrap;
+}
+
+.gstrip-open > .gi {
+  color: var(--hud-gold-hi, #f6d98a);
+}
+
+.gstrip-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
+  padding: 4px 10px;
+  border: 1px solid var(--hud-gold, #d9ad4f);
+  border-radius: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gstrip-pick.is-empty {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.gsel.is-folded .ubtn {
+  --ubtn-h: 48px;
+}
+
+.gthreat .gbtn,
+.gpick .gthreat-all {
+  background: linear-gradient(180deg, #23497a, #15304f);
+  border: 1px solid var(--hud-gold, #d9ad4f);
+  color: var(--hud-ink, #f8e8c0);
+}
+
+.gsel .gthreat-all.is-on,
+.gpick .gthreat-all.is-on,
+.gthreat .gbtn-chip.is-on {
+  background: linear-gradient(180deg, #8a2f29, #521915);
+  border-color: #ff9a8a;
+  color: #ffe0da;
+}
+
+.gthreat .gbtn-chip.is-on {
+  background: linear-gradient(180deg, #3a6aa6, #1d3d64);
+  border-color: var(--hud-gold-hi, #f6d98a);
+  color: var(--hud-gold-hi, #f6d98a);
+}
+
+.gpick-text .gthreat-all {
+  margin-left: 6px;
+  font-size: 0.85em;
+}
+
+.gpick-tip {
+  margin-top: -4px;
+  color: rgba(248, 232, 192, 0.75);
+}
+
+/* The tapped monster (or the own hero's move) just above the dock, over the board's bottom edge. */
+.gthreat {
+  position: fixed;
+  z-index: 21;
+  left: 50%;
+  bottom: calc(var(--g-bottom) + 10px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(640px, calc(100vw - 32px));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 2px solid var(--hud-gold, #d9ad4f);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(30, 62, 102, 0.96), rgba(13, 29, 52, 0.97));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  color: var(--hud-ink, #f8e8c0);
+  font-size: 15px;
+}
+
+.gthreat-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gthreat-head > b {
+  font-size: 1.1em;
+  color: #fff1c8;
+}
+
+.gthreat-hp {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.gthreat-close {
+  margin-left: auto;
+}
+
+.gthreat p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.gthreat-steps {
+  flex-wrap: wrap;
+}
+
+.gthreat-steps small {
+  opacity: 0.7;
+}
+
+.gthreat-line.is-hit {
+  color: #ffab9e;
+  font-weight: 700;
+}
+
+.gthreat-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.8;
+}
+
+.gthreat-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 3px;
+}
+
+.gthreat-legend .is-reach {
+  background: #ffd36b;
+}
+
+.gthreat-legend .is-hit {
+  background: #e2483d;
+}
+
+/* Phones: a taller sheet (the cards stay readable), a smaller chip, the strip's picks shorter. */
+@media (max-width: 600px) {
+  body.game {
+    --sel-dock-h: 60vh;
+  }
+
+  .gthreat {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .gstrip-open > b,
+  .gstrip-open > .gport {
+    display: none;
+  }
+
+  .gstrip-pick {
+    max-width: 96px;
+    font-size: 13px;
+  }
+
+  .gsel.is-folded .gthreat-all,
+  .gsel.is-folded .ubtn {
+    font-size: 13px;
+  }
+}
+
+@media (max-height: 520px) {
+  body.game {
+    --sel-dock-h: 62vh;
+  }
+}
+
+/* Landscape tablets: the chip sits right of the board's middle, clear of the figures and the camera buttons. */
+@media (min-width: 900px) {
+  .gthreat {
+    left: auto;
+    right: 72px;
+    transform: none;
+    max-width: min(520px, calc(100vw - 300px));
+  }
+}
+
+.gthreat-all {
+  white-space: nowrap;
+}
+
+/* Portrait phones: a lower sheet (the cards scroll in one row), labels off the head's buttons,
+   compact rest buttons, and a smaller chip without the legend. */
+@media (max-width: 600px) {
+  body.game {
+    --sel-dock-h: 54vh;
+  }
+
+  .gthreat-legend {
+    display: none;
+  }
+
+  .gsel.is-dock .gsel-head .gbtn-label {
+    display: none;
+  }
+
+  .gsel.is-dock .gsel-foot .gsel-tools .ubtn {
+    --ubtn-h: 40px;
+    font-size: 12px;
+  }
+
+  .gthreat-hp,
+  .gthreat .gbtn-small {
+    font-size: 12px;
+  }
+}
+
+/* Phones: the details stay a long press on the figure away; the chip keeps to what the board shows. */
+@media (max-width: 600px) {
+  .gthreat .gbtn-small {
+    display: none;
+  }
+}
+
+/* Short landscape screens (1024×768): a taller dock and lower rest buttons, so the cards keep their size. */
+@media (min-width: 601px) and (max-height: 800px) {
+  body.game {
+    --sel-dock-h: 56vh;
+  }
+
+  .gsel.is-dock .gsel-foot .gsel-tools .ubtn {
+    --ubtn-h: 40px;
+  }
+
+  .gthreat {
+    max-width: min(440px, calc(100vw - 300px));
+    font-size: 14px;
+  }
+}

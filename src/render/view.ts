@@ -32,6 +32,11 @@ export interface BoardHighlights {
   active?: FigureId | null;
   /** A figure the player picked to look at (a soft white hex edge). */
   selected?: FigureId | null;
+  /** Hexes monsters could attack this round (card choice): a red tint under the other cells. */
+  threat?: Hex[];
+  /** Lines of sight (card choice: from a monster to the heroes it sees); `hit` = it can attack
+   *  that hero this round (red), else it only sees them (pale). */
+  sight?: { from: Hex; to: Hex; hit?: boolean }[];
 }
 
 export interface BoardViewOptions {
