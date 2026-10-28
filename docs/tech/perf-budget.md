@@ -107,7 +107,26 @@ numbers are in `docs/tech/bench/2026-10-25-ipad-air-m2.json`
 
 ### iPad Air 13" (M2), fps
 
-Filled in from `docs/tech/bench/` after the before and after runs.
+Before: `docs/tech/bench/2026-10-25-ipad-air-m2.json`; after: `2026-10-28-ipad-air-m2.json` (DPR 2
+device, high capped at 1.5). fps is the 5 s average, p5 in brackets.
+
+| mission | low | medium | high |
+|---|---|---|---|
+| s0 | 60 → 60 | 57.2 → 55.7 | **3.9 (0.4) → 32.5 (30.3)** |
+| s1 | 59.6 → 59.6 | 49.8 → 57.2 | **10.8 (6.2) → 29.6 (28.6)** |
+| s2 | 60 → 60 | 49.9 → 54.5 | **13 (12) → 32.6 (31.3)** |
+| s3 | 60 → 60 | 52.1 → 48.5 | **10.1 (9.1) → 34.3 (32.3)** |
+| s4 | 60 → 60 | 52.3 → 53.9 | **15.3 (11) → 31.2 (28.6)** |
+| s5 | 60 → 60 | 53.1 → 54.1 | **15.1 (12.8) → 32.9 (30.3)** |
+| s6 | 60 → 60 | 41.7 (27) → 53.1 (41.7) | **11 (10.1) → 33.2 (31.3)** |
+| s7 | 60 → 60 | 52.4 → 53.8 | **16.4 (15.6) → 36.9 (34.5)** |
+| s8 | 60 → 60 | 57.4 → 56.2 | **10.7 (6.2) → 31.7 (29.4)** |
+| s9 | 60 → 60 | 49.5 → 54.2 | **0.7 (0.2) → 28 (26.3)** |
+| s10 | 60 → 60 | 54 → 54.4 | **16.3 (14.5) → 33.6 (31.3)** |
+
+High went from 1–16 fps to 28–37 with the same look. Medium holds 48–57 (s6 no longer drops to 27
+on its slowest frames), and low stays at 60. The full table with calls and tris:
+`node tools/bench-table.mjs docs/tech/bench/2026-10-25-ipad-air-m2.json docs/tech/bench/2026-10-28-ipad-air-m2.json`.
 
 ## Still open
 
