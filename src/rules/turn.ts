@@ -409,7 +409,10 @@ export function figureSteps(ctx: Ctx, f: Figure): Step[] {
     if (!current) return [];
     // «Монстри з X»: the X rolled when this card was revealed.
     const roll = ctx.s.variants.monsterDieAbilities ? ctx.s.behaviourDecks[f.typeId]?.xRolls?.[current] : undefined;
-    steps = onboardingSteps(ctx, f, absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current)), roll));
+    // «Завод» (мідний автомат): every third round it winds up instead of playing its card.
+    steps = monsterStats(ctx, f).windUp && ctx.s.round % 3 === 0
+      ? [{ type: 'shield', value: 2, target: 'self', duration: 'round' }]
+      : onboardingSteps(ctx, f, absoluteSteps(ctx, f, cardSteps(ctx, f, behaviourCard(ctx, f.typeId, current)), roll));
   } else {
     return [];
   }
@@ -443,10 +446,9 @@ function withoutConsume(st: Step): Step {
 
 function cardSteps(ctx: Ctx, m: MonsterState, card: MonsterCard): Step[] {
   if (!card.if) return card.steps;
+  const heroesWithin = (d: number) => Object.values(ctx.s.figures).filter((f) => f.kind === 'hero' && isPresent(f) && distance(f.hex, m.hex) <= d).length;
   const holds =
-    card.if === 'selfHpAtMostHalf'
-      ? m.hp * 2 <= m.maxHp
-      : Object.values(ctx.s.figures).filter((f) => f.kind === 'hero' && isPresent(f) && distance(f.hex, m.hex) === 1).length >= 2;
+    card.if === 'selfHpAtMostHalf' ? m.hp * 2 <= m.maxHp : card.if === 'heroWithinTwo' ? heroesWithin(2) >= 1 : heroesWithin(1) >= 2;
   return holds ? card.steps : (card.otherwise ?? []);
 }
 
@@ -454,14 +456,19 @@ function absoluteSteps(ctx: Ctx, m: MonsterState, steps: Step[], xRoll?: number)
   const stats = monsterStats(ctx, m);
   return steps.map((raw): Step => {
     const st = withX(raw, xRoll);
-    if (st.type === 'move') return { ...st, value: Math.max(0, stats.move + st.value), ...(stats.flying ? { fly: true } : {}) };
+    if (st.type === 'move') {
+      return { ...st, value: Math.max(0, stats.move + st.value), ...(stats.flying ? { fly: true } : stats.jumps ? { jump: true } : {}) };
+    }
     if (st.type === 'attack') {
       // Areas drawn from the monster itself (arc, line, all adjacent) and «по всіх сусідніх» are
       // melee: the monster's base range does not make them ranged (Тінерук 63: a line of 4).
       const fromSelf = !!st.targetAll || st.area?.shape === 'arc' || st.area?.shape === 'line' || st.area?.shape === 'allAdjacent';
-      const range = fromSelf ? st.range : stats.range !== undefined ? stats.range + (st.range ?? 0) : st.range;
+      let range = fromSelf ? st.range : stats.range !== undefined ? stats.range + (st.range ?? 0) : st.range;
+      // «Липкий язик»: a melee attack reaches 2 hexes and pulls the target in.
+      const tongue = !!stats.tonguePull && !fromSelf && range === undefined;
+      if (tongue) range = 2;
       const conditions = [...new Set([...(st.conditions ?? []), ...(stats.onAttack ?? [])])];
-      const out: Step = { ...st, value: Math.max(0, stats.attack + st.value) };
+      const out: Step = { ...st, value: Math.max(0, stats.attack + st.value), ...(tongue ? { pull: Math.max(st.pull ?? 0, 1) } : {}) };
       if (range !== undefined) out.range = Math.max(1, range);
       else delete out.range;
       if (conditions.length) out.conditions = conditions;

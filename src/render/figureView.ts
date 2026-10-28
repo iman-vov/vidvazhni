@@ -10,7 +10,7 @@ import type { ConditionId } from '../rules/content';
 import type { Hex } from '../rules/hex';
 import type { Figure, FigureId } from '../rules/state';
 import type { FigureBadge, OverlayItem } from './boardOverlay';
-import { modelScale, type FigureLook } from './figureLook';
+import { modelScale, RESTYLES, type FigureLook } from './figureLook';
 import { chooseGait, MODEL_STRIDE, walkSeconds, type Stride } from './gait';
 import { PLATE_HEIGHT } from './boardTiles';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
@@ -18,6 +18,7 @@ import { blobShadowTexture } from './contactShadow';
 import { HOVER_HEIGHT, hoverBob } from './motion';
 import { attachWeapon, loadModel, type Model } from './models';
 import type { GraphicsQuality } from './quality';
+import { applyRestyle, restyledScale } from './restyle';
 
 /** Desired seconds for one-shot clips on the board (Meshy clips run 1.6–5 s). */
 const CLIP_SECONDS: Record<string, number> = { attack: 1.0, hit: 0.7, death: 1.3, cast: 1.0 };
@@ -390,9 +391,8 @@ export class FigureView {
     }
     if (token !== this.loadToken || this.gone) return;
     const measured = measureHeight(model);
+    const restyle = this.look.restyleId ? RESTYLES[this.look.restyleId] : undefined;
     const scale = modelScale(this.look.height, measured);
-    model.scene.scale.setScalar(scale);
-    model.scene.position.y = PLATE_HEIGHT;
     // Own material copies, so fading, greying and outlining one figure leaves the others alone.
     const materials: THREE.Material[] = [];
     model.scene.traverse((o) => {
@@ -405,6 +405,14 @@ export class FigureView {
       mesh.material = Array.isArray(mesh.material) ? copies : copies[0]!;
       materials.push(...copies);
     });
+    if (restyle) {
+      // Restyled on its own material copies, measured at scale 1.
+      const extra = applyRestyle(model, restyle);
+      materials.push(...extra.materials);
+      this.ownGeometries.push(...extra.geometries);
+    }
+    model.scene.scale.copy(restyledScale(restyle, scale));
+    model.scene.position.y = PLATE_HEIGHT;
     const old = this.model;
     this.model = model;
     this.placeholder = null;
@@ -664,7 +672,7 @@ export class FigureView {
 
   /** Changes the look (e.g. a hero's class colour is the same, but a monster may turn elite after undo). */
   sameLook(look: FigureLook): boolean {
-    return look.modelId === this.look.modelId && look.kind === this.look.kind && look.number === this.look.number && look.color === this.look.color;
+    return look.modelId === this.look.modelId && look.restyleId === this.look.restyleId && look.kind === this.look.kind && look.number === this.look.number && look.color === this.look.color;
   }
 
   dispose(): void {

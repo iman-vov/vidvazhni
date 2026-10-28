@@ -1,0 +1,11 @@
+{
+  "id": "glass-guardian",
+  "hpPerHero": 12,
+  "hpPerHeroPerLevel": 2,
+  "move": 2,
+  "attack": 3,
+  "shield": 2,
+  "deck": "boss.glass-guardian",
+  "immune": ["stun", "immobilize", "muddle"],
+  "drops": { "coins": 4 }
+}

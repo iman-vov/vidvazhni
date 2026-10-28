@@ -211,6 +211,12 @@ export interface MonsterStats {
   /** Conditions every attack applies. */
   onAttack?: ConditionId[];
   flying?: boolean;
+  /** Moves with jump (жаба-скакун). */
+  jumps?: boolean;
+  /** Every third round skips its card and takes Щит +2 for the round instead (мідний автомат). */
+  windUp?: boolean;
+  /** Melee attacks reach range 2 and pull 1 (жаба-скакун, елітна: «Липкий язик»). */
+  tonguePull?: boolean;
 }
 
 export type MonsterTrait =
@@ -246,7 +252,7 @@ export interface MonsterType {
 }
 
 /** A condition that selects which branch of a conditional monster card is used. */
-export type MonsterCardCondition = 'selfHpAtMostHalf' | 'twoOrMoreHeroesAdjacent';
+export type MonsterCardCondition = 'selfHpAtMostHalf' | 'twoOrMoreHeroesAdjacent' | 'heroWithinTwo';
 
 export interface MonsterCard {
   id: string; // `<deck>.<initiative>` or `<monster>.<slug>`
@@ -273,6 +279,7 @@ export interface BossType {
   attack: number;
   range?: number;
   shield?: number;
+  flying?: boolean;
   deck: string;
   immune: ConditionId[];
   /** Named phases implemented in src/rules/special/ (Тінерук: друга фаза ≤ 50%). */

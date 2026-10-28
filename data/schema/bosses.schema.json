@@ -374,7 +374,7 @@
         "initiative": { "type": "integer", "minimum": 1, "maximum": 99 },
         "shuffle": { "type": "boolean" },
         "steps": { "$ref": "#/definitions/steps" },
-        "if": { "enum": ["selfHpAtMostHalf", "twoOrMoreHeroesAdjacent"] },
+        "if": { "enum": ["selfHpAtMostHalf", "twoOrMoreHeroesAdjacent", "heroWithinTwo"] },
         "otherwise": { "$ref": "#/definitions/steps" }
       },
       "required": ["id", "initiative", "steps"],
@@ -391,7 +391,10 @@
         "shield": { "type": "integer", "minimum": 1 },
         "retaliate": { "type": "integer", "minimum": 1 },
         "onAttack": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
-        "flying": { "type": "boolean" }
+        "flying": { "type": "boolean" },
+        "jumps": { "type": "boolean" },
+        "windUp": { "type": "boolean" },
+        "tonguePull": { "type": "boolean" }
       },
       "required": ["hp", "move", "attack"],
       "additionalProperties": false
@@ -406,6 +409,7 @@
     "attack": { "type": "integer", "minimum": 0 },
     "range": { "type": "integer", "minimum": 1 },
     "shield": { "type": "integer", "minimum": 1 },
+    "flying": { "type": "boolean" },
     "deck": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*$" },
     "immune": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
     "special": { "type": "array", "items": { "type": "string", "minLength": 1 } },

@@ -119,7 +119,7 @@ function statsOf(content: LoadedContent, typeId: string, rank: 'normal' | 'elite
   const m = content.monsters[typeId];
   if (m) return rank === 'elite' ? m.elite : m.normal;
   const b = content.bosses[typeId];
-  return b ? { hp: 0, move: b.move, attack: b.attack, ...(b.range ? { range: b.range } : {}), ...(b.shield ? { shield: b.shield } : {}) } : null;
+  return b ? { hp: 0, move: b.move, attack: b.attack, ...(b.range ? { range: b.range } : {}), ...(b.shield ? { shield: b.shield } : {}), ...(b.flying ? { flying: true } : {}) } : null;
 }
 
 function monsterStats(content: LoadedContent, typeId: string, m: MonsterState | undefined): HTMLElement | null {
@@ -132,6 +132,9 @@ function monsterStats(content: LoadedContent, typeId: string, m: MonsterState | 
   const ret = m ? m.retaliates.reduce((n, x) => n + x.value, 0) : (st.retaliate ?? 0);
   if (ret) stats.push(['retaliate', t('stat.retaliate'), ret]);
   if (st.flying) stats.push(['fly', t('step.fly'), '']);
+  if (st.jumps) stats.push(['jump', t('step.jump'), '']);
+  if (st.tonguePull) stats.push(['pull', t('monster.tonguePull'), '']);
+  if (st.windUp) stats.push(['gear', t('monster.windUp'), '']);
   return statLine(stats);
 }
 

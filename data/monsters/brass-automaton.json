@@ -1,0 +1,22 @@
+{
+  "id": "brass-automaton",
+  "deck": "guard",
+  "initiativeOffset": 6,
+  "normal": { "hp": 7, "move": 2, "attack": 3, "shield": 1, "windUp": true },
+  "elite": { "hp": 10, "move": 2, "attack": 4, "shield": 2, "windUp": true },
+  "forkCards": [
+    {
+      "id": "brass-automaton.gears",
+      "initiative": 30,
+      "if": "twoOrMoreHeroesAdjacent",
+      "steps": [{ "type": "attack", "value": 0, "targets": 2 }],
+      "otherwise": [{ "type": "move", "value": 0 }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "brass-automaton.wind-up",
+      "initiative": 70,
+      "steps": [{ "type": "shield", "value": 2, "target": "self", "duration": "round" }]
+    }
+  ],
+  "drops": { "normal": { "coins": 1, "coinChance": 0.5 }, "elite": { "coins": 1, "items": ["chainmail", "buckler"], "itemChance": 0.2 } }
+}

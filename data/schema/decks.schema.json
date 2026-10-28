@@ -361,7 +361,7 @@
         "initiative": { "type": "integer", "minimum": 1, "maximum": 99 },
         "shuffle": { "type": "boolean" },
         "steps": { "$ref": "#/definitions/steps" },
-        "if": { "enum": ["selfHpAtMostHalf", "twoOrMoreHeroesAdjacent"] },
+        "if": { "enum": ["selfHpAtMostHalf", "twoOrMoreHeroesAdjacent", "heroWithinTwo"] },
         "otherwise": { "$ref": "#/definitions/steps" }
       },
       "required": ["id", "initiative", "steps"],

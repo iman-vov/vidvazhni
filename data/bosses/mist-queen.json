@@ -1,0 +1,12 @@
+{
+  "id": "mist-queen",
+  "hpPerHero": 9,
+  "hpPerHeroPerLevel": 2,
+  "move": 3,
+  "attack": 3,
+  "range": 2,
+  "flying": true,
+  "deck": "boss.mist-queen",
+  "immune": ["stun", "immobilize", "muddle"],
+  "drops": { "coins": 3 }
+}

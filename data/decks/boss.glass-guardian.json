@@ -1,0 +1,50 @@
+{
+  "id": "boss.glass-guardian",
+  "cards": [
+    {
+      "id": "boss.glass-guardian.12",
+      "initiative": 12,
+      "steps": [{ "type": "attack", "value": 0, "area": { "shape": "line", "length": 4, "fromSelf": true } }]
+    },
+    {
+      "id": "boss.glass-guardian.23",
+      "initiative": 23,
+      "steps": [{ "type": "move", "value": 1 }, { "type": "attack", "value": 1 }]
+    },
+    {
+      "id": "boss.glass-guardian.31",
+      "initiative": 31,
+      "steps": [{ "type": "shield", "value": 1, "target": "self", "duration": "round" }, { "type": "attack", "value": 0 }]
+    },
+    {
+      "id": "boss.glass-guardian.42",
+      "initiative": 42,
+      "steps": [{ "type": "attack", "value": 1, "targetAll": "adjacentEnemies", "push": 1 }]
+    },
+    {
+      "id": "boss.glass-guardian.54",
+      "initiative": 54,
+      "steps": [
+        { "type": "shield", "value": 2, "target": "self", "duration": "round" },
+        { "type": "retaliate", "value": 2, "duration": "round" }
+      ]
+    },
+    {
+      "id": "boss.glass-guardian.63",
+      "initiative": 63,
+      "steps": [{ "type": "move", "value": 2 }, { "type": "attack", "value": -1, "conditions": ["immobilize"] }]
+    },
+    {
+      "id": "boss.glass-guardian.71",
+      "initiative": 71,
+      "shuffle": true,
+      "steps": [{ "type": "summon", "summon": "brass-automaton", "count": 1, "rank": "normal" }]
+    },
+    {
+      "id": "boss.glass-guardian.82",
+      "initiative": 82,
+      "shuffle": true,
+      "steps": [{ "type": "attack", "value": -1, "area": { "shape": "line", "length": 5, "fromSelf": true } }]
+    }
+  ]
+}

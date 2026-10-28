@@ -145,6 +145,7 @@ export function monsterStats(ctx: { s: GameState; c: Content }, m: MonsterState)
     const stats: MonsterStats = { hp: m.maxHp, move: boss.move, attack: boss.attack + phaseBonus };
     if (boss.range !== undefined) stats.range = boss.range;
     if (boss.shield !== undefined) stats.shield = boss.shield;
+    if (boss.flying) stats.flying = true;
     return stats;
   }
   const type = ctx.c.monsters[m.typeId];

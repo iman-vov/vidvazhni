@@ -12,6 +12,8 @@
 //   &env=1                 add a room environment map (metal looks dark without one)
 //   &sheet=1               contact sheet instead of the live view: idle, attack mid-frame and walk,
 //                          front and from the weapon side, close up (window.sheet holds a JPEG data URL)
+//   ?styles=brass-automaton,mist-queen   contact sheet of restyled monsters (figureLook RESTYLES):
+//                          the base model, then the restyle from the front and from behind
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -19,6 +21,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
 import { attachToBone, attachWeapon, listModels, loadModel, MODEL_CACHE, prefetchModels, type Model } from './models';
 import { GRAPHICS_QUALITIES, type GraphicsQuality } from './quality';
+import { MODEL_HEIGHT, RESTYLES } from './figureLook';
+import { applyRestyle, restyledScale } from './restyle';
 import type { IconName } from '../ui/icons/names';
 import { iconSvg } from '../ui/icons/svg';
 
@@ -95,6 +99,11 @@ function button(label: string, onClick: () => void, icon?: IconName): HTMLButton
 }
 
 async function main(): Promise<void> {
+  const styles = params.get('styles');
+  if (styles) {
+    await renderLineup(styles.split(','));
+    return;
+  }
   const ids = listModels();
   const id = params.get('model') ?? ids[0];
   if (!id) {
@@ -287,6 +296,68 @@ function renderSheet(model: Model, title: string): void {
   canvas.style.cssText = 'position:absolute;inset:0;max-width:100%;max-height:100%;margin:auto';
   document.body.appendChild(canvas);
   Object.assign(window, { sheet: canvas.toDataURL('image/jpeg', 0.85) });
+}
+
+/** One column per restyled monster: its base model, then the restyle from the front and from behind
+ *  (idle), each framed on its own; the board height is in the caption. */
+async function renderLineup(ids: string[]): Promise<void> {
+  const tile = 360;
+  const canvas = document.createElement('canvas');
+  canvas.width = tile * ids.length;
+  canvas.height = tile * 3 + 28;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#10141c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '15px system-ui, sans-serif';
+  renderer.setPixelRatio(1);
+  renderer.setSize(tile, tile, false);
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
+  for (const [col, id] of ids.entries()) {
+    const style = RESTYLES[id];
+    if (!style) continue;
+    const base = await loadModel(style.model, { quality: asQuality(params.get('quality')) });
+    const styled = await loadModel(style.model, { quality: asQuality(params.get('quality')) });
+    styled.scene.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) mesh.material = (mesh.material as THREE.Material).clone();
+    });
+    applyRestyle(styled, style);
+    // The base at its board height, the restyle at its own, both against the same 1.3 frame unit.
+    const box = new THREE.Box3().setFromObject(base.scene);
+    const h0 = Math.max(box.max.y - Math.min(0, box.min.y), 1e-6);
+    const baseH = MODEL_HEIGHT[style.model] ?? 1;
+    base.scene.scale.setScalar(baseH / h0);
+    styled.scene.scale.copy(restyledScale(style, (baseH * style.scale) / h0));
+    const rows: [Model, [number, number]][] = [[base, [0.35, 1]], [styled, [0.35, 1]], [styled, [-0.7, -0.8]]];
+    for (const [row, [m, [x, z]]] of rows.entries()) {
+      for (const other of [base, styled]) other.scene.removeFromParent();
+      scene.add(m.scene);
+      m.scene.position.y = PLATE_HEIGHT;
+      if (m.clips['idle']) {
+        m.mixer.stopAllAction();
+        const action = m.mixer.clipAction(m.clips['idle']);
+        action.reset().play();
+        action.time = 0.3 * m.clips['idle'].duration;
+        m.mixer.update(0);
+      }
+      m.scene.updateMatrixWorld(true);
+      box.setFromObject(m.scene);
+      const h = Math.max(box.max.y - PLATE_HEIGHT, 0.2);
+      const r = Math.max(h, box.max.x - box.min.x, box.max.z - box.min.z);
+      const centre = box.getCenter(new THREE.Vector3());
+      const dir = new THREE.Vector3(x, 0.35, z).normalize();
+      cam.position.copy(centre).addScaledVector(dir, r * 2.1);
+      cam.lookAt(centre);
+      renderer.render(scene, cam);
+      ctx.drawImage(renderer.domElement, col * tile, 28 + row * tile);
+    }
+    scene.remove(styled.scene);
+    ctx.fillStyle = '#e8ecf4';
+    ctx.fillText(`${id} from ${style.model}  (${(baseH * style.scale).toFixed(2)} vs ${baseH})`, col * tile + 8, 19);
+  }
+  canvas.style.cssText = 'position:absolute;inset:0;max-width:100%;max-height:100%;margin:auto';
+  document.body.appendChild(canvas);
+  Object.assign(window, { sheet: canvas.toDataURL('image/jpeg', 0.88) });
 }
 
 main().catch((err: unknown) => {

@@ -34,15 +34,21 @@ import greyWolf from '../../data/monsters/grey-wolf.json';
 import shadowWraith from '../../data/monsters/shadow-wraith.json';
 import stoneSentinel from '../../data/monsters/stone-sentinel.json';
 import thornling from '../../data/monsters/thornling.json';
+import marshHopper from '../../data/monsters/marsh-hopper.json';
+import brassAutomaton from '../../data/monsters/brass-automaton.json';
 
 import bogMiller from '../../data/bosses/bog-miller.json';
 import hammerfist from '../../data/bosses/hammerfist.json';
 import shadowhand from '../../data/bosses/shadowhand.json';
+import mistQueen from '../../data/bosses/mist-queen.json';
+import glassGuardian from '../../data/bosses/glass-guardian.json';
 
 import archerDeck from '../../data/decks/archer.json';
 import bossHammerfistDeck from '../../data/decks/boss.hammerfist.json';
 import bossMillerDeck from '../../data/decks/boss.miller.json';
 import bossShadowhandDeck from '../../data/decks/boss.shadowhand.json';
+import bossMistQueenDeck from '../../data/decks/boss.mist-queen.json';
+import bossGlassGuardianDeck from '../../data/decks/boss.glass-guardian.json';
 import casterDeck from '../../data/decks/caster.json';
 import ghostDeck from '../../data/decks/ghost.json';
 import guardDeck from '../../data/decks/guard.json';
@@ -100,11 +106,12 @@ export function loadContent(): LoadedContent {
     monsters: indexById<MonsterType>([
       cellarRat, gremlin, thornling, greyWolf, banditBrute,
       banditCrossbow, bogSlime, stoneSentinel, gloomCultist, shadowWraith,
-      mountainRam, nightMoth,
+      mountainRam, nightMoth, marshHopper, brassAutomaton,
     ]),
-    bosses: indexById<BossType>([bogMiller, shadowhand, hammerfist]),
+    bosses: indexById<BossType>([bogMiller, shadowhand, hammerfist, mistQueen, glassGuardian]),
     decks: indexById<BehaviourDeck>([
       meleeDeck, guardDeck, archerDeck, casterDeck, ghostDeck, bossMillerDeck, bossShadowhandDeck, bossHammerfistDeck,
+      bossMistQueenDeck, bossGlassGuardianDeck,
     ]),
     scenarios: indexById<ScenarioDef>([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10]),
     items: indexById<ItemDef>(items),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_HEIGHT, ELITE_SCALE, figureHeight, lookOf, modelIdOf, modelScale } from '../../src/render/figureLook';
+import { DEFAULT_HEIGHT, ELITE_SCALE, figureHeight, lookOf, modelIdOf, modelScale, RESTYLES } from '../../src/render/figureLook';
 import { loadContent } from '../../src/rules/load';
 import type { HeroState, MonsterState, SummonState } from '../../src/rules/state';
 
@@ -60,5 +60,25 @@ describe('lookOf', () => {
   it('every hero class and monster type in the content has a look', () => {
     for (const id of Object.keys(content.heroes)) expect(lookOf(hero(id), content).initial).toMatch(/^[A-Z]{1,2}$/);
     for (const id of Object.keys(content.monsters)) expect(lookOf(monster(id), content).height).toBeGreaterThan(0.3);
+  });
+});
+
+describe('restyled monsters (no Meshy model yet)', () => {
+  it('use an existing model at their own scale and keep their own look id', () => {
+    const automaton = lookOf(monster('brass-automaton'), content);
+    expect(automaton.modelId).toBe('stone-sentinel');
+    expect(automaton.restyleId).toBe('brass-automaton');
+    expect(automaton.height).toBeCloseTo(figureHeight('stone-sentinel', 'monster') * 0.8);
+    const queen = lookOf(monster('mist-queen', 'boss'), content);
+    expect(queen.modelId).toBe('night-moth');
+    expect(queen.flying).toBe(true);
+    expect(lookOf(monster('stone-sentinel'), content).restyleId).toBeUndefined();
+  });
+
+  it('every restyle is a known monster or boss and builds on a model with a height', () => {
+    for (const [id, r] of Object.entries(RESTYLES)) {
+      expect(content.monsters[id] ?? content.bosses[id]).toBeDefined();
+      expect(figureHeight(r.model, 'monster')).toBeGreaterThan(0.3);
+    }
   });
 });

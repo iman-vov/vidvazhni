@@ -42,6 +42,90 @@ export const MODEL_HEIGHT: Record<string, number> = {
   hammerfist: 2.0,
 };
 
+/** A piece added to a restyled model. `at` is a point in the model's bounding box: x and z from
+ *  −0.5 to 0.5 across its width and depth (+z is its front), y from 0 (feet) to 1 (top); `size` is
+ *  a share of its height. The piece rides the nearest bone. `mirror` adds a copy at −x. */
+export interface RestyleAccessory {
+  shape: 'key' | 'eye' | 'crystal' | 'heart' | 'crown';
+  color: string;
+  at: [number, number, number];
+  size: number;
+  mirror?: boolean;
+  /** Lit from inside: unaffected by the board's light. */
+  glow?: boolean;
+  /** Rides the first bone whose name contains this (e.g. `Head`) instead of the nearest one. */
+  bone?: string;
+}
+
+/** A monster without its own Meshy model yet: an existing model, recoloured and reshaped so it
+ *  reads as another creature (docs/design/act3.md «Нові монстри», «Боси»). */
+export interface Restyle {
+  /** The existing model it is built from. */
+  model: string;
+  /** × that model's height on the board. */
+  scale: number;
+  /** × its width and depth (squat or slender), height unchanged. */
+  widen?: number;
+  /** The texture's brightness is redrawn through these: shadow, middle, light. */
+  ramp: [string, string, string];
+  /** Lower part of the body in another colour (the toad's belly), up to `below` of its height. */
+  belly?: { color: string; below: number };
+  /** Below 1: see-through (glass). */
+  opacity?: number;
+  metalness?: number;
+  roughness?: number;
+  /** Clips play this much slower or faster (the queen's slow wingbeat). */
+  clipSpeed?: number;
+  accessories?: RestyleAccessory[];
+}
+
+export const RESTYLES: Record<string, Restyle> = {
+  'brass-automaton': {
+    model: 'stone-sentinel',
+    scale: 0.8,
+    widen: 1.22,
+    ramp: ['#3a2216', '#8a5a30', '#e2c27a'],
+    metalness: 0.55,
+    roughness: 0.42,
+    accessories: [
+      { shape: 'key', color: '#b08a4a', at: [0, 0.7, -0.45], size: 0.3, bone: 'Spine2' },
+      { shape: 'eye', color: '#ffb040', at: [0.07, 0.92, 0.2], size: 0.06, mirror: true, glow: true, bone: 'Head' },
+    ],
+  },
+  'marsh-hopper': {
+    model: 'bog-slime',
+    scale: 0.9,
+    widen: 1.18,
+    ramp: ['#1f2410', '#556326', '#98a048'],
+    // The slime sits half sunk into its hex: 0.5 is where it meets the plate.
+    belly: { color: '#e0c050', below: 0.66 },
+    roughness: 0.55,
+    accessories: [{ shape: 'eye', color: '#f0d040', at: [0.2, 0.92, 0.22], size: 0.24, mirror: true }],
+  },
+  'glass-guardian': {
+    model: 'stone-sentinel',
+    scale: 1.6,
+    widen: 0.94,
+    ramp: ['#2e5a70', '#7ab8d0', '#e8f8ff'],
+    opacity: 0.78,
+    metalness: 0.1,
+    roughness: 0.12,
+    accessories: [
+      { shape: 'heart', color: '#6a62d0', at: [0, 0.66, 0.2], size: 0.13, glow: true, bone: 'Spine2' },
+      { shape: 'crystal', color: '#a8d8e8', at: [0.3, 0.84, -0.05], size: 0.26, mirror: true, bone: 'Shoulder' },
+    ],
+  },
+  'mist-queen': {
+    model: 'night-moth',
+    scale: 2.2,
+    widen: 1.15,
+    ramp: ['#5a6070', '#9aa0b0', '#e4e8f0'],
+    roughness: 0.8,
+    clipSpeed: 0.6,
+    accessories: [{ shape: 'crown', color: '#b8b0e0', at: [0, 0.8, 0.3], size: 0.3 }],
+  },
+};
+
 /** Elite monsters stand a little taller (and get a gold base). */
 export const ELITE_SCALE = 1.12;
 
@@ -110,6 +194,8 @@ export interface FigureLook {
   attackYaw: number;
   /** Flying monsters (ghosts) hover above their hex with a bob and fly instead of jumping. */
   flying: boolean;
+  /** Monster type drawn as a restyled existing model (`RESTYLES`), if any. */
+  restyleId?: string;
 }
 
 export function figureKind(f: Figure): FigureKind {
@@ -123,6 +209,8 @@ export function figureKind(f: Figure): FigureKind {
 export function modelIdOf(f: Figure, content?: Content): string {
   if (f.kind === 'hero') return f.classId;
   if (f.kind === 'summon') return f.summonId.replace(/\./g, '-');
+  const restyle = RESTYLES[f.typeId];
+  if (restyle) return restyle.model;
   const model = content?.monsters[f.typeId]?.model;
   return model ? model.replace(/^.*\//, '').replace(/\.glb$/, '') : f.typeId;
 }
@@ -141,6 +229,7 @@ export function modelScale(height: number, measuredHeight: number): number {
 export function lookOf(f: Figure, content?: Content): FigureLook {
   const modelId = modelIdOf(f, content);
   const kind = figureKind(f);
+  const restyleId = f.kind === 'monster' && RESTYLES[f.typeId] ? f.typeId : undefined;
   const color =
     kind === 'hero'
       ? (HERO_COLORS[modelId] ?? '#4a7fd0')
@@ -154,14 +243,17 @@ export function lookOf(f: Figure, content?: Content): FigureLook {
   return {
     modelId,
     kind,
-    height: figureHeight(modelId, kind),
+    height: figureHeight(modelId, kind) * (restyleId ? RESTYLES[restyleId]!.scale : 1),
     color,
     initial: initialOf(modelId),
     number: f.kind === 'monster' ? f.number : null,
     weapons: WEAPONS[modelId] ?? [],
     projectile: PROJECTILE[modelId] ?? 'stone',
     attackYaw: ATTACK_YAW[modelId] ?? 0,
-    flying: f.kind === 'monster' && !!content?.monsters[f.typeId]?.[f.rank === 'normal' ? 'normal' : 'elite']?.flying,
+    flying:
+      f.kind === 'monster' &&
+      (f.rank === 'boss' ? !!content?.bosses[f.typeId]?.flying : !!content?.monsters[f.typeId]?.[f.rank === 'normal' ? 'normal' : 'elite']?.flying),
+    ...(restyleId ? { restyleId } : {}),
   };
 }
 
