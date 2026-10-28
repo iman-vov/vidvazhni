@@ -29,9 +29,10 @@ const MANIFEST = 'art/prompts/manifest.json';
 const TIERS = [
   { name: 'low', suffix: '.low', textureMax: { weapon: 256, prop: 256, default: 512 }, simplify: 0.5 },
   { name: 'medium', suffix: '', textureMax: { weapon: 512, prop: 512, default: 1024 } },
-  // 2048, not the source's 4096: Meshy's 4096² metallic-roughness maps cost 64 MB of GPU memory per
-  // model (two dozen on a board) and look the same on screen; iOS Safari killed the tab on high.
-  { name: 'high', suffix: '.hq', textureMax: { default: 2048 } },
+  // 2048 (1024 for props and weapons, small on screen), not the source's 4096: a Meshy model's three
+  // maps took 128 MB of GPU memory at 4096 (two dozen models on a board) and look the same on screen
+  // at these sizes; iOS Safari killed the tab when high started.
+  { name: 'high', suffix: '.hq', textureMax: { weapon: 1024, prop: 1024, default: 2048 } },
 ];
 const SIMPLIFY_ERROR = 0.01; // fraction of the mesh radius
 const WEBP_QUALITY = { normalTexture: 90, default: 85 };
