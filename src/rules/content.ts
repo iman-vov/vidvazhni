@@ -422,8 +422,9 @@ export interface SecondaryGoalDef {
   id: string;
   check: string;
   params?: Record<string, number | string | boolean>;
-  /** Per hero. */
-  reward: { xp?: number; gold?: number };
+  /** Per hero. `unlock`: scenarios opened on a won scenario with this goal met (the key to a
+   *  secret mission, s17/s18 → s19), like `ScenarioDef.reward.unlock`. */
+  reward: { xp?: number; gold?: number; unlock?: string[] };
 }
 
 export interface ScenarioDef {
@@ -445,8 +446,9 @@ export interface ScenarioDef {
   beam?: { from: Hex; aim: string; to: Hex; opens?: Hex[] };
   /** Fork: orbs present at start / infused every round. */
   forkOrbs?: { atStart?: { orb: OrbId; hex?: Hex }[]; eachRound?: { orb: OrbId; source: string }[] };
-  /** `closes`: the other options of a story choice (s6 or s7), dropped from the unlocked list on a win. */
-  reward: { goldEach: number; items?: string[]; unlock?: string[]; closes?: string[] };
+  /** `closes`: the other options of a story choice (s6 or s7), dropped from the unlocked list on a win.
+   *  `flags`: campaign flags set on a win (`blueprint`, `mirrors.aligned`), read by later scenarios. */
+  reward: { goldEach: number; items?: string[]; unlock?: string[]; closes?: string[]; flags?: string[] };
   /** Scenario events: ambushes, calls for help, alarms, waves (events.ts). */
   events?: ScenarioEventDef[];
   /** Drafted in the map editor, not yet playtested or balanced. */

@@ -43,8 +43,11 @@ export interface CampaignState {
   partyChest: string[];
   /** Won scenario ids, in order. */
   completed: string[];
-  /** Scenario ids that can be played next. */
+  /** Scenario ids that can be played next. An id may name a scenario whose data is not written yet
+   *  (s10 opens s11 before the marsh has data): it waits here and is not offered until it exists. */
   unlocked: string[];
+  /** Story flags set by won scenarios (`reward.flags`: `blueprint`, `mirrors.aligned`). */
+  flags?: string[];
   difficulty: GameSetup['difficulty'];
   /** «Як було?» per scenario id, the latest answer (for adaptive difficulty later). */
   feedback?: Record<string, ScenarioFeedback>;
@@ -257,6 +260,8 @@ export interface ScenarioResult {
   heroes: { classId: string; xp: number; gold: number }[];
   /** Shop items found in chests and on enemies (`GameState.foundItems`). */
   foundItems?: string[];
+  /** Ids of the secondary goals met (a win pays their `reward.unlock`). */
+  secondaryMet?: string[];
 }
 
 /** The end screen's «Як було? Легко / Саме те / Важко». */
@@ -268,8 +273,8 @@ export function setScenarioFeedback(s: CampaignState, scenarioId: string, rating
 }
 
 /** Scenario result → campaign. A loss keeps the gold, XP and found items («поразка м'яка»); a win also
- *  puts `reward.items` in the party chest, marks the scenario completed, unlocks `reward.unlock` and
- *  closes the other options of its story choice (`reward.closes`, docs/design/story.md «Вузли вибору»). */
+ *  puts `reward.items` in the party chest, marks the scenario completed, unlocks `reward.unlock` (and
+ *  the `reward.unlock` of the secondary goals met), sets `reward.flags` and closes the other options of its story choice (`reward.closes`, docs/design/story.md «Вузли вибору»). */
 export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: ScenarioResult): CampaignResult {
   if (s.lastResultId === r.id) return fail('result already applied');
   const scenario = c.scenarios[r.scenarioId];
@@ -287,9 +292,12 @@ export function applyScenarioResult(c: CampaignContent, s: CampaignState, r: Sce
     if (!next.completed.includes(r.scenarioId)) next.completed.push(r.scenarioId);
     const closes = scenario.reward.closes ?? [];
     next.unlocked = next.unlocked.filter((id) => id !== r.scenarioId && !closes.includes(id));
-    for (const id of scenario.reward.unlock ?? []) {
+    const met = new Set(r.secondaryMet ?? []);
+    const opened = [...(scenario.reward.unlock ?? []), ...(scenario.secondary ?? []).filter((g) => met.has(g.id)).flatMap((g) => g.reward.unlock ?? [])];
+    for (const id of opened) {
       if (!next.completed.includes(id) && !next.unlocked.includes(id)) next.unlocked.push(id);
     }
+    for (const flag of scenario.reward.flags ?? []) if (!(next.flags ??= []).includes(flag)) next.flags.push(flag);
   }
   next.lastResultId = r.id;
   return { ok: true, state: next };
@@ -351,9 +359,11 @@ export function pickHand(c: CampaignContent, s: CampaignState, classId: string, 
   });
 }
 
-/** Scenarios the party can start: unlocked ones (a lost one stays there) and won ones to replay. */
-export function playableScenarios(s: CampaignState): string[] {
-  return [...s.unlocked, ...s.completed.filter((id) => !s.unlocked.includes(id))];
+/** Scenarios the party can start: unlocked ones (a lost one stays there) and won ones to replay.
+ *  With `scenarios`, only the ones that have data (an unlocked id may wait for its scenario). */
+export function playableScenarios(s: CampaignState, scenarios?: Record<string, ScenarioDef>): string[] {
+  const all = [...s.unlocked, ...s.completed.filter((id) => !s.unlocked.includes(id))];
+  return scenarios ? all.filter((id) => scenarios[id]) : all;
 }
 
 /** Campaign → `GameSetup`: level, perks, equipped items (`<id>+` for ★), owned level cards and the

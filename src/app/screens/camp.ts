@@ -420,7 +420,7 @@ export function campScreen(o: CampOptions): HTMLElement {
   }
 
   function nextScenario(): string | undefined {
-    return playableScenarios(state)[0];
+    return playableScenarios(state, c.scenarios)[0];
   }
 
   function startMission(): void {

@@ -6,7 +6,7 @@ import type { ScenarioResult } from '../rules/campaign';
 import { apply, createGame } from '../rules/engine';
 import { coinValue } from '../rules/effects/context';
 import { loadContent, type LoadedContent } from '../rules/load';
-import { secondaryGold } from '../rules/objectives';
+import { secondaryGold, secondaryMet } from '../rules/objectives';
 import { legalActionResults } from '../rules/queries';
 import type { Action, FigureId, GameEvent, GameSetup, GameState, HeroState, Pending } from '../rules/state';
 import type { GameStorage, SavedGame } from './storage';
@@ -192,6 +192,7 @@ export class GameController {
       won: this.state.phase === 'won',
       heroes: this.rewards().map((r) => ({ classId: (this.state.figures[r.heroId] as HeroState).classId, xp: r.xp, gold: r.gold })),
       foundItems: this.foundItems(),
+      secondaryMet: (this.content.scenarios[this.state.scenarioId]?.secondary ?? []).filter((g) => secondaryMet(this.state, g)).map((g) => g.id),
     };
   }
 

@@ -645,11 +645,15 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds"] },
+          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken"] },
           "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
           "reward": {
             "type": "object",
-            "properties": { "xp": { "type": "integer", "minimum": 0 }, "gold": { "type": "integer", "minimum": 0 } },
+            "properties": {
+              "xp": { "type": "integer", "minimum": 0 },
+              "gold": { "type": "integer", "minimum": 0 },
+              "unlock": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Scenarios opened on a win with this goal met (a secret mission's key)." }
+            },
             "additionalProperties": false
           }
         },
@@ -897,7 +901,8 @@
         "goldEach": { "type": "integer", "minimum": 0 },
         "items": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "unlock": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "closes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Other options of the same story choice: a win takes them off the unlocked list." }
+        "closes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Other options of the same story choice: a win takes them off the unlocked list." },
+        "flags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Campaign flags set on a win (blueprint, mirrors.aligned)." }
       },
       "required": ["goldEach"],
       "additionalProperties": false
