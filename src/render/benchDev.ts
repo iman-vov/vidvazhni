@@ -127,21 +127,25 @@ async function openBoard(board: string, quality: GraphicsQuality): Promise<Board
   throw new Error('board did not start');
 }
 
-/** Draws every frame: warm-up until the triangle count holds still (kits keep loading), then measures. */
+/** Draws every frame: warm-up until the scene holds still, then measures. "Still" is the same
+ *  triangle count and no new shader programs for 3 s: kits keep arriving after the models, and each
+ *  new material compiles its shaders on first draw (seconds per frame on a tablet). */
 async function measure(win: BoardWindow, run: Pick<Run, 'board' | 'quality'>, label: string): Promise<Run> {
   const board = win.board!;
   board.spin(true);
   const warmEnd = performance.now() + WARM * 1000;
-  let lastTris = -1;
+  let last = '';
   let stableSince = performance.now();
-  while (performance.now() < warmEnd || performance.now() - stableSince < 1500) {
+  while (performance.now() < warmEnd || performance.now() - stableSince < 3000) {
     const tris = board.stats().triangles;
-    if (tris !== lastTris) {
-      lastTris = tris;
+    const programs = win.devBoard?.perf?.().programs ?? 0;
+    const now = `${tris}:${programs}`;
+    if (now !== last) {
+      last = now;
       stableSince = performance.now();
     }
-    if (performance.now() > warmEnd + 12000) break;
-    status(`${label}  розігрів…  tris ${tris}`);
+    if (performance.now() > warmEnd + 30000) break;
+    status(`${label}  розігрів…  tris ${tris}  shaders ${programs}`);
     await sleep(250);
   }
   const times: number[] = [];

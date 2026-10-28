@@ -364,6 +364,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     shadowsDirty = false;
     const tier = SHADOW_TIERS[quality];
     applyShadowFlags(scene, tier, PLATE_HEIGHT, isFigurePart);
+    // Obstacles merged per room once their flags are set (and again when anything in a room changed).
+    tiles.batchObstacles();
     if (tier.mode === 'realtime') {
       const centre = sun.target.position;
       lampLights = tier.lamps > 0 ? setupLampShadows(scene, tier.lamps, centre) : [];
@@ -393,6 +395,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   }
 
   const lampTarget = new THREE.WebGLRenderTarget(1, 1);
+  // One plain material for that render: drawing the scene's own materials into a plain target would
+  // compile a second variant of every shader (three keys programs by the target's colour space).
+  const lampOverride = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
 
   /** Draws the lamps' shadow maps from the static things only, in a render of its own with the
    *  figures hidden: three tests the main camera's layers in the shadow pass, so LAMP_LAYER alone
@@ -404,7 +409,9 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     for (const l of lampLights) l.shadow.needsUpdate = true;
     const target = renderer.getRenderTarget();
     renderer.setRenderTarget(lampTarget);
+    scene.overrideMaterial = lampOverride;
     renderer.render(scene, camera.camera);
+    scene.overrideMaterial = null;
     renderer.setRenderTarget(target);
     for (const fv of shown) fv.root.visible = true;
   }
@@ -1680,6 +1687,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     overlay.dispose();
     post.dispose();
     lampTarget.dispose();
+    lampOverride.dispose();
     renderer.dispose();
     root.remove();
     hexListeners.clear();

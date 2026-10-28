@@ -91,7 +91,8 @@ export function applyShadowFlags(root: THREE.Object3D, tier: ShadowTier, floorY:
   const visit = (o: THREE.Object3D): void => {
     if (skip?.(o)) return;
     const mesh = o as THREE.Mesh;
-    if (mesh.isMesh) {
+    // A merged batch of props keeps the flags its parts had (mergeParts.ts): its room-wide size says nothing.
+    if (mesh.isMesh && !mesh.userData['keepShadow']) {
       const kind = casterSize(mesh);
       mesh.castShadow = kind !== 'none' && (tier.casters === 'all' || kind === 'big') && (tier.reeds || !SWAYING_REEDS.test(mesh.name)) && worldTop(mesh) > floorY + 0.015;
       // On low the flag only marks what the bake draws; receiving costs nothing without a map.

@@ -20,6 +20,7 @@ import type { PropModelSpec } from './environment/types';
 import type { Partition } from './environment/walls';
 import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
 import { patchWater, setWaterMap } from './environment/life';
+import { batchSignature, batchStatic, mergeStaticParts, unbatch } from './mergeParts';
 
 export const PLATE_HEIGHT = 0.22 * HEX_SIZE;
 const WALL_HEIGHT = 0.62;
@@ -295,6 +296,8 @@ export class TileLayer {
   readonly root = new THREE.Group();
   private readonly rooms = new Map<string, RoomView>();
   private readonly props = new Map<string, PropView>();
+  /** Per room (and its walls): what batchObstacles merged, and what it was merged from. */
+  private readonly batches = new Map<string, { sig: string; batch: THREE.Group | null }>();
   private readonly plateGeometry: THREE.BufferGeometry;
   private readonly gridGeometry: THREE.BufferGeometry;
   private readonly boxGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -835,6 +838,31 @@ export class TileLayer {
     return DOOR_SECONDS[p.doorKind ?? 'door'];
   }
 
+  /**
+   * Draws each room's obstacles as one mesh per material (mergeParts.ts): a room of crates, ore and
+   * timber is a handful of draw calls instead of hundreds, twice over with the shadow map. Obstacles
+   * never move; one is added or broken, a model or the litter loads in, or the shadow flags change
+   * with the quality, and that room is merged again. Cheap when nothing changed.
+   */
+  batchObstacles(): void {
+    for (const [id, room] of this.rooms) {
+      const sources: THREE.Object3D[] = [];
+      for (const p of this.props.values()) if (p.room === id && p.key.endsWith(':obstacle')) sources.push(p.object);
+      this.rebatch(id, room.props, sources);
+      // The walls between rooms too: a divider is a run of posts, planks or stones, a mesh each.
+      const walls = room.edges?.children.filter((c) => c.name.startsWith('divider:')) ?? [];
+      this.rebatch(`${id}:walls`, room.edges, walls);
+    }
+  }
+
+  private rebatch(key: string, target: THREE.Group | null, sources: THREE.Object3D[]): void {
+    const sig = batchSignature(sources);
+    const prev = this.batches.get(key);
+    if (prev && prev.sig === sig && (!prev.batch || prev.batch.parent === target)) return;
+    unbatch(prev?.batch);
+    this.batches.set(key, { sig, batch: target && sources.length ? batchStatic(target, sources) : null });
+  }
+
   /** Drops every prop so the next syncProps builds them again (new art-kit pieces arrived). */
   resetProps(): void {
     for (const p of this.props.values()) p.object.removeFromParent();
@@ -921,6 +949,8 @@ export class TileLayer {
     part.position.set(Math.cos(w.rot) * 0.12, 0, Math.sin(w.rot) * 0.12);
     if (w.scale > 1.02) part.rotation.z = (w.scale - 1.02) * 0.9;
     part.userData['variation'] = v.scale;
+    // Its parts never move: one mesh per material instead of one per part (mergeParts.ts).
+    mergeStaticParts(part);
     return this.makeSimple(`${k}:obstacle`, hex, room, model, part, 'obstacle');
   }
 

@@ -63,6 +63,18 @@ AO and its denoise.
   `environment/index.ts`), so patches out of view and out of the sun's map are culled. Light
   materials stay one draw call.
 - **DPR cap 1.5 on high** (`RENDERER_PRESETS.high.maxPixelRatio`).
+- **Obstacles and dividers merged per room** (`mergeParts.ts`, `TileLayer.batchObstacles`). A
+  piece was built one mesh per part, so a crate was 21 draw calls for 3 materials. Now each obstacle
+  is first merged by material, then a room's obstacles and its dividers become one mesh per material.
+  The batch is rebuilt only when something in the room changes (an obstacle added or broken, a model
+  or the litter loaded in, shadow flags changed with the quality). The merged meshes keep their
+  parts' shadow flags (`userData.keepShadow`). On s6 high: 534 → 377 calls before dividers.
+- **Shader compiles were the s0/s9 cliffs.** Frames on the iPad took 2–5 s on s0 and s9 high, because
+  kits and models that arrive late compile their shaders on first draw. On this PC a frame with +17
+  programs took 17 s. The bench now warms up until neither the triangles nor the program count
+  change for 3 s (`programs` and `compiled` are in `board.perf()`). The lamp redraw renders with
+  one override material, so it no longer compiles a second variant of every shader for its own
+  target.
 - **Lamp shadow maps come from the static things only** (`redrawLamps` in `boardView.ts`): they are
   drawn in a render of their own with the figures hidden. `LAMP_LAYER` alone never kept the figures
   out, because three tests layers against the main camera in the shadow pass. So each lamp redraw

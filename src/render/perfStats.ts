@@ -26,6 +26,10 @@ export interface PerfBreakdown {
   categories: Record<string, PerfCount>;
   /** Lights that draw a shadow map, with the map size. */
   shadowMaps: string[];
+  /** Shader programs the renderer holds, and how many were compiled during this frame (a frame
+   *  that keeps compiling is a material whose defines change every frame). */
+  programs: number;
+  compiled: number;
 }
 
 /** The bucket a mesh belongs to, from the names of it and its ancestors. */
@@ -49,7 +53,8 @@ function add(map: Record<string, PerfCount>, key: string, calls: number, tris: n
 
 /** Draws one frame through `draw` and counts it. */
 export function capturePerf(renderer: THREE.WebGLRenderer, scene: THREE.Scene, draw: () => void): PerfBreakdown {
-  const out: PerfBreakdown = { total: { calls: 0, tris: 0 }, passes: {}, categories: {}, shadowMaps: [] };
+  const out: PerfBreakdown = { total: { calls: 0, tris: 0 }, passes: {}, categories: {}, shadowMaps: [], programs: 0, compiled: 0 };
+  const programsBefore = renderer.info.programs?.length ?? 0;
   const info = renderer.info.render;
   const original = renderer.renderBufferDirect;
   const originalRender = renderer.render;
@@ -85,6 +90,8 @@ export function capturePerf(renderer: THREE.WebGLRenderer, scene: THREE.Scene, d
     renderer.renderBufferDirect = original;
     renderer.render = originalRender;
   }
+  out.programs = renderer.info.programs?.length ?? 0;
+  out.compiled = Math.max(0, out.programs - programsBefore);
   scene.traverse((o) => {
     const light = o as THREE.DirectionalLight;
     if (light.isLight && light.castShadow && light.shadow) out.shadowMaps.push(`${light.type} ${light.shadow.mapSize.x}`);
