@@ -90,9 +90,14 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
       return items.length > 0 ? items : null;
     }
-    case 'escape':
-    case 'race': {
-      // The cave-in timer (or the rival) runs: run for the lift past the monsters, opening the doors on the way.
+    case 'race':
+      // The rival runs: head for the finish itself. Through rooms not yet open the distance falls back
+      // to the straight line (pathDistance), so every door on the way is progress; aiming at the next
+      // door instead made opening it look like a step back (the door after it is far), and s11's
+      // party waited on the shore for good.
+      return zoneOf(s, content);
+    case 'escape': {
+      // The cave-in timer runs: run for the lift past the monsters, opening the doors on the way.
       const zone = zoneOf(s, content);
       return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
     }
@@ -120,7 +125,11 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       const hexes = scenarioObjects(s).filter((o) => wrong.some((w) => w.id === o.id)).map((o) => o.hex);
       if (hexes.length > 0) return hexes;
       const zone = zoneOf(s, content);
-      return zone.length > 0 && monsters.length === 0 ? zone : null;
+      if (zone.length === 0 || monsters.length > 0) return null;
+      // The objects and the zone may wait behind closed doors (s14's bells and roof): open the way,
+      // or the last kill looked like a step back (the far zone's straight-line fallback) and the
+      // party stood by a monster on 1 hp for good.
+      return s.board.tiles[`${zone[0]?.join(',')}`] || wrong.length === 0 ? zone : doorsTowards(s, content, zone);
     }
     default:
       // Light the braziers first (s5); otherwise the plain «nearest monster, then doors» pull.
