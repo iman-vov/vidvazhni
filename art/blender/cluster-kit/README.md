@@ -1,4 +1,4 @@
-# Cluster kit (not built yet)
+# Cluster kit
 
 Set pieces of the obstacle clusters that no Meshy model covers, to replace the procedural `long-table` and `wagon` in `src/render/environment/pieces.ts` (the user's rule: every decorative mesh is modelled in Blender through the Blender MCP).
 

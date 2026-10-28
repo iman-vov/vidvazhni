@@ -39,6 +39,7 @@ import { buildCluster, planObstacles, type ClusterPlan } from './obstacles';
 import { pieceBox } from './footprint';
 import { buildScatter, planScatter, SCATTER_KIT, scatterProfile, scatterProto, type ScatterBuild } from './scatter';
 import { onFloorDetailChange } from '../floorDetail';
+import { buildMarsh, isMarsh, MARSH_COLOURS, MARSH_KIT, marshKitReady, planMarsh, reedRow, wetness, wetRock, type MarshBuild, type MarshLook, type MarshSpot } from './marsh';
 import { buildPiece, PALETTE_DEFAULTS, pieceMeta, UNLIT, type MaterialKey, type Part } from './pieces';
 import type { DividerStyle, EdgeStyle, EnvironmentDef, PropModelSpec } from './types';
 
@@ -64,7 +65,6 @@ const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 
 /** The map edge style a room boundary stands for (outdoor rooms close with plants, caves with rock). */
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
-/** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 /** Side (m) of the ground patches a heavy merged material is split into, and the triangle count
  *  from which it is split: a patch out of view costs nothing in the scene or the sun's map. */
 const PATCH = 8;
@@ -96,6 +96,9 @@ const DIVIDERS: Record<string, DividerStyle> = {
 };
 /** Divider by edge style, for a location not listed and for a room with an edge of its own. */
 const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick' };
+/** Pieces that look wet beside marsh water. */
+const WET_PIECES = /rock|boulder|stone|log|stump|roots/;
+const wc = new THREE.Color();
 const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge']);
 /** The natural edge of an outdoor room inside a built location: underground it is cave rock. */
 const NATURAL_EDGE: Record<EdgeStyle, EdgeStyle> = { stone: 'cave', tower: 'cliff', timber: 'forest', mine: 'cave', forge: 'cave', forest: 'forest', shore: 'shore', cave: 'cave', cliff: 'cliff' };
@@ -130,6 +133,7 @@ export function dividerFor(
   return EDGE_DIVIDER[NATURAL_EDGE[edgeOf(rooms[0]!)]];
 }
 
+/** Scenario obstacle models without a GLB yet → the location's piece standing in for them. */
 const OBSTACLE_PIECES: Record<string, { piece: string; scale: number }> = {
   barrel: { piece: 'barrel', scale: 1.04 },
   crate: { piece: 'crate', scale: 1.3 },
@@ -220,6 +224,14 @@ export class BoardEnvironment {
   private scatter: ScatterBuild | null = null;
   /** Bumped per small-things build: a kit load for an older one is dropped. */
   private scatterGen = 0;
+  /** Marsh growth (marsh.ts): its Blender kit once loaded, the placements before it took the old
+   *  plant pieces (for re-planning when the floor detail changes), its spots and its layer. */
+  private marshKit: ReadonlyMap<string, readonly Part[]> | null = null;
+  private marshBase: Placement[] = [];
+  private marshSpots: MarshSpot[] = [];
+  private marsh: MarshBuild | null = null;
+  /** Reed walls built before the marsh kit loaded, waiting to swap to it. */
+  private marshWaiting: (() => void)[] = [];
   private partitionLines: Partition[] = [];
   private buildToken = 0;
   /** Bumped when the scenario or quality changes: kit and prop-model loads for an older one are dropped. */
@@ -233,6 +245,7 @@ export class BoardEnvironment {
     onFloorDetailChange(() => {
       if (!this.layout) return;
       this.buildScatter();
+      this.buildMarsh(true);
       this.onChange();
     });
   }
@@ -262,6 +275,7 @@ export class BoardEnvironment {
     this.loadToken++;
     this.rebuild();
     this.loadKit();
+    this.loadMarsh();
     this.loadPropModels();
   }
 
@@ -273,6 +287,7 @@ export class BoardEnvironment {
     this.propProtos.clear();
     this.rebuild();
     this.loadKit();
+    this.loadMarsh();
     this.loadPropModels();
   }
 
@@ -361,6 +376,7 @@ export class BoardEnvironment {
       propSpec: (piece, height) => (this.def?.propModels?.[piece] ? propModelFor(this.def, [piece], this.available, height) : null),
       loadProp: (spec) => loadPropPrototype(spec, quality).then((proto) => (proto ? proto.object.clone() : null)),
       loadKit: () => loadLocationKit('scatter-kit', quality),
+      loadClusterKit: () => loadLocationKit('cluster-kit', quality),
       material: (key) => this.material(key),
       shadow: (radius) => {
         const geometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
@@ -392,6 +408,18 @@ export class BoardEnvironment {
       const g = stones || this.kitParts.has(piece) ? part.geometry.clone() : part.geometry;
       const pos = g.getAttribute('position');
       if (!g.getAttribute('color')) g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.count * 3).fill(1), 3));
+      // Stones on marsh hexes: damp, duller moss (marsh.ts), as by the water.
+      if (stones && this.marshKit) {
+        const col = g.getAttribute('color') as THREE.BufferAttribute;
+        const nrm = g.getAttribute('normal');
+        const v = new THREE.Vector3();
+        for (let i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(part.matrix);
+          wc.fromBufferAttribute(col, i);
+          wetRock(wc, v.y, nrm ? nrm.getY(i) : 1, 0.35);
+          col.setXYZ(i, wc.r, wc.g, wc.b);
+        }
+      }
       const mesh = new THREE.Mesh(g, this.material(part.material));
       mesh.applyMatrix4(part.matrix);
       group.add(mesh);
@@ -426,6 +454,27 @@ export class BoardEnvironment {
   }
 
   private pieceRow(piece: string, frames: THREE.Matrix4[], low: boolean, name: string): THREE.Object3D & { dispose(): void } {
+    // Reed walls between marsh rooms: low clumps from the marsh kit (marsh.ts) instead of the old
+    // strip; built before the kit arrives, the row swaps itself over when it does.
+    if (piece === 'reed-fence' && this.def && isMarsh(this.def)) {
+      let inner = this.marshKit ? this.marshRow(frames, low, name) : this.plainRow(piece, frames, low, name);
+      const holder = Object.assign(new THREE.Group(), { dispose: () => inner.dispose() });
+      holder.name = name;
+      holder.add(inner);
+      if (!this.marshKit)
+        this.marshWaiting.push(() => {
+          if (!holder.parent) return;
+          holder.remove(inner);
+          inner.dispose();
+          inner = this.marshRow(frames, low, name);
+          holder.add(inner);
+        });
+      return holder;
+    }
+    return this.plainRow(piece, frames, low, name);
+  }
+
+  private plainRow(piece: string, frames: THREE.Matrix4[], low: boolean, name: string): THREE.Object3D & { dispose(): void } {
     const meta = pieceMeta(piece)!;
     const owned: { dispose(): void }[] = [];
     const group = Object.assign(new THREE.Group(), { dispose: () => owned.forEach((d) => d.dispose()) });
@@ -584,6 +633,7 @@ export class BoardEnvironment {
     for (const d of this.disposables) d.dispose();
     this.scatter = null;
     this.scatterGen++;
+    this.marsh = null;
     this.disposables = [];
     this.materials.clear();
     this.morok = null;
@@ -622,9 +672,12 @@ export class BoardEnvironment {
     this.buildGround(def);
     const partitions = this.partitionLines.map((p) => p.points);
     // Forest edges grow into a thicket and lone trees into groves (thicket.ts).
-    this.placements = naturalEdge(layout, def, this.quality, planEnvironment(layout, def, this.quality, partitions), partitions);
+    this.marshBase = naturalEdge(layout, def, this.quality, planEnvironment(layout, def, this.quality, partitions), partitions);
+    // Marsh plants take the place of the old reed and lily pieces once their kit is in (marsh.ts).
+    this.placements = this.planMarsh(false);
     this.buildPieces(q.shadows);
     this.buildScatter();
+    this.buildMarsh(false);
     this.buildLights(q.lights);
     this.buildAtmosphere();
     if (q.wisps > 0) {
@@ -708,6 +761,8 @@ export class BoardEnvironment {
     if (m) return m;
     if (typeof key !== 'string') {
       m = key.clone();
+      // Marsh stones take the wet, duller look painted into their vertices (marsh.ts wetRock).
+      if (key.name === 'env-rocks' && this.def && isMarsh(this.def)) m.vertexColors = true;
     } else if (UNLIT.has(key)) {
       const basic = new THREE.MeshBasicMaterial({ color: this.palette(key), vertexColors: true });
       if (key === 'flame' || key === 'glow' || key === 'ember') this.flicker.push({ material: basic, base: basic.color.clone() });
@@ -773,6 +828,8 @@ export class BoardEnvironment {
       // A painted variation per piece and a darker foot (cheap baked occlusion).
       const tint = 0.86 + rnd() * 0.24;
       const hue = (p as TintedPlacement).tint ?? [1, 1, 1];
+      // Rocks and logs by the marsh water: wet, dark low down, algae at the water line (marsh.ts).
+      const wet = this.marshKit && this.field && (WET_PIECES.test(p.piece) || parts.some((pt) => typeof pt.material !== 'string' && pt.material.name === 'env-rocks')) ? wetness(this.field, p.x, p.z) : -1;
       for (const part of parts) {
         if (low && part.detail) continue;
         const g = part.geometry.clone();
@@ -780,10 +837,18 @@ export class BoardEnvironment {
         const pos = g.getAttribute('position');
         const colors = new Float32Array(pos.count * 3);
         const lit = typeof part.material !== 'string' || !UNLIT.has(part.material);
+        // A part with colours of its own keeps them under the tints.
+        const own = part.geometry.getAttribute('color');
+        const nrm = g.getAttribute('normal');
         for (let i = 0; i < pos.count; i++) {
           const foot = lit ? 0.6 + 0.4 * Math.min(1, Math.max(0, pos.getY(i) / 0.55)) : 1;
           const c = (lit ? tint : 1) * foot;
-          for (let k = 0; k < 3; k++) colors[i * 3 + k] = c * (lit ? hue[k]! : 1);
+          for (let k = 0; k < 3; k++) colors[i * 3 + k] = c * (lit ? hue[k]! : 1) * (own ? own.getComponent(i, k) : 1);
+          if (wet >= 0 && lit) {
+            wc.fromArray(colors, i * 3);
+            wetRock(wc, pos.getY(i), nrm ? nrm.getY(i) : 1, wet);
+            wc.toArray(colors, i * 3);
+          }
         }
         g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
@@ -821,6 +886,67 @@ export class BoardEnvironment {
     this.buildModelled(modelled, shadows);
     this.buildBlobs(blobs);
   }
+
+  /** A reed wall on edge frames: three low marsh clumps per frame, each turned and sized its own way. */
+  private marshRow(frames: THREE.Matrix4[], low: boolean, name: string): THREE.Object3D & { dispose(): void } {
+    const built = buildMarsh(reedRow(frames, low, name), this.marshKit!, this.marshPalette, this.marshMaterial);
+    built.root.name = name;
+    return Object.assign(built.root, { dispose: () => built.dispose() });
+  }
+
+  /** Loads the marsh kit for a marsh location (marsh.ts); the location rebuilds with it. */
+  private loadMarsh(): void {
+    const def = this.def;
+    this.marshKit = null;
+    this.marshWaiting = [];
+    if (!def || !isMarsh(def) || !listModels().includes(MARSH_KIT)) return;
+    const token = this.loadToken;
+    void loadLocationKit(MARSH_KIT, this.quality).then((kit) => {
+      if (token !== this.loadToken || !marshKitReady(kit)) return;
+      this.marshKit = kit;
+      this.rebuild();
+      // Reed walls between rooms (built by the board) swap their old strips for kit clumps.
+      for (const swap of this.marshWaiting.splice(0)) swap();
+      this.onChange();
+    });
+  }
+
+  /** Colours of the marsh kit's materials: the location palette; mud matches the ground, a shade darker. */
+  private marshPalette = (key: string): THREE.Color =>
+    key === 'mud' ? new THREE.Color(this.def!.ground.tint ?? MARSH_COLOURS.mud).multiplyScalar(0.72) : new THREE.Color(key in PALETTE_DEFAULTS ? this.palette(key as MaterialKey) : (MARSH_COLOURS[key] ?? this.palette('reed')));
+
+  private marshMaterial = (look: MarshLook): THREE.Material => {
+    const proto = scatterProto(this.quality, false);
+    return look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto);
+  };
+
+  /** Plans the marsh over `marshBase`: its spots, and the placements left for buildPieces. */
+  private planMarsh(keep: boolean): Placement[] {
+    if (!this.marshKit || !this.def || !this.field) {
+      this.marshSpots = [];
+      return this.marshBase;
+    }
+    const plan = planMarsh({ layout: this.layout!, def: this.def, field: this.field, quality: this.quality, placements: this.marshBase });
+    this.marshSpots = plan.spots;
+    return keep ? this.placements : plan.placements;
+  }
+
+  /** Draws the marsh spots (re-planned first when the floor detail changed). */
+  private buildMarsh(replan: boolean): void {
+    if (this.marsh) {
+      this.marsh.root.removeFromParent();
+      this.marsh.dispose();
+      this.disposables = this.disposables.filter((d) => d !== this.marsh);
+      this.marsh = null;
+    }
+    if (replan) this.planMarsh(true);
+    if (!this.marshKit || !this.marshSpots.length) return;
+    const built = buildMarsh(this.marshSpots, this.marshKit, this.marshPalette, this.marshMaterial);
+    this.root.add(built.root);
+    this.disposables.push(built);
+    this.marsh = built;
+  }
+
 
   /** A material bending in the wind (life.ts) for the swaying parts of plants and banners. */
   private swayMaterial(key: MaterialKey | THREE.Material, spec: SwaySpec): THREE.Material {

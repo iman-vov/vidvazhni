@@ -2901,6 +2901,31 @@
       },
       "textureMax": 2048,
       "attachTo": null
+    },
+    {
+      "id": "cluster-kit",
+      "nameUk": "Сет-піси перешкод: довгі столи, стільці, вози (по 4 варіанти)",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 80,
+      "wave": 5,
+      "scenarios": [],
+      "descriptionSource": "art/blender/cluster-kit/README.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/cluster-kit/cluster-kit.blend",
+      "modelFile": "assets/models/cluster-kit/cluster-kit.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 6000
+      },
+      "textureMax": 256,
+      "attachTo": null
     }
   ]
 }
