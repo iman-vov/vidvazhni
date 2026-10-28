@@ -106,9 +106,11 @@ export function mapIssues(s: ScenarioDef, content: Content): Issue[] {
   const items = questItems(s);
   const blocked = blockedHexes(s);
 
+  // A door the s19 beam opens may carry a key nobody has: then only the beam opens it.
+  const beamDoors = new Set((s.beam?.opens ?? []).map(hexKey));
   for (const room of s.rooms) {
     for (const d of room.doors ?? [])
-      if (d.key && !items.has(d.key)) error(`door at ${hexKey(d.hex)} needs key ${d.key}, but no chest or drop gives it`);
+      if (d.key && !items.has(d.key) && !beamDoors.has(hexKey(d.hex))) error(`door at ${hexKey(d.hex)} needs key ${d.key}, but no chest or drop gives it`);
     for (const d of room.drops ?? []) {
       if (!(room.spawns ?? []).some((sp) => sp.monster === d.monster))
         error(`drop ${d.questItem}: no ${d.monster} spawns in ${room.id}`);

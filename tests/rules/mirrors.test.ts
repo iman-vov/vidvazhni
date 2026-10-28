@@ -7,6 +7,7 @@ import type { Hex } from '../../src/rules/hex';
 import { beamPath, nextTurn, turnsBetween } from '../../src/rules/mirrors';
 import { objectiveStatus } from '../../src/rules/objectives';
 import type { GameState, MonsterState } from '../../src/rules/state';
+import { mapIssues } from '../../tools/map-editor/checks';
 import { checkScenario } from '../data/crossref';
 import {
   act,
@@ -243,5 +244,14 @@ describe('beamMirrors (s19)', () => {
     expect(checkScenario(bad.scenarios['test']!, bad)).toContain('test: beam aims at missing object nope');
     const goal = { ...c.scenarios['test']!, goal: { type: 'objectStates' as const, objects: [{ id: 'm1', state: 'z' }] } };
     expect(checkScenario(goal, c)).toContain('test: goal object m1 never turns to state z');
+  });
+
+  it('map checks: a door the beam opens may need a key nobody has; any other such door may not', () => {
+    const c = beamContent();
+    const sc = c.scenarios['test']!;
+    const locked = (hex: Hex): ScenarioDef => ({ ...sc, rooms: sc.rooms.map((r, i) => (i === 0 ? { ...r, doors: [{ hex, to: sc.rooms[1]!.id, key: 'nobody' }] } : r)) });
+    const keyErrors = (s: ScenarioDef) => mapIssues(s, c).filter((i) => i.msg.includes('needs key'));
+    expect(keyErrors(locked([6, 2]))).toEqual([]);
+    expect(keyErrors(locked([6, 3]))).toHaveLength(1);
   });
 });
