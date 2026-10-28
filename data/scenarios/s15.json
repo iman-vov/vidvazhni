@@ -74,7 +74,7 @@
       ]
     }
   ],
-  "reward": { "goldEach": 35, "unlock": ["s21"] },
+  "reward": { "goldEach": 35, "items": ["mist-pearl", "queen-veil"], "unlock": ["s21"] },
   "secondary": [
     { "id": "s15.nine-rounds", "check": "withinRounds", "params": { "rounds": 9 }, "reward": { "gold": 5 } },
     { "id": "s15.none-exhausted", "check": "noneExhausted", "reward": { "xp": 3 } }

@@ -47,7 +47,13 @@
       "chests": [{ "hex": [0, 0], "id": "s13.hollow", "loot": { "coins": 2 } }]
     }
   ],
-  "reward": { "goldEach": 20, "unlock": ["s15"], "closes": ["s12"], "flags": ["fireflies"] },
+  "reward": {
+    "goldEach": 20,
+    "items": ["firefly-jar"],
+    "unlock": ["s15"],
+    "closes": ["s12"],
+    "flags": ["fireflies"]
+  },
   "zones": [
     { "id": "s13.pond", "hexes": [[3, 2], [3, 3], [3, 4], [4, 1], [4, 2], [4, 3], [5, 1], [5, 2], [5, 3]] }
   ],

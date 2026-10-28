@@ -101,7 +101,7 @@
       "chests": [{ "hex": [23, -8], "id": "s14.treasure", "loot": { "coins": 4 } }]
     }
   ],
-  "reward": { "goldEach": 25, "flags": ["bells.rung"] },
+  "reward": { "goldEach": 25, "items": ["bell-clapper"], "flags": ["bells.rung"] },
   "lose": [{ "type": "roundLimit", "rounds": 12 }],
   "zones": [{ "id": "s14.roof", "hexes": [[20, -9], [20, -8], [21, -9], [21, -8]] }],
   "secondary": [
