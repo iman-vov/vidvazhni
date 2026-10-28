@@ -15,3 +15,7 @@ art/.chrome-render-profile/
 
 # Raw audio downloads (CC0 packs): kept locally, not in git
 art/audio-source/
+
+# Blender auto-backups and local sim output
+*.blend1
+out/
