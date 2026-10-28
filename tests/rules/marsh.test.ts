@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { BossType, Content } from '../../src/rules/content';
 import { takeDamage } from '../../src/rules/damage';
 import { hitObstacle } from '../../src/rules/obstacles';
-import { loomDisadvantage } from '../../src/rules/marsh';
+import { floodedRows, loomDisadvantage } from '../../src/rules/marsh';
 import { secondaryMet } from '../../src/rules/objectives';
 import type { GameState } from '../../src/rules/state';
 import { act, finishRound, makeContent, monsterType, newGame, playHalf, selectAll } from '../helpers/engineFixtures';
@@ -85,5 +85,31 @@ describe('deepWater', () => {
     // Move 2 out of the water is now move 1.
     expect(moveTry(c, s, [[2, 2], [3, 2]]).ok).toBe(false);
     expect(moveTry(c, s, [[2, 2]]).ok).toBe(true);
+  });
+});
+
+describe('risingWater', () => {
+  const RISING = { from: 3, every: 2, rows: [[[1, 0], [1, 1]], [[2, 0]]] as [number, number][][] };
+
+  it('counts the flooded rows', () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 9].map((r) => floodedRows(RISING, r))).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
+  });
+
+  it('round 3 floods the first row, round 5 deepens it and floods the next', () => {
+    const c = makeContent({
+      secondRoom: false,
+      monsters: [monsterType('rat', 'tidle')],
+      decks: [{ id: 'tidle', cards: [{ id: 'i.99', initiative: 99, steps: [] }] }],
+      spawns: [{ monster: 'rat', hex: [6, 4] }],
+      scenario: { specials: ['risingWater'], rising: RISING },
+    });
+    let s = newGame(c);
+    const terrain = (h: string) => s.board.tiles[h]?.terrain;
+    const pick = (n: number) => ({ alpha: [`alpha.c${2 * n - 1}`, `alpha.c${2 * n}`] as [string, string], beta: [`beta.c${2 * n - 1}`, `beta.c${2 * n}`] as [string, string] });
+    for (let r = 1; r <= 2; r++) s = finishRound(selectAll(s, c, pick(r)), c);
+    expect(s.round).toBe(3);
+    expect([terrain('1,0'), terrain('1,1'), terrain('2,0')]).toEqual(['water', 'water', 'normal']);
+    for (let r = 3; r <= 4; r++) s = finishRound(selectAll(s, c, pick(r)), c);
+    expect([terrain('1,0'), terrain('1,1'), terrain('2,0')]).toEqual(['deep', 'deep', 'water']);
   });
 });

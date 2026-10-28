@@ -557,6 +557,8 @@ export type GameEvent =
   | { type: 'allyJoined'; figureId: FigureId }
   /** A sleeping monster woke up (sleep.ts). */
   | { type: 'monsterWoke'; figureId: FigureId }
+  /** Hexes turned to another terrain (s14's rising water, marsh.ts). */
+  | { type: 'terrainChanged'; hexes: Hex[]; terrain: 'water' | 'deep' }
   /** A living shelf raised the alarm (books.ts). */
   | { type: 'alarm'; objectId: string }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */

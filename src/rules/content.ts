@@ -446,6 +446,9 @@ export interface ScenarioDef {
   /** `beamMirrors` (s19): the beam enters at the window `from` towards the object `aim`; reaching
    *  `to` (the crystal door) opens the doors on `opens` (mirrors.ts). */
   beam?: { from: Hex; aim: string; to: Hex; opens?: Hex[] };
+  /** `risingWater` (s14, marsh.ts): from round `from`, every `every` rounds the next of `rows`
+   *  turns to water and the one before it to deep water. */
+  rising?: { from: number; every: number; rows: Hex[][] };
   /** What a campaign flag changes here (the secret missions, flags.ts). */
   flagEffects?: { flag: string; bossShield?: { boss: string; shield: number }; brokenObjects?: string[] }[];
   /** Fork: orbs present at start / infused every round. */

@@ -266,6 +266,10 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     for (const h of s.beam.opens ?? []) if (!doorHexes.has(hexKey(h))) err(`beam opens ${hexKey(h)}, which is no door`);
   }
 
+  if (s.rising) {
+    if (!s.specials?.includes('risingWater')) err('rising without the risingWater special');
+    for (const h of s.rising.rows.flat()) if (!owner.has(hexKey(h))) err(`rising hex ${hexKey(h)} is outside every room`);
+  }
   for (const e of s.flagEffects ?? []) {
     if (e.bossShield && !content.bosses[e.bossShield.boss]) err(`flag ${e.flag} shields unknown boss ${e.bossShield.boss}`);
     for (const id of e.brokenObjects ?? []) if (!objects.some((o) => o.id === id)) err(`flag ${e.flag} breaks missing object ${id}`);
