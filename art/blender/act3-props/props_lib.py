@@ -9,6 +9,7 @@ from mathutils import Vector
 
 ROOT = r'C:\Braves\art\blender\act3-props'
 OUT = r'C:\Braves\art\meshy-source'
+TARGET = 'props'  # collection new objects go to; the marsh batch sets 'marsh'
 
 PAL = {
     'wood': '#8a5a3a', 'wood-dark': '#5e3b26', 'wood-light': '#b07a4e',
@@ -19,7 +20,16 @@ PAL = {
     'paper': '#e8dcbc', 'ink': '#3c5a8a', 'paper-dark': '#c2b28a',
     'leather-r': '#9c3b30', 'leather-g': '#3f6e4a', 'leather-b': '#33507e', 'leather-y': '#b8873a',
     'iron': '#4a4f57', 'stone': '#8d8676', 'red': '#a8423a',
+    # Sleepy Marsh (appended: part indices are positions in this table)
+    'marsh-wood': '#7d5c3e', 'marsh-wood-dark': '#54402c', 'moss': '#6d7f45',
+    'thread': '#b7bcc0', 'thread-dark': '#868e96', 'bronze': '#a8743a', 'verdigris': '#5f9a86',
+    'silk': '#cdbfa6', 'silk-dark': '#8a7c6c', 'lily': '#5c8f40', 'lily-light': '#88b357',
+    'lily-dark': '#3f6a2f', 'petal': '#e6b3c4', 'petal-deep': '#c27896', 'pollen': '#e8c454',
+    'rope': '#a68c5c', 'mud': '#5a4a36', 'water': '#3c6a74',
 }
+
+# Parts that get wood grain streaks in paint_rich.
+GRAIN = {'wood', 'wood-dark', 'wood-light', 'marsh-wood', 'marsh-wood-dark'}
 
 
 def hexc(h):
@@ -32,7 +42,7 @@ def new_obj(name, bm):
     bm.to_mesh(me)
     bm.free()
     ob = bpy.data.objects.new(name, me)
-    coll = bpy.data.collections.get('props') or bpy.context.scene.collection
+    coll = bpy.data.collections.get(TARGET) or bpy.context.scene.collection
     coll.objects.link(ob)
     return ob
 
@@ -100,6 +110,31 @@ def add(name, src):
     return ob
 
 
+def tube(bm, pts, radii, sides=6, key='marsh-wood', cap=True):
+    """A tube through points with a radius per point (branches, stems, threads)."""
+    lay = part_layer(bm)
+    rings = []
+    for i, p in enumerate(pts):
+        p = Vector(p)
+        d = (Vector(pts[min(i + 1, len(pts) - 1)]) - Vector(pts[max(i - 1, 0)])).normalized()
+        a = d.orthogonal().normalized()
+        b = d.cross(a)
+        rings.append([bm.verts.new(p + (a * math.cos(t) + b * math.sin(t)) * radii[i])
+                      for t in (k * 2 * math.pi / sides for k in range(sides))])
+    faces = []
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(sides):
+            faces.append(bm.faces.new((r0[k], r0[(k + 1) % sides], r1[(k + 1) % sides], r1[k])))
+    if cap:
+        faces.append(bm.faces.new(rings[0][::-1]))
+        if radii[-1] > 1e-4:
+            faces.append(bm.faces.new(rings[-1]))
+    for f in faces:
+        f[lay] = pid(key)
+    bmesh.ops.recalc_face_normals(bm, faces=faces)
+    return faces
+
+
 def tris(ob):
     return sum(len(p.vertices) - 2 for p in ob.data.polygons)
 
@@ -129,9 +164,79 @@ def paint(ob, parts=PARTS, seed=1, top=0.18, feet=0.35, noise=0.07, edge=0.1):
             low = 1 - feet * max(0, 0.25 - z) / 0.25
             k = light * low * (1 + fj + vjit[vi] * noise)
             c = [min(1, max(0, ch * k)) for ch in base]
-            col.data[li].color = (*c, 1)
+            col.data[li].color_srgb = (*c, 1)
     me.color_attributes.active_color = col
     ob.data.update()
+
+
+def streaks(bm, axis, count, lo, hi, faces=None):
+    """Cuts a piece lengthwise (planes across `axis`, 'x'/'y'/'z' local) so paint can lay grain."""
+    n = Vector({'x': (1, 0, 0), 'y': (0, 1, 0), 'z': (0, 0, 1)}[axis])
+    for i in range(1, count + 1):
+        geom = list(bm.verts) + list(bm.edges) + list(bm.faces) if faces is None else faces
+        bmesh.ops.bisect_plane(bm, geom=geom, plane_co=n * (lo + (hi - lo) * i / (count + 1)), plane_no=n)
+
+
+def paint_rich(ob, seed=1, top=0.16, feet=0.3, noise=0.06, wear=0.22, grain=0.12, hue=0.05):
+    """Like paint, plus worn light edges on convex corners, darker crevices, wood grain (each face
+    of a grain part gets its own streak tone) and a little hue drift per face, so a part never
+    reads as one flat colour."""
+    me = ob.data
+    rnd = random.Random(seed)
+    if 'Col' in me.color_attributes:
+        me.color_attributes.remove(me.color_attributes['Col'])
+    col = me.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER')
+    attr = me.attributes.get('part')
+    zs = [v.co.z for v in me.vertices]
+    zmin, h = min(zs), max(max(zs) - min(zs), 1e-4)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.verts.ensure_lookup_table()
+    cvx = []
+    for v in bm.verts:
+        if not v.link_edges:
+            cvx.append(0.0)
+            continue
+        nb = sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges)
+        # Offset from the neighbours' centre along the normal, per edge length: ~0.15 on a smooth
+        # 10-sided round, ~0.5 on a box corner. Only sharp corners count as worn or as crevices.
+        ln = max(sum(e.calc_length() for e in v.link_edges) / len(v.link_edges), 1e-5)
+        d = (v.co - nb).dot(v.normal) / ln
+        cvx.append(max(-1, min(1, (abs(d) * 2 - 0.3) * (1 if d > 0 else -1))) if abs(d) > 0.15 else 0.0)
+    bm.free()
+    vjit = [rnd.uniform(-1, 1) for _ in me.vertices]
+    for poly in me.polygons:
+        key = PARTS[attr.data[poly.index].value] if attr else 'wood'
+        base = hexc(PAL[key])
+        fj = rnd.uniform(-1, 1)
+        g = (rnd.choice((-1, -0.6, 0.2, 0.7, 1)) * grain) if key in GRAIN else 0
+        dh = rnd.uniform(-hue, hue)
+        base = [base[0] * (1 + dh), base[1], base[2] * (1 - dh)]
+        n = poly.normal
+        for li in poly.loop_indices:
+            vi = me.loops[li].vertex_index
+            z = (me.vertices[vi].co.z - zmin) / h
+            light = 1 + top * max(n.z, 0) - 0.22 * max(-n.z, 0) + 0.06 * (-n.y)
+            low = 1 - feet * max(0, 0.25 - z) / 0.25
+            c = cvx[vi]
+            edge = 1 + wear * max(c, 0) - wear * 0.8 * max(-c, 0)
+            k = light * low * edge * (1 + g + fj * noise * 0.6 + vjit[vi] * noise)
+            # Worn edges also lose a little saturation, like paint rubbed off.
+            m = sum(base) / 3
+            s = 1 - 0.35 * max(c, 0) * wear / 0.22
+            cc = [min(1, max(0, (m + (ch - m) * s) * k)) for ch in base]
+            col.data[li].color_srgb = (*cc, 1)
+    me.color_attributes.active_color = col
+    me.update()
+
+
+def finish_rich(ob, seed=1, **kw):
+    for p in ob.data.polygons:
+        p.use_smooth = False
+    paint_rich(ob, seed, **kw)
+    ob.data.materials.clear()
+    ob.data.materials.append(vc_material())
+    return tris(ob)
 
 
 def vc_material():

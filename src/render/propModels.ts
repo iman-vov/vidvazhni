@@ -52,7 +52,8 @@ export function fitToHeight(box: THREE.Box3, height: number): { scale: number; o
 /**
  * Heights (hex units) for props found by their own id rather than a location's table, where the
  * caller's generic default would size them wrong (a bookshelf shown at a barrel's height).
- * The Glass Town props of Act III are Blender-made (art/blender/act3-props).
+ * The Glass Town and Sleepy Marsh props of Act III are Blender-made (art/blender/act3-props).
+ * Lily pads are flat: their height is the model's own, so a pad keeps its ~0.75 width.
  */
 export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   mirror: 1.15,
@@ -61,6 +62,12 @@ export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   'crystal-heart': 1.0,
   'wind-up-key': 0.85,
   blueprint: 0.75,
+  loom: 1.3,
+  bell: 1.1,
+  cocoon: 1.0,
+  'lily-pad': 0.116,
+  'lily-pad-2': 0.154,
+  'lily-pad-3': 0.054,
 };
 
 const cache = new StampedCache<PropPrototype | null>();

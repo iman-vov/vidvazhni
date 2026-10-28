@@ -34,6 +34,10 @@ describe('prop models', () => {
     expect(propModelFor(null, ['bookshelf'], glass, 0.9)?.height).toBe(1.35);
   });
 
+  it('a flat lily pad keeps its own thin height, not the default', () => {
+    expect(propModelFor(null, ['lily-pad-3'], new Set(['lily-pad-3']), 0.9)?.height).toBeLessThan(0.1);
+  });
+
   it('every location maps only to planned prop models', () => {
     for (const env of ENVIRONMENTS) {
       for (const [key, entry] of Object.entries(env.propModels ?? {})) {
