@@ -10,6 +10,12 @@
 //   dieRerollBest            — Зілля удачі: reroll the initiative die and keep the better (lower) one,
 //                              or, on the own turn, the X of the pending step (the higher one is kept)
 //   xRerollBest{rolls}       — Щаслива кістка: the X die only (★ `rolls: 2`: the best of three)
+//   partyInitiativeReroll    — Дзвоник дзвонаря: every hero who rolled rerolls the initiative die once
+//                              and keeps the better (lower) roll
+//   dieMirror{times}         — Кришталева кістка: the own initiative die becomes 13 − x (3 → 10);
+//                              ★ `times: 2`: twice a scenario before it is spent
+//   dodgeRerollBest{rolls}   — Перлина туману: only for «Ухилитися» (defense.ts): `rolls` extra d12,
+//                              the best is kept (★ `rolls: 2`)
 // Other steps of a dice item (★: Лікування 2, Щит 1) are performed on the hero after the die.
 
 import type { ItemDef, Step } from './content';
@@ -23,7 +29,17 @@ import { INITIATIVE_DIE_SIDES, INITIATIVE_MIN } from './variants';
 
 type SpecialStep = Extract<Step, { type: 'special' }>;
 
-export const DICE_ITEM_SPECIALS: readonly string[] = ['initiativeReroll', 'initiativeDieOne', 'initiativeSwap', 'initiativeShift', 'dieRerollBest', 'xRerollBest'];
+export const DICE_ITEM_SPECIALS: readonly string[] = [
+  'initiativeReroll',
+  'initiativeDieOne',
+  'initiativeSwap',
+  'initiativeShift',
+  'dieRerollBest',
+  'xRerollBest',
+  'partyInitiativeReroll',
+  'dieMirror',
+  'dodgeRerollBest',
+];
 
 export interface DiceItemOptions {
   targetId?: FigureId;
@@ -50,7 +66,7 @@ export function isDiceItemDef(def: ItemDef): boolean {
 /** Used right after the initiative roll. */
 export function isInitiativeItem(ctx: Pick<Ctx, 's'>, def: ItemDef): boolean {
   const st = diceStep(ctx, def);
-  return !!st && st.name !== 'xRerollBest';
+  return !!st && st.name !== 'xRerollBest' && st.name !== 'dodgeRerollBest';
 }
 
 /** Used on the own turn, on the X of the pending step. */
@@ -86,7 +102,10 @@ export function initiativeItemError(ctx: Ctx, h: HeroState, def: ItemDef, opts: 
     case 'initiativeReroll':
     case 'initiativeDieOne':
     case 'dieRerollBest':
+    case 'dieMirror':
       return h.initiativeRoll === undefined ? 'no initiative die was rolled' : null;
+    case 'partyInitiativeReroll':
+      return activeHeroes(ctx.s).some((a) => playsCards(a) && a.initiativeRoll !== undefined) ? null : 'no initiative die was rolled';
     case 'initiativeSwap': {
       const ally = opts.targetId ? ctx.s.figures[opts.targetId] : undefined;
       if (!ally || ally.id === h.id) return 'choose an ally to swap with';
@@ -112,6 +131,18 @@ export function applyInitiativeItem(ctx: Ctx, h: HeroState, def: ItemDef, itemId
     setInitiative(h, cardInitiative(h), 1);
   } else if (st.name === 'dieRerollBest') {
     setInitiative(h, cardInitiative(h), Math.min(h.initiativeRoll ?? 1, d12()));
+  } else if (st.name === 'dieMirror') {
+    setInitiative(h, cardInitiative(h), INITIATIVE_DIE_SIDES + 1 - (h.initiativeRoll ?? 1));
+    h.dieMirrors = (h.dieMirrors ?? 0) + 1;
+    const times = param(st, 'times');
+    keep = typeof times === 'number' && h.dieMirrors < times;
+  } else if (st.name === 'partyInitiativeReroll') {
+    for (const ally of activeHeroes(ctx.s)) {
+      if (ally.id === h.id || !playsCards(ally) || ally.initiativeRoll === undefined) continue;
+      setInitiative(ally, cardInitiative(ally), Math.min(ally.initiativeRoll, d12()));
+      emit(ctx, { type: 'initiativeChanged', heroId: ally.id, itemId, card: cardInitiative(ally), roll: ally.initiativeRoll ?? 0, initiative: ally.initiative as number });
+    }
+    if (h.initiativeRoll !== undefined) setInitiative(h, cardInitiative(h), Math.min(h.initiativeRoll, d12()));
   } else if (st.name === 'initiativeShift') {
     const value = typeof param(st, 'value') === 'number' ? (param(st, 'value') as number) : 0;
     setInitiative(h, Math.max(INITIATIVE_MIN, cardInitiative(h) + (opts.shift ?? 0) * value), h.initiativeRoll);

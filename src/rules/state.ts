@@ -104,6 +104,8 @@ export interface HeroState extends FigureBase {
   rangedAttackedDisadvantage?: boolean;
   /** Item «Болотяні чоботи»: on the turn with this `turnCount` difficult terrain and water cost 1. */
   ignoreTerrainTurn?: number;
+  /** Item «Кришталева кістка» ★: times its die was mirrored this scenario. */
+  dieMirrors?: number;
   /** «Прикрий друга»: the hero already took a hit for an ally this round. */
   coverUsed?: boolean;
 }

@@ -583,6 +583,30 @@
     "upgrade": { "price": 25, "effect": [{ "type": "special", "name": "ignoreTerrain" }, { "type": "special", "name": "moveBonus", "params": { "value": 1 } }] }
   },
   {
+    "id": "bell-clapper",
+    "slot": "small",
+    "kind": "dice",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 14,
+    "source": { "type": "gift", "at": "s14" },
+    "use": "lost",
+    "effect": [{ "type": "special", "name": "partyInitiativeReroll" }],
+    "upgrade": { "price": 30, "effect": [{ "type": "special", "name": "partyInitiativeReroll" }, { "type": "shield", "value": 1, "target": "self", "duration": "round" }] }
+  },
+  {
+    "id": "mist-pearl",
+    "slot": "small",
+    "kind": "dice",
+    "rarity": "rare",
+    "price": 30,
+    "unlockedAfter": 15,
+    "source": { "type": "shop" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "dodgeRerollBest", "params": { "rolls": 1 } }],
+    "upgrade": { "price": 30, "effect": [{ "type": "special", "name": "dodgeRerollBest", "params": { "rolls": 2 } }] }
+  },
+  {
     "id": "queen-veil",
     "slot": "body",
     "rarity": "legendary",
@@ -605,6 +629,18 @@
     "effect": [{ "type": "infuse", "element": "light" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 1 } }],
     "forkEffect": [{ "type": "infuse", "element": "earth" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 1 } }],
     "upgrade": { "price": 30, "effect": [{ "type": "infuse", "element": "light" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 2 } }], "forkEffect": [{ "type": "infuse", "element": "earth" }, { "type": "special", "name": "nextRangedRangeBonus", "params": { "value": 2 } }] }
+  },
+  {
+    "id": "crystal-die",
+    "slot": "small",
+    "kind": "dice",
+    "rarity": "rare",
+    "price": 35,
+    "unlockedAfter": 19,
+    "source": { "type": "gift", "at": "s19" },
+    "use": "spent",
+    "effect": [{ "type": "special", "name": "dieMirror" }],
+    "upgrade": { "price": 35, "effect": [{ "type": "special", "name": "dieMirror", "params": { "times": 2 } }] }
   },
   {
     "id": "glass-shield",

@@ -48,14 +48,15 @@ function windowTask(ctx: Pick<Ctx, 's'>, heroId: FigureId): DamageTask | undefin
   return task?.t === 'damage' && task.targetId === heroId && task.attack ? task : undefined;
 }
 
-/** Extra d12 a dice item gives the dodge: Зілля удачі 1, Щаслива кістка `rolls` (★ 2); 0 = not one. */
+/** Extra d12 a dice item gives the dodge: Зілля удачі 1, Щаслива кістка and Перлина туману `rolls`
+ *  (★ 2); 0 = not one. */
 export function dodgeItemRolls(ctx: Pick<Ctx, 's'>, def: ItemDef): number {
   const st = itemEffect(ctx, def).find(
-    (x): x is SpecialStep => x.type === 'special' && (x.name === 'dieRerollBest' || x.name === 'xRerollBest'),
+    (x): x is SpecialStep => x.type === 'special' && ['dieRerollBest', 'xRerollBest', 'dodgeRerollBest'].includes(x.name),
   );
   if (!st) return 0;
   const rolls = st.params?.rolls;
-  return st.name === 'xRerollBest' && typeof rolls === 'number' ? rolls : 1;
+  return st.name !== 'dieRerollBest' && typeof rolls === 'number' ? rolls : 1;
 }
 
 /** Whether the hero could dodge this attack damage at all (opens the window). */
