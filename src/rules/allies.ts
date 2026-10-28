@@ -1,4 +1,10 @@
-// Glass Town allies (docs/design/act3.md, «Нові правила» s20).
+// Glass Town allies (docs/design/act3.md, «Нові правила» s17 and s20).
+//
+//   automatonHelpers (s17) A hero turning a wind-up key (an object of kind `wind-up-key` with its
+//                   own `interact`) winds the sleeping monster nearest to it, within 2 hexes, onto
+//                   the heroes' side: it becomes an allied NPC under the same id that walks and hits
+//                   the nearest monster like a hero's summon, on its own initiative. Every other
+//                   sleeper within 2 hexes of the key wakes up as an enemy (sleep.ts).
 //
 //   allyPhase (s20) When a boss falls to half health it stops being an enemy: it turns, on the
 //                   spot and under the same id, into an allied NPC (`SummonState.npc.fights`) that
@@ -16,34 +22,56 @@ import { areAdjacent, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { activeGoal } from './objectives';
 import { hitObstacle } from './obstacles';
 import { hasSpecial, scenarioOf } from './scenarioRules';
+import { sleepersNear, wake } from './sleep';
 import type { Figure, GameState, MonsterState, SummonState } from './state';
 
 /** What a monster's attack takes off the protected object. */
 export const HEART_HIT = 1;
+
+/** A wind-up key reaches the sleeping automatons this close. */
+export const WIND_UP_REACH = 2;
+/** The object kind a hero turns to wind an automaton up (`interact` in the data). */
+export const WIND_UP_KEY = 'wind-up-key';
 
 /** An ally's initiative when the data gives none: after most monster cards of the round. */
 export const ALLY_INITIATIVE = 50;
 
 /** `allyPhase`: the boss `m` (just at half health) becomes an allied NPC in place. */
 export function becomeAlly(ctx: Ctx, m: MonsterState): void {
-  if (!hasSpecial(ctx, 'allyPhase')) return;
+  if (hasSpecial(ctx, 'allyPhase')) turnAlly(ctx, m, 0);
+}
+
+/** The monster `m` becomes an allied NPC under the same id, with its attack and `move`; it keeps
+ *  its hp and its own shield and loses its conditions. */
+export function turnAlly(ctx: Ctx, m: MonsterState, move: number): void {
   const typeId = m.typeId;
   const stats = monsterStats(ctx, m);
   const old = m as unknown as Record<string, unknown>;
-  for (const k of ['typeId', 'rank', 'number', 'summonedRound', 'attackedBy', 'summonerId', 'room', 'drops', 'bossPhase', 'tag']) delete old[k];
+  for (const k of ['typeId', 'rank', 'number', 'summonedRound', 'attackedBy', 'summonerId', 'room', 'drops', 'bossPhase', 'tag', 'asleep']) delete old[k];
   const ally: Partial<SummonState> = {
     kind: 'summon',
     ownerId: m.id,
     summonId: typeId,
     monsterType: typeId,
     npc: { initiative: ALLY_INITIATIVE, fights: true },
-    move: 0,
+    move,
     attack: stats.attack,
-    shields: [],
+    ...(stats.range !== undefined ? { range: stats.range } : {}),
+    shields: m.shields.filter((sh) => sh.source === 'stats'),
     conditions: {},
   };
   Object.assign(old, ally);
   emit(ctx, { type: 'allyJoined', figureId: m.id });
+}
+
+/** `automatonHelpers` (s17): turning a wind-up key winds the sleeping monster nearest to it
+ *  (within `WIND_UP_REACH`) onto the heroes' side; every other sleeper that near wakes as an enemy. */
+export function windUpKey(ctx: Ctx, hex: Hex): void {
+  if (!hasSpecial(ctx, 'automatonHelpers')) return;
+  const [helper, ...rest] = sleepersNear(ctx, hex, WIND_UP_REACH);
+  if (!helper) return;
+  for (const m of rest) wake(ctx, m);
+  turnAlly(ctx, helper, monsterStats(ctx, helper).move);
 }
 
 /** The hex of the object every monster goes for (`allyPhase` with a `protect` goal), or null. */

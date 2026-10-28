@@ -383,7 +383,7 @@ function endFigureTurn(ctx: Ctx, figureId: string): void {
 function monsterGroup(ctx: Ctx, typeId: string): void {
   const rank = (m: MonsterState) => (m.rank === 'normal' ? 1 : 0);
   const list = monstersOfType(ctx.s, typeId)
-    .filter((m) => m.summonedRound !== ctx.s.round)
+    .filter((m) => m.summonedRound !== ctx.s.round && !m.asleep)
     .sort((a, b) => rank(a) - rank(b) || a.number - b.number);
   for (const m of list) schedule(ctx, { t: 'figureTurn', figureId: m.id });
 }

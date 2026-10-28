@@ -142,6 +142,8 @@ export interface MonsterState extends FigureBase {
   bossPhase?: number;
   /** Names the figure for scenario events (`spawns[].tag`). */
   tag?: string;
+  /** Skips its turns until woken (sleep.ts). */
+  asleep?: true;
 }
 
 export interface SummonState extends FigureBase {
@@ -545,6 +547,8 @@ export type GameEvent =
   | { type: 'bossHalfHp'; figureId: FigureId }
   /** A monster turned into an allied NPC under the same id (`allyPhase`, allies.ts). */
   | { type: 'allyJoined'; figureId: FigureId }
+  /** A sleeping monster woke up (sleep.ts). */
+  | { type: 'monsterWoke'; figureId: FigureId }
   /** A scenario event fired (`prevented`: its tagged monster died before it could). */
   | { type: 'scenarioEvent'; eventId: string; prevented?: true }
   /** A scenario event's story line (i18n key). */

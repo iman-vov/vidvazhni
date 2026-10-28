@@ -62,6 +62,7 @@ function runAction(ctx: Ctx, ev: ScenarioEventDef, a: EventAction, origin?: Hex)
       if (!hex) return;
       const m = spawnMonster(ctx, a.monster, rank, hex);
       if (a.tag) m.tag = a.tag;
+      if (a.asleep) m.asleep = true;
     }
   }
 }

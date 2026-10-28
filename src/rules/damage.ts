@@ -5,6 +5,7 @@ import type { ConditionId, HeroCard } from './content';
 import { activeHeroes, emit, hero, isPresent, type Ctx } from './effects/context';
 import { canDodge, coverAllies } from './defense';
 import { becomeAlly } from './allies';
+import { wake } from './sleep';
 import { onBossHalfHp } from './events';
 import { isShieldItem, readyItems } from './items';
 import { adjustDamage, checkBossPhase, npcLost, onHeroExhausted, onMonsterDied } from './scenarioRules';
@@ -101,6 +102,7 @@ export function takeDamage(ctx: Ctx, f: Figure, amount: number, source: string):
   const above = f.hp * 2 > f.maxHp;
   f.hp -= dealt;
   emit(ctx, { type: 'damaged', figureId: f.id, amount: dealt, source });
+  if (f.kind === 'monster' && dealt > 0) wake(ctx, f);
   if (f.hp > 0) {
     // A boss crossing half health (again after a heal): story beats, and `bossHalfHp` events once.
     if (f.kind === 'monster' && f.rank === 'boss' && above && f.hp * 2 <= f.maxHp) {

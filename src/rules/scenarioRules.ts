@@ -24,6 +24,7 @@ import { activeGoal, goalZone, inZone, npcId, raceWinner } from './objectives';
 import { winScenario } from './round';
 import { hasLineOfSight } from './geometry';
 import { checkBeam, turnRule } from './mirrors';
+import { windUpKey, WIND_UP_KEY } from './allies';
 import { areAdjacent, distance, hexKey, neighbors, parseHexKey, type Hex } from './hex';
 import { nextFloat, nextInt, type RngState } from './rng';
 import type { Figure, GameState, HeroState, MonsterState, SummonState, Tile } from './state';
@@ -172,6 +173,7 @@ export function applyInteraction(ctx: Ctx, h: HeroState, found: Exclude<ReturnTy
   if (found.rule.kind === 'brazier') infuse(ctx, ctx.s.variants.orbs ? BRAZIER_ORB : BRAZIER_ELEMENT, h.id);
   for (const hex of found.rule.opens ?? []) openDoor(ctx, hex);
   if (found.rule.special === 'beamMirrors') checkBeam(ctx);
+  if ((found.tile as Tile).object?.kind === WIND_UP_KEY) windUpKey(ctx, found.hex);
 }
 
 /** s3: the Miller's «Потоп» does nothing once the sluice lever is down. */

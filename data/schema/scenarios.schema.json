@@ -21,7 +21,8 @@
             "hexes": { "type": "array", "items": { "$ref": "#/definitions/hex" }, "minItems": 1 },
             "count": { "type": "integer", "minimum": 1 },
             "burst": { "type": "boolean" },
-            "tag": { "type": "string", "minLength": 1 }
+            "tag": { "type": "string", "minLength": 1 },
+            "asleep": { "const": true }
           },
           "required": ["type", "monster", "by", "hexes"],
           "additionalProperties": false
@@ -798,7 +799,8 @@
                   "additionalProperties": false
                 },
                 "drops": { "$ref": "#/definitions/drop" },
-                "tag": { "type": "string", "minLength": 1 }
+                "tag": { "type": "string", "minLength": 1 },
+                "asleep": { "const": true }
               },
               "required": ["monster", "hex", "by"],
               "additionalProperties": false

@@ -238,6 +238,7 @@ export function revealRoom(ctx: Ctx, scenario: ScenarioDef, roomId: string): voi
     if (room.drops?.some((d) => d.monster === sp.monster)) m.room = roomId;
     if (sp.drops) m.drops = sp.drops;
     if (sp.tag) m.tag = sp.tag;
+    if (sp.asleep) m.asleep = true;
   }
   spawnNpcs(ctx, room);
   onRoomRevealed(ctx, roomId);

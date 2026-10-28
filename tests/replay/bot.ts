@@ -10,7 +10,7 @@ import type { Content, ScenarioGoal } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
-import { objectHex } from '../../src/rules/allies';
+import { objectHex, WIND_UP_KEY } from '../../src/rules/allies';
 import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
@@ -154,7 +154,7 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     v += f.exhausted ? -200 : f.downed ? -120 : 2 * f.hp;
     v -= 2 * f.lost.length;
   }
-  for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit')) v += 20;
+  for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit') || (o.kind === WIND_UP_KEY && o.state === 'on')) v += 20;
   const goal = goalOf(s, content);
   if (goal?.type === 'carryItem') {
     for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted) v += 30 * (f.questItems?.length ?? 0);

@@ -326,7 +326,8 @@ export interface RoomDef {
   /** `by` = rank for 2/3/4 heroes; a missing key = the figure does not appear.
    *  `drops`: a named enemy's own loot, replacing its type's. `tag`: names the figure for
    *  scenario events (the horn-blower, the bell runner). */
-  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>; drops?: DropDef; tag?: string }[];
+  /** `asleep`: skips its turns until woken (sleep.ts). */
+  spawns?: { monster: string; hex: Hex; by: Partial<Record<'2' | '3' | '4', 'normal' | 'elite'>>; drops?: DropDef; tag?: string; asleep?: true }[];
   coins?: Hex[];
   /** `loot`: what opening the chest gives (a story item, coins, or a shop item). */
   chests?: { hex: Hex; id: string; loot?: { coins?: number; item?: string; questItem?: string } }[];
@@ -496,6 +497,8 @@ export type EventAction =
       count?: number;
       burst?: boolean;
       tag?: string;
+      /** The figures sleep until woken (sleep.ts). */
+      asleep?: true;
     }
   | { type: 'openDoor'; hex: Hex }
   /** A story line (i18n key) shown to the players. */
