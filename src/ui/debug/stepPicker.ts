@@ -39,6 +39,9 @@ export interface StepModel {
   /** Area mode: directions available for the selected anchor, and the hexes the area covers. */
   directions: number[];
   areaPreview: Hex[];
+  /** Area mode: every anchor + rotation with the hexes it covers, so a tap on a covered hex (a
+   *  monster, say) can aim the area at it. */
+  areaCover: { hex: Hex; direction: number; keys: string[] }[];
   /** Choice ready to confirm (targets set matches, area anchor + direction chosen). */
   ready: StepChoice | null;
 }
@@ -82,6 +85,7 @@ export function stepModel(s: GameState, step: Step, all: StepChoice[], sel: Step
     maxTargets: 0,
     directions: [],
     areaPreview: [],
+    areaCover: [],
     ready: null,
   };
   const actor = s.half ? s.figures[s.half.heroId] : undefined;
@@ -115,6 +119,19 @@ export function stepModel(s: GameState, step: Step, all: StepChoice[], sel: Step
       const anchors = new Map<string, Hex>();
       for (const c of choices) if (c.hex) anchors.set(hexKey(c.hex), c.hex);
       model.highlights = [...anchors.values()];
+      const shape = step.type === 'attack' ? (step.area ?? (consume ? step.consume?.area : undefined)) : undefined;
+      if (mode === 'area' && shape && actor) {
+        const seen = new Set<string>();
+        for (const c of choices) {
+          if (!c.hex) continue;
+          const keys = areaHexes(shape, actor.hex, c.hex, c.direction ?? 0).map(hexKey);
+          // Rotations that cover the same hexes are one option, the first one (as `directions` below).
+          const id = `${hexKey(c.hex)}=${[...keys].sort().join('|')}`;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          model.areaCover.push({ hex: c.hex, direction: c.direction ?? 0, keys });
+        }
+      }
       const anchor = sel.hex && anchors.has(hexKey(sel.hex)) ? sel.hex : anchors.size === 1 ? [...anchors.values()][0] ?? null : null;
       if (!anchor) break;
       const forAnchor = choices.filter((c) => c.hex && hexKey(c.hex) === hexKey(anchor));
@@ -168,8 +185,14 @@ export function tapStep(s: GameState, model: StepModel, sel: StepSelection, hex:
       return c ? { apply: c } : {};
     }
     case 'area': {
-      if (!model.highlights.some((x) => hexKey(x) === key)) return {};
-      return { sel: { ...sel, hex, direction: null } };
+      if (model.highlights.some((x) => hexKey(x) === key)) return { sel: { ...sel, hex, direction: null } };
+      // A tap on a hex the area can cover: aim there. Tapping it again turns to the next rotation
+      // that still covers it.
+      const covering = model.areaCover.filter((o) => o.keys.includes(key));
+      if (covering.length === 0) return {};
+      const at = covering.findIndex((o) => sel.hex && hexKey(o.hex) === hexKey(sel.hex) && o.direction === sel.direction);
+      const pick = covering[(at + 1) % covering.length] as (typeof covering)[number];
+      return { sel: { ...sel, hex: pick.hex, direction: pick.direction } };
     }
     case 'plain':
       return {};
