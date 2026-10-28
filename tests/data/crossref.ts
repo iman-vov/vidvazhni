@@ -275,6 +275,7 @@ export function checkScenario(s: ScenarioDef, content: Content): string[] {
     const t = ev.trigger;
     if (t.type === 'doorOpened' && !rooms.has(t.room)) err(`event ${ev.id} waits for missing room ${t.room}`);
     if (t.type === 'heroEnters' && !t.hexes?.length && !t.adjacent) err(`event ${ev.id} has no hexes to enter`);
+    if (t.type === 'goalRound' && !(s.events ?? []).some((e) => e.actions.some((x) => x.type === 'setGoal'))) err(`event ${ev.id} counts goal rounds, but no event switches the goal`);
     if (t.type === 'alarm') {
       if (!s.specials?.includes('livingBooks')) err(`event ${ev.id} waits for an alarm without the livingBooks special`);
       if (t.object && !objects.some((o) => o.id === t.object && o.kind === BOOKSHELF && o.state === SHELF_ASLEEP)) err(`event ${ev.id} waits for ${t.object}, which is no sleeping bookshelf`);

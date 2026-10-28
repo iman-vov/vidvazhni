@@ -66,6 +66,22 @@ describe('allyPhase', () => {
     expect(obstacleTargetError({ s, c, ev: [], out: [] }, s.figures['hero:alpha']!, HEART, 99)).toMatch(/keep/);
   });
 
+  it('goalRound: a wave at the start of each round of the switched goal', () => {
+    const c = fixture([]);
+    c.scenarios.test!.events!.push({ id: 'wave', trigger: { type: 'goalRound', round: 1, every: 1 }, actions: [{ type: 'spawn', monster: 'rat', by: { '2': 'normal' }, hexes: [[6, 0], [5, 0], [4, 0]] }] });
+    let s = finishRound(select(newGame(c), c), c);
+    const rats = (st: GameState) => Object.keys(st.figures).filter((id) => id.startsWith('monster:rat')).length;
+    expect(rats(s)).toBe(0);
+    const ctx = { s, c, ev: [], out: [] };
+    s = select(s, c);
+    ctx.s = s;
+    takeDamage(ctx, s.figures[GUARDIAN_ID]!, 8, 'test'); // switched in round 2: its rounds are 3, 4, 5
+    expect(rats(s)).toBe(0);
+    s = finishRound(s, c);
+    expect(s.round).toBe(3);
+    expect(rats(s)).toBe(1);
+  });
+
   it('without the special the boss stays an enemy', () => {
     const c = fixture([], []);
     const { s } = toHalf(c);

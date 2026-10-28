@@ -20,7 +20,7 @@ function eventsOf(ctx: Pick<Ctx, 's' | 'c'>): ScenarioEventDef[] {
 }
 
 function done(s: GameState, ev: ScenarioEventDef): boolean {
-  return s.firedEvents?.[ev.id] !== undefined && !(ev.trigger.type === 'round' && ev.trigger.every);
+  return s.firedEvents?.[ev.id] !== undefined && !((ev.trigger.type === 'round' || ev.trigger.type === 'goalRound') && ev.trigger.every);
 }
 
 /** Whether the event can still fire (not fired, not prevented). */
@@ -117,14 +117,18 @@ export function onRoomRevealed(ctx: Ctx, roomId: string): void {
 /** `round`: the round has just started (before card selection and the intents). */
 export function onRoundStart(ctx: Ctx): void {
   const round = ctx.s.round;
+  // `goalRound`: the switched goal's own rounds, its first being the round after `goalSince`.
+  const goalRound = ctx.s.goal ? round - (ctx.s.goalSince ?? 0) : 0;
   for (const ev of eventsOf(ctx)) {
-    if (ev.trigger.type !== 'round' || !roundDue(ev.trigger, round)) continue;
+    const t = ev.trigger;
+    const due = t.type === 'round' ? roundDue(t, round) : t.type === 'goalRound' ? goalRound > 0 && roundDue(t, goalRound) : false;
+    if (!due) continue;
     if (ctx.s.firedEvents?.[ev.id] === round) continue;
     fire(ctx, ev, ev.actions);
   }
 }
 
-function roundDue(t: Extract<EventTrigger, { type: 'round' }>, round: number): boolean {
+function roundDue(t: Extract<EventTrigger, { type: 'round' | 'goalRound' }>, round: number): boolean {
   if (round < t.round) return false;
   return t.every ? (round - t.round) % t.every === 0 : round === t.round;
 }

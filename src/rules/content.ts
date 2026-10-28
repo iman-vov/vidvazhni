@@ -477,6 +477,9 @@ export type EventTrigger =
   | { type: 'heroEnters'; hexes?: Hex[]; adjacent?: Hex }
   /** At the start of round `round` (before the cards are chosen), then every `every` rounds. */
   | { type: 'round'; round: number; every?: number }
+  /** Like `round`, counted in the rounds of a goal an event switched to (`setGoal`): `round: 1` is
+   *  its first round (s20's moths at the start of each of the heart's 3 rounds). */
+  | { type: 'goalRound'; round: number; every?: number }
   /** At the end of the `turns`-th turn of a monster with `tag` (the horn-blower calls). */
   | { type: 'monsterTurnsAlive'; tag: string; turns: number }
   /** A monster with `tag` ends its turn on or next to `hex` (the bell, a door). Such a monster
