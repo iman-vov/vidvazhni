@@ -1,6 +1,6 @@
 {
   "id": "old-forge",
-  "scenarios": ["s10"],
+  "scenarios": ["s10", "s17"],
   "edge": "forge",
   "surface": "worn-stone",
   "boundary": "walls",
