@@ -151,3 +151,36 @@ describe('fogBanks', () => {
     expect(hasLineOfSight(s, [1, 2], [3, 2])).toBe(false);
   });
 });
+
+describe('fireflyPond', () => {
+  function pondGame(specials = ['fireflyPond']): { c: Content; s: GameState } {
+    const c = makeContent({
+      secondRoom: false,
+      monsters: [monsterType('rat', 'trat', { normal: { hp: 9, move: 3, attack: 2 } })],
+      decks: [{ id: 'trat', cards: [{ id: 'r.50', initiative: 50, steps: [{ type: 'move', value: 0 }, { type: 'attack', value: 0 }] }] }],
+      spawns: [{ monster: 'rat', hex: [2, 2] }],
+      goal: { type: 'defend', zone: 'pond', rounds: 7, counter: 8 },
+      scenario: { specials, zones: [{ id: 'pond', hexes: [[5, 2], [5, 3], [6, 2]] }], secondary: [{ id: 'lights', check: 'counterKept', reward: { xp: 3 } }] },
+    });
+    const s = newGame(c);
+    s.figures['hero:alpha']!.hex = [1, 2];
+    return { c, s };
+  }
+  const pick = { alpha: ['alpha.c1', 'alpha.c2'] as [string, string], beta: ['beta.c1', 'beta.c2'] as [string, string] };
+
+  it('a monster outside the pond heads for it instead of fighting, and puts out a light there', () => {
+    const { c, s: s0 } = pondGame();
+    const s = finishRound(selectAll(s0, c, pick), c);
+    expect(s.figures['monster:rat:1']!.hex[0]).toBeGreaterThanOrEqual(5);
+    expect(s.figures['hero:alpha']!.hp).toBe(s.figures['hero:alpha']!.maxHp);
+    expect(s.goalCounter).toBe(7);
+    expect(secondaryMet(s, { id: 'lights', check: 'counterKept', reward: { xp: 3 } })).toBe(false);
+  });
+
+  it('without the special the monster fights the hero next to it', () => {
+    const { c, s: s0 } = pondGame([]);
+    const s = finishRound(selectAll(s0, c, pick), c);
+    expect(s.figures['hero:alpha']!.hp).toBeLessThan(s.figures['hero:alpha']!.maxHp);
+    expect(s.goalCounter).toBeUndefined();
+  });
+});

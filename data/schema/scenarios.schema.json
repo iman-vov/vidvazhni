@@ -652,7 +652,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "string", "minLength": 1 },
-          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken", "objectIntact", "noAlarm", "loomsBrokenBeforeHalf"] },
+          "check": { "enum": ["chestOpened", "noneExhausted", "objectState", "withinRounds", "noMirrorBroken", "objectIntact", "noAlarm", "loomsBrokenBeforeHalf", "counterKept"] },
           "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
           "reward": {
             "type": "object",

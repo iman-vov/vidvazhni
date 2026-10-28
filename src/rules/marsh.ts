@@ -10,6 +10,10 @@
 //   fogBanks (s12) Terrain `fog`: no line of sight into, out of or through it, only neighbours
 //                  can attack a figure in it (los.ts). A figure that makes Fire or Air (an infusion
 //                  or an orb) clears the fog on and next to its hex through the next round.
+//   fireflyPond (s13) The goal is `defend {zone, counter}` (objectives.ts: at the end of each round
+//                  each monster in the zone puts out 1 light). With this special every untagged
+//                  monster outside the pond flies or walks for it instead of fighting, and fights
+//                  once in. Secondary check `counterKept`: not one light went out.
 //   risingWater (s14) `ScenarioDef.rising {from, every, rows}`: at the start of round `from`, then
 //                  every `every` rounds, the next row turns to water and the row before it to deep
 //                  water (the last row deepens one step after it floods). Rooms not revealed yet
@@ -18,8 +22,9 @@
 
 import { emit, tileAt, type Ctx } from './effects/context';
 import { neighbors, type Hex } from './hex';
+import { activeGoal, goalZone, inZone } from './objectives';
 import { boardObjects, hasSpecial, scenarioOf } from './scenarioRules';
-import type { Figure, GameState } from './state';
+import type { Figure, GameState, MonsterState } from './state';
 
 export const LOOM = 'loom';
 
@@ -83,4 +88,14 @@ export function clearFog(ctx: Ctx, byId?: string): void {
     cleared.push([h[0], h[1]]);
   }
   if (cleared.length) emit(ctx, { type: 'fogCleared', hexes: cleared, until: ctx.s.round + 1 });
+}
+
+/** `fireflyPond`: where a monster outside the pond heads (the pond's hexes), or null. */
+export function pondGoal(ctx: Pick<Ctx, 's' | 'c'>, m: MonsterState): Hex[] | null {
+  const scenario = scenarioOf(ctx);
+  if (!scenario || m.tag || !hasSpecial(ctx, 'fireflyPond')) return null;
+  const goal = activeGoal(ctx.s, scenario);
+  if (goal.type !== 'defend' || !goal.counter) return null;
+  const zone = goalZone(scenario, goal);
+  return zone.length && !inZone(zone, m.hex) ? zone : null;
 }

@@ -3,7 +3,7 @@
 // and sets `pending`. Tasks scheduled by a task run before the rest of the queue (depth first).
 
 import { planRun, planTurn } from './ai';
-import { soakPenalty } from './marsh';
+import { pondGoal, soakPenalty } from './marsh';
 import { allyTargetGoal, allyTargetHex, hitTarget } from './allies';
 import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
@@ -490,7 +490,7 @@ function figureAct(ctx: Ctx, figureId: string): void {
   for (const st of steps) if (st.consume && st.consume.element !== 'any' && canConsume(ctx, st.consume.element)) consume(ctx, st.consume.element);
   // `allyPhase`: every monster goes for the object the heroes protect and hits it.
   const target = f.kind === 'monster' && !f.tag ? allyTargetHex(ctx) : null;
-  const goal = target ? allyTargetGoal(ctx) : f.kind === 'monster' ? runnerGoal(ctx, f) : f.kind === 'summon' && f.npc && !f.npc.fights ? npcGoal(ctx, f) : null;
+  const goal = target ? allyTargetGoal(ctx) : f.kind === 'monster' ? (runnerGoal(ctx, f) ?? pondGoal(ctx, f)) : f.kind === 'summon' && f.npc && !f.npc.fights ? npcGoal(ctx, f) : null;
   // An NPC with nowhere to go stays put (no attack); a fighting one plays like a summon.
   const stay = !goal && f.kind === 'summon' && !!f.npc && !f.npc.fights;
   const plan = goal || stay ? planRun(ctx.s, figureId, steps, goal ?? [f.hex]) : planTurn(ctx.s, figureId, steps);
