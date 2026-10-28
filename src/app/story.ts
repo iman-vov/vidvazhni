@@ -15,7 +15,7 @@ export type StoryMode = 'full' | 'short' | 'off';
 export const STORY_MODES: readonly StoryMode[] = ['full', 'short', 'off'];
 
 /** Off-board voices; a hero speaks by its class id. */
-export type NpcId = 'narrator' | 'marta' | 'miller' | 'shadowhand' | 'lina' | 'theo' | 'flip' | 'hammerfist' | 'ferryman' | 'heron' | 'mist-queen';
+export type NpcId = 'narrator' | 'marta' | 'miller' | 'shadowhand' | 'lina' | 'theo' | 'flip' | 'hammerfist' | 'ferryman' | 'heron' | 'mist-queen' | 'ida' | 'glass-guardian';
 
 export interface StoryLineDef {
   id: string;
@@ -59,7 +59,7 @@ export function scenarioStory(lang: Lang, scenarioId: string): ScenarioStory | n
 /** Monsters that speak as an NPC when they stand on the board. */
 export const NPC_FIGURES: Partial<Record<string, string>> = { miller: 'bog-miller', shadowhand: 'shadowhand', hammerfist: 'hammerfist' };
 
-const NPC_IDS: readonly string[] = ['narrator', 'marta', 'miller', 'shadowhand', 'lina', 'theo', 'flip', 'hammerfist', 'ferryman', 'heron', 'mist-queen'] satisfies NpcId[];
+const NPC_IDS: readonly string[] = ['narrator', 'marta', 'miller', 'shadowhand', 'lina', 'theo', 'flip', 'hammerfist', 'ferryman', 'heron', 'mist-queen', 'ida', 'glass-guardian'] satisfies NpcId[];
 
 export const isHeroSpeaker = (speaker: string): boolean => ![...NPC_IDS, 'hero'].includes(speaker);
 

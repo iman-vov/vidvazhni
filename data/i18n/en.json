@@ -1451,5 +1451,20 @@
   "event.s15.loom-broken": "The loom falls apart, and the mist around the Queen grows thinner.",
   "event.s15.looms-down": "All the looms are silent. Now the Queen can be seen clearly.",
   "event.s15.bells": "The bells from the tower have already broken one loom. Only two are left.",
-  "event.s15.last-thread": "The last thread! Every loom still standing heals the Queen."
+  "event.s15.last-thread": "The last thread! Every loom still standing heals the Queen.",
+  "scenario.s16": "The Crystal Road",
+  "scenario.s16.goal": "Escort Master Ida’s cart to the gate of Glass Town",
+  "scenario.s16.intro": "The second flock of black moths flew east, to Glass Town. Ida, an old lamplighter, is taking her cart there along the crystal road. Get her safely to the town gate, and don’t break the mirrors by the roadside.",
+  "scenario.s16.outro": "Ida has reached the gate. She told you Lumo was her best apprentice: his workshop still stands on the hill, and his notes are kept in the Library of Light.",
+  "room.s16.approach": "A. Coaching Yard",
+  "room.s16.road": "B. Crystal Road",
+  "room.s16.bridge": "C. Bridge",
+  "room.s16.gate": "D. Town Gate",
+  "event.s16.flash": "Flash! The mirrors light up, and moths fly out of the farthest ones.",
+  "event.s16.lookout": "The gremlin lookout is rocking the bridge. Now it’s hard going.",
+  "event.s16.lookout-gone": "The lookout is chased off and the bridge holds still. He dropped a few coins.",
+  "event.s16.mirror-broken": "Ding! A mirror cracked and went dark.",
+  "event.s16.crate": "Ida opens a crate on her cart: “For your trouble.” There are coins inside.",
+  "story.speaker.ida": "Master Ida",
+  "story.speaker.glass-guardian": "Glass Guardian"
 }

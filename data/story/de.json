@@ -1045,6 +1045,84 @@
         ]
       },
       "epilogue": { "id": "s15.epilogue", "speaker": "marta", "text": "Der Nebel zieht auf Alba zu. Schließt die Fensterläden, ihr Mutigen, und ich setze den größten Suppenkessel auf. Wir verteidigen die Stadt zusammen." }
+    },
+    "s16": {
+      "intro": [
+        { "id": "s16.intro.1", "speaker": "narrator", "text": "Östlich von Alba, oben in den Bergen, liegt die Glasstadt. Eine Kristallstraße führt hinauf und glitzert in der Sonne wie ein gefrorener Bach." },
+        { "id": "s16.intro.2", "speaker": "marta", "text": "Der zweite Falterschwarm ist genau dorthin geflogen. Am Rasthof wartet Meisterin Ida auf euch, eine alte Laternenmacherin. Sie bringt ihren Karren zum Stadttor." },
+        { "id": "s16.intro.3", "speaker": "marta", "text": "Der Karren ist schwer, und Ida geht langsam. Passt gut auf sie auf, und zerschlagt die Spiegel am Weg nicht. Die stehen da nicht nur zur Zierde." },
+        { "id": "s16.intro.4", "speaker": "ida", "text": "Ihr seid die Mutigen? Gut. Den Karren nicht schieben, da ist Glas drin. Ich bin zwar langsam, aber warten mag ich nicht." },
+        {
+          "id": "s16.intro.5", "speaker": "hero", "pick": "random",
+          "text": "Auf zum Tor!",
+          "variants": {
+            "warden": "Die Straße ist glatt wie Eis. Ich gehe vor, ihr bleibt hinter meinem Schild.",
+            "wind-archer": "Spiegel den ganzen Weg entlang. Ich frage mich, wer hineinschaut, wenn wir nicht da sind.",
+            "herbalist": "Frau Ida, Ihre Hände sind ganz kalt. Nehmen Sie die Handschuhe, ich habe noch ein Paar.",
+            "rogue": "Ein ganzer Karren voller Glas. Ich fasse nichts an. Seht ihr? Hände in den Taschen.",
+            "elementalist": "Kristall liebt Erde, und Spiegel lieben Licht. Hier ist alles wie für Zauber gemacht!",
+            "tinker": "Die Räder vom Karren quietschen. Bolt, erinnere mich, sie bei der Rast zu ölen."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s16.road",
+          "trigger": { "on": "doorOpened", "arg": "s16.road" },
+          "lines": [
+            { "id": "s16.road.1", "speaker": "narrator", "text": "Die Kristallstraße funkelt, und in jedem Spiegel am Wegrand spiegelt sich der Himmel." },
+            { "id": "s16.road.2", "speaker": "ida", "text": "Zerbrecht die Spiegel nicht. Mein Lehrling hat sie einst aufgestellt, damit es nachts auf der Straße nie dunkel ist." }
+          ]
+        },
+        {
+          "id": "s16.flash",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s16.flash.1", "speaker": "narrator", "text": "Alle Spiegel blitzten zugleich auf, und aus den hintersten flatterten schwarze Falter." },
+            { "id": "s16.flash.2", "speaker": "glass-guardian", "text": "Pling. Wer geht zur Werkstatt? Der Meister ist nicht zu Hause. Der Meister kommt bald zurück." }
+          ]
+        },
+        {
+          "id": "s16.bridge",
+          "trigger": { "on": "doorOpened", "arg": "s16.bridge" },
+          "lines": [
+            { "id": "s16.bridge.1", "speaker": "narrator", "text": "Die Brücke schwankt über der Schlucht, und ein Rad des Karrens steckt zwischen den Brettern fest." },
+            { "id": "s16.bridge.2", "speaker": "warden", "text": "Lasst mich mal. Die Rathaustür ist schwerer, und die habe ich jeden Morgen aufgemacht." }
+          ]
+        },
+        {
+          "id": "s16.gate",
+          "trigger": { "on": "doorOpened", "arg": "s16.gate" },
+          "lines": [
+            { "id": "s16.gate.1", "speaker": "narrator", "text": "Am Tor der Glasstadt stehen Kultisten und verstecken die Augen unter ihren Kapuzen." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s16.win.1", "speaker": "narrator", "text": "Der Karren rollte durchs Tor. Die Glasstadt klirrte mit tausend Fensterscheiben, als würde sie Hallo sagen." },
+          { "id": "s16.win.2", "speaker": "ida", "text": "Danke, ihr Mutigen. Vor vierzig Jahren hat man genau auf dieser Straße die Schutzlaterne nach Alba gebracht. Mein bester Lehrling hat sie gebaut: Lumo." },
+          { "id": "s16.win.3", "speaker": "ida", "text": "Er kam als kleiner Junge zu mir, mit einem Glas Glühwürmchen unterm Arm. Und jede Nacht ließ er eine Kerze auf seiner Werkbank brennen." },
+          { "id": "s16.win.4", "speaker": "ida", "text": "Seine Werkstatt steht noch oben am Hang, und seine Aufzeichnungen liegen in der Bibliothek des Lichts. Wohin geht ihr zuerst?" },
+          {
+            "id": "s16.win.5", "speaker": "hero", "pick": "random",
+            "text": "Wir müssen wählen.",
+            "variants": {
+              "warden": "Werkstatt oder Bücher? Ich gehe dahin, wo etwas getragen werden muss.",
+              "wind-archer": "In der Werkstatt riecht es nach Eisen, in der Bibliothek nach Staub. Meine Nase stimmt für die Werkstatt.",
+              "herbalist": "Ein Junge, der nie die Kerze ausblies. Der Arme hat bestimmt kaum geschlafen.",
+              "rogue": "Eine Laternenmacherwerkstatt. Da gibt es bestimmt lauter spannenden Krimskrams. Ich schaue nur.",
+              "elementalist": "Die Bibliothek des Lichts! Es heißt, die Bücher dort flüstern. Oh. Die ist ja gleich neben meiner Akademie.",
+              "tinker": "Die Werkstatt, in der die Schutzlaterne gebaut wurde? Davon träume ich, seit ich klein bin."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s16.lose.1", "speaker": "marta", "text": "Ida ist müde geworden, und der Karren musste anhalten. Macht nichts, ruht euch aus und brecht wieder auf." },
+          { "id": "s16.lose.2", "speaker": "marta", "text": "Stellt euch zwischen Ida und die Feinde. Und keine Flächenangriffe bei den Spiegeln: Ein zersprungener Spiegel hilft euch nicht mehr." }
+        ]
+      },
+      "epilogue": { "id": "s16.epilogue", "speaker": "marta", "text": "Ida hat mir eine kleine Glaskugel dagelassen. Wenn man sie schüttelt, schneit es drinnen über einer winzigen Stadt." }
     }
   }
 }

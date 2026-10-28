@@ -1045,6 +1045,84 @@
         ]
       },
       "epilogue": { "id": "s15.epilogue", "speaker": "marta", "text": "The mist is coming for Alba. Shut the shutters, Brave Ones, and I’ll put on my biggest pot of soup. We’ll defend the town together." }
+    },
+    "s16": {
+      "intro": [
+        { "id": "s16.intro.1", "speaker": "narrator", "text": "East of Alba, up in the mountains, lies Glass Town. A crystal road leads there, sparkling in the sun like a frozen stream." },
+        { "id": "s16.intro.2", "speaker": "marta", "text": "The second flock of moths flew that way. Master Ida, an old lamplighter, is waiting for you at the coaching yard. She’s taking her cart up to the town gate." },
+        { "id": "s16.intro.3", "speaker": "marta", "text": "The cart is heavy and Ida walks slowly. Keep her safe, and don’t break the mirrors along the road. They’re not there just for show." },
+        { "id": "s16.intro.4", "speaker": "ida", "text": "You’re the Brave Ones? Good. Don’t push the cart, there’s glass in it. I may be slow, but I don’t like waiting." },
+        {
+          "id": "s16.intro.5", "speaker": "hero", "pick": "random",
+          "text": "To the gate!",
+          "variants": {
+            "warden": "The road is slippery as ice. I’ll go first, you stay behind my shield.",
+            "wind-archer": "Mirrors all along the road. I wonder who looks into them when we’re not here.",
+            "herbalist": "Mistress Ida, your hands are cold. Take these gloves, I’ve got a spare pair.",
+            "rogue": "A whole cart full of glass. I’m not touching it. See? Hands in my pockets.",
+            "elementalist": "Crystal loves earth and mirrors love light. This place is made for magic!",
+            "tinker": "The cart wheels squeak. Bolt, remind me to oil them when we stop."
+          }
+        }
+      ],
+      "beats": [
+        {
+          "id": "s16.road",
+          "trigger": { "on": "doorOpened", "arg": "s16.road" },
+          "lines": [
+            { "id": "s16.road.1", "speaker": "narrator", "text": "The crystal road glitters, and every mirror along the roadside holds a piece of sky." },
+            { "id": "s16.road.2", "speaker": "ida", "text": "Don’t break the mirrors. My apprentice put them up long ago, so the road would never be dark at night." }
+          ]
+        },
+        {
+          "id": "s16.flash",
+          "trigger": { "on": "round", "arg": 3 },
+          "lines": [
+            { "id": "s16.flash.1", "speaker": "narrator", "text": "All the mirrors flashed at once, and black moths fluttered out of the farthest ones." },
+            { "id": "s16.flash.2", "speaker": "glass-guardian", "text": "Ding. Who goes to the workshop? The master is not at home. The master will be back soon." }
+          ]
+        },
+        {
+          "id": "s16.bridge",
+          "trigger": { "on": "doorOpened", "arg": "s16.bridge" },
+          "lines": [
+            { "id": "s16.bridge.1", "speaker": "narrator", "text": "The bridge sways over the gorge, and one of the cart’s wheels is stuck between the planks." },
+            { "id": "s16.bridge.2", "speaker": "warden", "text": "Let me. The town hall doors are heavier, and I opened them every morning." }
+          ]
+        },
+        {
+          "id": "s16.gate",
+          "trigger": { "on": "doorOpened", "arg": "s16.gate" },
+          "lines": [
+            { "id": "s16.gate.1", "speaker": "narrator", "text": "Cultists stand by the gate of Glass Town, their eyes hidden under their hoods." }
+          ]
+        }
+      ],
+      "outro": {
+        "victory": [
+          { "id": "s16.win.1", "speaker": "narrator", "text": "The cart rolled through the gate. Glass Town chimed with a thousand windowpanes, as if saying hello." },
+          { "id": "s16.win.2", "speaker": "ida", "text": "Thank you, Brave Ones. Forty years ago the Guardian Lantern was carried down this very road to Alba. My best apprentice made it. His name was Lumo." },
+          { "id": "s16.win.3", "speaker": "ida", "text": "He came to me as a little boy, with a jar of fireflies under his arm. And every night he left a candle burning on his workbench." },
+          { "id": "s16.win.4", "speaker": "ida", "text": "His workshop still stands on the hill, and his notes are kept in the Library of Light. Where will you go first?" },
+          {
+            "id": "s16.win.5", "speaker": "hero", "pick": "random",
+            "text": "We have to choose.",
+            "variants": {
+              "warden": "Workshop or books? I’ll go wherever something needs carrying.",
+              "wind-archer": "The workshop smells of iron, the library of dust. My nose votes for the workshop.",
+              "herbalist": "A boy who never blew out his candle. Poor thing, he can’t have slept a wink.",
+              "rogue": "A lamplighter’s workshop. Must be full of interesting bits and bobs. I’ll just have a look.",
+              "elementalist": "The Library of Light! They say the books there whisper. Oh. That’s right next to my academy.",
+              "tinker": "The workshop where the Guardian Lantern was made? I’ve dreamed of seeing it since I was little."
+            }
+          }
+        ],
+        "defeat": [
+          { "id": "s16.lose.1", "speaker": "marta", "text": "Ida got tired and the cart had to stop. Never mind, have a rest and set off again." },
+          { "id": "s16.lose.2", "speaker": "marta", "text": "Stand between Ida and the enemies. And no area attacks near the mirrors: a cracked mirror can’t help you any more." }
+        ]
+      },
+      "epilogue": { "id": "s16.epilogue", "speaker": "marta", "text": "Ida left me a little glass ball. Give it a shake, and snow falls over a tiny town inside." }
     }
   }
 }

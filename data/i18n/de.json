@@ -1451,5 +1451,20 @@
   "event.s15.loom-broken": "Der Webstuhl zerfällt, und der Nebel um die Königin wird dünner.",
   "event.s15.looms-down": "Alle Webstühle schweigen. Jetzt ist die Königin deutlich zu sehen.",
   "event.s15.bells": "Die Glocken vom Turm haben schon einen Webstuhl zerbrochen. Es sind nur noch zwei.",
-  "event.s15.last-thread": "Der letzte Faden! Jeder heile Webstuhl heilt die Königin."
+  "event.s15.last-thread": "Der letzte Faden! Jeder heile Webstuhl heilt die Königin.",
+  "scenario.s16": "Die Kristallstraße",
+  "scenario.s16.goal": "Meisterin Idas Karren bis zum Tor der Glasstadt geleiten",
+  "scenario.s16.intro": "Der zweite Schwarm schwarzer Falter ist nach Osten geflogen, zur Glasstadt. Die alte Laternenmacherin Ida fährt ihren Karren über die Kristallstraße dorthin. Bringt sie sicher zum Stadttor und zerbrecht die Spiegel am Wegrand nicht.",
+  "scenario.s16.outro": "Ida ist am Tor. Sie hat erzählt, dass Lumo ihr bester Lehrling war: Seine Werkstatt steht noch am Hang, und seine Aufzeichnungen liegen in der Bibliothek des Lichts.",
+  "room.s16.approach": "A. Rasthof",
+  "room.s16.road": "B. Kristallstraße",
+  "room.s16.bridge": "C. Brücke",
+  "room.s16.gate": "D. Stadttor",
+  "event.s16.flash": "Aufblitzen! Die Spiegel leuchten auf, und aus den hintersten fliegen Falter.",
+  "event.s16.lookout": "Der Gremlin-Späher bringt die Brücke ins Schaukeln. Jetzt kommt man nur mühsam voran.",
+  "event.s16.lookout-gone": "Der Späher ist verjagt, die Brücke steht still. Er hat ein paar Münzen verloren.",
+  "event.s16.mirror-broken": "Pling! Ein Spiegel ist zersprungen und erloschen.",
+  "event.s16.crate": "Ida öffnet eine Kiste auf dem Karren: „Für eure Mühe.“ Darin liegen Münzen.",
+  "story.speaker.ida": "Meisterin Ida",
+  "story.speaker.glass-guardian": "Gläserner Wächter"
 }

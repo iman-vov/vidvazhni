@@ -1,11 +1,14 @@
-// Act III region A (Sleepy Marsh, s11–s15): every story line and every scenario, room and event
+// Act III regions A (Sleepy Marsh, s11–s15) and B (Glass Town, s16–s20): every story line and every scenario, room and event
 // text exists in all three languages, and every NPC who speaks there has a name.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const LANGS = ['uk', 'de', 'en'] as const;
-const MARSH = ['s11', 's12', 's13', 's14', 's15'];
+const REGIONS: Record<string, string[]> = {
+  'Sleepy Marsh': ['s11', 's12', 's13', 's14', 's15'],
+  'Glass Town': ['s16'],
+};
 
 type Line = { id: string; speaker: string; text: string; variants?: Record<string, string> };
 type Scenario = { intro: Line[]; beats: { id: string; lines: Line[] }[]; outro: { victory: Line[]; defeat: Line[] }; epilogue: Line };
@@ -18,8 +21,8 @@ const HEROES = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', '
 const lines = (s: Scenario): Line[] => [...s.intro, ...s.beats.flatMap((b) => b.lines), ...s.outro.victory, ...s.outro.defeat, s.epilogue];
 const own = (id: string) => (key: string) => key === `scenario.${id}` || key.startsWith(`scenario.${id}.`) || key.includes(`.${id}.`);
 
-describe('Sleepy Marsh texts', () => {
-  for (const id of MARSH) {
+for (const [region, ids] of Object.entries(REGIONS)) describe(`${region} texts`, () => {
+  for (const id of ids) {
     it(`${id} has story lines with the same ids in uk, de and en`, () => {
       const ids = (l: (typeof LANGS)[number]) => lines(story[l]![id]!).map((x) => x.id);
       for (const l of LANGS) expect(story[l]![id], `${l} ${id}`).toBeDefined();
