@@ -1,22 +1,41 @@
 # Act III props v2 (high detail): hand-over
 
-## State 2026-10-29 ~16:00 (props-hq-3, local_e9d7e22a)
-- **bookshelf is done and committed**: 4364 tris (low tier 2594), 1024 col / metal-rough / normal baked from `bookshelf-hi` (73.8k tris). The maps are in `hq-tex/bookshelf_{col,mr,n}.png`, the GLB is in `assets/models/bookshelf/`, and the sheet is `docs/art/act3/props-hq.jpg` (Blender only so far).
-- **Still owed for the bookshelf:** the in-game board shot (`dev/board.html?board=s18&quality=high`). With 46 node sims running, Chrome's renderer froze on every dev page, the plain model viewer included, so no board shot exists yet.
-- **This session had no Blender MCP tools.** The lead session approved driving the live Blender through the addon socket on 9876. The helper `bl.py` sends `execute_code` / `get_viewport_screenshot` JSON, one step per call. It lived in the session scratchpad; recreate it as needed.
-- **Pipeline:** the functions are in `hq_lib.py`; one call each:
-  1. `step_*()` builds each part (lo plus hi);
-  2. `join_parts(id, parts)` joins the parts and triangulates the lo;
-  3. `prep_lo(lo)`;
-  4. `shrink_hidden(lo, rule)` shrinks the bottoms and inner book faces in UV and repacks;
-  5. mark lo edges over 40° sharp;
-  6. `bake_start(lo, hi, id, 'col'|'mr'|'n')` runs as an INVOKE job: poll `bpy.app.is_job_running('OBJECT_BAKE')`, then call `bake_save(id, which)`;
-  7. `final_mat(lo, id)`;
-  8. export a GLB (`export_vertex_color='NONE'`, tangents) to `art/meshy-source/<id>/<id>.glb`, then run `npm run models <id>`.
-- `_new_faces` takes a set again. A face count was wrong because BMesh reuses freed face slots, and that broke `book_piece`.
-- Books are built one shelf per call (`step_books(0|1|2)`), and `step_top()` adds the dressing (books plus a glass globe on a brass stand).
-- **Weak points to revisit** (seen on the sheet): the wood surfaces are a bit clean and smooth, with little visible wear or scratching; the glass globe is opaque (one material per prop).
-- **Next, in order:** mirror, glass-cart, crystal-heart, loom, bell, glass-lantern, glass-workbench, then the rest.
+## State 2026-10-29 ~18:30 (props-hq-3, local_e9d7e22a)
+- **Done and committed (v2, 1024 col / metal-rough / normal baked from `<id>-hi`):**
+
+  | prop | lo tris | low tier | commit |
+  |---|---|---|---|
+  | bookshelf | 4364 | 2594 | 7dd11fc |
+  | mirror | 4228 | 2114 | f5ec9cd |
+  | glass-cart | 5352 | 2708 | 6d0e6ef |
+  | crystal-heart | 2246 | 1206 | 0117bb7 |
+  | wind-up-key | 4508 | 3368 | 1786638 |
+  | blueprint | 1756 | 1278 | 786b6bb |
+
+  - One script per prop: `bookshelf_hq.py`, `mirror_hq.py`, `glasscart_hq.py`, `crystalheart_hq.py`, `windupkey_hq.py`, `blueprint_hq.py`.
+  - The v1 objects are renamed `<id>-v1` in the blend.
+- **Sheet `docs/art/act3/props-hq.jpg`:** the top row is in-game (s18 bookshelves, s16 mirrors), then one Blender row per prop.
+- **In-game shots: headless Chrome works when the window does not.**
+  - With the screen off or locked, the interactive Chrome tab froze and Blender's viewport did not redraw.
+  - Command: `chrome.exe --headless=new --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir=<one scratch dir> --window-size=1280,800 --virtual-time-budget=40000 --screenshot=out.png "http://localhost:5342/vidvazhni/dev/board.html?board=s16&quality=high"`. Note the `/vidvazhni/` base.
+  - Larger windows crash the renderer.
+  - `models.html` stays blank headless.
+- **Viewport shots: Blender's offscreen viewport was stale/empty while the window did not redraw.** Looks are a Workbench render from a camera instead (`look()` in the scratchpad `view.py`: Solid/Texture, 512, about 0.5 s).
+- **glass-cart has a second, clear material** `glass-cart-glass` (BLEND, no textures) on the pane faces.
+  - Its UV islands are shrunk to 3%, and the hi pane faces are deleted before the bake.
+  - The loader instances each primitive with its own cloned material, so it reaches the board.
+  - **Not yet seen in the game:** the cart's room in s16 was off the headless frame.
+  - The cart now runs along X (wheels toward the camera); v1 ran along Y.
+- **Pipeline changes in `hq_lib.py`:**
+  - Wood wear: edge chips (paler raw wood, rougher, dented), dark hand-worn patches, a per-piece tone (`Kit(tone=True)`, its own random stream).
+  - `join_parts` marks edges over 50° sharp on lo and hi. Without it, unbevelled flat faces on smooth-shaded hi baked big normal gradients.
+  - `shrink_hidden`'s rule may return its own factor.
+  - Crystal faces get `use_smooth=False` on lo and hi for a faceted look (done in the join timer, see crystalheart in the transcript).
+- **Weak points:**
+  - The bookshelf was baked before the wood wear and the sharp-edge fix. A rebake of its col/n would improve it.
+  - The rope on the cart is 6-sided on lo.
+  - The heart pedestal's chips are subtle from the front.
+- **Next:** loom, bell, glass-lantern, glass-workbench, then the rest (cocoon, lily pads, glass-crystals ×2, glass-panes).
 
 ## Brief (unchanged)
 - Remodel the 17 Act III props in Blender, much more detailed and realistic. The bar is `docs/art/weapons/warden.jpg` and the Meshy figures.
