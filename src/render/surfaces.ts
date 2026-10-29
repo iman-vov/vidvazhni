@@ -409,7 +409,7 @@ const GLASS_TILES: StoneStyle = {
   cracks: 0.05,
   dirt: 0.25,
   moss: 0,
-  grout: [112, 106, 98],
+  grout: [126, 120, 110],
   tone: (rnd) => {
     const v = 146 + rnd() * 22;
     if (rnd() < 0.08) return [v - 34, v - 30, v - 24]; // a blue-grey slate

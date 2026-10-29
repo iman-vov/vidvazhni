@@ -26,6 +26,7 @@
     "sacks": { "model": "glass-panes", "height": 0.6 },
     "brazier": { "model": "glass-lantern", "height": 1.5 },
     "brazier-lit": { "model": "glass-lantern", "height": 1.5 },
+    "glass-lamp": { "model": "glass-lantern", "height": 1.5 },
     "crystals": { "model": "glass-crystals-2", "height": 0.8 },
     "crystal": { "model": "glass-crystals", "height": 0.7 },
     "chest": { "model": "chest", "height": 0.6 },
@@ -36,7 +37,7 @@
     "candles": { "model": "candles-stone", "height": 0.6 }
   },
   "dressing": {
-    "anchors": [["brazier-lit", 3]],
+    "anchors": [["glass-lamp", 3]],
     "sets": [
       { "weight": 3, "items": [{ "piece": "crystals", "x": 0, "z": -0.05 }, { "piece": "rock", "x": 0.55, "z": 0.18 }, { "piece": "crate", "x": -0.6, "z": 0.22 }] },
       { "weight": 2, "items": [{ "piece": "barrel", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.2 }] },

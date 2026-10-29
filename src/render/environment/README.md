@@ -64,6 +64,8 @@
 | `copperdale` (с. 8) | `timber-*` (фасади хат) | `crate`, `barrel`, `sacks`, `mine-cart`, `ore-pile`, `weapon-rack`, `timber-stack`, `house-far` (за краєм) | `bell-post`, `torch`; перешкода `campfire`, об'єкти `cage` |
 | `dark-depths` (с. 9) | `mine-*`; брама кузні — `forge-*` | `rock`, `stalagmite`, `ore-pile`, `glow-mushrooms`, `crystals`, `rubble-heap` | вода, згаслі `brazier` |
 | `old-forge` (с. 10) | `forge-wall` (цегла з залізом), `forge-hearth` (жар у стіні), `forge-wall-low`, `forge-pillar`, `forge-pillar-low`, `forge-doorway` | `coal-pile`, `anvil`, `ore-pile`, `quench-trough`, `chain-hoist`, `rubble-heap`, `weapon-rack` | об'єкти `forge`, `dark-lantern`; іскри |
+| `glass-town` (с. 17–19, Скляне місто в приміщенні) | `glass-wall` (вапняк, латунний пояс, карниз), `glass-window` (вітражне вікно, кіт `env-glass-town` з Blender), `glass-wall-low`, `glass-pillar`, `glass-pillar-low`, `glass-doorway`; на стінах `glass-sconce` (латунний ліхтар, кіт) | `shelf` → `glassware-shelf`, `wine-rack` → `bookshelf`, `keg-rack`/`table` → `glass-workbench`, `barrel` → `glass-crystals`, `crate`/`sacks` → `glass-panes`, `brazier-lit` → `glass-lantern` | підлога `glass-tiles`; плями денного світла від вітражів; скляний пил |
+| `glass-heights` (с. 16, 20, надворі) | `rock-*` з кристалами (край `cave`) | `crystals`, `rock`, скляні пропи, `glass-lantern` | бруківка, денне світло |
 
 Перешкоди й об'єкти на гексах без власної моделі теж беруться звідси: `obstacle-tree`, `boulder`, `pillar`, `bunk`, `table`, `hut` (зменшена), `brazier` / `brazier-lit`, `lever` / `lever-down`, `millstone`.
 

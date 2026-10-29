@@ -117,7 +117,7 @@ export const ATMOSPHERE: Record<string, Atmosphere> = {
   'glass-town': {
     // Glass Town indoors: clean pale stone in cool daylight through the windows, little dirt.
     grade: grade([0.0, 0.008, 0.02], [1.02, 1.03, 1.06], 1.06, 1.06, 0.42),
-    pools: 0.32,
+    pools: 0.5,
     grime: '#3a3834',
     floor: { density: 0.35, kinds: [['dust', 3], ['slab', 2], ['crack', 1]] },
     edge: 0.35,

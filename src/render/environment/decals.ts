@@ -874,6 +874,7 @@ function buildPools(input: AtmosphereInput, atm: Atmosphere): { mesh: THREE.Inst
   const euler = new THREE.Euler();
   const v = new THREE.Vector3();
   const strength = atm.pools * POOL_QUALITY[quality];
+  const glassy = def.edge === 'glass';
   for (const p of placements) {
     const l = pieceMeta(p.piece)?.light;
     if (!l || p.band === 'far') continue;
@@ -881,8 +882,9 @@ function buildPools(input: AtmosphereInput, atm: Atmosphere): { mesh: THREE.Inst
     m.compose(new THREE.Vector3(p.x, p.y ?? 0, p.z), q, new THREE.Vector3(p.scale * (p.sx ?? 1), p.scale, p.scale));
     v.set(l.x, l.y, l.z).applyMatrix4(m);
     const hex =
-      l.kind === 'crystal' ? (def.palette?.crystal ?? '#a884ff') : l.kind === 'window' ? '#9fb4d8' : (def.light.point?.color ?? '#ffac58');
-    const k = strength * (l.kind === 'window' ? 0.55 : l.kind === 'crystal' ? 0.8 : 1) * (l.fire ? Math.min(1.3, 0.85 + l.fire * 0.2) : 1);
+      l.kind === 'crystal' ? (def.palette?.crystal ?? '#a884ff') : l.kind === 'window' ? (glassy ? (def.palette?.glowCold ?? '#a8e0f0') : '#9fb4d8') : (def.light.point?.color ?? '#ffac58');
+    // Glass Town's tall stained windows throw a stronger patch of daylight than a slit or a shutter.
+    const k = strength * (l.kind === 'window' ? (glassy ? 1.6 : 0.55) : l.kind === 'crystal' ? 0.8 : 1) * (l.fire ? Math.min(1.3, 0.85 + l.fire * 0.2) : 1);
     // Output-space colour (the pool shader adds raw values, as the fire shaders do).
     const rgb = { r: 0, g: 0, b: 0 };
     new THREE.Color(hex).getRGB(rgb, THREE.SRGBColorSpace);

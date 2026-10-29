@@ -1081,7 +1081,7 @@ export class BoardEnvironment {
     }
     const point = def.light.point;
     chosen.forEach((s, i) => {
-      const color = s.kind === 'crystal' ? this.palette('crystal') : s.kind === 'window' && def.edge === 'tower' ? this.palette('glowCold') : point.color;
+      const color = s.kind === 'crystal' ? this.palette('crystal') : s.kind === 'window' && (def.edge === 'tower' || def.edge === 'glass') ? this.palette('glowCold') : point.color;
       const base = point.intensity * (s.kind === 'lantern' ? 1.3 : s.kind === 'crystal' ? 0.7 : 1);
       const light = new THREE.PointLight(color, base, point.distance, 2);
       light.position.copy(s.pos).add(new THREE.Vector3(0, 0.15, 0));
@@ -1161,7 +1161,8 @@ export class BoardEnvironment {
         const v = new THREE.Vector3(l.x * p.scale, l.y * p.scale, l.z * p.scale).applyAxisAngle(up, p.rot);
         // A prop model's bowl may stand taller than the placeholder's: the fire burns on its rim.
         const proto = this.propProtos.get(p.piece);
-        if (proto && l.kind === 'lantern') v.y = Math.max(v.y, proto.spec.height * p.scale - 0.06);
+        // A small flame inside a glass lantern (fire under 1) stays where the piece puts it.
+        if (proto && l.kind === 'lantern' && (l.fire ?? 1) >= 1) v.y = Math.max(v.y, proto.spec.height * p.scale - 0.06);
         fires.push({ pos: new THREE.Vector3(p.x + v.x, v.y, p.z + v.z), size: (l.fire ?? (l.kind === 'lantern' ? 1.3 : 0.8)) * p.scale, room: p.room });
       }
       if (q.beam && p.band === 'feature' && p.piece === 'stairs') {

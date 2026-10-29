@@ -31,6 +31,7 @@
     "sack": { "model": "glass-crystals", "height": 0.5 },
     "brazier": { "model": "glass-lantern", "height": 1.5 },
     "brazier-lit": { "model": "glass-lantern", "height": 1.5 },
+    "glass-lamp": { "model": "glass-lantern", "height": 1.5 },
     "table": { "model": "glass-workbench", "height": 0.8 },
     "chest": { "model": "chest", "height": 0.6 },
     "door": { "model": "dungeon-door", "height": 1 },
@@ -38,10 +39,10 @@
     "candles": { "model": "candles-stone", "height": 0.6 },
     "crystal": { "model": "glass-crystals", "height": 0.7 },
     "rubble": { "model": "rubble-pile", "height": 0.45 },
-    "forge": { "model": "forge", "height": 1.9 }
+    "forge": { "model": "glass-furnace", "height": 1.9 }
   },
   "dressing": {
-    "anchors": [["brazier-lit", 2]],
+    "anchors": [["glass-lamp", 2]],
     "sets": [
       { "weight": 3, "items": [{ "piece": "shelf", "x": 0, "z": -0.05, "align": true }, { "piece": "crate", "x": 0.72, "z": 0.12 }, { "piece": "sack", "x": -0.62, "z": 0.25 }] },
       { "weight": 2, "items": [{ "piece": "wine-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "barrel", "x": 0.66, "z": 0.16 }] },

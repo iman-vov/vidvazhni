@@ -1305,7 +1305,7 @@ const PIECES: Record<string, PieceDef> = {
   // Act III, Glass Town (s16-s20): limestone, brass and glass; the window and the wall lantern
   // come from the Blender kit env-glass-town (art/blender/act3-props/glasswindow_hq.py).
   'glass-wall': wall((b, o) => glassWall(b, o.height, 5)),
-  'glass-window': wall((b, o) => glassWindowWall(b, o.height)),
+  'glass-window': wall((b, o) => glassWindowWall(b, o.height), 'wall', { x: 0, y: 0.9, z: 0.45, kind: 'window' }),
   'glass-wall-low': wall((b, o) => lowWall(b, o.height, 'stone', 'stoneLight')),
   'glass-pillar': wall((b, o) => {
     pillar(b, o.height, 'stoneLight', 'stoneDark');
@@ -1316,6 +1316,18 @@ const PIECES: Record<string, PieceDef> = {
     doorway(b, o.height, 'stoneLight', 'stoneDark');
     b.box('ore', [0.86, 0.03, WALL_THICK + 0.1], [0, 1.2 + 0.15, -WALL_THICK / 2]);
   }, 'doorway'),
+  // A glass lantern on a wrought post (prop model glass-lantern): a small flame inside the glass.
+  'glass-lamp': {
+    kind: 'prop',
+    height: 1.5,
+    radius: 0.3,
+    light: { x: 0.2, y: 1.15, z: 0, kind: 'lantern', fire: 0.45 },
+    build: (b) => {
+      b.box('iron', [0.08, 1.5, 0.08], [0, 0.75, 0]);
+      b.cyl('glow', 0.08, 0.08, 0.2, 6, [0, 1.2, 0]);
+      b.cone('iron', 0.1, 0.1, 6, [0, 1.35, 0]);
+    },
+  },
   // A brass wall lantern with glowing panes, in place of the forge's torches.
   'glass-sconce': {
     kind: 'prop',
