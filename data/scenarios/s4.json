@@ -32,7 +32,11 @@
         [6, 0], [7, -2], [7, -1], [7, 0], [8, -3], [8, -2], [8, -1], [9, -3],
         [9, -2], [9, -1], [10, -3]
       ],
-      "obstacles": [{ "hex": [4, -1], "model": "bed" }, { "hex": [8, -1], "model": "bed" }],
+      "obstacles": [
+        { "hex": [4, -1], "model": "bed" },
+        { "hex": [8, -1], "model": "bed" },
+        { "hex": [7, -2], "model": "crate-stack" }
+      ],
       "doors": [{ "hex": [10, -3], "to": "s4.upper-tier", "key": "tower-key" }],
       "spawns": [
         { "monster": "gloom-cultist", "hex": [8, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } },
@@ -70,7 +74,10 @@
         { "hex": [13, -7], "model": "table" },
         { "hex": [13, -2], "model": "crate" },
         { "hex": [15, -8], "model": "barrel" },
-        { "hex": [11, -2], "model": "crate" }
+        { "hex": [11, -2], "model": "crate" },
+        { "hex": [12, -6], "model": "crate-stack" },
+        { "hex": [12, -5], "model": "barrel" },
+        { "hex": [12, -4], "model": "crate-stack" }
       ],
       "spawns": [
         { "monster": "shadow-wraith", "hex": [14, -8], "by": { "2": "normal", "3": "normal", "4": "normal" } },
