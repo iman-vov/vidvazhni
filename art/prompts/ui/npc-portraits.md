@@ -15,7 +15,10 @@
 | `lumo` | Лумо, учень ліхтарника (Тінерук у минулому) | по пояс + значок |
 | `lina` | Ліна, донька рудокопа (Акт II) | по пояс + значок |
 | `theo` | Тео, рудокоп, тато Ліни (Акт II) | по пояс + значок |
-| `heron` | стара Чапля з Сонних боліт | по пояс + значок |
+| `heron` | стара Чапля з Сонних боліт | готово (`heron.png`, `heron-token.png`); значок уже в грі як `src/ui/game/assets/portraits/heron.webp` |
+| `ida` | майстриня Іда, стара ліхтарниця (Акт III, Скляне місто) | по пояс + значок; промпт у розділі «Акт III» нижче |
+| `mist-queen` | Королева Туману, бос s15 | по пояс + значок (значок = і фішка боса); промпт у розділі «Акт III» |
+| `glass-guardian` | Скляний Сторож, бос s20, потім друг | по пояс + значок (значок = і фішка боса); промпт у розділі «Акт III» |
 
 ## Як просити
 
@@ -107,4 +110,47 @@ Palette (only these): skin #E3B08E, skin shade #BF8A6A, beard and hair #4A3426, 
 ```
 Sketch: OLD HERON, a tall, very old marsh wise-woman with a long neck and a long sharp nose, grey hair in a high bun stuck with two reed stalks, small round spectacles, a long grey-blue shawl like folded wings, a wooden staff topped with a carved heron head. A dry, knowing half-smile.
 Palette (only these): skin #E6CDB8, skin shade #C4A894, hair #C9C5BE, shawl #7F96A6, shawl shade #5F7686, dress #5E6B55, staff #7A5A3A, reed #9AA868, outline #2B2A33.
+```
+
+## Акт III: один спільний запит (`ida`, `mist-queen`, `glass-guardian`)
+
+Цей розділ іде за правилом із `STYLE-LOCK.md`, але **без ескізного проходу**: генератор малює одразу в кольорі, всі три персонажі в одному повідомленні. Спільні стиль і заборони стоять один раз зверху, далі по блоку на кожного з шляхом до файлу. Стара Чапля вже намальована (`heron.png`), її сюди не додавай: вона потрібна лише як референс.
+
+**Перед відправкою прикріпи 3 картинки:** `art/ui-mockups/story/assets/npc/heron.png`, `art/ui-mockups/camp/assets/marta.png`, `art/ui-mockups/camp/assets/heroes/warden.png`. Чапля задає той самий пласкіший «книжковий» мазок, що в усіх NPC; Марта й Вартовий тримають масштаб голови.
+
+**Куди класти результат:** `art/ui-mockups/story/assets/npc/<id>.png` і `<id>-token.png`, рядки додай у `manifest.json` там же. Значок `<id>-token.png` потім перетворюється на `src/ui/game/assets/portraits/<id>.webp` (160×160, як `heron.webp`): у Королеви й Сторожа це водночас і фішка боса на полі, і значок мовця в сюжеті. Код уже шукає ці файли за id, тож нічого більше міняти не треба.
+
+**Якщо результат поплив**, встав цей рядок:
+`Too glossy and too detailed, looks AI-generated. Redo all three exactly like the attached heron.png: flat matte colors with ONE darker shade each, even dark outline, big simple shapes, no glow, no sparkles, no particles, transparent background, same waist-up crop.`
+
+### Повідомлення (копіюй цілим)
+
+```
+Make 3 character portraits for a family fantasy board game, all in ONE consistent style. Paint them directly in final color (no sketch step). The attached heron.png is the exact style target: copy its line weight, flat colors, face proportions and finish. The attached marta.png and warden.png show the head size and proportions to match.
+
+SHARED STYLE (applies to all three):
+- Technique: hand-painted 2D storybook cartoon, like the character art of a modern family tabletop game; clean dark outline of even weight (#3A2A20, about 3 px at 1024 px), flat matte fills, every color = base tone + exactly ONE darker cel-shade tone. No airbrush gradients, no texture brushes.
+- Pose and crop: waist-up, three-quarter view, head top about 6% below the top edge, the body cut off by the bottom edge, centered; the character looks slightly to the side with a readable, friendly or characterful face. Nobody looks scary: a 6-year-old must like every one of them.
+- Detail budget: nothing smaller than 1/40 of the image width. At most 3 accessories per character. Hair or wings = 4–6 big shapes, cloth folds = 3–5 big shapes. The face is the most detailed part; everything else stays simple.
+- Lighting: flat, even, matte daylight from the top-left; one soft shadow side; no rim light, no shine, no highlights on glass or metal beyond one flat lighter shape.
+- Background: genuine transparent background (alpha). No scenery, no floor, no shadow under the figure, no frame.
+- Shared palette (plus each character's own colors below, nothing else): outline #3A2A20, skin #EBC2A2, skin shade #C99A7E, warm white #F1E8D6.
+
+NEGATIVE (for all three): no glow, no bloom, no lens flare, no god rays, no light beams, no sparkles, no magic particles, no fireflies, no glowing eyes, no glowing objects, no neon, no sunset or golden-hour light, no dramatic backlight, no rim light, no vignette, no cloud, fog or smoke framing the figure, no background scenery, no floor shadow, no frame or border, no gloss, no plastic skin, no 3D-render look, no HDR, no teal-and-orange grading, no oversaturated colors, no depth-of-field blur, no hyper-detailed texture, no tiny repeated details, no embroidery patterns, no jewelry clutter, no crystals sticking out everywhere, no weapons drawn, no blood, no scary faces, no sharp teeth, no text, no letters, no labels, no watermark, no signature.
+
+TASK 1, file ida.png (1024×1024, transparent):
+MASTER IDA, an old lantern-maker of about 75, small and wiry, a strict but warm teacher. Short white hair in a tight bun with a pencil stuck through it, round brass work goggles pushed up on her forehead, sharp grey eyes, a thin raised eyebrow and a tiny half-smile. A long leather work apron with one big front pocket over a dusty-blue blouse with rolled sleeves. She holds a small UNLIT glass lantern up in one hand at shoulder height, as if checking a seam; the glass is drawn as one flat pale-blue shape with one lighter stripe, nothing shining.
+Her colors only: hair #E9E4DA, hair shade #C7C1B6, goggles brass #C9A04A, goggles shade #9C7A33, apron #7B5236, apron shade #5C3C27, blouse #6F8FAF, blouse shade #56738F, lantern glass #CFE3EE, lantern frame #4A4A52.
+
+TASK 2, file mist-queen.png (1024×1024, transparent):
+THE MIST QUEEN, a tall, graceful moth-woman: a calm, sleepy, slightly sad face with big soft dark eyes and a small closed-mouth smile; two short feathery moth antennae curving back from her forehead like a tiara; long pale lilac hair falling in 4 big waves. Two large soft moth wings rise behind her shoulders, each wing ONE flat grey-lilac shape with ONE simple darker eye-spot (no patterns, no veins). A loose gown of layered grey-white veils. In both hands at chest height she holds a simple wooden weaving shuttle with a single grey thread hanging down. She is a gentle dreamer, not a villain: soft, quiet, a little lonely.
+Her colors only: skin #E8DDE6, skin shade #C9BACA, hair #C8B6D8, hair shade #A391B8, wings #9C93AE, wing shade #7C7392, eye-spot #5B5470, gown #E4E1E8, gown shade #BDB8C8, shuttle wood #8A6A48.
+
+TASK 3, file glass-guardian.png (1024×1024, transparent):
+THE GLASS GUARDIAN, a big friendly clockwork automaton made of brass and clear glass panels, built by a lonely young inventor long ago. Round barrel-shaped glass chest with ONE simple brass heart-shaped gear visible inside; a rounded glass dome head with two big round brass "eyes" like lenses and a short straight mouth slot that reads as a shy smile; broad round shoulders with brass rivets drawn as 3–4 simple dots per plate; big mitten-like brass hands, one raised in a careful wave. Glass is drawn as flat pale blue-grey shapes with one lighter stripe each; brass is flat. He looks loyal and a bit sad, like a big gentle dog.
+His colors only: glass #CFE0E8, glass shade #A9C2CE, brass #C9A04A, brass shade #9C7A33, dark metal #4A4A52, heart gear #B5533C, lens #2F3A4A.
+
+ALSO GIVE ME, as separate transparent PNG files with no text baked in:
+- ida-token.png, mist-queen-token.png, glass-guardian-token.png: 512×512 round token portraits, the head and shoulders of the SAME character, centered, filling a circle of 470 px diameter; fully transparent outside the circle; no ring or frame (the game draws the ring). For the Mist Queen include the top of the wings; for the Guardian the whole dome head and the shoulders.
+- manifest.json listing all 6 files: [{ "file": "<id>.png", "size": [1024,1024], "use": "story scene portrait, waist-up" }, { "file": "<id>-token.png", "size": [512,512], "use": "round speaker badge and board token", "circle": { "cx": 256, "cy": 256, "r": 235 } }].
 ```
