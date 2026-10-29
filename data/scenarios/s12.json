@@ -96,7 +96,14 @@
         { "hex": [14, -7], "terrain": "water" },
         { "hex": [16, -5], "terrain": "water" },
         { "hex": [17, -5], "terrain": "water" },
-        { "hex": [18, -9], "terrain": "water" }
+        { "hex": [18, -9], "terrain": "water" },
+        { "hex": [15, -7], "terrain": "fog" },
+        { "hex": [15, -6], "terrain": "fog" },
+        { "hex": [15, -5], "terrain": "fog" },
+        { "hex": [15, -4], "terrain": "fog" },
+        { "hex": [17, -8], "terrain": "fog" },
+        { "hex": [17, -7], "terrain": "fog" },
+        { "hex": [17, -6], "terrain": "fog" }
       ],
       "obstacles": [{ "hex": [12, -3], "model": "rock" }],
       "doors": [{ "hex": [19, -7], "to": "s12.pier" }],
