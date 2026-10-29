@@ -135,6 +135,13 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       // party stood by a monster on 1 hp for good.
       return s.board.tiles[`${zone[0]?.join(',')}`] || wrong.length === 0 ? zone : doorsTowards(s, content, zone);
     }
+    case 'protect': {
+      // s20's heart: the monsters closing on it first, else stand by it (the moths fly straight at it).
+      const at = objectHex(s, goal.object);
+      if (!at) return null;
+      const close = monsters.filter((m) => distance(m, at) <= 3);
+      return close.length > 0 ? close : [at];
+    }
     default:
       // Light the braziers first (s5); otherwise the plain «nearest monster, then doors» pull.
       return unlit.length > 0 && monsters.length > 0 ? unlit : null;
