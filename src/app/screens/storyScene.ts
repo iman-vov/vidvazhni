@@ -22,10 +22,11 @@ export function speakerName(speaker: string): string {
   return boss ? t(`boss.${boss}`) : t(`story.speaker.${speaker}`);
 }
 
-/** Round portrait of a speaker: the hero's or boss's token, else the silhouette; none for the narrator. */
+/** Round portrait of a speaker: the hero's, the boss's or the NPC's own token (`portraits/<id>.webp`,
+ *  also its figure on the board), else the silhouette; none for the narrator. */
 export function speakerBadge(speaker: string, cls = 'gstory-badge'): HTMLElement | null {
   if (speaker === 'narrator') return null;
-  const url = portraitUrl(isHeroSpeaker(speaker) ? speaker : (NPC_FIGURES[speaker] ?? ''));
+  const url = portraitUrl(isHeroSpeaker(speaker) ? speaker : (NPC_FIGURES[speaker] ?? speaker));
   const el = h('span', { class: `${cls}${url ? '' : ' is-silhouette'}`, 'aria-hidden': 'true' });
   if (url) el.append(h('img', { src: url, alt: '', draggable: 'false' }));
   else el.innerHTML = SILHOUETTE;
