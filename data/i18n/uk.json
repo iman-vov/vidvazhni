@@ -1185,6 +1185,8 @@
   "map.state.available": "можна вирушати",
   "map.state.locked": "шлях закрито",
   "map.state.unknown": "невідомо",
+  "map.state.soon": "далі буде",
+  "map.soon.text": "Далі буде! Ця місія ще пишеться і з’явиться в наступному оновленні гри. Ваш загін чекатиме її тут.",
   "map.region.alba": "Альба",
   "map.region.forest": "Терновий ліс",
   "map.region.mountains": "Сиві гори",

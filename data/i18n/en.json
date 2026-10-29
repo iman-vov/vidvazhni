@@ -1185,6 +1185,8 @@
   "map.state.available": "ready to go",
   "map.state.locked": "path closed",
   "map.state.unknown": "unknown",
+  "map.state.soon": "to be continued",
+  "map.soon.text": "To be continued! This mission is still being written and will arrive in a future update. Your party will wait for it here.",
   "map.region.alba": "Alba",
   "map.region.forest": "Thornwood",
   "map.region.mountains": "Grey Mountains",

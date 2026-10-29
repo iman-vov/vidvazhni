@@ -1185,6 +1185,8 @@
   "map.state.available": "bereit",
   "map.state.locked": "Weg geschlossen",
   "map.state.unknown": "unbekannt",
+  "map.state.soon": "Fortsetzung folgt",
+  "map.soon.text": "Fortsetzung folgt! Diese Mission wird noch geschrieben und kommt mit einem späteren Update. Eure Gruppe wartet hier auf sie.",
   "map.region.alba": "Alba",
   "map.region.forest": "Dornwald",
   "map.region.mountains": "Graue Berge",

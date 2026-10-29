@@ -240,18 +240,20 @@ export function campaignMapScreen(o: CampaignMapOptions): HTMLElement {
     const scenario = o.content.scenarios[m.id];
     const goal = scenario?.goal.type;
     const playable = !!scenario && playableScenarios(o.campaign).includes(m.id);
+    // Opened by the story but not written yet (s21 after the Act III finales): «to be continued».
+    const soon = state === 'available' && !scenario;
     // A story choice (docs/design/story.md «Вузли вибору»): the open missions a win here closes.
     const closes = (scenario?.reward.closes ?? []).filter((id) => states[id] === 'available' && byId.has(id));
     const intro = h('p', { class: 'gmap-intro' });
-    if (state !== 'unknown' && state !== 'locked') void introLine(m.id).then((text) => (intro.textContent = text));
+    if (state !== 'unknown' && state !== 'locked' && !soon) void introLine(m.id).then((text) => (intro.textContent = text));
     panel.replaceChildren(
       h(
         'section',
         { class: 'gmap-card' },
         h('button', { class: 'gbtn gbtn-icon gmap-close', 'aria-label': t('map.close'), onclick: () => select(null) }, icon('close')),
-        h('small', { class: 'gmap-region' }, t(`map.region.${m.region}`), ' · ', t(`map.state.${state}`)),
+        h('small', { class: 'gmap-region' }, t(`map.region.${m.region}`), ' · ', t(soon ? 'map.state.soon' : `map.state.${state}`)),
         h('h2', null, state === 'unknown' ? t('map.unknown') : nameOf(m)),
-        state === 'unknown' ? h('p', { class: 'gmap-intro' }, t('map.unknown.text')) : state === 'locked' ? h('p', { class: 'gmap-intro' }, t('map.locked.text')) : intro,
+        soon ? h('p', { class: 'gmap-intro' }, t('map.soon.text')) : state === 'unknown' ? h('p', { class: 'gmap-intro' }, t('map.unknown.text')) : state === 'locked' ? h('p', { class: 'gmap-intro' }, t('map.locked.text')) : intro,
         goal && state !== 'unknown' && state !== 'locked'
           ? h('p', { class: 'gmap-goal' }, icon(GOAL_ICONS[goal] ?? 'objective-flag'), h('span', null, has(`goal.type.${goal}`) ? t(`goal.type.${goal}`) : goal))
           : null,
