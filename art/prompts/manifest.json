@@ -3394,6 +3394,95 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "env-glass-town",
+      "nameUk": "Набір оточення: Скляне місто (вітражне вікно, ліхтар на стіні)",
+      "kind": "environment",
+      "styleBlock": null,
+      "promptFile": "art/prompts/environment/README.md",
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 98,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/glass-town/PLAN.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props-hq.blend",
+      "modelFile": "assets/models/env-glass-town/env-glass-town.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 8000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "glassware-shelf",
+      "nameUk": "Полиця склодува зі склом (колби, графин, реторта, пісочний годинник, бутель)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 99,
+      "wave": 6,
+      "scenarios": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descriptionSource": "docs/art/act3/glass-town/PLAN.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props-hq.blend",
+      "modelFile": "assets/models/glassware-shelf/glassware-shelf.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 6500
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "mirror-broken",
+      "nameUk": "Розбите дзеркало (тріснуте скло, скалки на підлозі)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 100,
+      "wave": 6,
+      "scenarios": [
+        16
+      ],
+      "descriptionSource": "docs/art/act3/props.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props-hq.blend",
+      "modelFile": "assets/models/mirror-broken/mirror-broken.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

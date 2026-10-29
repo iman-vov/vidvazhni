@@ -57,6 +57,8 @@ export function fitToHeight(box: THREE.Box3, height: number): { scale: number; o
  */
 export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   mirror: 1.15,
+  'mirror-broken': 1.15,
+  'glassware-shelf': 1.4,
   bookshelf: 1.35,
   'glass-cart': 0.85,
   'crystal-heart': 1.0,
