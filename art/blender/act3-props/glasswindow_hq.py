@@ -260,3 +260,56 @@ def window_uvs(lo):
     rescale_islands(lo, factor)
     lo['glass_faces'] = sorted(glass)
     return len(hid), len(glass)
+
+
+# ---------------------------------------------------------------- the plain segment
+
+GP_PARTS = ['gp-wall', 'gp-trim']
+
+
+def step_plain_wall():
+    """`glass-wall`: the same courses without the window; a shallow pilaster strip at one end
+    (alternate segments are turned round on the board, so the strips fall at different places)."""
+    k = Kit(64)
+
+    def body(bm, hi):
+        f = []
+        rnd = random.Random(612)  # the same layout on lo and hi
+        g = 0.007
+        z = 0.0
+        row = 0
+        while z < H - 1e-3:
+            h = min(H - z, rnd.uniform(0.2, 0.25))
+            if H - (z + h) < 0.08:
+                h = H - z
+            x = -L / 2
+            first = True
+            while x < L / 2 - 1e-3:
+                w = rnd.uniform(0.26, 0.42) if not (first and row % 2) else rnd.uniform(0.12, 0.2)
+                w = min(w, L / 2 - x)
+                if L / 2 - (x + w) < 0.1:
+                    w = L / 2 - x
+                f += box(bm, hi, (x + w / 2, T / 2 + rnd.uniform(-0.002, 0.002), z + h / 2), (w - g, T, h - g), bev=0.012)
+                x += w
+                first = False
+            z += h
+            row += 1
+        return f
+    k.add(body, 'stone', STONE)
+    return k.finish('gp-wall')
+
+
+def step_plain_trim():
+    k = Kit(65)
+    k.add(lambda bm, hi: box(bm, hi, (0, T / 2 - 0.02, 0.08), (L, T + 0.04, 0.16), bev=0.012), 'stone', PLINTH)
+    prof = [(0.0, H - 0.2), (-0.018, H - 0.2), (-0.018, H - 0.175), (-0.03, H - 0.16), (-0.05, H - 0.13),
+            (-0.062, H - 0.09), (-0.075, H - 0.07), (-0.075, H), (0.0, H)]
+    k.add(lambda bm, hi: sweep(bm, hi, prof, [Vector((-L / 2, 0, 0)), Vector((L / 2, 0, 0))], up=Vector((0, 0, 1))), 'stone', STONE2)
+    k.add(lambda bm, hi: box(bm, hi, (0, -0.021, H - 0.215), (L, 0.012, 0.03), bev=0.003), 'brass', BRASS, 0)
+    k.add(lambda bm, hi: sum((dome(bm, hi, (x, -0.027, H - 0.215), 0.006, 0.004) for x in [(-0.45 + 0.1 * i) for i in range(10)]), []),
+          'brass', BRASS, levels=('hi',))
+    # pilaster strip at the right end: a raised band of stone with a brass capital ring
+    k.add(lambda bm, hi: box(bm, hi, (L / 2 - 0.09, -0.02, (0.16 + H - 0.2) / 2), (0.16, 0.04, H - 0.36), bev=0.01), 'stone', STONE2)
+    k.add(lambda bm, hi: box(bm, hi, (L / 2 - 0.09, -0.03, H - 0.27), (0.18, 0.05, 0.04), bev=0.006), 'brass', BRASS, 0)
+    k.add(lambda bm, hi: box(bm, hi, (L / 2 - 0.09, -0.03, 0.2), (0.19, 0.06, 0.08), bev=0.01), 'stone', PLINTH)
+    return k.finish('gp-trim')
