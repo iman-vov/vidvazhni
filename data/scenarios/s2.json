@@ -26,7 +26,9 @@
         { "hex": [0, 0], "model": "tree" },
         { "hex": [4, -2], "model": "tree" },
         { "hex": [0, 5], "model": "tree" },
-        { "hex": [2, 4], "model": "tree" }
+        { "hex": [2, 4], "model": "tree" },
+        { "hex": [2, 3], "model": "tree" },
+        { "hex": [2, 2], "model": "rock" }
       ],
       "doors": [{ "hex": [5, 1], "to": "s2.ravine" }],
       "spawns": [
@@ -70,7 +72,7 @@
         [14, -6], [14, -5], [14, -4], [14, -3], [15, -6], [15, -5], [15, -4], [15, -3],
         [16, -7], [16, -6], [16, -5], [16, -4], [17, -7], [17, -6], [17, -5], [17, -4]
       ],
-      "terrain": [{ "hex": [15, -5], "terrain": "hazardous" }],
+      "terrain": [{ "hex": [15, -5], "terrain": "hazardous" }, { "hex": [15, -4], "terrain": "difficult" }],
       "obstacles": [
         { "hex": [14, -6], "model": "tree" },
         { "hex": [16, -7], "model": "hut" },
