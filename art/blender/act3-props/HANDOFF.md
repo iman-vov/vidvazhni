@@ -1,6 +1,22 @@
-# Act III props v2 (high detail): hand-over to props-hq-2
+# Act III props v2 (high detail): hand-over
 
-Written 2026-10-29 by act3-props-hq (local_e9d7e22a), which stopped because its Blender MCP connector died. Blender itself stayed alive.
+## State 2026-10-29 ~16:00 (props-hq-3, local_e9d7e22a)
+- **bookshelf is done and committed**: 4364 tris (low tier 2594), 1024 col / metal-rough / normal baked from `bookshelf-hi` (73.8k tris). The maps are in `hq-tex/bookshelf_{col,mr,n}.png`, the GLB is in `assets/models/bookshelf/`, and the sheet is `docs/art/act3/props-hq.jpg` (Blender only so far).
+- **Still owed for the bookshelf:** the in-game board shot (`dev/board.html?board=s18&quality=high`). With 46 node sims running, Chrome's renderer froze on every dev page, the plain model viewer included, so no board shot exists yet.
+- **This session had no Blender MCP tools.** The lead session approved driving the live Blender through the addon socket on 9876. The helper `bl.py` sends `execute_code` / `get_viewport_screenshot` JSON, one step per call. It lived in the session scratchpad; recreate it as needed.
+- **Pipeline:** the functions are in `hq_lib.py`; one call each:
+  1. `step_*()` builds each part (lo plus hi);
+  2. `join_parts(id, parts)` joins the parts and triangulates the lo;
+  3. `prep_lo(lo)`;
+  4. `shrink_hidden(lo, rule)` shrinks the bottoms and inner book faces in UV and repacks;
+  5. mark lo edges over 40° sharp;
+  6. `bake_start(lo, hi, id, 'col'|'mr'|'n')` runs as an INVOKE job: poll `bpy.app.is_job_running('OBJECT_BAKE')`, then call `bake_save(id, which)`;
+  7. `final_mat(lo, id)`;
+  8. export a GLB (`export_vertex_color='NONE'`, tangents) to `art/meshy-source/<id>/<id>.glb`, then run `npm run models <id>`.
+- `_new_faces` takes a set again. A face count was wrong because BMesh reuses freed face slots, and that broke `book_piece`.
+- Books are built one shelf per call (`step_books(0|1|2)`), and `step_top()` adds the dressing (books plus a glass globe on a brass stand).
+- **Weak points to revisit** (seen on the sheet): the wood surfaces are a bit clean and smooth, with little visible wear or scratching; the glass globe is opaque (one material per prop).
+- **Next, in order:** mirror, glass-cart, crystal-heart, loom, bell, glass-lantern, glass-workbench, then the rest.
 
 ## Brief (unchanged)
 - Remodel the 17 Act III props in Blender, much more detailed and realistic. The bar is `docs/art/weapons/warden.jpg` and the Meshy figures.

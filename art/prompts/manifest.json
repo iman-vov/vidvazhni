@@ -2971,15 +2971,15 @@
       "descriptionSource": "docs/art/act3/props.md",
       "meshy": null,
       "source": "blender",
-      "blendFile": "art/blender/act3-props/act3-props.blend",
+      "blendFile": "art/blender/act3-props/act3-props-hq.blend",
       "modelFile": "assets/models/bookshelf/bookshelf.glb",
       "rig": "none",
       "animations": [],
       "triangleBudget": {
         "min": null,
-        "max": 1500
+        "max": 6000
       },
-      "textureMax": null,
+      "textureMax": 1024,
       "attachTo": null
     },
     {
