@@ -19,7 +19,12 @@
         [4, 1]
       ],
       "terrain": [{ "hex": [2, 4], "terrain": "water" }],
-      "obstacles": [{ "hex": [2, -1], "model": "crate" }, { "hex": [1, 5], "model": "crate" }],
+      "obstacles": [
+        { "hex": [2, -1], "model": "crate" },
+        { "hex": [1, 5], "model": "crate" },
+        { "hex": [2, 1], "model": "crate" },
+        { "hex": [2, 2], "model": "sacks" }
+      ],
       "doors": [{ "hex": [4, 1], "to": "s3.sluice" }],
       "spawns": [
         {
@@ -47,6 +52,7 @@
         { "hex": [7, 0], "terrain": "water" },
         { "hex": [8, -2], "terrain": "water" }
       ],
+      "obstacles": [{ "hex": [8, 0], "model": "crate" }],
       "doors": [{ "hex": [11, -2], "to": "s3.mill-hall" }],
       "spawns": [
         { "monster": "bandit-crossbow", "hex": [10, -3], "by": { "3": "normal", "4": "normal" } },
@@ -79,6 +85,7 @@
         { "hex": [15, -3], "terrain": "water" }
       ],
       "obstacles": [{ "hex": [12, -6], "model": "tree" }, { "hex": [13, -1], "model": "rock" }],
+      "traps": [{ "hex": [13, -4] }],
       "spawns": [
         { "monster": "bog-miller", "hex": [15, -5], "by": { "2": "normal", "3": "normal", "4": "normal" } }
       ],
