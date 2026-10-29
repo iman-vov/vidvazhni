@@ -26,8 +26,10 @@ const SEEDS = [1, 2, 3, 4, 5, 6];
 const MAX_ROUNDS = 40;
 const MIN_SLACK = 0.25;
 const MAX_DECK_LOSSES = 0.1;
-/** Bot games (of SEEDS) lost to an empty deck after the balance pass of 2026-10-24; may not grow. */
-const KNOWN_DECK_LOSSES: Record<string, number> = { s3: 2, s5: 4 };
+/** Bot games (of SEEDS) lost to an empty deck after the balance pass of 2026-10-24; may not grow.
+ *  s5: 4 → 5 with the stronger bot of 2026-10-29 (docs/design/bot-strength.md): it wins 1 of 6
+ *  (was 0) and no longer loses to wounds, so the other seeds now end on the deck. */
+const KNOWN_DECK_LOSSES: Record<string, number> = { s3: 2, s5: 5 };
 
 const PARTIES: Record<string, [string, string]> = {
   s1: ['warden', 'wind-archer'],
