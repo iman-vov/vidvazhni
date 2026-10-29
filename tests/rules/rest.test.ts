@@ -81,6 +81,37 @@ describe('long rest', () => {
     expect(eventsOf(s.log, 'rested')).toEqual([{ type: 'rested', heroId: 'hero:alpha', kind: 'long', lost: 'alpha.c9' }]);
     expect(s.pending?.kind).toBe('selectCards');
   });
+
+  // Seen on s15: a wounded hero long-rested, avoided the wound with the last two discards, and the
+  // game waited for a lost card from an empty discard with no legal action.
+  it('a wound avoided with the last 2 discards: the rest does nothing instead of waiting forever', () => {
+    const { content, s: s0 } = game({}, ['alpha', 'beta']);
+    const h0 = heroOf(s0, 'alpha');
+    h0.hand = h0.hand.slice(0, 2);
+    h0.discard = ['alpha.c9', 'alpha.c10'];
+    h0.conditions.wound = {};
+    let s = selectAll(s0, content, { alpha: 'rest', beta: ['beta.c1', 'beta.c2'] });
+    s = act(s, content, { type: 'endTurn', heroId: 'hero:beta' }); // the long rest goes last (initiative 99)
+    expect(s.pending).toMatchObject({ kind: 'avoidDamage', heroId: 'hero:alpha' });
+    s = act(s, content, { type: 'avoidDamage', heroId: 'hero:alpha', choice: { kind: 'loseDiscard', cardIds: ['alpha.c9', 'alpha.c10'] } });
+    expect(s.pending).not.toMatchObject({ kind: 'longRestLoss' });
+    expect(heroOf(s, 'alpha')).toMatchObject({ exhausted: false, hp: 10, discard: [] });
+    expect(eventsOf(s.log, 'rested')).toEqual([]);
+  });
+
+  it('… and with fewer than 2 cards in the hand as well, the hero is exhausted', () => {
+    const { content, s: s0 } = game({}, ['alpha', 'beta']);
+    const h0 = heroOf(s0, 'alpha');
+    h0.hand = [];
+    h0.discard = ['alpha.c9', 'alpha.c10'];
+    h0.conditions.wound = {};
+    let s = selectAll(s0, content, { alpha: 'rest', beta: ['beta.c1', 'beta.c2'] });
+    s = act(s, content, { type: 'endTurn', heroId: 'hero:beta' }); // the long rest goes last (initiative 99)
+    s = act(s, content, { type: 'avoidDamage', heroId: 'hero:alpha', choice: { kind: 'loseDiscard', cardIds: ['alpha.c9', 'alpha.c10'] } });
+    expect(heroOf(s, 'alpha').exhausted).toBe(true);
+    expect(eventsOf(s.log, 'heroExhausted')).toEqual([{ type: 'heroExhausted', heroId: 'hero:alpha', reason: 'cards' }]);
+    expect(s.pending).not.toMatchObject({ kind: 'longRestLoss' });
+  });
 });
 
 describe('avoid damage', () => {

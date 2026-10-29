@@ -7,7 +7,7 @@ import { pondGoal, soakPenalty } from './marsh';
 import { allyTargetGoal, allyTargetHex, hitTarget } from './allies';
 import { expireConditions } from './conditions';
 import type { MonsterCard, Step } from './content';
-import { findCard, runDamage } from './damage';
+import { exhaust, findCard, runDamage } from './damage';
 import { attackSpecFor, canTarget, runAfterHit, runAttackTarget, runRetaliate } from './effects/attack';
 import { emit, hero, isPresent, monsterStats, schedule, wallBetween, type Ctx } from './effects/context';
 import { performStep, withConsumeBonus } from './effects/index';
@@ -128,6 +128,14 @@ function heroReady(ctx: Ctx, heroId: string): void {
   if (h.exhausted || h.downed) {
     // Downed by a wound at the start of the turn: the selected cards are discarded.
     if (h.downed) discardSelection(ctx, h);
+    schedule(ctx, { t: 'nextTurn' });
+    return;
+  }
+  if (h.selection?.kind === 'longRest' && h.discard.length === 0) {
+    // A wound at the start of the turn avoided with the last 2 discards leaves nothing to rest with:
+    // the rest does nothing, and without 2 cards in the hand either the hero is exhausted.
+    if (h.hand.length < 2) exhaust(ctx, h, 'cards');
+    else schedule(ctx, { t: 'endFigureTurn', figureId: h.id });
     schedule(ctx, { t: 'nextTurn' });
     return;
   }
