@@ -720,6 +720,108 @@ export function terrainOverlayTexture(terrain: 'difficult' | 'hazardous', qualit
   return tex;
 }
 
+/** A flat-top hexagon path centred in a square canvas (corners at ±x, like the board's hexes). */
+function hexPath(ctx: CanvasRenderingContext2D, size: number, radius: number): void {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const x = size / 2 + Math.cos(a) * radius;
+    const y = size / 2 + Math.sin(a) * radius;
+    if (i) ctx.lineTo(x, y);
+    else ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+}
+
+/** The band drawn along the inside of a difficult hex's rim (hex-local UVs, a flat hex of the
+ *  board's size): short dark and ochre strokes across the band, like rough ground marked on a game
+ *  board, so difficult terrain reads as its own kind of hex on any floor. Matte, no glow. */
+export function roughRimTexture(quality: GraphicsQuality): THREE.Texture {
+  const size = quality === 'low' ? 128 : 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const outer = size * 0.47;
+  const inner = size * 0.36;
+  // A faint earthy fill over the whole hex, darker in the band.
+  hexPath(ctx, size, outer);
+  ctx.fillStyle = 'rgba(60,42,24,0.34)';
+  ctx.fill();
+  ctx.save();
+  hexPath(ctx, size, outer);
+  ctx.clip();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 6; i++) {
+    const a0 = (i / 6) * Math.PI * 2;
+    const a1 = ((i + 1) / 6) * Math.PI * 2;
+    for (let k = 0; k < 7; k++) {
+      const t = (k + 0.5) / 7;
+      const ox = Math.cos(a0) * (1 - t) + Math.cos(a1) * t;
+      const oy = Math.sin(a0) * (1 - t) + Math.sin(a1) * t;
+      const n = Math.hypot(ox, oy);
+      const tx = -oy / n;
+      const ty = ox / n;
+      const cx = size / 2 + (ox / n) * ((outer + inner) / 2) * (0.93 + 0.07 * Math.abs(1 - 2 * t));
+      const cy = size / 2 + (oy / n) * ((outer + inner) / 2) * (0.93 + 0.07 * Math.abs(1 - 2 * t));
+      const half = (outer - inner) * 0.55;
+      ctx.strokeStyle = k % 2 ? 'rgba(214,182,112,1)' : 'rgba(40,26,14,1)';
+      ctx.lineWidth = size * 0.04;
+      ctx.beginPath();
+      ctx.moveTo(cx - (ox / n) * half - tx * half * 0.5, cy - (oy / n) * half - ty * half * 0.5);
+      ctx.lineTo(cx + (ox / n) * half + tx * half * 0.5, cy + (oy / n) * half + ty * half * 0.5);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** A trap's plate (hex-local UVs): dark iron with a rust-red rim, pale rivets and spikes painted
+ *  towards the centre, where the snare sits. Flat and matte, no glow: it reads from across the
+ *  board as «danger here», unlike an obstacle (a prop) or terrain (a fill over the whole hex). */
+export function trapPlateTexture(quality: GraphicsQuality): THREE.Texture {
+  const size = quality === 'low' ? 128 : 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const r = size * 0.48;
+  hexPath(ctx, size, r);
+  ctx.fillStyle = '#9a4a2c';
+  ctx.fill();
+  hexPath(ctx, size, r * 0.8);
+  ctx.fillStyle = '#2f2a26';
+  ctx.fill();
+  // Spikes: pale triangles from the inner rim towards the centre.
+  ctx.fillStyle = '#b8ae9c';
+  for (let i = 0; i < 12; i++) {
+    const a = ((i + 0.5) / 12) * Math.PI * 2;
+    const w = 0.16;
+    const base = r * 0.74;
+    const tip = r * 0.42;
+    ctx.beginPath();
+    ctx.moveTo(size / 2 + Math.cos(a - w) * base, size / 2 + Math.sin(a - w) * base);
+    ctx.lineTo(size / 2 + Math.cos(a) * tip, size / 2 + Math.sin(a) * tip);
+    ctx.lineTo(size / 2 + Math.cos(a + w) * base, size / 2 + Math.sin(a + w) * base);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Rivets on the rim's corners.
+  ctx.fillStyle = '#e0d6c2';
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(size / 2 + Math.cos(a) * r * 0.88, size / 2 + Math.sin(a) * r * 0.88, size * 0.018, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 /** The surface of a hex: its per-hex override, else its room's surface, else the location's. */
 export function surfaceOf(key: string, room: { surface?: SurfaceId; surfaces?: { hex: [number, number]; surface: SurfaceId }[] } | undefined, fallback: SurfaceId): SurfaceId {
   const own = room?.surfaces?.find((s) => hexKey(s.hex) === key);

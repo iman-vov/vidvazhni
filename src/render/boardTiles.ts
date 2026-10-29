@@ -21,7 +21,8 @@ import type { Partition } from './environment/walls';
 import { buildLayout } from './environment/layout';
 import { walledRuns } from './environment/plan';
 import { environmentFor } from './environment/data';
-import { surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
+import { roughRimTexture, surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture, trapPlateTexture } from './surfaces';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { patchWater, setWaterMap } from './environment/life';
 import { batchSignature, batchStatic, freeMergedParts, mergeStaticParts, unbatch } from './mergeParts';
 
@@ -37,6 +38,8 @@ type Overlay = 'difficult' | 'hazardous' | 'water';
 const OVERLAYS: readonly Overlay[] = ['difficult', 'hazardous', 'water'];
 /** Height of each terrain overlay above the plate's base (water lies a little under the others). */
 const OVERLAY_Y: Record<Overlay, number> = { difficult: PLATE_HEIGHT + 0.004, hazardous: PLATE_HEIGHT + 0.005, water: PLATE_HEIGHT + 0.003 };
+/** The band along a difficult hex's rim, over the terrain fill and under the grid. */
+const ROUGH_RIM_Y = PLATE_HEIGHT + 0.006;
 /** Floor patches (a room whose surface differs from the location's) and the grid lines above them. */
 const PATCH_Y = PLATE_HEIGHT + 0.002;
 const GRID_Y = PLATE_HEIGHT + 0.007;
@@ -424,6 +427,10 @@ export class TileLayer {
       floor.roughness = surfaceRoughness(surface);
       Object.assign(floor, PATCH_OFFSET);
       m = floor;
+    } else if (key === 'overlay:difficult-rim') {
+      const tex = roughRimTexture(this.quality);
+      this.textures.push(tex);
+      m = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: 0.95, ...OVER_PATCH_OFFSET });
     } else if (key.startsWith('overlay:')) {
       const terrain = key.slice(8) as Overlay;
       if (terrain === 'water') {
@@ -694,6 +701,7 @@ export class TileLayer {
         list.push(...off.values());
       }
       add(`overlay:${terrain}`, this.overlayGeometry, list, OVERLAY_Y[terrain], 1);
+      if (terrain === 'difficult') add('overlay:difficult-rim', this.overlayGeometry, list, ROUGH_RIM_Y, 1);
     }
     add('grid', this.gridGeometry, tiles.map(([k]) => parseHexKey(k)), GRID_Y, 2);
     group.add(room.props);
@@ -864,7 +872,8 @@ export class TileLayer {
       // a barricade) as the door, not as an obstacle too.
       if (tile.obstacle && !tile.object && !tile.door) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
       if (tile.door) wanted.push([`${k}:door`, () => this.makeDoor(k, hex, tile, s)]);
-      if (tile.trap) wanted.push([`${k}:trap`, () => this.makeSimple(`${k}:trap`, hex, tile.room, 'trap', this.propParts.trap())]);
+      if (tile.trap) wanted.push([`${k}:trap`, () => this.makeTrap(k, hex, tile.room)]);
+      if (tile.terrain === 'difficult' && !tile.obstacle) wanted.push([`${k}:rough`, () => this.makeSimple(`${k}:rough`, hex, tile.room, null, this.propParts.rough(hex))]);
       if (tile.coins) wanted.push([`${k}:coins`, () => this.makeSimple(`${k}:coins`, hex, tile.room, null, this.propParts.coins(tile.coins ?? 1))]);
       if (tile.chest) wanted.push([`${k}:chest`, () => this.makeChest(k, hex, tile.room)]);
       if (tile.object) {
@@ -986,7 +995,7 @@ export class TileLayer {
   batchObstacles(): void {
     for (const [id, room] of this.rooms) {
       const sources: THREE.Object3D[] = [];
-      for (const p of this.props.values()) if (p.room === id && p.key.endsWith(':obstacle')) sources.push(p.object);
+      for (const p of this.props.values()) if (p.room === id && (p.key.endsWith(':obstacle') || p.key.endsWith(':rough'))) sources.push(p.object);
       this.rebatch(id, room.props, sources);
       // The walls between rooms too: a divider is a run of posts, planks or stones, a mesh each.
       const walls = room.edges?.children.filter((c) => c.name.startsWith('divider:')) ?? [];
@@ -1090,6 +1099,14 @@ export class TileLayer {
     // Its parts never move: one mesh per material instead of one per part (mergeParts.ts).
     mergeStaticParts(part);
     return this.makeSimple(`${k}:obstacle`, hex, room, model, part, 'obstacle');
+  }
+
+  /** A trap: the location's snare model (a bear trap) on a plate with spikes round its rim, larger
+   *  than the snare alone so it reads from across the board. */
+  private makeTrap(k: HexKey, hex: Hex, room: string): PropView {
+    const view = this.makeSimple(`${k}:trap`, hex, room, 'trap', this.propParts.trap());
+    view.object.add(this.propParts.trapBase());
+    return view;
   }
 
   private makeChest(k: HexKey, hex: Hex, room: string): PropView {
@@ -1339,6 +1356,21 @@ function doorDirection(hex: Hex, tile: Tile, s: GameState): THREE.Vector3 {
   return acc.normalize();
 }
 
+/** Six spikes round a trap's plate, leaning in a little: one geometry. */
+function trapSpikes(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = ((i + 0.5) / 6) * Math.PI * 2;
+    const cone = new THREE.ConeGeometry(0.05, 0.16, 4);
+    cone.rotateZ(Math.cos(a) * 0.35).rotateX(-Math.sin(a) * 0.35);
+    cone.translate(Math.cos(a) * 0.56, 0.08, Math.sin(a) * 0.56);
+    parts.push(cone);
+  }
+  const g = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  return g;
+}
+
 /** Shared placeholder geometry and materials for props (one set per board). */
 class PropParts {
   private readonly disposables: { dispose(): void }[] = [];
@@ -1364,6 +1396,14 @@ class PropParts {
   private readonly trapRing = this.keep(new THREE.TorusGeometry(0.3, 0.04, 6, 20).rotateX(Math.PI / 2));
   private readonly toothGeo = this.keep(new THREE.ConeGeometry(0.035, 0.12, 4));
   private readonly runeGeo = this.keep(new THREE.DodecahedronGeometry(0.28));
+  // A trap's plate (most of the hex) with spikes round its rim, and the loose stones and a stick on
+  // difficult terrain: matte, low, never as tall as an obstacle.
+  private readonly trapPlateGeo = this.keep(new THREE.CircleGeometry(0.74, 6).rotateX(-Math.PI / 2));
+  private readonly trapPlateMat = this.keep(new THREE.MeshStandardMaterial({ map: this.keep(trapPlateTexture('high')), roughness: 0.85, metalness: 0.1, alphaTest: 0.5 }));
+  private readonly spikeGeo = this.keep(trapSpikes());
+  private readonly spikeMat = this.keep(new THREE.MeshStandardMaterial({ color: '#b3aa98', roughness: 0.7, metalness: 0.2 }));
+  private readonly stoneGeo = this.keep(new THREE.DodecahedronGeometry(0.12, 0));
+  private readonly stoneMat = this.keep(new THREE.MeshStandardMaterial({ color: '#a59c8c', roughness: 0.95, flatShading: true }));
   // Mirror placeholders until act3-props models them (matte; a broken one is darker).
   private readonly glass = this.keep(new THREE.MeshStandardMaterial({ color: '#a8d8e8', roughness: 0.25, metalness: 0.3, side: THREE.DoubleSide }));
   private readonly brokenGlass = this.keep(new THREE.MeshStandardMaterial({ color: '#5a7480', roughness: 0.7, side: THREE.DoubleSide }));
@@ -1500,6 +1540,41 @@ class PropParts {
       return wing;
     });
     return { frame, wings };
+  }
+
+  /** What stays under a trap's snare model: the plate and its spikes. */
+  trapBase(): THREE.Group {
+    const g = new THREE.Group();
+    g.name = 'trap-base';
+    const plate = new THREE.Mesh(this.trapPlateGeo, this.trapPlateMat);
+    plate.position.y = 0.012;
+    plate.receiveShadow = true;
+    g.add(plate);
+    g.add(new THREE.Mesh(this.spikeGeo, this.spikeMat));
+    return g;
+  }
+
+  /** Difficult terrain's loose stones and a stick, near the rim so the centre stays clear for a
+   *  figure; laid out differently per hex. */
+  rough(hex: Hex): THREE.Group {
+    const g = new THREE.Group();
+    const v = hexVariation(hex[0], hex[1]);
+    for (let i = 0; i < 4; i++) {
+      const a = v.rot + i * 1.7;
+      const w = hexVariation(hex[0] * 7 + i, hex[1] * 5 - i);
+      const s = new THREE.Mesh(this.stoneGeo, this.stoneMat);
+      const d = 0.5 + 0.12 * w.scale;
+      s.position.set(Math.cos(a) * d, 0.025, Math.sin(a) * d);
+      s.scale.set(0.8 + 0.5 * (w.scale - 0.9) * 5, 0.5, 0.75);
+      s.rotation.y = w.rot;
+      g.add(s);
+    }
+    const stick = new THREE.Mesh(this.box, this.darkWood);
+    stick.scale.set(0.42, 0.035, 0.04);
+    stick.position.set(Math.cos(v.rot + 3.6) * 0.42, 0.02, Math.sin(v.rot + 3.6) * 0.42);
+    stick.rotation.y = v.rot + 1.2;
+    g.add(stick);
+    return g;
   }
 
   trap(): THREE.Group {
