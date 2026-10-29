@@ -14,7 +14,7 @@
 | tinker | герой | гайковий ключ (права) | ✅ | ✅ | ✅ | ✅ | [tinker.jpg](tinker.jpg) | |
 | tinker-button | виклик | — | — | ✅ | ✅ | — | [tinker-button.jpg](tinker-button.jpg) | Пес-автоматон, рук немає |
 | bandit-brute | монстр | дубина (права) | ✅ | ✅ | ✅ | ✅ | [bandit-brute.jpg](bandit-brute.jpg) | Була біля руки й за середину; тепер за кінець руків'я |
-| bandit-crossbow | монстр | арбалет (ліва) | ✅ | ✅ | ✅ | ✅ | [bandit-crossbow.jpg](bandit-crossbow.jpg) | Ліва рука на цівці (раніше кулак був під нею, з зазором), приклад біля щоки, доворот атаки −60°. Арбалетного кліпу в Meshy немає |
+| bandit-crossbow | монстр | арбалет (ліва) | ✅ | ✅ | ✅ | ✅ | [bandit-crossbow.jpg](bandit-crossbow.jpg) | Кліп атаки — обрізаний Archery_Shot: ліва рука на цівці біля дуги, права на прикладі біля щоки, арбалет на рівні очей, доворот атаки −99° (2026-10-29). Арбалетного кліпу в Meshy немає |
 | gremlin | монстр | рогатка (ліва) | ✅ | ✅ | ✅ | ✅ | [gremlin.jpg](gremlin.jpg) | Рогатка раніше висіла перед кулаком: руків'я в моделі спереду коробки, а не в центрі. Виправлено. Атака в кліпі — кидок |
 | gloom-cultist | монстр | посох (права) | ✅ | ✅ | ✅ | ✅ | [gloom-cultist.jpg](gloom-cultist.jpg) | |
 | cellar-rat | монстр | — | — | ✅ | ✅ | — | [cellar-rat.jpg](cellar-rat.jpg) | Звір |
