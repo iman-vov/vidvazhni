@@ -9,6 +9,7 @@
 // simulator (tests/balance/sim.test.ts).
 
 import type { Content, HeroCard, HeroClass, ScenarioGoal } from '../../src/rules/content';
+import { scaleMonsterStats } from '../../src/rules/effects/context';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
@@ -17,7 +18,7 @@ import { BOOKSHELF, SHELF_ASLEEP } from '../../src/rules/books';
 import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
-import { availableCards } from '../../src/rules/setup';
+import { availableCards, withIntentsHpBonus } from '../../src/rules/setup';
 import type { Action, GameState, HeroState, MonsterState } from '../../src/rules/state';
 import { stepsFrom } from '../../tools/map-editor/checks';
 
@@ -164,14 +165,24 @@ function bossOf(s: GameState, content: Content | undefined) {
   return Object.values(s.figures).find((f) => f.kind === 'monster' && f.typeId === goal.boss);
 }
 
+/** The most health a monster of that id can have had (the elite's, with the fork's intents bonus). */
+function fullHp(s: GameState, content: Content | undefined, id: string): number {
+  const type = content?.monsters[id.split(':')[1] ?? ''];
+  if (!type) return 0;
+  const hp = scaleMonsterStats(type.elite ?? type.normal, s.level).hp;
+  return s.variants.threeIntents ? withIntentsHpBonus(hp) : hp;
+}
+
 /** Higher is better for the party; `heroId` adds the acting hero's position. */
 export function score(s: GameState, heroId?: string, content?: Content): number {
   if (s.phase === 'won') return 1e6;
   if (s.phase === 'lost') return -1e6;
   let v = 0;
   const goal = goalOf(s, content);
-  // A kill outweighs the jump of the distance pull from «nearest monster» to «nearest door or exit».
-  v += 40 * s.log.filter((e) => e.type === 'figureDied' && e.figureId.startsWith('monster:')).length;
+  // A kill outweighs the jump of the distance pull from «nearest monster» to «nearest door or exit»,
+  // and the wound credit (3 a point, below) the monster takes off the board with it: with a flat
+  // 40, finishing a 17-hp elite automaton scored worse than leaving it at 1 hp, and s20's trio did.
+  for (const e of s.log) if (e.type === 'figureDied' && e.figureId.startsWith('monster:')) v += 40 + 3 * fullHp(s, content, e.figureId);
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster');
   for (const m of monsters) v += 3 * (m.maxHp - m.hp);
   // A boss fight is won on the boss alone: its wounds outweigh the minions it keeps calling.
