@@ -34,16 +34,22 @@ def V(*a):
 class Kit:
     """Two bmeshes (lo, hi) filled piece by piece; each piece is built once per level."""
 
-    def __init__(self, seed=1):
+    def __init__(self, seed=1, tone=True):
         self.lo, self.hi = bmesh.new(), bmesh.new()
         for bm in (self.lo, self.hi):
             bm.faces.layers.float_color.new('base')
             bm.faces.layers.int.new('gax')
         self.rnd = random.Random(seed)
+        # per-piece wood tone (its own stream, so the layouts drawn from rnd stay as they were)
+        self.vary = random.Random(seed + 7919)
+        self.tone = tone
 
     def add(self, build, mat, color, gax=2, levels=('lo', 'hi')):
         """build(bm, hi) adds one piece to bm; mat a MATS name; color hex or linear rgb."""
         col = hexc(color) if isinstance(color, str) else list(color)
+        if mat == 'wood' and self.tone:
+            k, w = self.vary.uniform(0.8, 1.18), self.vary.uniform(-0.04, 0.04)
+            col = [col[0] * k * (1 + w), col[1] * k, col[2] * k * (1 - w)]
         for lvl in levels:
             bm = self.lo if lvl == 'lo' else self.hi
             before = set(bm.faces)
@@ -394,7 +400,8 @@ def bake_mat(kind):
     col = mixc(math_('MULTIPLY', math_('SUBTRACT', 1.0, pattern), amt), base.outputs['Color'], dark)
     # big soft hue/value drift so no part reads as one flat colour
     drift = noise(3.0, 2, 0.5)
-    col = mixc(math_('MULTIPLY', drift, 0.25), col, (0.62, 0.55, 0.45, 1), 'MULTIPLY' if kind != 'glass' else 'MIX')
+    col = mixc(math_('MULTIPLY', drift, 0.25), col, (0.62, 0.55, 0.45, 1) if kind != 'glass' else (0.5, 0.56, 0.6, 1),
+               'MULTIPLY' if kind != 'glass' else 'MIX')
     # cavity AO
     ao = N.new('ShaderNodeAmbientOcclusion')
     ao.samples = 12
@@ -425,6 +432,23 @@ def bake_mat(kind):
             'stone': 1.35, 'glass': 1.15, 'crystal': 1.3}[kind]
     worn = mixc(1.0, col, (lift, lift, lift, 1), 'MULTIPLY')
     col = mixc(math_('MINIMUM', math_('MULTIPLY', wear, 1.4), 1.0), col, worn)
+    chip = grime = None
+    if kind == 'wood':
+        # chips: sharp-edged bites out of the edges showing paler raw wood
+        bev2 = N.new('ShaderNodeBevel')
+        bev2.samples = 6
+        bev2.inputs['Radius'].default_value = 0.012
+        dot2 = N.new('ShaderNodeVectorMath')
+        dot2.operation = 'DOT_PRODUCT'
+        L.new(bev2.outputs[0], dot2.inputs[0])
+        L.new(geo.outputs['Normal'], dot2.inputs[1])
+        chip = math_('MULTIPLY', ramp(dot2.outputs['Value'], 0.99, 0.94), ramp(noise(38.0, 3, 0.6), 0.61, 0.645))
+        raw = mixc(1.0, base.outputs['Color'], (2.1, 1.85, 1.55, 1), 'MULTIPLY')
+        col = mixc(math_('MINIMUM', chip, 1.0), col, raw)
+        # hand-worn patches: darker, oilier, a little polished
+        grime = ramp(noise(2.2, 3, 0.5), 0.56, 0.74)
+        col = mixc(math_('MULTIPLY', grime, 0.42), col, (0.34, 0.27, 0.22, 1), 'MULTIPLY')
+        height = math_('SUBTRACT', height, math_('MULTIPLY', chip, 1.6))
     # dirt in crevices
     cav = math_('POWER', aof, 1.0)
     shade = math_('ADD', 0.42, math_('MULTIPLY', cav, 0.58))
@@ -455,6 +479,8 @@ def bake_mat(kind):
     r = math_('SUBTRACT', r, math_('MULTIPLY', wear, 0.18 if metal0 else 0.05))
     if kind == 'brass':
         r = math_('ADD', r, math_('MULTIPLY', math_('MINIMUM', pat_amt, 0.85), 0.4))
+    if chip:
+        r = math_('SUBTRACT', math_('ADD', r, math_('MULTIPLY', chip, 0.12)), math_('MULTIPLY', grime, 0.14))
     mrc = N.new('ShaderNodeCombineColor')
     L.new(r, mrc.inputs[1])
     if kind == 'brass':
