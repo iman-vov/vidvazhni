@@ -668,9 +668,9 @@ def join_parts(name, parts):
         if not suf:
             bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4], quad_method='BEAUTY',
                                   ngon_method='EAR_CLIP')
-        # edges over 40 degrees shade sharp on both meshes, so flat unbevelled faces bake flat
+        # edges over 50 degrees shade sharp on both meshes, so flat unbevelled faces bake flat
         for e in bm.edges:
-            if len(e.link_faces) != 2 or e.calc_face_angle(0) > math.radians(40):
+            if len(e.link_faces) != 2 or e.calc_face_angle(0) > math.radians(50):
                 e.smooth = False
         me = bpy.data.meshes.new(nm)
         bm.to_mesh(me)
