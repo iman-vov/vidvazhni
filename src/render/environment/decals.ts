@@ -546,6 +546,8 @@ const FLOOR_SIZE: Record<FloorDecal, [number, number]> = {
 };
 
 const POOL_RADIUS = { flame: 1.7, lantern: 2.1, crystal: 1.5, window: 1.3 } as const;
+/** Tints of the light pools under Glass Town's stained windows. */
+const STAINED = ['#9fdcec', '#ffc870', '#9fdcec', '#b8e8d8'];
 const POOL_QUALITY: Record<GraphicsQuality, number> = { low: 1.2, medium: 0.6, high: 0.5 };
 
 export function buildAtmosphere(input: AtmosphereInput): AtmosphereBuild {
@@ -882,13 +884,20 @@ function buildPools(input: AtmosphereInput, atm: Atmosphere): { mesh: THREE.Inst
     m.compose(new THREE.Vector3(p.x, p.y ?? 0, p.z), q, new THREE.Vector3(p.scale * (p.sx ?? 1), p.scale, p.scale));
     v.set(l.x, l.y, l.z).applyMatrix4(m);
     const hex =
-      l.kind === 'crystal' ? (def.palette?.crystal ?? '#a884ff') : l.kind === 'window' ? (glassy ? (def.palette?.glowCold ?? '#a8e0f0') : '#9fb4d8') : (def.light.point?.color ?? '#ffac58');
-    // Glass Town's tall stained windows throw a stronger patch of daylight than a slit or a shutter.
-    const k = strength * (l.kind === 'window' ? (glassy ? 1.6 : 0.55) : l.kind === 'crystal' ? 0.8 : 1) * (l.fire ? Math.min(1.3, 0.85 + l.fire * 0.2) : 1);
+      l.kind === 'crystal'
+        ? (def.palette?.crystal ?? '#a884ff')
+        : l.kind === 'window'
+          ? glassy
+            ? STAINED[Math.abs(Math.round(p.x * 3 + p.z * 5)) % STAINED.length]!
+            : '#9fb4d8'
+          : (def.light.point?.color ?? '#ffac58');
+    // Glass Town's tall stained windows throw a bigger, stronger patch of tinted daylight than a
+    // slit or a shutter (aqua or amber, like the glass they come through).
+    const k = strength * (l.kind === 'window' ? (glassy ? 2.6 : 0.55) : l.kind === 'crystal' ? 0.8 : 1) * (l.fire ? Math.min(1.3, 0.85 + l.fire * 0.2) : 1);
     // Output-space colour (the pool shader adds raw values, as the fire shaders do).
     const rgb = { r: 0, g: 0, b: 0 };
     new THREE.Color(hex).getRGB(rgb, THREE.SRGBColorSpace);
-    const r = POOL_RADIUS[l.kind] * (0.9 + 0.25 * Math.min(1, v.y / 1.2));
+    const r = POOL_RADIUS[l.kind] * (glassy && l.kind === 'window' ? 1.35 : 1) * (0.9 + 0.25 * Math.min(1, v.y / 1.2));
     spots.push({ x: v.x, z: v.z, r, color: new THREE.Color().setRGB(rgb.r * k, rgb.g * k, rgb.b * k, THREE.LinearSRGBColorSpace) });
   }
   if (!spots.length) return null;
