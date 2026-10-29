@@ -12,7 +12,7 @@ import type { HeroState } from '../../rules/state';
 import { t } from '../../ui/i18n';
 import { icon, type IconName } from '../../ui/game/icons';
 import { chestFinds } from '../../ui/game/events';
-import { className } from '../../ui/game/text';
+import { className, secondaryGoalText } from '../../ui/game/text';
 import { campHeroUrl, heroBustUrl } from '../../ui/game/uiArt';
 import { artButton } from './menu';
 import './end.css';
@@ -95,7 +95,7 @@ export function endScreen(o: EndOptions): HTMLElement {
       goals.length
         ? goals.map((goal) => {
             const met = secondaryMet(s, goal);
-            return h('p', { class: `gend-goal${met ? ' is-met' : ''}` }, icon(met ? 'check' : 'close'), h('span', null, t(`objective.secondary.${goal.check}`, Object.fromEntries(Object.entries(goal.params ?? {}).map(([k, v]) => [k, String(v)])))));
+            return h('p', { class: `gend-goal${met ? ' is-met' : ''}` }, icon(met ? 'check' : 'close'), h('span', null, secondaryGoalText(goal)));
           })
         : h('p', { class: 'gend-goal is-none' }, h('span', null, won ? t('game.end.noGoal') : t('game.end.goalLost'))),
     );

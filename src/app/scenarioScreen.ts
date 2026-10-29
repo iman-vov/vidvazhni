@@ -31,7 +31,7 @@ import { isIconName } from '../ui/icons/names';
 import { elementsRow, eventChips, heroPanel, initiativeBar, intentIcon, intentIcons, portrait, statusRow, type RibbonTarget } from '../ui/game/panels';
 import { figureCard, monsterPlan } from '../ui/game/figureCard';
 import { onPress } from '../ui/game/press';
-import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, stepLine } from '../ui/game/text';
+import { cardName, elementName, figureName, modifierLabel, monsterTypeName, playedCard, secondaryGoalText, stepLine } from '../ui/game/text';
 import { previewAction, type ActionPreview } from './actionPreview';
 import { allThreats, heroMove, monsterThreat, type MonsterThreat } from './threat';
 import { heroColor } from './boardViewStub';
@@ -2167,7 +2167,7 @@ function objectivePlate(content: Content, s: GameState): HTMLElement {
   const st = objectiveStatus(content, s);
   if (!st) return h('span', null);
   const secondary = st.secondary.map((g) =>
-    h('span', null, g.met ? icon('check') : '', t(`objective.secondary.${g.check}`, Object.fromEntries(Object.entries(g.params ?? {}).map(([k, v]) => [k, String(v)])))),
+    h('span', null, g.met ? icon('check') : '', secondaryGoalText(g)),
   );
   return h(
     'div',

@@ -46,6 +46,13 @@ export function eventWarningIcon(w: EventWarning): IconName {
   return w.kind === 'alarm' ? 'move' : 'summon';
 }
 
+/** A secondary goal: its own text (`objective.secondary.<goal id>`) when the check alone says too
+ *  little (an `objectState` is a lever in one scenario and herbs in another), else the check's. */
+export function secondaryGoalText(goal: { id: string; check: string; params?: Record<string, unknown> }): string {
+  const params = Object.fromEntries(Object.entries(goal.params ?? {}).map(([k, v]) => [k, String(v)]));
+  return t(has(`objective.secondary.${goal.id}`) ? `objective.secondary.${goal.id}` : `objective.secondary.${goal.check}`, params);
+}
+
 export function cardName(cardId: string): string {
   return has(`card.${cardId}`) ? t(`card.${cardId}`) : cardId;
 }
