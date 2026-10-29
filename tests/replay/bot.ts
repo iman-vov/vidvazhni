@@ -3,7 +3,9 @@
 // Порив («Наснага», played out the same way) and raising a downed ally («Підняти друга»).
 // Scenario goals steer where the acting hero heads: monsters, exits, keys, chests, braziers.
 // In the damage window it dodges (d12) or lets an ally cover by a fixed rule, never by peeking at
-// the roll; carried items are weighed like a half. Used by the replay tests and the balance
+// the roll; carried items are weighed like a half. The hand and each round's two cards are picked
+// by worth (pickHand, selectPair); a lost card costs the rounds it takes off the hand; a boss is
+// focused. Strength: docs/design/bot-strength.md. Used by the replay tests and the balance
 // simulator (tests/balance/sim.test.ts).
 
 import type { Content, HeroCard, HeroClass, ScenarioGoal } from '../../src/rules/content';
@@ -98,11 +100,11 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
       // door instead made opening it look like a step back (the door after it is far), and s11's
       // party waited on the shore for good.
       return zoneOf(s, content);
-    case 'escape': {
-      // The cave-in timer runs: run for the lift past the monsters, opening the doors on the way.
-      const zone = zoneOf(s, content);
-      return s.board.tiles[`${zone[0]?.join(',')}`] ? zone : doorsTowards(s, content, zone);
-    }
+    case 'escape':
+      // The cave-in timer runs: run for the lift past the monsters. As in the race, the lift itself:
+      // aiming at the door made opening it look like a step back once the last rounds weigh every
+      // step 60 (the lift behind it is farther), and s6's Warden stood next to the door till the end.
+      return zoneOf(s, content);
     case 'destroy': {
       // Break the cages; their rooms open first.
       const cages = tilesWith(s, (t) => !!t.breakable && t.object?.kind === goal.kind);
