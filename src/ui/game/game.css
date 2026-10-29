@@ -475,6 +475,17 @@ textarea.ginput {
   line-height: 1.5;
 }
 
+/* The scenario's own rules in the intro (scenarioSpecial.*). */
+.gspecials {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  line-height: 1.4;
+}
+
+.gspecials li + li {
+  margin-top: 4px;
+}
+
 .grewards {
   border-collapse: collapse;
   background: var(--panel);

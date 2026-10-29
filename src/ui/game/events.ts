@@ -75,6 +75,16 @@ export function eventLine(e: GameEvent, s: GameState): string | null {
       return t('game.ev.undone');
     case 'story':
       return t(e.text);
+    case 'monsterWoke':
+      return t('game.ev.woke', { name: n(e.figureId) });
+    case 'allyJoined':
+      return t('game.ev.allyJoined', { name: n(e.figureId) });
+    case 'alarm':
+      return t('game.ev.alarm');
+    case 'fogCleared':
+      return t('game.ev.fogCleared');
+    case 'terrainChanged':
+      return t(e.terrain === 'deep' ? 'game.ev.deepened' : 'game.ev.flooded');
     default:
       return null;
   }
@@ -93,8 +103,21 @@ export interface RuleHint {
   text: string;
 }
 
-/** Rule explanations a batch of events brings up for the first time (hint level 1). */
-export function ruleHints(events: GameEvent[]): RuleHint[] {
+/** Which scenario rule (`specials`) an event shows at work, so its line comes up as a hint. */
+function specialOf(e: GameEvent, specials: readonly string[]): string | null {
+  const pick = (...names: string[]) => names.find((x) => specials.includes(x)) ?? null;
+  if (e.type === 'terrainChanged') return pick('risingWater');
+  if (e.type === 'fogCleared') return pick('fogBanks');
+  if (e.type === 'allyJoined') return pick('allyPhase', 'automatonHelpers');
+  if (e.type === 'monsterWoke') return pick('automatonHelpers', 'livingBooks');
+  if (e.type === 'alarm') return pick('livingBooks');
+  if (e.type === 'objectChanged') return e.state === 'broken' ? pick('mirrorHexes') : pick('beamMirrors');
+  return null;
+}
+
+/** Rule explanations a batch of events brings up for the first time (hint level 1); `specials`:
+ *  the scenario's own rules, explained when an event first shows one at work. */
+export function ruleHints(events: GameEvent[], specials: readonly string[] = []): RuleHint[] {
   const out: RuleHint[] = [];
   const add = (key: string, title: string, text: string) => {
     if (!out.some((x) => x.key === key)) out.push({ key, title, text });
@@ -103,6 +126,8 @@ export function ruleHints(events: GameEvent[]): RuleHint[] {
     if (has(`help.${id}.title`)) add(key, t(`help.${id}.title`), t(`help.${id}.short`));
   };
   for (const e of events) {
+    const special = specialOf(e, specials);
+    if (special) add(`special.${special}`, t('game.specialRule'), t(`scenarioSpecial.${special}`));
     if (e.type === 'conditionAdded') add(`condition.${e.condition}`, conditionName(e.condition), t(`condition.${e.condition}.text`));
     else if (e.type === 'elementChanged' && e.level === 'strong') add('elements', t('ui.elements'), t('game.explain.elements'));
     else if (e.type === 'orbInfused') add('orbs', t('ui.orbs'), t('game.explain.orbs'));

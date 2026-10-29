@@ -516,7 +516,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     const s = game.state;
     // Hint level 1: rules met for the first time, for the hero who acted or is asked next.
     const viewer = actor ?? game.pendingHeroes()[0] ?? null;
-    if (viewer && hintLevel(viewer) >= 1) for (const hint of ruleHints(events)) showHint(hint);
+    if (viewer && hintLevel(viewer) >= 1) for (const hint of ruleHints(events, content.scenarios[game.state.scenarioId]?.specials)) showHint(hint);
     const next = game.pendingHeroes()[0];
     if (next && hintLevel(next) >= 1) {
       const kind = s.pending?.kind;
@@ -1862,6 +1862,7 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
         h('p', { class: 'gintro' }, t(`scenario.${s.scenarioId}.intro`)),
         h('p', null, h('b', null, t('game.goal')), ' ', t(`scenario.${s.scenarioId}.goal`)),
         sc?.introduces.length ? h('p', { class: 'gside-hint' }, t('game.introduces'), ' ', sc.introduces.map((i) => t(`introduces.${i}`)).join(', ')) : null,
+        sc?.specials?.length ? h('div', { class: 'gside-hint' }, h('b', null, t('game.specialRules')), h('ul', { class: 'gspecials' }, sc.specials.map((x) => h('li', null, t(`scenarioSpecial.${x}`))))) : null,
         h('div', { class: 'grow gend' }, h('button', { class: 'gbtn gbtn-primary', onclick: () => ((ui.modal = null), render()) }, t('game.begin'))),
       ],
       () => ((ui.modal = null), render()),
