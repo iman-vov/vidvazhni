@@ -3,7 +3,8 @@
 // results as JSON lines. Off by default; run one scenario per process, e.g.
 //   SIM=1 SIM_SCENARIO=s2 SIM_SEEDS=20 SIM_OUT=out/s2.jsonl npx vitest run tests/balance/sim.test.ts
 // SIM_LEVELS (default 1,2,3), SIM_PARTIES ('pairs', 'big', 'all' or 'warden,rogue;herbalist,tinker'), SIM_VARIANTS (JSON merged
-// over FULL_FORK, e.g. {"dodgeDie":false}), SIM_FLAGS (campaign flags, e.g. mirrors.aligned).
+// over FULL_FORK, e.g. {"dodgeDie":false}), SIM_FLAGS (campaign flags, e.g. mirrors.aligned), SIM_BOT (a
+// snapshot of the bot to play with instead, as tools/bot-bench.sh makes one).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +13,7 @@ import { apply, createGame } from '../../src/rules/engine';
 import { loadContent } from '../../src/rules/load';
 import type { GameSetup, GameState } from '../../src/rules/state';
 import { FULL_FORK } from '../../src/rules/variants';
-import { chooseAction } from '../replay/bot';
+import * as liveBot from '../replay/bot';
 
 const HEROES = ['warden', 'wind-archer', 'herbalist', 'rogue', 'elementalist', 'tinker'];
 const BIG: string[][] = [
@@ -23,6 +24,7 @@ const BIG: string[][] = [
   ['elementalist', 'tinker', 'herbalist', 'wind-archer'],
 ];
 const MAX_ROUNDS = 40;
+let chooseAction = liveBot.chooseAction;
 /** Items a party of this level would have bought (start gold 15, then the shop). */
 const KIT: Record<number, string[]> = { 1: ['healing-potion'], 2: ['healing-potion', 'buckler'], 3: ['healing-potion', 'buckler', 'luck-potion', 'dagger'] };
 
@@ -146,7 +148,8 @@ function play(setup: GameSetup, content: ReturnType<typeof loadContent>): SimRes
 }
 
 describe.skipIf(!process.env.SIM)('balance simulator', () => {
-  it('plays the configured games', { timeout: 6 * 3600_000 }, () => {
+  it('plays the configured games', { timeout: 6 * 3600_000 }, async () => {
+    if (process.env.SIM_BOT) chooseAction = ((await import(path.resolve(process.env.SIM_BOT))) as typeof liveBot).chooseAction;
     const content = loadContent();
     const scenario = process.env.SIM_SCENARIO ?? 's1';
     const seeds = Number(process.env.SIM_SEEDS ?? 10);
