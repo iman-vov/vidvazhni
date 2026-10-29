@@ -310,6 +310,8 @@ function avoidOrTake(s: GameState, content?: Content): Action {
   return { type: 'avoidDamage', heroId: h.id, choice: { kind: 'take' } };
 }
 
+const ATTACK_TRY = 2;
+
 /** Best immediate step choice (skipping included). */
 function bestStep(s: GameState, content: Content, heroId: string): Action {
   let best: Action = { type: 'skipStep' };
@@ -324,7 +326,11 @@ function bestStep(s: GameState, content: Content, heroId: string): Action {
     if (!t) continue;
     // No new room while monsters are still up (the door pull would rush the party into a second fight).
     if (fighting && t.board.revealedRooms.length > s.board.revealedRooms.length) continue;
-    const v = score(t, heroId, content) + (a.type === 'skipStep' ? -0.5 : 0);
+    // The look-ahead sees the modifier card on top of the deck. An attack it shows doing nothing
+    // still goes in, as a player's would: skipping left that card on top for everyone, and s20's
+    // trio stood eight rounds around a 1-hp automaton while the deck never moved.
+    const swings = t.log.slice(s.log.length).filter((e) => e.type === 'attacked' && e.attackerId === heroId && e.targetId.startsWith('monster:')).length;
+    const v = score(t, heroId, content) + (a.type === 'skipStep' ? -0.5 : 0) + ATTACK_TRY * swings;
     if (v > bestScore) {
       bestScore = v;
       best = a;
@@ -402,7 +408,8 @@ function selectPair(s: GameState, content: Content, h: HeroState): [string, stri
     const b = h.hand.filter((x) => x !== a).sort((x, y) => moveValue(content, h, y) - moveValue(content, h, x))[0] as string;
     return [a, b];
   }
-  const shield = target.shields.reduce((n, x) => n + x.value, 0);
+  // The shields that last (a round's guard is gone by the hero's turn); poison adds 1 to every hit.
+  const shield = target.shields.filter((x) => x.until !== 'round').reduce((n, x) => n + x.value, 0) - (target.conditions.poison ? 1 : 0);
   const gap = distance(target.hex, h.hex);
   const near = monsters.filter((m) => distance(m.hex, target.hex) <= 2).length;
   const size = cls.handSize;
