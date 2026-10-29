@@ -182,7 +182,10 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   // A kill outweighs the jump of the distance pull from «nearest monster» to «nearest door or exit»,
   // and the wound credit (3 a point, below) the monster takes off the board with it: with a flat
   // 40, finishing a 17-hp elite automaton scored worse than leaving it at 1 hp, and s20's trio did.
-  for (const e of s.log) if (e.type === 'figureDied' && e.figureId.startsWith('monster:')) v += 40 + 3 * fullHp(s, content, e.figureId);
+  // In a boss fight the boss's own pull does that job, and a flat 40 a minion drew the party onto
+  // the moths the Mist Queen keeps calling (s15).
+  const kill = goal?.type === 'killBoss' ? 10 : 40;
+  for (const e of s.log) if (e.type === 'figureDied' && e.figureId.startsWith('monster:')) v += kill + 3 * fullHp(s, content, e.figureId);
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster');
   for (const m of monsters) v += 3 * (m.maxHp - m.hp);
   // A boss fight is won on the boss alone: its wounds outweigh the minions it keeps calling.
