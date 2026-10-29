@@ -139,6 +139,14 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
   }
 }
 
+/** Rounds a hand of `cards` lasts, a card lost at each rest (as in card-budget.test.ts). */
+function handRounds(cards: number): number {
+  let r = 0;
+  for (let c = cards; c >= 2; c--) r += Math.floor(c / 2);
+  return r;
+}
+const CARD_ROUND = 6;
+
 /** The boss of a `killBoss` goal while it is on the board as a monster. */
 const BOSS_HP = 10;
 function bossOf(s: GameState, content: Content | undefined) {
@@ -168,7 +176,10 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   for (const f of Object.values(s.figures)) {
     if (f.kind !== 'hero') continue;
     v += f.exhausted ? -200 : f.downed ? -120 : 2 * f.hp;
-    v -= 2 * f.lost.length;
+    // A lost card costs the rounds it takes off the hand's life (handRounds): dear early on, cheap
+    // in the last rests. A flat −2 let the bot burn its big loss cards on the first automaton.
+    const size = content?.heroes[f.classId]?.handSize;
+    v += size ? CARD_ROUND * handRounds(size - f.lost.length) : -2 * f.lost.length;
   }
   for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit') || (o.kind === WIND_UP_KEY && o.state === 'on')) v += 20;
   if (goal?.type === 'carryItem') {
