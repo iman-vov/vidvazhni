@@ -62,6 +62,9 @@ export const SCATTER: Record<string, ScatterProfile> = {
   copperdale: { perHex: 2.2, kinds: [['straw', 3], ['pebbles', 3], ['snow', 2], ['shards', 2], ['chips', 2], ['plank', 1]] },
   'dark-depths': { perHex: 2.2, kinds: [['pebbles', 6], ['shards', 1], ['chips', 1]] },
   'old-forge': { perHex: 2.4, kinds: [['pebbles', 4], ['chips', 3], ['plank', 1], ['shards', 1]] },
+  // Glass Town: swept floors, a glint of broken glass here and there.
+  'glass-town': { perHex: 1.1, kinds: [['shards', 4], ['chips', 1], ['pebbles', 1]] },
+  'glass-heights': { perHex: 1.8, kinds: [['pebbles', 4], ['shards', 3], ['tuft', 1]] },
 };
 
 const BY_EDGE: Record<EdgeStyle, ScatterProfile> = {
@@ -74,6 +77,7 @@ const BY_EDGE: Record<EdgeStyle, ScatterProfile> = {
   mine: SCATTER['mine-tunnel']!,
   cliff: SCATTER['mountain-pass']!,
   forge: SCATTER['old-forge']!,
+  glass: SCATTER['glass-town']!,
 };
 
 const OUTDOOR: ReadonlySet<EdgeStyle> = new Set(['forest', 'shore', 'cliff']);

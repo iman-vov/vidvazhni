@@ -292,7 +292,7 @@ export type Terrain = 'normal' | 'difficult' | 'hazardous' | 'water' | 'deep' | 
 
 /** What a hex looks like underfoot (cosmetic; the rules use `Terrain`). The board draws the surface
  *  and shows difficult, hazardous and water terrain on top of it. */
-export type SurfaceId = 'planks' | 'flagstones' | 'cobblestone' | 'worn-stone' | 'forest-floor' | 'grass' | 'roots' | 'mud' | 'wet-grass' | 'walkway' | 'rock';
+export type SurfaceId = 'planks' | 'flagstones' | 'cobblestone' | 'worn-stone' | 'forest-floor' | 'grass' | 'roots' | 'mud' | 'wet-grass' | 'walkway' | 'rock' | 'glass-tiles';
 /** How a room is closed off from its neighbours on the board (cosmetic; the rules see walls). */
 export type BoundaryKind = 'walls' | 'reeds' | 'thicket' | 'rocks' | 'logs';
 /** What a door between rooms looks like and how it opens (cosmetic; the rules see a door). */

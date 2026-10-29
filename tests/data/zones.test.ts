@@ -12,9 +12,9 @@ const SCENARIOS: ScenarioDef[] = readdirSync('data/scenarios')
   .sort((a, b) => Number(a.slice(1, -5)) - Number(b.slice(1, -5)))
   .map((f) => JSON.parse(readFileSync(`data/scenarios/${f}`, 'utf8')) as ScenarioDef);
 
-const BUILT_EDGES: EdgeStyle[] = ['stone', 'tower', 'timber', 'mine', 'forge'];
+const BUILT_EDGES: EdgeStyle[] = ['stone', 'tower', 'timber', 'mine', 'forge', 'glass'];
 /** Floors of an interior; bare rock only down a mine. */
-const INDOOR_FLOORS: SurfaceId[] = ['planks', 'flagstones', 'cobblestone', 'worn-stone'];
+const INDOOR_FLOORS: SurfaceId[] = ['planks', 'flagstones', 'cobblestone', 'worn-stone', 'glass-tiles'];
 const OUTDOOR_FLOORS: SurfaceId[] = ['forest-floor', 'grass', 'roots', 'mud', 'wet-grass', 'walkway', 'rock', 'cobblestone'];
 /** Things that only stand in a house, and things that only grow or stand outside. */
 const HOUSE_THINGS = ['table', 'bunk', 'bed', 'pillar', 'keg-rack', 'shelf', 'wine-rack'];

@@ -354,6 +354,26 @@ function hearthWall(b: Builder, h: number): void {
   b.box('rockDark', [0.7, 0.08, 0.16], [0, 0.18, 0.06]);
 }
 
+/** Pale limestone of Glass Town in ashlar courses, a brass band under a moulded cornice. */
+function glassWall(b: Builder, h: number, seed: number): void {
+  b.box('stone', [WALL_LEN, h, WALL_THICK], [0, h / 2, -WALL_THICK / 2]);
+  b.box('stoneDark', [WALL_LEN + 0.02, 0.16, WALL_THICK + 0.07], [0, 0.08, -WALL_THICK / 2]);
+  b.box('stoneLight', [WALL_LEN + 0.04, 0.14, WALL_THICK + 0.14], [0, h - 0.07, -WALL_THICK / 2 + 0.02]);
+  b.box('ore', [WALL_LEN + 0.02, 0.03, WALL_THICK + 0.05], [0, h - 0.2, -WALL_THICK / 2]);
+  blocks(b, h - 0.2, seed, 'stoneLight');
+}
+
+/** Stand-in until the kit's stained-glass window loads: an arched opening with cold glass. */
+function glassWindowWall(b: Builder, h: number): void {
+  glassWall(b, h, 2);
+  const top = Math.min(h - 0.4, 1.2);
+  b.box('glowCold', [0.46, top - 0.44, 0.02], [0, 0.44 + (top - 0.44) / 2, 0.006]);
+  b.add(new THREE.CircleGeometry(0.23, 10, 0, Math.PI), 'glowCold', [0, top, 0.006]);
+  b.add(new THREE.TorusGeometry(0.26, 0.035, 4, 10, Math.PI), 'ore', [0, top, 0.02]);
+  for (const x of [-0.26, 0.26]) b.box('ore', [0.05, top - 0.44, 0.04], [x, 0.44 + (top - 0.44) / 2, 0.02]);
+  b.box('stoneLight', [0.62, 0.05, 0.12], [0, 0.42, 0.04]);
+}
+
 function wall(build: (b: Builder, o: BuildOptions) => void, kind: PieceKind = 'wall', light?: PieceMeta['light']): PieceDef {
   return { kind, height: 1.6, radius: 0.55, ...(light ? { light } : {}), build };
 }
@@ -1280,6 +1300,34 @@ const PIECES: Record<string, PieceDef> = {
         b.blob('snow', 0.2, [x, o.height * 0.8, -0.18], [1.2, 0.35, 1.1]);
       }
       b.blob('snow', 0.3, [0, 0.03, -0.2], [2.2, 0.15, 1.2], true);
+    },
+  },
+  // Act III, Glass Town (s16-s20): limestone, brass and glass; the window and the wall lantern
+  // come from the Blender kit env-glass-town (art/blender/act3-props/glasswindow_hq.py).
+  'glass-wall': wall((b, o) => glassWall(b, o.height, 5)),
+  'glass-window': wall((b, o) => glassWindowWall(b, o.height)),
+  'glass-wall-low': wall((b, o) => lowWall(b, o.height, 'stone', 'stoneLight')),
+  'glass-pillar': wall((b, o) => {
+    pillar(b, o.height, 'stoneLight', 'stoneDark');
+    b.box('ore', [0.42, 0.04, 0.42], [0, o.height - 0.08, -0.1]);
+  }, 'corner'),
+  'glass-pillar-low': wall((b, o) => pillar(b, o.height, 'stoneLight', 'stoneDark'), 'corner'),
+  'glass-doorway': wall((b, o) => {
+    doorway(b, o.height, 'stoneLight', 'stoneDark');
+    b.box('ore', [0.86, 0.03, WALL_THICK + 0.1], [0, 1.2 + 0.15, -WALL_THICK / 2]);
+  }, 'doorway'),
+  // A brass wall lantern with glowing panes, in place of the forge's torches.
+  'glass-sconce': {
+    kind: 'prop',
+    height: 1.35,
+    radius: 0.14,
+    light: { x: 0, y: 1.12, z: 0.2, kind: 'lantern', fire: 0.6 },
+    build: (b) => {
+      b.box('ore', [0.13, 0.24, 0.02], [0, 1.12, 0.01]);
+      b.box('ore', [0.025, 0.025, 0.24], [0, 1.28, 0.12]);
+      b.cyl('ore', 0.08, 0.075, 0.02, 6, [0, 1.03, 0.2]);
+      b.cyl('glow', 0.06, 0.06, 0.18, 6, [0, 1.13, 0.2]);
+      b.cone('ore', 0.08, 0.09, 6, [0, 1.27, 0.2]);
     },
   },
   'forge-wall': wall((b, o) => forgeWall(b, o.height, 6)),

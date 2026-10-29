@@ -58,6 +58,7 @@ export const STYLE_PIECES: Record<EdgeStyle, StylePieces> = {
   cave: { wall: 'rock-wall', alt: 'rock-wall-crystal', low: 'rock-low', corner: 'rock-pillar', cornerLow: 'rock-pillar-low', door: 'cave-mouth', walled: false },
   mine: { wall: 'mine-wall', alt: 'mine-wall-ore', low: 'mine-wall-low', corner: 'mine-post', cornerLow: 'mine-post-low', door: 'mine-adit', walled: true, frame: 'mine-wall-set' },
   cliff: { wall: 'cliff-wall', alt: 'cliff-wall-snow', low: 'cliff-low', corner: 'cliff-pillar', cornerLow: 'cliff-pillar-low', door: 'cliff-gap', walled: true },
+  glass: { wall: 'glass-wall', alt: 'glass-window', low: 'glass-wall-low', corner: 'glass-pillar', cornerLow: 'glass-pillar-low', door: 'glass-doorway', walled: true },
   forge: { wall: 'forge-wall', alt: 'forge-hearth', low: 'forge-wall-low', corner: 'forge-pillar', cornerLow: 'forge-pillar-low', door: 'forge-doorway', walled: true },
 };
 

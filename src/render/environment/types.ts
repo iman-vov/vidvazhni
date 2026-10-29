@@ -10,7 +10,7 @@ import type { BoundaryKind, SurfaceId } from '../../rules/content';
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 
 /** How the edge of the map is closed: walls indoors, plants and rock outdoors. */
-export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave' | 'mine' | 'cliff' | 'forge';
+export type EdgeStyle = 'stone' | 'tower' | 'timber' | 'forest' | 'shore' | 'cave' | 'mine' | 'cliff' | 'forge' | 'glass';
 
 /** A piece id with a relative weight, for random picks. */
 export type Weighted = [piece: string, weight: number];

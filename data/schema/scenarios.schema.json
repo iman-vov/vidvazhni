@@ -72,7 +72,7 @@
       "additionalProperties": false,
       "dependencies": { "coinChance": ["coins"], "itemChance": ["items"] }
     },
-    "surface": { "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock"] },
+    "surface": { "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock", "glass-tiles"] },
     "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
     "breakable": {
       "description": "Heroes break it with attacks (no modifier draw); gone at 0 hp.",

@@ -61,7 +61,7 @@ const GROUND_EXTRA = 70;
  *  model in the location's `propModels` table can replace them by these ids). */
 export const BOUNDARY_PIECES: Record<Exclude<BoundaryKind, 'walls'>, string> = { reeds: 'reed-fence', thicket: 'thicket-hedge', rocks: 'rock-pile', logs: 'log-wall' };
 /** Default boundary between rooms for a location edge style. */
-const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 'walls', timber: 'walls', forest: 'thicket', shore: 'reeds', cave: 'rocks', mine: 'walls', cliff: 'rocks', forge: 'walls' };
+const EDGE_BOUNDARY: Record<EdgeStyle, BoundaryKind> = { stone: 'walls', tower: 'walls', timber: 'walls', forest: 'thicket', shore: 'reeds', cave: 'rocks', mine: 'walls', cliff: 'rocks', forge: 'walls', glass: 'walls' };
 /** The map edge style a room boundary stands for (outdoor rooms close with plants, caves with rock). */
 const BOUNDARY_EDGE: Record<Exclude<BoundaryKind, 'walls'>, EdgeStyle> = { reeds: 'shore', thicket: 'forest', logs: 'forest', rocks: 'cave' };
 
@@ -93,15 +93,17 @@ const DIVIDERS: Record<string, DividerStyle> = {
   copperdale: 'wattle',
   'dark-depths': 'rock-ridge',
   'old-forge': 'brick',
+  'glass-town': 'stone',
+  'glass-heights': 'rock-ridge',
 };
 /** Divider by edge style, for a location not listed and for a room with an edge of its own. */
-const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick' };
+const EDGE_DIVIDER: Record<EdgeStyle, DividerStyle> = { stone: 'stone', tower: 'stone', timber: 'planks', forest: 'hedge', shore: 'reed-fence', cave: 'rock-ridge', mine: 'planks', cliff: 'stone-fence', forge: 'brick', glass: 'stone' };
 /** Pieces that look wet beside marsh water. */
 const WET_PIECES = /rock|boulder|stone|log|stump|roots/;
 const wc = new THREE.Color();
-const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge']);
+const INDOOR_EDGES: ReadonlySet<EdgeStyle> = new Set(['stone', 'tower', 'timber', 'mine', 'forge', 'glass']);
 /** The natural edge of an outdoor room inside a built location: underground it is cave rock. */
-const NATURAL_EDGE: Record<EdgeStyle, EdgeStyle> = { stone: 'cave', tower: 'cliff', timber: 'forest', mine: 'cave', forge: 'cave', forest: 'forest', shore: 'shore', cave: 'cave', cliff: 'cliff' };
+const NATURAL_EDGE: Record<EdgeStyle, EdgeStyle> = { stone: 'cave', tower: 'cliff', timber: 'forest', mine: 'cave', forge: 'cave', forest: 'forest', shore: 'shore', cave: 'cave', cliff: 'cliff', glass: 'glass' };
 
 /** Dividers that are a building's wall; the rest (fences, hedges, reeds, rock) stand outdoors. */
 const BUILT_DIVIDERS: ReadonlySet<DividerStyle> = new Set(['stone', 'brick', 'planks']);
@@ -302,7 +304,8 @@ export class BoardEnvironment {
    */
   propModel(key: string, defaultHeight: number): Required<PropModelSpec> | null {
     const stand = OBSTACLE_PIECES[key];
-    const keys = [...new Set([key, stand?.piece, key.split(':')[0]].filter((k): k is string => !!k))];
+    // A look's own model goes before its kind's (`mirror:broken` → model mirror-broken, else mirror).
+    const keys = [...new Set([key, stand?.piece, key.replace(':', '-'), key.split(':')[0]].filter((k): k is string => !!k))];
     const meta = stand ? pieceMeta(stand.piece) : undefined;
     return propModelFor(this.def, keys, this.available, meta ? meta.height * stand!.scale : defaultHeight);
   }
@@ -1304,7 +1307,7 @@ export class BoardEnvironment {
  */
 export function withRoomEdges(def: EnvironmentDef, scenario: ScenarioDef): EnvironmentDef {
   const rooms: Record<string, { edge: EdgeStyle }> = {};
-  const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber' || def.edge === 'mine' || def.edge === 'forge';
+  const indoor = def.edge === 'stone' || def.edge === 'tower' || def.edge === 'timber' || def.edge === 'mine' || def.edge === 'forge' || def.edge === 'glass';
   for (const room of scenario.rooms) {
     const b = room.boundary;
     if (def.rooms?.[room.id]) continue;

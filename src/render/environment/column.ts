@@ -24,6 +24,7 @@ const BY_EDGE: Record<EdgeStyle, ColumnVariant[]> = {
   stone: ['column-intact', 'column-intact', 'column-broken'],
   tower: ['column-intact'],
   forge: ['column-intact'],
+  glass: ['column-intact'],
   timber: ['column-wood'],
   mine: ['column-wood'],
 };

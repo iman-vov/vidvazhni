@@ -3,6 +3,8 @@
 
 import type { EnvironmentDef } from './types';
 
+// Vitest's fsModuleCache (node_modules/.vitest-cache) keys this module on its text, not on what the
+// glob finds: after adding or removing a location file, run vitest once with --fsModuleCache=false.
 const FILES = import.meta.glob<EnvironmentDef>('/data/environments/*.json', { eager: true, import: 'default' });
 
 export const ENVIRONMENTS: EnvironmentDef[] = Object.values(FILES).sort((a, b) => a.id.localeCompare(b.id));

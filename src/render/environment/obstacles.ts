@@ -220,6 +220,7 @@ const GOODS_SETS: Record<EdgeStyle, string[]> = {
   cave: ['crate-pile', 'barrel-pile'],
   mine: ['crate-pile', 'barrel-pile'],
   forge: ['crate-pile', 'barrel-pile'],
+  glass: ['crate-pile', 'long-table'],
 };
 /** Set pieces for goods in a room of this kind: no wagon indoors, a long table with stools in a
  *  house's rooms (not down a mine or in a forge). */
@@ -244,6 +245,7 @@ const LITTER: Record<EdgeStyle, string[]> = {
   cave: ['pebbles', 'pebbles', 'shards'],
   mine: ['pebbles', 'chips', 'stick'],
   forge: ['pebbles', 'shards', 'stick'],
+  glass: ['shards', 'shards', 'chips'],
 };
 const LITTER_BY_PIECE: Record<string, string> = {
   sacks: 'straw',

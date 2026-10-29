@@ -114,6 +114,26 @@ export const ATMOSPHERE: Record<string, Atmosphere> = {
     walls: { share: 0.8, kinds: [['ore', 2], ['damp', 3], ['drips', 3], ['slime', 1], ['crack', 1]] },
     variants: [['plain', 3], ['support', 1]],
   },
+  'glass-town': {
+    // Glass Town indoors: clean pale stone in cool daylight through the windows, little dirt.
+    grade: grade([0.0, 0.008, 0.02], [1.02, 1.03, 1.06], 1.06, 1.06, 0.42),
+    pools: 0.32,
+    grime: '#3a3834',
+    floor: { density: 0.35, kinds: [['dust', 3], ['slab', 2], ['crack', 1]] },
+    edge: 0.35,
+    walls: { share: 0.3, kinds: [['banner', 2], ['plaster', 1], ['crack', 1]] },
+    variants: [['plain', 3], ['plinth', 1], ['blocks', 1]],
+  },
+  'glass-heights': {
+    // Open ground around Glass Town: clear cold daylight on pale rock and crystal.
+    grade: grade([0.0, 0.01, 0.025], [1.0, 1.03, 1.08], 1.04, 1.08, 0.45),
+    pools: 0.3,
+    grime: '#30343a',
+    floor: { density: 0.6, kinds: [['dust', 3], ['crack', 2], ['rubble', 1], ['slab', 1]] },
+    edge: 0.45,
+    walls: { share: 0.2, kinds: [['crack', 1]] },
+    variants: [['plain', 1]],
+  },
   'old-forge': {
     // Hot orange forge light against soot-black brick.
     grade: grade([0.03, 0.012, 0.0], [1.14, 0.96, 0.8], 1.08, 1.16, 0.58),

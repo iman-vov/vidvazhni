@@ -4,7 +4,7 @@
   "description": "What surrounds the playable hexes of a scenario location (src/render/environment). Piece ids are the kit ids in src/render/environment/pieces.ts.",
   "definitions": {
     "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-    "edge": { "enum": ["stone", "tower", "timber", "forest", "shore", "cave", "mine", "cliff", "forge"] },
+    "edge": { "enum": ["stone", "tower", "timber", "forest", "shore", "cave", "mine", "cliff", "forge", "glass"] },
     "piece": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "weighted": {
       "type": "array",
@@ -45,7 +45,7 @@
       "additionalProperties": false
     },
     "kits": { "description": "Blender kit models (env-<location>) to borrow pieces from, after the location's own.", "type": "array", "items": { "type": "string", "pattern": "^env-[a-z0-9-]+$" } },
-    "surface": { "description": "Default look of the hexes; a room's surface in the scenario wins.", "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock"] },
+    "surface": { "description": "Default look of the hexes; a room's surface in the scenario wins.", "enum": ["planks", "flagstones", "cobblestone", "worn-stone", "forest-floor", "grass", "roots", "mud", "wet-grass", "walkway", "rock", "glass-tiles"] },
     "boundary": { "description": "Default look of thin walls between rooms; a room's boundary wins.", "enum": ["walls", "reeds", "thicket", "rocks", "logs"] },
     "walls": {
       "type": "object",

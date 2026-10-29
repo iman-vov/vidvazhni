@@ -10,7 +10,7 @@ import type { SurfaceId, Terrain } from '../rules/content';
 import { hexKey } from '../rules/hex';
 import type { GraphicsQuality } from './quality';
 
-export const SURFACE_IDS: readonly SurfaceId[] = ['planks', 'flagstones', 'cobblestone', 'worn-stone', 'forest-floor', 'grass', 'roots', 'mud', 'wet-grass', 'walkway', 'rock'];
+export const SURFACE_IDS: readonly SurfaceId[] = ['planks', 'flagstones', 'cobblestone', 'worn-stone', 'forest-floor', 'grass', 'roots', 'mud', 'wet-grass', 'walkway', 'rock', 'glass-tiles'];
 
 type Painter = (ctx: CanvasRenderingContext2D, size: number, rnd: () => number) => void;
 
@@ -397,6 +397,26 @@ const WORN_STONE: StoneStyle = {
   },
 };
 
+/** Glass Town: big polished limestone slabs in running bond, cream with now and then a blue-grey
+ *  slate, tight pale joints, hardly any dirt and no moss (swept every morning). */
+const GLASS_TILES: StoneStyle = {
+  course: [0.62, 0.62],
+  length: [1.0, 1.0],
+  split: 0,
+  gap: 0.012,
+  round: 0.04,
+  chips: 0.05,
+  cracks: 0.05,
+  dirt: 0.25,
+  moss: 0,
+  grout: [112, 106, 98],
+  tone: (rnd) => {
+    const v = 146 + rnd() * 22;
+    if (rnd() < 0.08) return [v - 34, v - 30, v - 24]; // a blue-grey slate
+    return [v + 10, v + 2, v - 12];
+  },
+};
+
 const COBBLES: StoneStyle = {
   course: [0.2, 0.34],
   ashlar: { module: 0.17, w: [2, 3], h: [2, 3] },
@@ -553,6 +573,7 @@ const SURFACES: Record<SurfaceId, SurfaceDef> = {
   'wet-grass': { base: 'swamp-mud', paint: grass(1000, true), fallback: '#5a6440', side: '#40382a', roughness: 0.8 },
   walkway: { paint: walkway, fallback: '#7a5a3c', side: '#3e2e20', roughness: 0.8 },
   rock: { base: 'cave-rock', fallback: '#6a6460', side: '#45403c', roughness: 0.95 },
+  'glass-tiles': { paint: stones(GLASS_TILES, STONE_WORLD), world: STONE_WORLD, fallback: '#c8bfae', side: '#7e786e', roughness: 0.55 },
 };
 
 export function surfaceSide(id: SurfaceId): string {

@@ -1,6 +1,6 @@
 {
   "id": "gloom-heart",
-  "scenarios": ["s5", "s20", "s15"],
+  "scenarios": ["s5", "s15"],
   "edge": "cave",
   "surface": "rock",
   "boundary": "rocks",
@@ -19,7 +19,6 @@
   "fog": { "color": "#121119", "glow": "#241d36", "start": 2.6, "end": 8.5, "morok": "#9c9cb4", "morokOpacity": 0.5 },
   "weather": { "kind": "dust", "count": 360, "color": "#a890d8", "wind": [0.05, 0.03] },
   "entrance": null,
-  "byScenario": { "s20": { "propModels": {"crystal": {"model": "glass-crystals", "height": 0.7}, "crystals": {"model": "glass-crystals-2", "height": 0.7}, "brazier": {"model": "glass-lantern", "height": 0.8}} } },
   "propModels": {
     "brazier": { "model": "brazier", "height": 0.8 },
     "brazier-lit": { "model": "brazier", "height": 0.8 },

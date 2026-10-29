@@ -1,0 +1,50 @@
+{
+  "id": "glass-heights",
+  "scenarios": ["s16", "s20"],
+  "edge": "cave",
+  "surface": "cobblestone",
+  "boundary": "rocks",
+  "ground": { "texture": "cave-rock", "tint": "#76787e", "scale": 3.0 },
+  "walls": { "height": 1.9, "low": 0.4, "alt": 2, "inner": "#8a8c94" },
+  "palette": { "rock": "#8c8e98", "rockDark": "#5c5e68", "crystal": "#7cc8e4", "moss": "#7a8a80", "glowCold": "#a8e4f4", "ore": "#c8994a" },
+  "light": {
+    "sky": "#c8dcf4",
+    "ground": "#34343c",
+    "hemi": 0.8,
+    "sun": "#fff6e8",
+    "sunIntensity": 2.0,
+    "env": 0.55,
+    "point": { "color": "#ffd08a", "intensity": 5, "distance": 6 }
+  },
+  "fog": { "color": "#24303e", "glow": "#5a7290", "start": 2.6, "end": 9, "morok": "#b8c0d0", "morokOpacity": 0.35 },
+  "weather": { "kind": "dust", "count": 300, "color": "#e4f4ff", "wind": [0.2, 0.06] },
+  "entrance": null,
+  "propModels": {
+    "barrel": { "model": "glass-crystals", "height": 0.85 },
+    "crate": { "model": "glass-panes", "height": 0.62 },
+    "crate-stack": { "model": "glass-crystals-2", "height": 1.1 },
+    "sacks": { "model": "glass-panes", "height": 0.6 },
+    "brazier": { "model": "glass-lantern", "height": 1.5 },
+    "brazier-lit": { "model": "glass-lantern", "height": 1.5 },
+    "crystals": { "model": "glass-crystals-2", "height": 0.8 },
+    "crystal": { "model": "glass-crystals", "height": 0.7 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "rubble-heap": { "model": "rubble-pile", "height": 0.55 },
+    "candles": { "model": "candles-stone", "height": 0.6 }
+  },
+  "dressing": {
+    "anchors": [["brazier-lit", 3]],
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "crystals", "x": 0, "z": -0.05 }, { "piece": "rock", "x": 0.55, "z": 0.18 }, { "piece": "crate", "x": -0.6, "z": 0.22 }] },
+      { "weight": 2, "items": [{ "piece": "barrel", "x": 0, "z": 0 }, { "piece": "rock", "x": 0.5, "z": 0.2 }] },
+      { "weight": 1, "items": [{ "piece": "crate", "x": 0, "z": 0 }, { "piece": "sacks", "x": 0.62, "z": 0.16 }] }
+    ],
+    "ring": [["rock", 3], ["crystals", 3], ["barrel", 2], ["crate", 1], ["stalagmite", 1]],
+    "outside": [["stalagmite", 2], ["rock", 2], ["crystals", 2]],
+    "far": [["stalagmite-big", 3]],
+    "density": 0.7
+  }
+}

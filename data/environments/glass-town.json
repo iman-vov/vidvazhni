@@ -1,0 +1,54 @@
+{
+  "id": "glass-town",
+  "scenarios": ["s17", "s18", "s19"],
+  "edge": "glass",
+  "surface": "glass-tiles",
+  "boundary": "walls",
+  "ground": { "texture": "cobblestone", "tint": "#6c675e", "scale": 2.4 },
+  "walls": { "height": 1.8, "low": 0.32, "alt": 2, "inner": "#b9ae98", "sconce": { "piece": "glass-sconce", "every": 3 } },
+  "palette": { "stone": "#cfc6b4", "stoneDark": "#9a9284", "stoneLight": "#ddd5c4", "ore": "#c8994a", "iron": "#5a5048", "wood": "#7a4e30", "woodDark": "#4e3220", "glow": "#ffd890", "glowCold": "#a8e0f0", "crystal": "#8ad0e8", "banner": "#2e5a7a", "bottle": "#3a8a8e" },
+  "light": {
+    "sky": "#c8dcf0",
+    "ground": "#3a3a44",
+    "hemi": 0.85,
+    "sun": "#f0f4ff",
+    "sunIntensity": 1.7,
+    "env": 0.6,
+    "point": { "color": "#ffd08a", "intensity": 5, "distance": 6 }
+  },
+  "fog": { "color": "#1a222c", "glow": "#33475c", "start": 2.2, "end": 7.5, "morok": "#b0b8c8", "morokOpacity": 0.35 },
+  "weather": { "kind": "dust", "count": 240, "color": "#dff2ff", "wind": [0.04, 0.02] },
+  "entrance": null,
+  "propModels": {
+    "shelf": { "model": "glassware-shelf", "height": 1.4 },
+    "wine-rack": { "model": "bookshelf", "height": 1.35 },
+    "keg-rack": { "model": "glass-workbench", "height": 1.15 },
+    "barrel": { "model": "glass-crystals", "height": 0.85 },
+    "crate": { "model": "glass-panes", "height": 0.62 },
+    "crate-stack": { "model": "glass-crystals-2", "height": 1.1 },
+    "crate-broken": { "model": "glass-panes", "height": 0.55 },
+    "sacks": { "model": "glass-panes", "height": 0.6 },
+    "sack": { "model": "glass-crystals", "height": 0.5 },
+    "brazier": { "model": "glass-lantern", "height": 1.5 },
+    "brazier-lit": { "model": "glass-lantern", "height": 1.5 },
+    "table": { "model": "glass-workbench", "height": 0.8 },
+    "chest": { "model": "chest", "height": 0.6 },
+    "door": { "model": "dungeon-door", "height": 1 },
+    "trap": { "model": "bear-trap", "height": 0.18 },
+    "candles": { "model": "candles-stone", "height": 0.6 },
+    "crystal": { "model": "glass-crystals", "height": 0.7 },
+    "rubble": { "model": "rubble-pile", "height": 0.45 },
+    "forge": { "model": "forge", "height": 1.9 }
+  },
+  "dressing": {
+    "anchors": [["brazier-lit", 2]],
+    "sets": [
+      { "weight": 3, "items": [{ "piece": "shelf", "x": 0, "z": -0.05, "align": true }, { "piece": "crate", "x": 0.72, "z": 0.12 }, { "piece": "sack", "x": -0.62, "z": 0.25 }] },
+      { "weight": 2, "items": [{ "piece": "wine-rack", "x": 0, "z": -0.05, "align": true }, { "piece": "barrel", "x": 0.66, "z": 0.16 }] },
+      { "weight": 2, "items": [{ "piece": "keg-rack", "x": 0, "z": 0, "align": true }, { "piece": "crate-stack", "x": 0.72, "z": 0.1 }] },
+      { "weight": 1, "items": [{ "piece": "shelf", "x": -0.36, "z": -0.05, "align": true }, { "piece": "shelf", "x": 0.62, "z": -0.05, "align": true }] }
+    ],
+    "ring": [["shelf", 3], ["wine-rack", 2], ["keg-rack", 2], ["barrel", 2], ["crate", 2], ["crate-stack", 1]],
+    "density": 0.75
+  }
+}
