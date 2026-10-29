@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import type { ConditionId } from '../rules/content';
 import type { IconName } from '../ui/icons/names';
 import { iconInner, iconSvg } from '../ui/icons/svg';
+import { chipHtml } from './ruleMarkLayer';
+import type { Chip } from './ruleMarks';
 
 /** Condition icons (the game's set, src/ui/icons) differ by shape, not only colour (style guide). */
 export const CONDITION_ICONS: Record<ConditionId, { color: string; svg: string }> = {
@@ -47,6 +49,8 @@ const CSS = `
 .bv-fig.dim{opacity:.55}
 .bv-mark{display:inline-flex;align-items:center;gap:1px;height:18px;padding:0 4px;border-radius:9px;background:rgba(150,36,30,.9);color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 0 1.5px rgba(255,210,120,.85)}
 .bv-mark[hidden]{display:none}
+.bv-tags{display:flex;gap:2px}.bv-tags:empty{display:none}
+.bv-tag{display:inline-flex;align-items:center;gap:1px;height:18px;padding:0 4px;border-radius:9px;color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 0 1.5px rgba(255,255,255,.7)}
 .bv-float{transform:translate(-50%,-175%)}
 .bv-float>span{display:block;white-space:nowrap;font-size:26px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.45),0 0 6px rgba(0,0,0,.6)}
 .bv-float.dmg>span{color:#ff6b57}.bv-float.heal>span{color:#7ee07a}.bv-float.miss>span{color:#d7dbe4;font-size:18px}
@@ -205,6 +209,8 @@ export class FigureBadge {
   private readonly conds: HTMLDivElement;
   private readonly mark: HTMLSpanElement;
   private markKey = '';
+  private readonly tags: HTMLDivElement;
+  private tagsKey = '';
   private shown = new Set<string>();
 
   /** The side shows in the bar: heroes (and summons) green in a warm gold frame, monsters red in a
@@ -223,7 +229,9 @@ export class FigureBadge {
     this.mark = document.createElement('span');
     this.mark.className = 'bv-mark';
     this.mark.hidden = true;
-    this.el.append(this.mark, this.conds, this.bar);
+    this.tags = document.createElement('div');
+    this.tags.className = 'bv-tags';
+    this.el.append(this.mark, this.tags, this.conds, this.bar);
   }
 
   /** A scenario event countdown over the figure (turns until the horn-blower calls, hexes the
@@ -268,6 +276,14 @@ export class FigureBadge {
       if (pop && !old.has(`shield:${shield}`)) span.classList.add('pop');
       this.conds.appendChild(span);
     }
+  }
+
+  /** Scenario-rule tags (ruleMarks.ts): soaked, asleep, an ally that was a monster. */
+  setTags(tags: readonly Chip[]): void {
+    const key = JSON.stringify(tags);
+    if (key === this.tagsKey) return;
+    this.tagsKey = key;
+    this.tags.innerHTML = tags.map((c) => `<span class="bv-tag ${c.tone}">${chipHtml(c, 12)}</span>`).join('');
   }
 
   setDim(dim: boolean): void {

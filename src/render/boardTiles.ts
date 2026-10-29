@@ -879,6 +879,8 @@ export class TileLayer {
           key,
           () => {
             const part = (this.obstacleFactory?.(look) as THREE.Group | null) ?? (mirror ? this.propParts.mirror(object.state, !!tile.obstacle) : this.propParts.rune());
+            // A broken mirror's model lies fallen on its back (the placeholder splits instead).
+            if (mirror && object.state === 'broken') part.userData['fallen'] = true;
             const view = this.makeSimple(key, hex, tile.room, look, part, 'object');
             if (mirror) this.aimMirror(view.object, hex, this.mirrorAim?.(object.id, object.state) ?? null);
             return view;
@@ -1176,6 +1178,11 @@ export class TileLayer {
       model.rotation.z += placeholder.rotation.z;
       model.position.add(placeholder.position);
       model.scale.multiplyScalar((placeholder.userData['variation'] as number | undefined) ?? 1);
+      if (placeholder.userData['fallen']) {
+        model.rotation.order = 'YXZ';
+        model.rotation.x = -Math.PI / 2 + 0.12;
+        model.position.y += 0.05;
+      }
 
       placeholder.parent.add(model);
       placeholder.removeFromParent();

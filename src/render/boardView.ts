@@ -9,6 +9,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ConditionId, Content, OrbId } from '../rules/content';
 import { eventWarnings } from '../rules/events';
 import { beamPath, mirrorAimHex } from '../rules/mirrors';
+import { RuleMarkLayer } from './ruleMarkLayer';
+import { ruleMarks } from './ruleMarks';
 import { DIRECTIONS, hexKey, parseHexKey, type Hex } from '../rules/hex';
 import type { Figure, FigureId, GameEvent, GameState } from '../rules/state';
 import { Animator, easeOut, linear } from './animator';
@@ -173,7 +175,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   anim.speed = opts.speed ?? 1;
   const effects = new BoardEffects(anim);
   const parts = createFigureParts();
-  scene.add(environment.root, tiles.root, effects.root);
+  const ruleLayer = new RuleMarkLayer(overlay);
+  scene.add(environment.root, tiles.root, effects.root, ruleLayer.root);
   const bake = new ShadowBake();
   // Real-time levels: a shadow catcher over the floor deepens the shadows that fall on it.
   const floorShade = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.ShadowMaterial({ opacity: 0, depthWrite: false }));
@@ -785,6 +788,10 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       if (w.kind === 'alarm') marks.set(w.figureId, { icon: 'move', value: w.steps });
     }
     for (const fv of figures.values()) fv.badge?.setMark(marks.get(fv.id) ?? null);
+    // Act III rules: tinted hexes, chips and threads, tags over figures (ruleMarks.ts).
+    const rules = ruleMarks(s, c);
+    ruleLayer.sync(rules);
+    for (const fv of figures.values()) fv.badge?.setTags(rules.tags.get(fv.id) ?? []);
     effects.syncOrbs(s.orbs);
     updateBounds();
     applyHighlights();
@@ -1759,6 +1766,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     for (const m of [fills, frames, dots, edges, lines]) m?.dispose();
     for (const x of [fillGeo, frameGeo, dotGeo, edgeGeo, lineGeo, fillMat, frameMat, dotMat, edgeMat, lineMat]) x.dispose();
     tiles.dispose();
+    ruleLayer.dispose();
     environment.dispose();
     effects.dispose();
     disposeFigureParts(parts);
