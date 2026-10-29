@@ -464,6 +464,9 @@ export function mountScenario(o: ScenarioScreenOptions): () => void {
     act({ type: 'resolveStep', choice });
   }
 
+  // Dev only: browser automation (the replay bot) acts through the screen, with its animations and story.
+  if (import.meta.env.DEV) (window as unknown as { __act?: typeof act }).__act = act;
+
   async function playEvents(events: GameEvent[], actor: FigureId | null): Promise<void> {
     const s = game.state;
     for (const e of events) pushLog(e, s);
