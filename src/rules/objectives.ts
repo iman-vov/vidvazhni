@@ -189,6 +189,8 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   noneExhausted: (s) => !heroes(s).some((h) => h.exhausted),
   /** «Опустити шлюз», «Увімкнути автомат»: the object `params.object` is in state `params.state`. */
   objectState: (s, p) => Object.values(s.board.tiles).some((t) => t.object?.id === String(p?.object) && t.object.state === String(p?.state)),
+  /** «Зібрати 3 трави» (s12): at least `params.count` objects of kind `params.kind` are in state `params.state`. */
+  objectsInState: (s, p) => objectsInState(s, p) >= Number(p?.count),
   /** «До N-го раунду»: the scenario ends no later than round `params.rounds`. */
   withinRounds: (s, p) => s.round <= Number(p?.rounds),
   /** «Не розбито жодного дзеркала» (s16, mirrors.ts). */
@@ -202,6 +204,11 @@ const SECONDARY_CHECKS: Record<string, (s: GameState, params: SecondaryGoalDef['
   loomsBrokenBeforeHalf: (s) => s.loomsAtHalf === 0,
   noAlarm: (s, p) => noAlarm(s, p?.rounds === undefined ? undefined : Number(p.rounds)),
 };
+
+/** How many objects of kind `params.kind` are in state `params.state` (the objectsInState counter). */
+function objectsInState(s: GameState, p: SecondaryGoalDef['params']): number {
+  return Object.values(s.board.tiles).filter((t) => t.object?.kind === String(p?.kind) && t.object.state === String(p?.state)).length;
+}
 
 export function isSecondaryCheck(check: string): boolean {
   return check in SECONDARY_CHECKS;
@@ -230,7 +237,8 @@ export interface ObjectiveStatus {
   extra?: { key: string; n: number; of?: number };
   /** Rounds left before `roundLimit` loses the scenario, this one included. */
   roundsLeft?: number;
-  secondary: { id: string; check: string; params?: SecondaryGoalDef['params']; met: boolean }[];
+  /** `done`: the progress of a counted goal (herbs picked of `params.count`). */
+  secondary: { id: string; check: string; params?: SecondaryGoalDef['params']; met: boolean; done?: number }[];
 }
 
 function nearest(zone: Hex[], hex: Hex): number {
@@ -245,7 +253,13 @@ export function objectiveStatus(content: Content, s: GameState): ObjectiveStatus
   const zone = goalZone(scenario, goal);
   const status: ObjectiveStatus = {
     goal: goal.type,
-    secondary: (scenario.secondary ?? []).map((g) => ({ id: g.id, check: g.check, params: g.params, met: secondaryMet(s, g) })),
+    secondary: (scenario.secondary ?? []).map((g) => ({
+      id: g.id,
+      check: g.check,
+      params: g.params,
+      met: secondaryMet(s, g),
+      ...(g.check === 'objectsInState' ? { done: Math.min(objectsInState(s, g.params), Number(g.params?.count)) } : {}),
+    })),
   };
   if (goal.type === 'reachExit' || goal.type === 'escape') {
     status.done = living.filter((h) => inZone(zone, h.hex)).length;

@@ -556,7 +556,7 @@
   "objective.secondary.noMirrorBroken": "No mirror broken",
   "objective.secondary.objectIntact": "The heart stays whole",
   "objective.secondary.s6.free-flip": "Free Flip from the cart",
-  "objective.secondary.s12.herbs": "Pick the herbs on the island",
+  "objective.secondary.s12.herbs": "Pick {count} {count|herb|herbs} on the island",
   "objective.secondary.s17.lever": "Pull the lever in the workshop",
   "ui.hand": "Hand",
   "ui.discard": "Discard",

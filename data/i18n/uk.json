@@ -556,7 +556,7 @@
   "objective.secondary.noMirrorBroken": "Не розбити жодного дзеркала",
   "objective.secondary.objectIntact": "Серце ціле до кінця",
   "objective.secondary.s6.free-flip": "Звільнити Фліпа з вагонетки",
-  "objective.secondary.s12.herbs": "Зібрати трави на острові",
+  "objective.secondary.s12.herbs": "Зібрати {count} {count|траву|трави|трав} на острові",
   "objective.secondary.s17.lever": "Перемкнути важіль у майстерні",
   "ui.hand": "Рука",
   "ui.discard": "Скидання",

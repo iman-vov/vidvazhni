@@ -143,8 +143,8 @@
   "secondary": [
     {
       "id": "s12.herbs",
-      "check": "objectState",
-      "params": { "object": "s12.herb-5", "state": "picked" },
+      "check": "objectsInState",
+      "params": { "kind": "herb", "state": "picked", "count": 3 },
       "reward": { "xp": 2 }
     },
     {

@@ -2168,7 +2168,7 @@ function objectivePlate(content: Content, s: GameState): HTMLElement {
   const st = objectiveStatus(content, s);
   if (!st) return h('span', null);
   const secondary = st.secondary.map((g) =>
-    h('span', null, g.met ? icon('check') : '', secondaryGoalText(g)),
+    h('span', null, g.met ? icon('check') : '', secondaryGoalText(g), g.done !== undefined ? ` ${g.done}/${g.params?.count}` : ''),
   );
   return h(
     'div',
@@ -2176,7 +2176,7 @@ function objectivePlate(content: Content, s: GameState): HTMLElement {
     h('b', null, t(`objective.${st.goal}`, { done: st.done ?? 0, of: st.of ?? 0 })),
     st.extra ? h('small', null, t(st.extra.key, { n: st.extra.n, of: st.extra.of ?? 0 })) : null,
     st.roundsLeft !== undefined ? h('small', null, t('objective.roundsLeft', { n: st.roundsLeft })) : null,
-    secondary.length ? h('small', null, ...secondary) : null,
+    secondary.length ? h('small', null, ...secondary.flatMap((x, i) => (i ? [' · ', x] : [x]))) : null,
   );
 }
 

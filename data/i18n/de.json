@@ -556,7 +556,7 @@
   "objective.secondary.noMirrorBroken": "Kein Spiegel zerbrochen",
   "objective.secondary.objectIntact": "Das Herz bleibt ganz",
   "objective.secondary.s6.free-flip": "Flip aus dem Wagen befreien",
-  "objective.secondary.s12.herbs": "Die Kräuter auf der Insel sammeln",
+  "objective.secondary.s12.herbs": "{count} {count|Kraut|Kräuter} auf der Insel sammeln",
   "objective.secondary.s17.lever": "Den Hebel in der Werkstatt umlegen",
   "ui.hand": "Hand",
   "ui.discard": "Ablage",
