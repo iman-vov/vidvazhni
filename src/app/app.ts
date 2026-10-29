@@ -12,6 +12,7 @@ import { getLang, onLangChange, t } from '../ui/i18n';
 import { icon } from '../ui/game/icons';
 import { screenMusic } from '../audio/index';
 import { createGameBoard } from './board';
+import { installDevCampaign } from './devCampaign';
 import { GameController, type PlayerInfo } from './game';
 import { mountScenario } from './scenarioScreen';
 import { campScreen } from './screens/camp';
@@ -38,6 +39,8 @@ const SCREEN_MUSIC: Partial<Record<Screen, string>> = { menu: 'menu', newGame: '
 
 export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: GameStorage = gameStorage(), campaigns: CampaignStorage = campaignStorage()): void {
   const content = loadContent();
+  // `?campaign=act3`: a dev save after s10 (src/app/devCampaign.ts), opened in the camp.
+  const devStart = import.meta.env.DEV && installDevCampaign(content, campaigns);
   let screen: Screen = 'menu';
   let game: GameController | null = null;
   let board: BoardView | null = null;
@@ -323,5 +326,5 @@ export function mountApp(boardEl: HTMLElement, overlay: HTMLElement, storage: Ga
     }
   }
 
-  go('menu');
+  go(devStart ? 'camp' : 'menu');
 }
