@@ -3483,6 +3483,33 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "glass-furnace",
+      "nameUk": "Склодувна піч (світлий камінь, латунні обручі, отвори з жаром, склодувні трубки)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 101,
+      "wave": 6,
+      "scenarios": [
+        17
+      ],
+      "descriptionSource": "docs/art/act3/glass-town/PLAN.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/act3-props/act3-props-hq.blend",
+      "modelFile": "assets/models/glass-furnace/glass-furnace.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": null,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }
