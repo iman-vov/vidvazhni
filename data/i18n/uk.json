@@ -1165,6 +1165,7 @@
   "map.unknown": "Невідоме місце",
   "map.unknown.text": "Що там, дізнаємося згодом.",
   "map.locked.text": "Цей шлях закрито вашим вибором.",
+  "map.choice": "Це вибір: після перемоги тут закриється {other}.",
   "map.state.completed": "виграно",
   "map.state.available": "можна вирушати",
   "map.state.locked": "шлях закрито",

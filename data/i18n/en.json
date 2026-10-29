@@ -1165,6 +1165,7 @@
   "map.unknown": "Unknown place",
   "map.unknown.text": "We will find out later.",
   "map.locked.text": "Your choice closed this path.",
+  "map.choice": "This is a choice: winning here closes {other}.",
   "map.state.completed": "won",
   "map.state.available": "ready to go",
   "map.state.locked": "path closed",

@@ -240,6 +240,8 @@ export function campaignMapScreen(o: CampaignMapOptions): HTMLElement {
     const scenario = o.content.scenarios[m.id];
     const goal = scenario?.goal.type;
     const playable = !!scenario && playableScenarios(o.campaign).includes(m.id);
+    // A story choice (docs/design/story.md «Вузли вибору»): the open missions a win here closes.
+    const closes = (scenario?.reward.closes ?? []).filter((id) => states[id] === 'available' && byId.has(id));
     const intro = h('p', { class: 'gmap-intro' });
     if (state !== 'unknown' && state !== 'locked') void introLine(m.id).then((text) => (intro.textContent = text));
     panel.replaceChildren(
@@ -253,6 +255,7 @@ export function campaignMapScreen(o: CampaignMapOptions): HTMLElement {
         goal && state !== 'unknown' && state !== 'locked'
           ? h('p', { class: 'gmap-goal' }, icon(GOAL_ICONS[goal] ?? 'objective-flag'), h('span', null, has(`goal.type.${goal}`) ? t(`goal.type.${goal}`) : goal))
           : null,
+        state === 'available' && closes.length ? h('p', { class: 'gmap-choice' }, icon('map'), h('span', null, t('map.choice', { other: closes.map((id) => nameOf(byId.get(id) as MapMarker)).join(', ') }))) : null,
         message ? h('p', { class: 'gmap-msg', role: 'status' }, message) : null,
         playable ? artButton('play', state === 'completed' ? t('map.replay') : t('map.start'), () => start(m.id), { cls: 'is-go' }) : null,
       ),

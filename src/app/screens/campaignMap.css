@@ -371,6 +371,23 @@
   color: var(--mp-gold-hi);
 }
 
+/* A story choice: winning this mission closes the other one. */
+.gmap-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.92em;
+  line-height: 1.35;
+}
+
+.gmap-choice .gi {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--mp-gold-hi);
+}
+
 .gmap-msg {
   margin: 0;
   color: #ffc4b4;
