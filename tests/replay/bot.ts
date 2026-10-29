@@ -16,7 +16,7 @@ import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
 import { availableCards } from '../../src/rules/setup';
-import type { Action, GameState, HeroState } from '../../src/rules/state';
+import type { Action, GameState, HeroState, MonsterState } from '../../src/rules/state';
 import { stepsFrom } from '../../tools/map-editor/checks';
 
 /** The goal in force (an event may have switched it). */
@@ -377,6 +377,71 @@ function bestTurnAction(s: GameState, content: Content, heroId: string, ahead: b
   return { action: best, value: bestScore };
 }
 
+/** The two cards for the round. With no monster about: the strongest attack and the longest move.
+ *  The same on a timer (escape, race). In a fight every pair is weighed by its better split (one top, one bottom) against the target
+ *  the hero heads for (the boss, else the nearest monster): damage through the target's shield,
+ *  if the move brings it into reach; a move only as far as needed; heals for missing health;
+ *  guards near the enemy; and a loss half costs the rounds it takes off the hand (as in score()). */
+function selectPair(s: GameState, content: Content, h: HeroState): [string, string] {
+  const cls = content.heroes[h.classId]!;
+  const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster' && !f.asleep) as MonsterState[];
+  const target = (bossOf(s, content) as MonsterState | undefined) ?? [...monsters].sort((x, y) => distance(x.hex, h.hex) - distance(y.hex, h.hex))[0];
+  // On a timer (escape, race) the party runs past the monsters: keep the long move.
+  const running = goalOf(s, content)?.type === 'escape' || goalOf(s, content)?.type === 'race';
+  if (!target || running) {
+    const a = [...h.hand].sort((x, y) => attackValue(content, h, y) - attackValue(content, h, x))[0] as string;
+    const b = h.hand.filter((x) => x !== a).sort((x, y) => moveValue(content, h, y) - moveValue(content, h, x))[0] as string;
+    return [a, b];
+  }
+  const shield = target.shields.reduce((n, x) => n + x.value, 0);
+  const gap = distance(target.hex, h.hex);
+  const near = monsters.filter((m) => distance(m.hex, target.hex) <= 2).length;
+  const size = cls.handSize;
+  const lossCost = (CARD_ROUND * (handRounds(size - h.lost.length) - handRounds(size - h.lost.length - 1))) / 3;
+  const card = (id: string) => cls.cards.find((c) => c.id === id)!;
+  /** Worth of a half in damage units; `move` = the other half's move towards the target. */
+  const half = (x: HeroCard['top'], move: number): { v: number; move: number } => {
+    let v = 0;
+    let mv = 0;
+    for (const st of x.steps) {
+      const val = 'value' in st && typeof st.value === 'number' ? st.value : 0;
+      const e = st as { targets?: number; range?: number; area?: unknown; targetAll?: boolean; pierce?: number };
+      if (st.type === 'attack') {
+        const reach = (e.range ?? 1) + move + mv >= gap;
+        const hit = Math.max(0, val + (e.pierce ?? 0) - shield) + (Math.min(e.targets ?? 1, near) - 1 + (e.area || e.targetAll ? Math.min(2, near - 1) : 0)) * Math.max(0, val - 1);
+        v += reach ? hit : hit * 0.2;
+      } else if (st.type === 'move' || st.type === 'teleport') mv += val;
+      else if (st.type === 'heal') v += 0.8 * Math.min(val, h.maxHp - h.hp);
+      else if (st.type === 'shield' || st.type === 'retaliate') v += gap <= 3 ? 0.6 * val : 0.1 * val;
+      else if (st.type === 'summon') v += 3;
+      else v += 0.2;
+    }
+    // A move is worth the steps the hero still needs to close in (a ranged hero needs fewer).
+    v += 0.5 * Math.min(mv, Math.max(0, gap - 1)) + 0.1 * mv;
+    return { v: v - (x.loss ? lossCost : 0), move: mv };
+  };
+  const split = (top: string, bottom: string) => {
+    const t = card(top).top;
+    const b = card(bottom).bottom;
+    const bm = half(b, 0).move;
+    const tm = half(t, 0).move;
+    return half(t, bm).v + half(b, tm).v;
+  };
+  let best: [string, string] = [h.hand[0]!, h.hand[1]!];
+  let bestV = -Infinity;
+  for (let i = 0; i < h.hand.length; i++)
+    for (let j = i + 1; j < h.hand.length; j++) {
+      const a = h.hand[i]!;
+      const b = h.hand[j]!;
+      const v = Math.max(split(a, b), split(b, a));
+      if (v > bestV) {
+        bestV = v;
+        best = [a, b];
+      }
+    }
+  return best;
+}
+
 /** A rough worth of a card half for picking the hand: damage first, then moves, heals and guards. */
 function halfWorth(half: HeroCard['top']): number {
   let v = 0;
@@ -435,10 +500,7 @@ export function chooseAction(s: GameState, content: Content): Action {
     case 'selectCards': {
       const h = hero(s, p.heroIds[0] as string);
       if (h.hand.length < 2) return { type: 'declareLongRest', heroId: h.id };
-      const byAttack = [...h.hand].sort((a, b) => attackValue(content, h, b) - attackValue(content, h, a));
-      const a = byAttack[0] as string;
-      const byMove = h.hand.filter((x) => x !== a).sort((x, y) => moveValue(content, h, y) - moveValue(content, h, x));
-      const b = byMove[0] as string;
+      const [a, b] = selectPair(s, content, h);
       const ini = (id: string) => content.heroes[h.classId]?.cards.find((x) => x.id === id)?.initiative ?? 99;
       return { type: 'selectCards', heroId: h.id, cards: [a, b], leading: ini(a) <= ini(b) ? a : b };
     }
