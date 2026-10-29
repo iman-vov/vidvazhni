@@ -192,10 +192,10 @@
       "outro": {
         "victory": [
           { "id": "s3.win.1", "speaker": "narrator", "text": "Der Schlamm rutscht vom Müller ab, und er ist wieder er selbst: der müde, gute Bruno." },
-          { "id": "s3.win.2", "speaker": "miller", "text": "Oh, mein Kopf brummt wie ein Mühlstein. Wie lange habe ich geschlafen?" },
+          { "id": "s3.win.2", "speaker": "bruno", "text": "Oh, mein Kopf brummt wie ein Mühlstein. Wie lange habe ich geschlafen?" },
           { "id": "s3.win.3", "speaker": "herbalist", "text": "Hier, Bruno, ein Schluck Minztee. In einer Stunde bist du wie neu." },
-          { "id": "s3.win.4", "speaker": "miller", "text": "Ich erinnere mich an einen großen Mann im Mantel aus Schatten. Auf seiner Brust hing eine Glaskugel, und darin war unser Licht." },
-          { "id": "s3.win.5", "speaker": "miller", "text": "Er nannte sich Schattenhand. Seine Leute schleppten Kisten zum alten Wachturm." }
+          { "id": "s3.win.4", "speaker": "bruno", "text": "Ich erinnere mich an einen großen Mann im Mantel aus Schatten. Auf seiner Brust hing eine Glaskugel, und darin war unser Licht." },
+          { "id": "s3.win.5", "speaker": "bruno", "text": "Er nannte sich Schattenhand. Seine Leute schleppten Kisten zum alten Wachturm." }
         ],
         "defeat": [
           { "id": "s3.lose.1", "speaker": "marta", "text": "Dieser nasse Riese ist immer noch unser Bruno, nur ganz durcheinander. Gebt nicht auf, er wartet auf euch." },

@@ -192,10 +192,10 @@
       "outro": {
         "victory": [
           { "id": "s3.win.1", "speaker": "narrator", "text": "The mud slides off the Miller, and he is himself again: tired, kind Bruno." },
-          { "id": "s3.win.2", "speaker": "miller", "text": "Oh, my head is like a millstone. How long was I asleep?" },
+          { "id": "s3.win.2", "speaker": "bruno", "text": "Oh, my head is like a millstone. How long was I asleep?" },
           { "id": "s3.win.3", "speaker": "herbalist", "text": "Here, Bruno, a sip of mint tea. You'll feel new in an hour." },
-          { "id": "s3.win.4", "speaker": "miller", "text": "I remember a tall man in a cloak made of shadow. On his chest hung a glass ball, and inside it was our light." },
-          { "id": "s3.win.5", "speaker": "miller", "text": "He called himself Shadowhand. His men hauled crates to the old watchtower." }
+          { "id": "s3.win.4", "speaker": "bruno", "text": "I remember a tall man in a cloak made of shadow. On his chest hung a glass ball, and inside it was our light." },
+          { "id": "s3.win.5", "speaker": "bruno", "text": "He called himself Shadowhand. His men hauled crates to the old watchtower." }
         ],
         "defeat": [
           { "id": "s3.lose.1", "speaker": "marta", "text": "That wet giant is still our Bruno, only muddled. Don't give up. He is waiting for you." },
