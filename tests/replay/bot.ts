@@ -139,15 +139,30 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
   }
 }
 
+/** The boss of a `killBoss` goal while it is on the board as a monster. */
+const BOSS_HP = 10;
+function bossOf(s: GameState, content: Content | undefined) {
+  const goal = goalOf(s, content);
+  if (goal?.type !== 'killBoss') return undefined;
+  return Object.values(s.figures).find((f) => f.kind === 'monster' && f.typeId === goal.boss);
+}
+
 /** Higher is better for the party; `heroId` adds the acting hero's position. */
 export function score(s: GameState, heroId?: string, content?: Content): number {
   if (s.phase === 'won') return 1e6;
   if (s.phase === 'lost') return -1e6;
   let v = 0;
+  const goal = goalOf(s, content);
   // A kill outweighs the jump of the distance pull from «nearest monster» to «nearest door or exit».
   v += 40 * s.log.filter((e) => e.type === 'figureDied' && e.figureId.startsWith('monster:')).length;
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster');
   for (const m of monsters) v += 3 * (m.maxHp - m.hp);
+  // A boss fight is won on the boss alone: its wounds outweigh the minions it keeps calling.
+  const boss = bossOf(s, content);
+  if (boss) v += BOSS_HP * (boss.maxHp - boss.hp);
+  // An event took the boss off the goal (s20: at half health the Guardian turns ally and the goal
+  // becomes the heart): full credit, or the bot never crossed that line and stood by at 19 of 36.
+  else if (content && content.scenarios[s.scenarioId]?.goal.type === 'killBoss' && goal?.type !== 'killBoss') v += BOSS_HP * 40;
   // An opened door is progress: without this the monsters it reveals make the step look worse.
   v += 30 * s.board.revealedRooms.length;
   for (const f of Object.values(s.figures)) {
@@ -156,7 +171,6 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     v -= 2 * f.lost.length;
   }
   for (const o of scenarioObjects(s)) if ((o.kind === 'lever' && o.state === 'down') || (o.kind === 'brazier' && o.state === 'lit') || (o.kind === WIND_UP_KEY && o.state === 'on')) v += 20;
-  const goal = goalOf(s, content);
   if (goal?.type === 'carryItem') {
     for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted) v += 30 * (f.questItems?.length ?? 0);
   }
@@ -206,7 +220,8 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     const late = (goal?.type === 'escape' && s.round >= goal.rounds - 3) || goal?.type === 'race';
     v -= (late ? 60 : 3) * pathDistance(s, content, targets, me.hex);
   } else if (me && !me.exhausted) {
-    if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
+    if (boss) v -= distance(boss.hex, me.hex);
+    else if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
     else {
       const doors = Object.entries(s.board.tiles)
         .filter(([, t]) => t.door && !t.door.open)
