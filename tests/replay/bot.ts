@@ -6,7 +6,7 @@
 // the roll; carried items are weighed like a half. Used by the replay tests and the balance
 // simulator (tests/balance/sim.test.ts).
 
-import type { Content, ScenarioGoal } from '../../src/rules/content';
+import type { Content, HeroCard, HeroClass, ScenarioGoal } from '../../src/rules/content';
 import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
@@ -15,7 +15,7 @@ import { BOOKSHELF, SHELF_ASLEEP } from '../../src/rules/books';
 import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
-import { availableCards, recommendedHand } from '../../src/rules/setup';
+import { availableCards } from '../../src/rules/setup';
 import type { Action, GameState, HeroState } from '../../src/rules/state';
 import { stepsFrom } from '../../tools/map-editor/checks';
 
@@ -377,6 +377,43 @@ function bestTurnAction(s: GameState, content: Content, heroId: string, ahead: b
   return { action: best, value: bestScore };
 }
 
+/** A rough worth of a card half for picking the hand: damage first, then moves, heals and guards. */
+function halfWorth(half: HeroCard['top']): number {
+  let v = 0;
+  for (const st of half.steps) {
+    const val = 'value' in st && typeof st.value === 'number' ? st.value : 0;
+    const extra = st as { targets?: number; range?: number; area?: unknown; targetAll?: boolean; pierce?: number };
+    if (st.type === 'attack') v += val * (extra.targets ?? 1) + (extra.area || extra.targetAll ? 2 : 0) + (extra.range ? 0.5 : 0) + (extra.pierce ?? 0) * 0.5;
+    else if (st.type === 'move' || st.type === 'teleport') v += val * 0.4;
+    else if (st.type === 'heal') v += val * 0.6;
+    else if (st.type === 'shield' || st.type === 'retaliate') v += val * 0.6;
+    else if (st.type === 'summon') v += 4;
+    else v += 0.3;
+  }
+  return half.loss ? v * 0.5 : v;
+}
+
+/** The hand for a scenario: the most worthy cards of the pool, at most two with a loss half. The
+ *  recommended hand alone takes the highest levels first, and at level 5 that was four loss cards
+ *  out of ten for the Warden and no plain ranged attack for the Elementalist. */
+const MAX_LOSS_CARDS = 2;
+function pickHand(cls: HeroClass, pool: string[]): string[] {
+  const cards = pool.map((id) => cls.cards.find((c) => c.id === id)!).filter(Boolean);
+  const worth = (c: HeroCard) => Math.max(halfWorth(c.top), 0) + Math.max(halfWorth(c.bottom), 0) * 0.8;
+  const sorted = [...cards].sort((a, b) => worth(b) - worth(a) || pool.indexOf(a.id) - pool.indexOf(b.id));
+  const hand: string[] = [];
+  let losses = 0;
+  for (const c of sorted) {
+    if (hand.length >= cls.handSize) break;
+    const loss = !!c.top.loss || !!c.bottom.loss;
+    if (loss && losses >= MAX_LOSS_CARDS) continue;
+    if (loss) losses++;
+    hand.push(c.id);
+  }
+  for (const c of sorted) if (hand.length < cls.handSize && !hand.includes(c.id)) hand.push(c.id);
+  return hand;
+}
+
 export function chooseAction(s: GameState, content: Content): Action {
   const p = s.pending;
   if (!p) throw new Error('bot: nothing pending');
@@ -384,10 +421,9 @@ export function chooseAction(s: GameState, content: Content): Action {
     case 'avoidDamage':
       return avoidOrTake(s, content);
     case 'chooseHandBeforeScenario': {
-      // The recommended hand; a levelled hero takes its new cards in place of the last recommended ones.
       const h = hero(s, p.heroIds[0] as string);
       const cls = content.heroes[h.classId]!;
-      return { type: 'chooseHand', heroId: h.id, cards: recommendedHand(cls, availableCards(cls, h.level, h.cardPool)) };
+      return { type: 'chooseHand', heroId: h.id, cards: pickHand(cls, availableCards(cls, h.level, h.cardPool)) };
     }
     case 'beforeAttacked': {
       const h = hero(s, p.heroId);
