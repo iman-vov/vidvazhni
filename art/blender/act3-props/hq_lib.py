@@ -668,6 +668,10 @@ def join_parts(name, parts):
         if not suf:
             bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4], quad_method='BEAUTY',
                                   ngon_method='EAR_CLIP')
+        # edges over 40 degrees shade sharp on both meshes, so flat unbevelled faces bake flat
+        for e in bm.edges:
+            if len(e.link_faces) != 2 or e.calc_face_angle(0) > math.radians(40):
+                e.smooth = False
         me = bpy.data.meshes.new(nm)
         bm.to_mesh(me)
         bm.free()
@@ -681,7 +685,8 @@ def join_parts(name, parts):
 
 def shrink_hidden(ob, hidden, k=0.2, margin=0.003):
     """Scales the UV islands that `hidden(normal, material_index)` calls hidden (bottoms, faces
-    inside the prop) to k of their size and repacks, so the seen faces get the texels."""
+    inside the prop) to k of their size, or to the factor it returns, and repacks, so the seen
+    faces get the texels."""
     from mathutils import Vector as V2
     me = ob.data
     bm = bmesh.new()
@@ -706,13 +711,15 @@ def shrink_hidden(ob, hidden, k=0.2, margin=0.003):
                         seen.add(h)
                         st.append(h)
         nrm = sum((g.normal * g.calc_area() for g in isl), V2())
-        if nrm.length and hidden(nrm.normalized(), isl[0].material_index):
+        kk = hidden(nrm.normalized(), isl[0].material_index) if nrm.length else False
+        if kk:
             n += 1
+            kk = k if kk is True else kk
             cs = [l[uvl].uv.copy() for g in isl for l in g.loops]
             c = sum(cs, V2((0, 0))) / len(cs)
             for g in isl:
                 for l in g.loops:
-                    l[uvl].uv = c + (l[uvl].uv - c) * k
+                    l[uvl].uv = c + (l[uvl].uv - c) * kk
     bm.to_mesh(me)
     bm.free()
     for o in bpy.context.view_layer.objects:
