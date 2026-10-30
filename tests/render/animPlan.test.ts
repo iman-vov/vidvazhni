@@ -170,6 +170,22 @@ describe('planAnimation', () => {
     expect(steps[5]).toMatchObject({ added: false });
   });
 
+  it('a trap snaps after the walk onto it (the engine reports it first), on the hex walked to', () => {
+    const steps = planAnimation(
+      [
+        { type: 'trapTriggered', figureId: W, damage: 2 },
+        { type: 'moved', figureId: W, path: [[1, 0], [2, 0]] },
+        { type: 'damaged', figureId: W, amount: 2, source: 'trap' },
+        { type: 'trapTriggered', figureId: R, damage: 2 },
+        { type: 'pushed', figureId: R, path: [[4, -1]] },
+      ],
+      start,
+    );
+    expect(kinds(steps)).toEqual(['walk', 'trap', 'damage', 'slide', 'trap']);
+    expect(steps[1]).toMatchObject({ figureId: W, hex: [2, 0], wait: TIMING.trap });
+    expect(steps[4]).toMatchObject({ figureId: R, hex: [4, -1] });
+  });
+
   it('does not change the positions it is given', () => {
     const positions = { [W]: [0, 1] as Hex };
     planAnimation([{ type: 'moved', figureId: W, path: [[1, 0]] }], positions);

@@ -1051,7 +1051,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       case 'trap': {
         const fv = figures.get(step.figureId);
         if (!fv) return;
-        const key = `${hexKey(fv.hex)}:trap`;
+        const key = `${hexKey(step.hex)}:trap`;
         const p = tiles.prop(key);
         if (p) {
           await anim.tween(TIMING.trap, (k) => p.object.scale.set(1 + Math.sin(k * Math.PI) * 0.5, 1 - k * 0.6, 1 + Math.sin(k * Math.PI) * 0.5));

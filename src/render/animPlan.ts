@@ -28,7 +28,8 @@ export const TIMING = {
   room: 1.1,
   spawn: 0.5,
   loot: 0.7,
-  trap: 0.35,
+  trap: 0.18, // the snap shut: the damage number pops as the trap closes
+  trapSprung: 0.9, // how long a sprung trap lies closed before it fades
   revive: 0.9,
   die: 0.45,
 } as const;
@@ -66,7 +67,8 @@ export type AnimStep = { wait: number; duration: number } & (
   | { kind: 'room'; roomId: string }
   | { kind: 'spawn'; figureId: FigureId }
   | { kind: 'loot'; heroId: FigureId; coins: number; chest?: string }
-  | { kind: 'trap'; figureId: FigureId }
+  /** A trap snapping shut on `hex` under the figure that sprang it (after its walk there). */
+  | { kind: 'trap'; figureId: FigureId; hex: Hex }
   | { kind: 'trapPlaced'; hex: Hex }
   /** «Карти з X»: the X die's roll, a small d12 badge over the figure. */
   | { kind: 'die'; figureId: FigureId; roll: number }
@@ -96,7 +98,14 @@ export function planAnimation(events: readonly GameEvent[], positions: Readonly<
   let actor: FigureId | null = null;
   const push = (s: AnimStep) => steps.push(s);
 
-  for (const e of events) {
+  // The engine springs a trap before it reports the move onto it: the snap waits for that move.
+  const trapAfter = new Map<number, FigureId[]>();
+  const pushTrap = (figureId: FigureId) => {
+    const hex = at[figureId];
+    if (hex) push({ kind: 'trap', figureId, hex, wait: TIMING.trap, duration: TIMING.trap + 0.6 });
+  };
+
+  for (const [i, e] of events.entries()) {
     switch (e.type) {
       case 'turnStarted':
         actor = e.figureId;
@@ -213,9 +222,14 @@ export function planAnimation(events: readonly GameEvent[], positions: Readonly<
       case 'looted':
         push({ kind: 'loot', heroId: e.heroId, coins: e.coins, ...(e.chest ? { chest: e.chest } : {}), wait: TIMING.loot, duration: TIMING.loot + 0.5 });
         break;
-      case 'trapTriggered':
-        push({ kind: 'trap', figureId: e.figureId, wait: TIMING.trap, duration: TIMING.trap });
+      case 'trapTriggered': {
+        const j = events.findIndex((m, k) => k > i && (m.type === 'moved' || m.type === 'pushed') && m.figureId === e.figureId);
+        const between = j < 0 ? [] : events.slice(i + 1, j);
+        if (j >= 0 && !between.some((m) => m.type === 'trapTriggered' || (m.type === 'damaged' && m.figureId === e.figureId))) {
+          trapAfter.set(j, [...(trapAfter.get(j) ?? []), e.figureId]);
+        } else pushTrap(e.figureId);
         break;
+      }
       case 'trapPlaced':
         push({ kind: 'trapPlaced', hex: e.hex, wait: 0.3, duration: 0.4 });
         break;
@@ -225,6 +239,7 @@ export function planAnimation(events: readonly GameEvent[], positions: Readonly<
       default:
         break;
     }
+    for (const id of trapAfter.get(i) ?? []) pushTrap(id);
   }
   return steps;
 }
