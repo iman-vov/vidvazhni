@@ -168,43 +168,64 @@ def town_layout(v):
             p, a = ring_pos(rnd, a0, a1, r0, r1)
             fn(p, rnd.uniform(0, 6.28))
 
+    step = P.append
     if v == 1:
         # two broken boards crossed over a heap of brick and tile, loose tiles round the rim
-        board(at(R(200), 0.6), R(200) + R(80), 0.5, broken=1, pitch=0.05)
-        board(at(R(225), 0.58), R(225) + R(115), 0.44, W=0.09, broken=2, pitch=-0.16, base=0.025)
-        for i in range(9):
-            brick(at(R(160 + i * 11), rnd.uniform(0.58, 0.74)), rnd.uniform(0, 6), base=0.03 * (i % 3 == 1))
+        step('boards')
+        board(at(R(200), 0.7), R(200) + R(80), 0.52, broken=1, pitch=0.05)
+        board(at(R(225), 0.68), R(225) + R(115), 0.46, W=0.09, broken=2, pitch=-0.16, base=0.025)
+        step('brick heap')
+        for i in range(11):
+            brick(at(R(178 + i * 5 + rnd.uniform(-4, 4)), rnd.uniform(0.62, 0.84)), rnd.uniform(0, 6), base=0.026 * (i % 3))
+        step('tiles sw')
         for i in range(8):
-            tile(at(R(250 + i * 10), rnd.uniform(0.56, 0.74)), rnd.uniform(0, 6), up=rnd.random() < 0.6)
-        scatter(R(20), R(130), 7, lambda p, a: tile(p, a, rnd.random() < 0.5))
-        scatter(R(-40), R(140), 6, lambda p, a: stone(p))
-        scatter(R(160), R(300), 5, lambda p, a: stone(p, rnd.uniform(0.02, 0.035)))
+            tile(at(R(250 + i * 10), rnd.uniform(0.62, 0.88)), rnd.uniform(0, 6), up=rnd.random() < 0.6)
+        step('tiles ne')
+        scatter(R(20), R(130), 7, lambda p, a: tile(p, a, rnd.random() < 0.5), 0.56, 0.9)
+        step('stones')
+        scatter(R(-40), R(140), 6, lambda p, a: stone(p), 0.56, 0.92)
+        step('grit')
+        scatter(R(160), R(300), 6, lambda p, a: stone(p, rnd.uniform(0.02, 0.035)), 0.5, 1.0)
     elif v == 2:
         # a rubble heap (stone, brick, mortar lumps) one side, planks and a bent iron band the other
-        for i in range(9):
-            stone(at(R(100 + rnd.uniform(-30, 30)), rnd.uniform(0.56, 0.76)), rnd.uniform(0.045, 0.08))
+        step('rubble')
+        for i in range(10):
+            stone(at(R(100 + rnd.uniform(-24, 24)), rnd.uniform(0.64, 0.84)), rnd.uniform(0.06, 0.1), base=0.02 * (i % 3 == 2))
+        step('bricks')
         for i in range(6):
-            brick(at(R(100 + rnd.uniform(-35, 35)), rnd.uniform(0.55, 0.76)), rnd.uniform(0, 6), base=rnd.uniform(0.0, 0.05))
+            brick(at(R(100 + rnd.uniform(-35, 35)), rnd.uniform(0.6, 0.86)), rnd.uniform(0, 6), base=rnd.uniform(0.0, 0.05))
+        step('mortar')
         for i in range(5):
-            stone(at(R(100 + rnd.uniform(-20, 20)), rnd.uniform(0.6, 0.7)), rnd.uniform(0.03, 0.05), base=0.05)
-        board(at(R(280), 0.6), R(280) + R(95), 0.46, broken=1)
-        board(at(R(300), 0.62), R(300) + R(70), 0.36, W=0.065, broken=2, pitch=0.12, base=0.018)
-        board(at(R(240), 0.66), R(240) + R(60), 0.28, W=0.07, broken=1, nails=1)
-        strap([at(R(320), 0.66) + Vector((0, 0, 0.004)), at(R(335), 0.62) + Vector((0, 0, 0.03)), at(R(352), 0.6) + Vector((0, 0, 0.012)), at(R(5), 0.64) + Vector((0, 0, 0.004))])
-        scatter(R(180), R(230), 5, lambda p, a: tile(p, a, rnd.random() < 0.5))
-        scatter(R(20), R(60), 4, lambda p, a: brick(p, a))
+            stone(at(R(100 + rnd.uniform(-20, 20)), rnd.uniform(0.66, 0.78)), rnd.uniform(0.03, 0.05), base=0.05)
+        step('planks')
+        board(at(R(280), 0.7), R(280) + R(95), 0.5, broken=1)
+        board(at(R(300), 0.72), R(300) + R(70), 0.38, W=0.065, broken=2, pitch=0.12, base=0.018)
+        board(at(R(240), 0.76), R(240) + R(60), 0.3, W=0.07, broken=1, nails=1)
+        step('iron band')
+        strap([at(R(320), 0.76) + Vector((0, 0, 0.004)), at(R(335), 0.72) + Vector((0, 0, 0.03)), at(R(352), 0.7) + Vector((0, 0, 0.012)), at(R(5), 0.74) + Vector((0, 0, 0.004))])
+        step('tiles')
+        scatter(R(180), R(230), 5, lambda p, a: tile(p, a, rnd.random() < 0.5), 0.56, 0.9)
+        step('bricks ne')
+        scatter(R(20), R(60), 4, lambda p, a: brick(p, a), 0.56, 0.92)
     else:
         # a slid roof: a charred beam end, tiles stacked and sliding off it, nails, tiles all round
-        board(at(R(150), 0.62), R(150) + R(90), 0.52, W=0.1, T=0.09, broken=2, cols=BEAM, nails=0)
+        step('beam')
+        board(at(R(150), 0.72), R(150) + R(90), 0.56, W=0.1, T=0.09, broken=2, cols=BEAM, nails=0)
+        step('tile stack')
         for i in range(5):
-            tile(at(R(135 + i * 7), 0.62) + Vector((0, 0, 0)), R(150) + rnd.uniform(-0.3, 0.3), up=True, base=0.09 + i * 0.012, L=0.15)
+            tile(at(R(135 + i * 7), 0.72), R(150) + rnd.uniform(-0.3, 0.3), up=True, base=0.09 + i * 0.012, L=0.15)
+        step('tiles w')
         for i in range(8):
-            tile(at(R(175 + i * 11), rnd.uniform(0.56, 0.75)), rnd.uniform(0, 6), up=rnd.random() < 0.55)
+            tile(at(R(175 + i * 11), rnd.uniform(0.62, 0.9)), rnd.uniform(0, 6), up=rnd.random() < 0.55)
+        step('tiles n')
         for i in range(5):
-            tile(at(R(85 + i * 10), rnd.uniform(0.58, 0.74)), rnd.uniform(0, 6), up=rnd.random() < 0.55)
-        board(at(R(300), 0.62), R(300) + R(85), 0.4, broken=1, pitch=0.04)
-        scatter(R(260), R(360), 4, lambda p, a: brick(p, a))
-        scatter(R(0), R(80), 5, lambda p, a: stone(p, rnd.uniform(0.025, 0.045)))
+            tile(at(R(85 + i * 10), rnd.uniform(0.62, 0.86)), rnd.uniform(0, 6), up=rnd.random() < 0.55)
+        step('board')
+        board(at(R(300), 0.72), R(300) + R(85), 0.42, broken=1, pitch=0.04)
+        step('bricks')
+        scatter(R(260), R(360), 4, lambda p, a: brick(p, a), 0.56, 0.92)
+        step('stones')
+        scatter(R(0), R(80), 5, lambda p, a: stone(p, rnd.uniform(0.025, 0.045)), 0.56, 0.95)
     return P
 
 
