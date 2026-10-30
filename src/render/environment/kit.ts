@@ -15,6 +15,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { freeParts, onAssetRelease, partsInUse, StampedCache } from '../assetRelease';
 import { listModels, modelUrl, resolveTier } from '../models';
 import type { GraphicsQuality } from '../quality';
+import { simplifierReady } from '../simplify';
 import type { Part } from './pieces';
 
 const KIT_URLS = import.meta.glob<string>('/assets/environment/**/*.glb', { query: '?url', import: 'default', eager: true });
@@ -121,9 +122,9 @@ export function loadLocationKit(modelId: string, quality: GraphicsQuality): Prom
   if (!url) return Promise.resolve(new Map());
   let p = kitCache.get(url);
   if (!p) {
-    p = loader
-      .loadAsync(url)
-      .then((gltf) => {
+    // With the simplifier in, so stones built from the kit get their lighter copies (stone.ts).
+    p = Promise.all([loader.loadAsync(url), simplifierReady])
+      .then(([gltf]) => {
         const out = new Map<string, Part[]>();
         gltf.scene.updateMatrixWorld(true);
         for (const node of gltf.scene.children) {

@@ -6,6 +6,7 @@
 // pieces keep their placeholders.
 
 import * as THREE from 'three';
+import { simplified } from '../simplify';
 import type { Part } from './pieces';
 
 /** Which look a location's stones take. */
@@ -40,6 +41,10 @@ const SPECS: Record<string, { slots: StoneSlot[]; look?: StoneLook }> = {
 /** Big shapes for main stones, chunky ones for the small. */
 const MAIN = ['a', 'b', 'c', 'd', 'e'];
 const SMALL = ['f', 'd', 'a', 'e'];
+/** How far (a fraction of the stone's size) a kit stone may be simplified (simplify.ts): a main
+ *  stone keeps its facets within a few millimetres (~1500 -> ~1000 triangles); a chunk a fifth as
+ *  tall may lose more (-> ~500). A ring of rubble is hundreds of stones. */
+const SIMPLIFY = { main: 0.01, small: 0.04 };
 
 export interface StoneEnv {
   look: StoneLook;
@@ -100,7 +105,8 @@ export function stoneParts(piece: string, seed: number, env: StoneEnv): Part[] |
     const h = slot.h * (0.85 + rnd() * 0.3);
     const turn = rnd() * Math.PI * 2;
     m.compose(new THREE.Vector3(slot.x, 0, slot.z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn), new THREE.Vector3(h * (0.9 + rnd() * 0.2), h, h * (0.9 + rnd() * 0.2)));
-    for (const part of kit) parts.push({ geometry: part.geometry, material: rockMaterial(part.material, look, env.rock), matrix: m.clone().multiply(part.matrix), detail: !!slot.small });
+    const error = slot.small ? SIMPLIFY.small : SIMPLIFY.main;
+    for (const part of kit) parts.push({ geometry: simplified(part.geometry, error), material: rockMaterial(part.material, look, env.rock), matrix: m.clone().multiply(part.matrix), detail: !!slot.small });
   }
   return parts;
 }
