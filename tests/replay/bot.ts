@@ -88,6 +88,9 @@ function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | nul
   return keys.length > 0 ? keys : null;
 }
 
+/** carryItem: monsters this close to the hero or to the item are fought before the item is taken. */
+const CARRY_FIGHT = 6;
+
 /** Where the acting hero should head, by the scenario goal; null = no goal-specific target. */
 function targetsByGoal(s: GameState, content: Content, me: HeroState): Hex[] | null {
   const goal = goalOf(s, content);
@@ -106,9 +109,13 @@ function targetsByGoal(s: GameState, content: Content, me: HeroState): Hex[] | n
         (f): f is HeroState => f.kind === 'hero' && !f.exhausted && !!f.questItems?.includes(goal.item),
       );
       if (carriers.some((c) => c.id === me.id)) return zoneOf(s, content);
-      if (carriers.length > 0 || monsters.length > 0) return null;
+      if (carriers.length > 0) return null;
       const items = tilesWith(s, (t) => !!t.chest || !!t.questItems?.length);
-      return items.length > 0 ? items : null;
+      // The fight near the hero first; monsters far off don't hold it back. Stepping next to s17's
+      // blueprint calls two gremlins at the far glassworks, the pull jumped to them, and the party
+      // circled the chest two hexes off till its decks ran out (pair 0/8, every loss in round 26).
+      const near = monsters.some((m) => distance(m, me.hex) <= CARRY_FIGHT || items.some((x) => distance(m, x) <= CARRY_FIGHT));
+      return items.length > 0 && !near ? items : null;
     }
     case 'race':
       // The rival runs: head for the finish itself. Through rooms not yet open the distance falls back
