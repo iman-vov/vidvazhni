@@ -53,7 +53,12 @@
         { "hex": [10, -1], "terrain": "water" },
         { "hex": [11, -1], "terrain": "water" }
       ],
-      "obstacles": [{ "hex": [9, -5], "model": "rock" }, { "hex": [12, -2], "model": "rock" }],
+      "obstacles": [
+        { "hex": [9, -5], "model": "rock" },
+        { "hex": [12, -2], "model": "rock" },
+        { "hex": [8, -3], "model": "rock" },
+        { "hex": [9, -3], "model": "rock" }
+      ],
       "doors": [{ "hex": [13, -4], "to": "s9.gate" }],
       "spawns": [
         { "monster": "bog-slime", "hex": [10, -4], "by": { "2": "normal", "3": "elite", "4": "elite" } },
