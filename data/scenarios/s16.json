@@ -44,7 +44,12 @@
         [14, -6], [14, -5], [14, -4], [14, -3], [15, -6], [15, -5], [15, -4], [15, -3],
         [16, -5]
       ],
-      "obstacles": [{ "hex": [9, -2], "model": "rock" }],
+      "terrain": [{ "hex": [11, -2], "terrain": "difficult" }, { "hex": [11, -1], "terrain": "difficult" }],
+      "obstacles": [
+        { "hex": [9, -2], "model": "rock" },
+        { "hex": [9, -1], "model": "glass-cart" },
+        { "hex": [9, -3], "model": "rock" }
+      ],
       "doors": [{ "hex": [16, -5], "to": "s16.bridge" }],
       "spawns": [
         { "monster": "shadow-wraith", "hex": [11, -3], "by": { "2": "normal", "3": "elite", "4": "elite" } },
