@@ -22,7 +22,7 @@ function plan(s: ScenarioDef) {
 }
 
 /** A hex holding one big thing: a case or rack in its middle, or (with its neighbour) a ridge of rock. */
-const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => ['shelf', 'bookshelf', 'bookcase-long', 'rack-long', 'crate-wall', 'workbench-forge'].includes(it.piece) || it.piece.startsWith('ridge-'));
+const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => ['shelf', 'bookshelf', 'bookcase-long', 'rack-long', 'crate-wall', 'workbench-forge', 'logs-fallen'].includes(it.piece) || it.piece.startsWith('ridge-'));
 
 describe('obstacle clusters', () => {
   it('is the same every time for a scenario', () => {

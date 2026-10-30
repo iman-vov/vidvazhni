@@ -85,6 +85,7 @@ export const HEIGHT: Record<string, number> = {
   'ridge-forest': 0.85,
   'crate-wall': 1.37,
   'workbench-forge': 1.5,
+  'logs-fallen': 0.59,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -131,6 +132,7 @@ const FOOT: Record<string, [number, number, number, number]> = {
   'ridge-forest': [-1.52, 1.52, -0.56, 0.56],
   'crate-wall': [-1.57, 1.57, -0.43, 0.43],
   'workbench-forge': [-1.67, 1.67, -0.47, 0.47],
+  'logs-fallen': [-0.89, 0.89, -0.7, 0.7],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
@@ -221,6 +223,8 @@ const SINGLE: Record<string, Spec[][]> = {
   // Shelves are set out as a row (placeShelves), not from a recipe.
   shelf: [[S('shelf')]],
   bookshelf: [[S('bookshelf')]],
+  // Fallen trunks are laid out by placeLogs.
+  'fallen-log': [[S('logs-fallen')]],
 };
 
 /** Set pieces across two touching obstacle hexes. */
@@ -269,6 +273,7 @@ const FAMILY: Record<string, string> = {
   hut: 'hut',
   shelf: 'shelf',
   bookshelf: 'shelf',
+  'fallen-log': 'log',
 };
 
 /** Set pieces for goods by the location's look, and for the other families. */
@@ -378,7 +383,8 @@ function heightOf(piece: string, variant?: number): number {
 function footprint(piece: string, scale: number, tip: ClusterItem['tip'], variant?: number): [number, number, number, number] {
   const meta = pieceMeta(piece);
   const kb = KIT_PIECES.has(piece) ? kitBounds(piece, variant) : undefined;
-  const k = kb ? 1 : (HEIGHT[piece] ?? meta?.height ?? 1) / (meta?.height ?? 1);
+  // A procedural piece's FOOT is at its meta height; a model's (a Blender set piece with no stand-in) is final.
+  const k = kb || !meta ? 1 : (HEIGHT[piece] ?? meta.height) / meta.height;
   const r = meta?.radius ?? 0.4;
   const [x0, x1, z0, z1] = kb ? [kb[0]!, kb[1]!, kb[4]!, kb[5]!] : (FOOT[piece] ?? [-r, r, -r, r]);
   const s = k * scale;
@@ -518,6 +524,14 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
     let placed: Placed[];
     if (fam === 'shelf') {
       placed = placeShelves(group, pieces, orient, rnd);
+    } else if (fam === 'log') {
+      // Trunks fallen one way: every fallen log in a room lies within a few degrees of the room's
+      // one direction (a storm felled them together).
+      const way = seededRandom(`${scenario.id}:logs:${room}`)() * Math.PI;
+      placed = group.map((k) => {
+        const c = centreOf(k);
+        return { spec: S('logs-fallen'), piece: 'logs-fallen', x: c.x, z: c.z, y: 0, rot: way + between(rnd, [-0.14, 0.14]) + (rnd() < 0.5 ? Math.PI : 0), scale: 1, tip: 'none', lean: 0, leanDir: 0, box: footprint('logs-fallen', 1, 'none') };
+      });
     } else if (group.length > 1) {
       // Two tables side by side are always one long table with its stools.
       const tables = group.every((k) => pieces.get(k) === 'table');

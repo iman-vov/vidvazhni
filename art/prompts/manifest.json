@@ -4174,6 +4174,34 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "logs-fallen",
+      "nameUk": "Повалені стовбури на гекс: кора, мох, спил, обламаний кінець, папороть",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 128,
+      "wave": 7,
+      "scenarios": [
+        11,
+        13
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/logs-fallen/logs-fallen.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 500,
+        "max": 3000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }
