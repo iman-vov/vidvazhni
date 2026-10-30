@@ -254,8 +254,11 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     const late = (goal?.type === 'escape' && s.round >= goal.rounds - 3) || goal?.type === 'race';
     v -= (late ? 60 : 3) * pathDistance(s, content, targets, me.hex);
   } else if (me && !me.exhausted) {
-    if (boss) v -= distance(boss.hex, me.hex);
-    else if (monsters.length > 0) v -= Math.min(...monsters.map((m) => distance(m.hex, me.hex)));
+    // Walking steps, not the straight line: behind a hedge (s2's forest edge) the straight line
+    // to a monster only grows on the way round, and the hero stood still until its deck ran out.
+    const away = (h: Hex) => (content ? pathDistance(s, content, [me.hex], h) : distance(h, me.hex));
+    if (boss) v -= away(boss.hex);
+    else if (monsters.length > 0) v -= Math.min(...monsters.map((m) => away(m.hex)));
     else {
       const doors = Object.entries(s.board.tiles)
         .filter(([, t]) => t.door && !t.door.open)
