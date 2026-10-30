@@ -562,7 +562,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     // Props by the zoom: the distance to the ground at the view's centre.
     const down = -cam.getWorldDirection(viewDir).y;
     const toGround = down > 0.05 ? (cam.position.y - PLATE_HEIGHT) / down : cam.position.y;
-    setPropDetail(scene, pxPerUnit / Math.max(0.1, toGround) >= PROP_FULL_PX);
+    // The obstacles' merged batch is built from the props' meshes: again, at the new level.
+    if (setPropDetail(scene, pxPerUnit / Math.max(0.1, toGround) >= PROP_FULL_PX)) shadowsDirty = true;
   }
 
   /** Rings on the water around figures standing in it. */

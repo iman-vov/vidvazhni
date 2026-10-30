@@ -178,12 +178,14 @@ function swapDetail(root: THREE.Object3D, low: boolean): void {
   });
 }
 
-/** Full prop meshes (zoomed in close) or simplified ones, for everything under `scene`. */
-export function setPropDetail(scene: THREE.Object3D, full: boolean): void {
-  if (propsLow === !full) return;
+/** Full prop meshes (zoomed in close) or simplified ones, for everything under `scene`. Returns
+ *  whether the level changed (merged batches of props need building again). */
+export function setPropDetail(scene: THREE.Object3D, full: boolean): boolean {
+  if (propsLow === !full) return false;
   propsLow = !full;
   swapDetail(scene, propsLow);
   for (const p of prototypes) swapDetail(p, propsLow);
+  return true;
 }
 
 /** Loads and normalises a prop model (cached per model, height, turn and quality); null if it fails. */

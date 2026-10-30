@@ -624,7 +624,8 @@ export class TileLayer {
       for (const d of room.edgeDisposables) d.dispose();
       this.rooms.delete(id);
       for (const [k, p] of this.props) if (p.room === id) this.dropProp(k, p);
-      for (const key of [id, `${id}:walls`]) {
+      // The board's batch holds this room's obstacles too: built again on the next batchObstacles.
+      for (const key of [id, `${id}:walls`, 'board']) {
         unbatch(this.batches.get(key)?.batch);
         this.batches.delete(key);
       }
@@ -1071,14 +1072,22 @@ export class TileLayer {
    * with the quality, and that room is merged again. Cheap when nothing changed.
    */
   batchObstacles(): void {
+    // Rooms standing in place merge into one batch for the whole board: one draw per material,
+    // and the same prop model in several rooms shares its material (a barrel in each room was a
+    // draw each). A room still rising or sunk keeps a batch of its own that moves with it.
+    const settled: THREE.Object3D[] = [];
     for (const [id, room] of this.rooms) {
       const sources: THREE.Object3D[] = [];
       for (const p of this.props.values()) if (p.room === id && (p.key.endsWith(':obstacle') || p.key.endsWith(':rough'))) sources.push(p.object);
-      this.rebatch(id, room.props, sources);
       // The walls between rooms too: a divider is a run of posts, planks or stones, a mesh each.
       const walls = room.edges?.children.filter((c) => c.name.startsWith('divider:')) ?? [];
-      this.rebatch(`${id}:walls`, room.edges, walls);
+      // (A risen room ends a hair under 0: the rise's easing lands on 0.9999999999999999.)
+      const inPlace = room.props.visible && Math.abs(room.props.position.y) < 1e-6 && (!room.edges || Math.abs(room.edges.position.y) < 1e-6);
+      this.rebatch(id, room.props, inPlace ? [] : sources);
+      this.rebatch(`${id}:walls`, room.edges, inPlace ? [] : walls);
+      if (inPlace) settled.push(...sources, ...walls);
     }
+    this.rebatch('board', this.root, settled);
   }
 
   private rebatch(key: string, target: THREE.Group | null, sources: THREE.Object3D[]): void {

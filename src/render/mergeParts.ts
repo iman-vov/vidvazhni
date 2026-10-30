@@ -72,9 +72,20 @@ function batchable(mesh: THREE.Mesh): boolean {
   // See-through and glowing things keep their own draw (sorting, additive blending), except the soft
   // contact shadows under props: flat on the floor and all alike, so their order does not matter.
   if ((m.transparent && mesh.name !== 'contact-shadow') || m.blending !== THREE.NormalBlending) return false;
-  const g = mesh.geometry;
-  if (Object.keys(g.morphAttributes).length) return false;
-  return !Object.values(g.attributes).some((a) => (a as THREE.InterleavedBufferAttribute).isInterleavedBufferAttribute);
+  return !Object.keys(mesh.geometry.morphAttributes).length;
+}
+
+/** A copy with every attribute as plain floats. Model GLBs come quantised (meshopt: normalised
+ *  integers, often interleaved), which can neither take a matrix nor merge with another layout. */
+function plainCopy(src: THREE.BufferGeometry): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  for (const [name, a] of Object.entries(src.attributes)) {
+    const out = new Float32Array(a.count * a.itemSize);
+    for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) out[i * a.itemSize + c] = a.getComponent(i, c);
+    g.setAttribute(name, new THREE.BufferAttribute(out, a.itemSize));
+  }
+  if (src.index) g.setIndex(new THREE.BufferAttribute(new Uint32Array(src.index.array), 1));
+  return g;
 }
 
 /** The meshes a batch of `sources` would draw: shown ones (or hidden by an earlier batch) under
@@ -110,8 +121,9 @@ export function batchStatic(target: THREE.Object3D, sources: THREE.Object3D[]): 
   const buckets = new Map<string, THREE.Mesh[]>();
   for (const mesh of batchMeshes(sources)) {
     const g = mesh.geometry;
+    // As plain floats (plainCopy), so only the attribute names and sizes have to match.
     const attrs = Object.entries(g.attributes)
-      .map(([name, a]) => `${name}${a.itemSize}${a.normalized ? 'n' : ''}${(a as THREE.BufferAttribute).array.constructor.name}`)
+      .map(([name, a]) => `${name}${a.itemSize}`)
       .sort()
       .join(',');
     const key = `${(mesh.material as THREE.Material).uuid}|${attrs}|${g.index ? 'i' : '-'}|${mesh.renderOrder}|${mesh.castShadow}|${mesh.receiveShadow}`;
@@ -126,7 +138,7 @@ export function batchStatic(target: THREE.Object3D, sources: THREE.Object3D[]): 
     if (list.length < 2) continue;
     const geometries = list.map((m) => {
       m.updateWorldMatrix(true, false);
-      return m.geometry.clone().applyMatrix4(local.multiplyMatrices(toTarget, m.matrixWorld));
+      return plainCopy(m.geometry).applyMatrix4(local.multiplyMatrices(toTarget, m.matrixWorld));
     });
     const geometry = mergeGeometries(geometries, false);
     for (const g of geometries) g.dispose();
