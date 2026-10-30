@@ -103,7 +103,10 @@
         { "hex": [15, -4], "terrain": "fog" },
         { "hex": [17, -8], "terrain": "fog" },
         { "hex": [17, -7], "terrain": "fog" },
-        { "hex": [17, -6], "terrain": "fog" }
+        { "hex": [17, -6], "terrain": "fog" },
+        { "hex": [13, -4], "terrain": "difficult" },
+        { "hex": [13, -5], "terrain": "difficult" },
+        { "hex": [14, -5], "terrain": "difficult" }
       ],
       "obstacles": [{ "hex": [12, -3], "model": "rock" }],
       "doors": [{ "hex": [19, -7], "to": "s12.pier" }],
@@ -125,6 +128,7 @@
         [20, -9], [20, -8], [20, -7], [21, -9], [21, -8], [21, -7], [22, -10], [22, -9],
         [22, -8], [23, -10], [23, -9], [23, -8]
       ],
+      "obstacles": [{ "hex": [21, -9], "model": "crate" }, { "hex": [21, -7], "model": "sacks" }],
       "spawns": [
         {
           "monster": "gloom-cultist",
