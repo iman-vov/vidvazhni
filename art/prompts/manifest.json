@@ -3985,6 +3985,33 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "bookcase-long",
+      "nameUk": "Двобічна бібліотечна шафа на гекс: ряди стикуються в одну довгу",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 121,
+      "wave": 7,
+      "scenarios": [
+        18
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/bookcase-long/bookcase-long.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 2000,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

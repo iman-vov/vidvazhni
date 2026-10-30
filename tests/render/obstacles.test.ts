@@ -22,7 +22,7 @@ function plan(s: ScenarioDef) {
 }
 
 /** A hex of shelves: they stand on the hex's line, a lone one in its middle. */
-const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => it.piece === 'shelf' || it.piece === 'bookshelf');
+const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => it.piece === 'shelf' || it.piece === 'bookshelf' || it.piece === 'bookcase-long');
 
 describe('obstacle clusters', () => {
   it('is the same every time for a scenario', () => {

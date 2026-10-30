@@ -81,6 +81,7 @@ export const HEIGHT: Record<string, number> = {
   bookshelf: 1.35,
   pallet: 0.12,
   'weapon-rack': 1.1,
+  'bookcase-long': 1.46,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -117,6 +118,9 @@ const FOOT: Record<string, [number, number, number, number]> = {
   shelf: [-0.49, 0.49, -0.31, 0.01],
   bookshelf: [-0.47, 0.47, -0.2, 0.2],
   pallet: [-0.46, 0.46, -0.4, 0.4],
+  // A library case as long as its hex is across (Blender, art/blender/obstacle-sets): cases on
+  // touching hexes meet end to end.
+  'bookcase-long': [-0.86, 0.86, -0.32, 0.32],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
@@ -592,7 +596,9 @@ function rowAxis(k: HexKey, pieces: Map<HexKey, string>, roomOf: Map<HexKey, str
   for (const [o, piece] of [...pieces].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     if (o === k || piece !== pieces.get(k) || roomOf.get(o) !== roomOf.get(k)) continue;
     const [oq, or] = parseHexKey(o);
-    const d = (Math.abs(oq - q) + Math.abs(or - r) + Math.abs(oq + or - q - r)) / 2;
+    // On a straight hex line counts as nearer (a row), at the same distance.
+    const straight = oq === q || or === r || oq + or === q + r;
+    const d = (Math.abs(oq - q) + Math.abs(or - r) + Math.abs(oq + or - q - r)) / 2 - (straight ? 0.5 : 0);
     if (d <= 2 && d < bd) {
       bd = d;
       best = o;
@@ -622,9 +628,18 @@ function singleRecipe(piece: string, edge: EdgeStyle, rnd: () => number): Spec[]
  *  copy. A lone shelf hex is one unit, square to its row. */
 function placeShelves(group: HexKey[], pieces: Map<HexKey, string>, orient: Orient, rnd: () => number): Placed[] {
   const out: Placed[] = [];
+  const along = [...group].sort((a, b) => proj(hexToWorld(...parseHexKey(a)), orient.base) - proj(hexToWorld(...parseHexKey(b)), orient.base));
   for (const k of group) {
     const c = hexToWorld(...parseHexKey(k));
     const piece = pieces.get(k)!;
+    if (piece === 'bookshelf') {
+      // A library case fills its hex along the row, end to end with the next; every other one is
+      // turned round, so the row shows both faces' books, never the same face twice in a row.
+      const turn = along.indexOf(k) % 2 ? Math.PI : 0;
+      const box = footprint('bookcase-long', 1, 'none');
+      out.push({ spec: S('bookcase-long'), piece: 'bookcase-long', x: c.x, z: c.z, y: 0, rot: orient.base + turn + between(rnd, [-0.01, 0.01]), scale: 1, tip: 'none', lean: 0, leanDir: 0, box });
+      continue;
+    }
     const [a, b] = rnd() < 0.5 ? [0.95, 1.03] : [1.03, 0.95];
     const [x0, x1, z0, z1] = footprint(piece, a, 'none');
     if (group.length === 1) {
