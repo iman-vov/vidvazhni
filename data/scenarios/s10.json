@@ -56,7 +56,8 @@
         { "hex": [9, -2], "terrain": "hazardous" },
         { "hex": [13, -3], "terrain": "hazardous" },
         { "hex": [12, -2], "terrain": "hazardous" },
-        { "hex": [13, -2], "terrain": "hazardous" }
+        { "hex": [13, -2], "terrain": "hazardous" },
+        { "hex": [9, -1], "terrain": "hazardous" }
       ],
       "obstacles": [
         { "hex": [7, -5], "model": "rubble" },
@@ -69,7 +70,9 @@
         { "hex": [12, -8], "model": "rubble" },
         { "hex": [8, -6], "model": "barrel" },
         { "hex": [9, 1], "model": "crate-stack" },
-        { "hex": [14, -4], "model": "rubble" }
+        { "hex": [14, -4], "model": "rubble" },
+        { "hex": [10, 0], "model": "crate-stack" },
+        { "hex": [8, -4], "model": "barrel" }
       ],
       "spawns": [
         { "monster": "hammerfist", "hex": [11, -3], "by": { "2": "normal", "3": "normal", "4": "normal" } }
