@@ -375,6 +375,8 @@ export class TileLayer {
   propModel: ((key: string, defaultHeight: number) => Required<PropModelSpec> | null) | null = null;
   /** Glowing bits (a brazier's fire) to keep on top of a prop model of that key. */
   propGlow: ((key: string, height: number) => THREE.Object3D | null) | null = null;
+  /** The difficult-terrain clump model for a hex (by the location's region), or null. */
+  roughModel: ((hex: Hex) => string | null) | null = null;
   /** Where a turning mirror (s19) sends the beam in a state: it is drawn facing that hex. */
   mirrorAim: ((objectId: string, state: string | undefined) => Hex | null) | null = null;
   /** The beam (s19): one thin bar per leg, rebuilt when its path changes. */
@@ -873,7 +875,7 @@ export class TileLayer {
       if (tile.obstacle && !tile.object && !tile.door) wanted.push([`${k}:obstacle`, () => this.makeObstacle(k, hex, tile.room)]);
       if (tile.door) wanted.push([`${k}:door`, () => this.makeDoor(k, hex, tile, s)]);
       if (tile.trap) wanted.push([`${k}:trap`, () => this.makeTrap(k, hex, tile.room)]);
-      if (tile.terrain === 'difficult' && !tile.obstacle) wanted.push([`${k}:rough`, () => this.makeSimple(`${k}:rough`, hex, tile.room, null, this.propParts.rough(hex))]);
+      if (tile.terrain === 'difficult' && !tile.obstacle) wanted.push([`${k}:rough`, () => this.makeRough(k, hex, tile.room)]);
       if (tile.coins) wanted.push([`${k}:coins`, () => this.makeSimple(`${k}:coins`, hex, tile.room, null, this.propParts.coins(tile.coins ?? 1))]);
       if (tile.chest) wanted.push([`${k}:chest`, () => this.makeChest(k, hex, tile.room)]);
       if (tile.object) {
@@ -1099,6 +1101,15 @@ export class TileLayer {
     // Its parts never move: one mesh per material instead of one per part (mergeParts.ts).
     mergeStaticParts(part);
     return this.makeSimple(`${k}:obstacle`, hex, room, model, part, 'obstacle');
+  }
+
+  /** Difficult terrain: the region's clump model (roughModel), turned per hex; the code stones
+   *  stand in until it loads, and where the location has no set. */
+  private makeRough(k: HexKey, hex: Hex, room: string): PropView {
+    const part = this.propParts.rough(hex);
+    const model = this.roughModel?.(hex) ?? null;
+    if (model) part.rotation.y = hexVariation(hex[1] * 5 + 3, hex[0] * 3 - 1).rot;
+    return this.makeSimple(`${k}:rough`, hex, room, model, part);
   }
 
   /** A trap: the location's snare model (a bear trap) on a plate with spikes round its rim, larger

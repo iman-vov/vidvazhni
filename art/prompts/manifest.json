@@ -3510,6 +3510,81 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "rough-forest-1",
+      "nameUk": "Складна місцевість: бурелом і ожина, варіант 1",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 102,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-forest-1/rough-forest-1.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-forest-2",
+      "nameUk": "Складна місцевість: бурелом і ожина, варіант 2",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 103,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-forest-2/rough-forest-2.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-forest-3",
+      "nameUk": "Складна місцевість: бурелом і ожина, варіант 3",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 104,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-forest-3/rough-forest-3.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }

@@ -79,6 +79,40 @@ export const MODEL_HEIGHT: Readonly<Record<string, number>> = {
   'glass-panes': 0.8,
 };
 
+/**
+ * Difficult-terrain clumps (art/blender/terrain-props): low litter round a hex's rim, one set of
+ * variants per region, picked per location. They are modelled in hex units round the hex centre
+ * and shown as made (anchoredModel), so a clump heavy on one side stays on the rim.
+ */
+export const ROUGH_SETS: Readonly<Record<string, string>> = {
+  'thorn-path': 'forest',
+  'flooded-mill': 'marsh',
+  'dark-depths': 'cave',
+  'mine-tunnel': 'cave',
+  'gloom-heart': 'cave',
+  'mountain-pass': 'cave',
+  cellar: 'town',
+  copperdale: 'town',
+  'old-forge': 'town',
+  watchtower: 'town',
+  'glass-town': 'glass',
+  'glass-heights': 'glass',
+};
+export const ROUGH_VARIANTS = 3;
+
+/** The difficult-terrain clump model for a hex of a location, or null when it has no set. */
+export function roughModelFor(environmentId: string | null | undefined, q: number, r: number): string | null {
+  const set = environmentId ? ROUGH_SETS[environmentId] : undefined;
+  if (!set) return null;
+  const h = Math.abs(Math.sin(q * 91.7 + r * 47.3) * 15731.7) % 1;
+  return `rough-${set}-${1 + Math.floor(h * ROUGH_VARIANTS)}`;
+}
+
+/** Models shown at their authored size and origin rather than fitted to a height and centred. */
+export function anchoredModel(model: string): boolean {
+  return model.startsWith('rough-');
+}
+
 const cache = new StampedCache<PropPrototype | null>();
 // Prototypes of earlier boards that nothing drawn shares geometry or materials with; their model's
 // GPU copies go with the model (models.ts).
@@ -96,7 +130,9 @@ export function loadPropPrototype(spec: Required<PropModelSpec>, quality: Graphi
         const box = new THREE.Box3().setFromObject(inner);
         if (box.isEmpty()) return null;
         const count = Math.max(1, spec.stack);
-        const fit = fitToHeight(box, spec.height / count);
+        const fit = anchoredModel(spec.model)
+          ? { scale: 1, offset: new THREE.Vector3(), radius: Math.max(box.max.x, -box.min.x, box.max.z, -box.min.z) }
+          : fitToHeight(box, spec.height / count);
         inner.scale.multiplyScalar(fit.scale);
         inner.position.multiplyScalar(fit.scale).add(fit.offset);
         const object = new THREE.Group();

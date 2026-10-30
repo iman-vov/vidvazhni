@@ -31,7 +31,7 @@ import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slid
 import { listModels } from './models';
 import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
-import { loadPropPrototype } from './propModels';
+import { loadPropPrototype, roughModelFor } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
@@ -623,6 +623,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.partitionLines = () => environment.partitions();
   tiles.propModel = (key, height) => environment.propModel(key, height);
   tiles.propGlow = (key, height) => environment.propGlow(key, height);
+  tiles.roughModel = (hex) => roughModelFor(environment.def?.id, hex[0], hex[1]);
   tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);
   tiles.dividerFactory = (rooms, frames) => environment.divider(rooms, frames);
   tiles.pieceFactory = (id) => environment.makePiece(id);
