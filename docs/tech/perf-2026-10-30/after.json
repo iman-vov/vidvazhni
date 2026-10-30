@@ -1,0 +1,3153 @@
+{
+ "s3/high": {
+  "total": {
+   "calls": 284,
+   "tris": 972976
+  },
+  "passes": {
+   "shadow": {
+    "calls": 77,
+    "tris": 314588
+   },
+   "scene 1": {
+    "calls": 202,
+    "tris": 658383
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "categories": {
+   "env:env-rocks (shadow)": {
+    "calls": 1,
+    "tris": 22700
+   },
+   "env:env-flooded-mill (shadow)": {
+    "calls": 1,
+    "tris": 1442
+   },
+   "env:env-flora (shadow)": {
+    "calls": 6,
+    "tris": 88480
+   },
+   "env:model (shadow)": {
+    "calls": 4,
+    "tris": 36875
+   },
+   "env:marsh (shadow)": {
+    "calls": 12,
+    "tris": 13604
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 4,
+    "tris": 10063
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 3,
+    "tris": 5608
+   },
+   "piece (shadow)": {
+    "calls": 10,
+    "tris": 476
+   },
+   "trap-forestjaw-a-mesh (shadow)": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-forestjaw-b-mesh (shadow)": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-foreststatic (shadow)": {
+    "calls": 1,
+    "tris": 590
+   },
+   "obstacle (shadow)": {
+    "calls": 2,
+    "tris": 112
+   },
+   "static-batch (shadow)": {
+    "calls": 4,
+    "tris": 4008
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 17,
+    "tris": 77501
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 224
+   },
+   "env:marsh": {
+    "calls": 59,
+    "tris": 308105
+   },
+   "output_unwrapped": {
+    "calls": 4,
+    "tris": 10063
+   },
+   "static-batch": {
+    "calls": 13,
+    "tris": 24960
+   },
+   "trap-forestjaw-a-mesh": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-foreststatic": {
+    "calls": 1,
+    "tris": 590
+   },
+   "trap-forestjaw-b-mesh": {
+    "calls": 1,
+    "tris": 286
+   },
+   "heroes": {
+    "calls": 16,
+    "tris": 46693
+   },
+   "monsters": {
+    "calls": 37,
+    "tris": 77641
+   },
+   "env:env-flora": {
+    "calls": 6,
+    "tris": 88480
+   },
+   "obstacle-cluster": {
+    "calls": 3,
+    "tris": 5608
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 22700
+   },
+   "env:env-flooded-mill": {
+    "calls": 1,
+    "tris": 1442
+   },
+   "env:model": {
+    "calls": 4,
+    "tris": 36875
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 31754
+   },
+   "piece": {
+    "calls": 32,
+    "tris": 812
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 552
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 82
+   },
+   "env:water": {
+    "calls": 1,
+    "tris": 2
+   },
+   "contact-shadow": {
+    "calls": 1,
+    "tris": 2
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 972
+   },
+   "env:ambient": {
+    "calls": 1,
+    "tris": 94
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 156
+   },
+   "env:life": {
+    "calls": 1,
+    "tris": 0
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 2048"
+  ],
+  "programs": 65,
+  "compiled": 0,
+  "memory": {
+   "geometries": 194,
+   "textures": 119,
+   "heapMB": 228.3,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 264.1,
+    "textures": 278.3,
+    "geometry": 26.7,
+    "total": 605.1
+   }
+  }
+ },
+ "s3/medium": {
+  "total": {
+   "calls": 272,
+   "tris": 892890
+  },
+  "passes": {
+   "shadow": {
+    "calls": 73,
+    "tris": 277330
+   },
+   "scene 1": {
+    "calls": 198,
+    "tris": 615559
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "categories": {
+   "env:env-rocks (shadow)": {
+    "calls": 1,
+    "tris": 22628
+   },
+   "env:env-flooded-mill (shadow)": {
+    "calls": 1,
+    "tris": 1339
+   },
+   "env:env-flora (shadow)": {
+    "calls": 5,
+    "tris": 66312
+   },
+   "env:model (shadow)": {
+    "calls": 3,
+    "tris": 24014
+   },
+   "env:marsh (shadow)": {
+    "calls": 10,
+    "tris": 11550
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 4,
+    "tris": 10063
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 3,
+    "tris": 5608
+   },
+   "piece (shadow)": {
+    "calls": 10,
+    "tris": 476
+   },
+   "trap-forestjaw-a-mesh (shadow)": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-forestjaw-b-mesh (shadow)": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-foreststatic (shadow)": {
+    "calls": 1,
+    "tris": 590
+   },
+   "obstacle (shadow)": {
+    "calls": 2,
+    "tris": 112
+   },
+   "static-batch (shadow)": {
+    "calls": 4,
+    "tris": 4008
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 17,
+    "tris": 77501
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 224
+   },
+   "env:marsh": {
+    "calls": 57,
+    "tris": 300757
+   },
+   "trap-forestjaw-a-mesh": {
+    "calls": 1,
+    "tris": 286
+   },
+   "trap-foreststatic": {
+    "calls": 1,
+    "tris": 590
+   },
+   "trap-forestjaw-b-mesh": {
+    "calls": 1,
+    "tris": 286
+   },
+   "output_unwrapped": {
+    "calls": 4,
+    "tris": 10063
+   },
+   "static-batch": {
+    "calls": 13,
+    "tris": 24960
+   },
+   "heroes": {
+    "calls": 16,
+    "tris": 46693
+   },
+   "monsters": {
+    "calls": 37,
+    "tris": 77641
+   },
+   "env:env-flora": {
+    "calls": 5,
+    "tris": 66312
+   },
+   "obstacle-cluster": {
+    "calls": 3,
+    "tris": 5608
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 22628
+   },
+   "env:env-flooded-mill": {
+    "calls": 1,
+    "tris": 1339
+   },
+   "env:model": {
+    "calls": 3,
+    "tris": 24014
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 31622
+   },
+   "piece": {
+    "calls": 32,
+    "tris": 812
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 552
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 66
+   },
+   "env:water": {
+    "calls": 1,
+    "tris": 2
+   },
+   "contact-shadow": {
+    "calls": 1,
+    "tris": 2
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 972
+   },
+   "env:ambient": {
+    "calls": 1,
+    "tris": 54
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:life": {
+    "calls": 1,
+    "tris": 0
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 1024"
+  ],
+  "programs": 51,
+  "compiled": 0,
+  "memory": {
+   "geometries": 189,
+   "textures": 111,
+   "heapMB": 385.3,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 180.1,
+    "textures": 214.3,
+    "geometry": 23.7,
+    "total": 454.1
+   }
+  }
+ },
+ "s3/low": {
+  "total": {
+   "calls": 173,
+   "tris": 369085
+  },
+  "passes": {
+   "scene 1": {
+    "calls": 173,
+    "tris": 369085
+   }
+  },
+  "categories": {
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 224
+   },
+   "env:marsh": {
+    "calls": 50,
+    "tris": 184962
+   },
+   "static-batch": {
+    "calls": 12,
+    "tris": 22450
+   },
+   "output_unwrapped": {
+    "calls": 3,
+    "tris": 6157
+   },
+   "heroes": {
+    "calls": 16,
+    "tris": 30779
+   },
+   "trap-forestjaw-a-mesh": {
+    "calls": 1,
+    "tris": 196
+   },
+   "trap-foreststatic": {
+    "calls": 1,
+    "tris": 295
+   },
+   "trap-forestjaw-b-mesh": {
+    "calls": 1,
+    "tris": 190
+   },
+   "monsters": {
+    "calls": 37,
+    "tris": 55203
+   },
+   "env:env-flora": {
+    "calls": 5,
+    "tris": 30677
+   },
+   "obstacle-cluster": {
+    "calls": 3,
+    "tris": 4222
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 8740
+   },
+   "env:env-flooded-mill": {
+    "calls": 1,
+    "tris": 927
+   },
+   "env:model": {
+    "calls": 3,
+    "tris": 12871
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 9192
+   },
+   "piece": {
+    "calls": 17,
+    "tris": 476
+   },
+   "obstacle-litter": {
+    "calls": 1,
+    "tris": 36
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 464
+   },
+   "shadow-bake": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:water": {
+    "calls": 1,
+    "tris": 2
+   },
+   "contact-shadow": {
+    "calls": 1,
+    "tris": 2
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 972
+   },
+   "env:life": {
+    "calls": 1,
+    "tris": 0
+   }
+  },
+  "shadowMaps": [],
+  "programs": 42,
+  "compiled": 0,
+  "memory": {
+   "geometries": 167,
+   "textures": 107,
+   "heapMB": 163.1,
+   "gpuMB": {
+    "canvas": 16,
+    "targets": 0,
+    "textures": 62.8,
+    "geometry": 13.8,
+    "total": 92.6
+   }
+  }
+ },
+ "s8/high": {
+  "total": {
+   "calls": 282,
+   "tris": 748821
+  },
+  "passes": {
+   "shadow": {
+    "calls": 98,
+    "tris": 353282
+   },
+   "scene 1": {
+    "calls": 179,
+    "tris": 395534
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "categories": {
+   "env:wood (shadow)": {
+    "calls": 1,
+    "tris": 1244
+   },
+   "env:woodDark (shadow)": {
+    "calls": 1,
+    "tris": 5636
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 960
+   },
+   "env:iron (shadow)": {
+    "calls": 1,
+    "tris": 916
+   },
+   "env:moss (shadow)": {
+    "calls": 1,
+    "tris": 552
+   },
+   "env:rock (shadow)": {
+    "calls": 1,
+    "tris": 108
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:cloth (shadow)": {
+    "calls": 1,
+    "tris": 192
+   },
+   "env:rockDark (shadow)": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:snow (shadow)": {
+    "calls": 1,
+    "tris": 1840
+   },
+   "env:bark (shadow)": {
+    "calls": 1,
+    "tris": 560
+   },
+   "env:woodLight (shadow)": {
+    "calls": 1,
+    "tris": 80
+   },
+   "env:kit (shadow)": {
+    "calls": 9,
+    "tris": 5910
+   },
+   "env:berry (shadow)": {
+    "calls": 1,
+    "tris": 4795
+   },
+   "env:env-rocks (shadow)": {
+    "calls": 1,
+    "tris": 8068
+   },
+   "env:model (shadow)": {
+    "calls": 6,
+    "tris": 84140
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 216
+   },
+   "piece (shadow)": {
+    "calls": 2,
+    "tris": 288
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 1,
+    "tris": 64
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 9,
+    "tris": 29266
+   },
+   "crate-wall (shadow)": {
+    "calls": 1,
+    "tris": 5892
+   },
+   "wreck-heap (shadow)": {
+    "calls": 1,
+    "tris": 1338
+   },
+   "static-batch (shadow)": {
+    "calls": 12,
+    "tris": 54551
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 22,
+    "tris": 93885
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 13,
+    "tris": 332
+   },
+   "static-batch": {
+    "calls": 27,
+    "tris": 79115
+   },
+   "ring-floor:planks": {
+    "calls": 3,
+    "tris": 659
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 732
+   },
+   "output_unwrapped": {
+    "calls": 7,
+    "tris": 23181
+   },
+   "crate-wall": {
+    "calls": 1,
+    "tris": 5892
+   },
+   "wreck-heap": {
+    "calls": 1,
+    "tris": 1338
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 52613
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 91093
+   },
+   "env:kit": {
+    "calls": 9,
+    "tris": 5910
+   },
+   "env:atmosphere": {
+    "calls": 6,
+    "tris": 896
+   },
+   "env:wood": {
+    "calls": 1,
+    "tris": 1244
+   },
+   "env:woodDark": {
+    "calls": 1,
+    "tris": 5636
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 960
+   },
+   "piece": {
+    "calls": 6,
+    "tris": 557
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 1072
+   },
+   "env:iron": {
+    "calls": 1,
+    "tris": 916
+   },
+   "env:flame": {
+    "calls": 1,
+    "tris": 80
+   },
+   "env:moss": {
+    "calls": 1,
+    "tris": 552
+   },
+   "env:rock": {
+    "calls": 1,
+    "tris": 108
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:cloth": {
+    "calls": 1,
+    "tris": 192
+   },
+   "env:rockDark": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:snow": {
+    "calls": 1,
+    "tris": 1840
+   },
+   "env:bark": {
+    "calls": 1,
+    "tris": 560
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 64
+   },
+   "env:woodLight": {
+    "calls": 1,
+    "tris": 80
+   },
+   "env:berry": {
+    "calls": 1,
+    "tris": 4795
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 8068
+   },
+   "env:model": {
+    "calls": 6,
+    "tris": 84140
+   },
+   "cluster-item": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 22273
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 222
+   },
+   "contact-shadow": {
+    "calls": 2,
+    "tris": 4
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 94
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 148
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 2048",
+   "PointLight 512",
+   "PointLight 512"
+  ],
+  "programs": 56,
+  "compiled": 0,
+  "memory": {
+   "geometries": 155,
+   "textures": 149,
+   "heapMB": 378.9,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 300.1,
+    "textures": 246.5,
+    "geometry": 20.4,
+    "total": 603
+   }
+  }
+ },
+ "s8/medium": {
+  "total": {
+   "calls": 268,
+   "tris": 727977
+  },
+  "passes": {
+   "shadow": {
+    "calls": 93,
+    "tris": 342775
+   },
+   "scene 1": {
+    "calls": 174,
+    "tris": 385201
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "categories": {
+   "env:wood (shadow)": {
+    "calls": 1,
+    "tris": 924
+   },
+   "env:woodDark (shadow)": {
+    "calls": 1,
+    "tris": 5044
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:iron (shadow)": {
+    "calls": 1,
+    "tris": 672
+   },
+   "env:moss (shadow)": {
+    "calls": 1,
+    "tris": 392
+   },
+   "env:rock (shadow)": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:cloth (shadow)": {
+    "calls": 1,
+    "tris": 12
+   },
+   "env:snow (shadow)": {
+    "calls": 1,
+    "tris": 720
+   },
+   "env:bark (shadow)": {
+    "calls": 1,
+    "tris": 280
+   },
+   "env:woodLight (shadow)": {
+    "calls": 1,
+    "tris": 40
+   },
+   "env:kit (shadow)": {
+    "calls": 6,
+    "tris": 4980
+   },
+   "env:berry (shadow)": {
+    "calls": 1,
+    "tris": 4160
+   },
+   "env:env-rocks (shadow)": {
+    "calls": 1,
+    "tris": 12464
+   },
+   "env:model (shadow)": {
+    "calls": 5,
+    "tris": 74182
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 216
+   },
+   "piece (shadow)": {
+    "calls": 2,
+    "tris": 288
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 1,
+    "tris": 64
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 9,
+    "tris": 29266
+   },
+   "crate-wall (shadow)": {
+    "calls": 1,
+    "tris": 5892
+   },
+   "wreck-heap (shadow)": {
+    "calls": 1,
+    "tris": 1338
+   },
+   "static-batch (shadow)": {
+    "calls": 12,
+    "tris": 54551
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 22,
+    "tris": 93885
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 13,
+    "tris": 332
+   },
+   "static-batch": {
+    "calls": 27,
+    "tris": 79115
+   },
+   "ring-floor:planks": {
+    "calls": 3,
+    "tris": 659
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 732
+   },
+   "crate-wall": {
+    "calls": 1,
+    "tris": 5892
+   },
+   "wreck-heap": {
+    "calls": 1,
+    "tris": 1338
+   },
+   "output_unwrapped": {
+    "calls": 7,
+    "tris": 23181
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 52613
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 91093
+   },
+   "env:kit": {
+    "calls": 6,
+    "tris": 4980
+   },
+   "env:atmosphere": {
+    "calls": 6,
+    "tris": 896
+   },
+   "env:wood": {
+    "calls": 1,
+    "tris": 924
+   },
+   "env:woodDark": {
+    "calls": 1,
+    "tris": 5044
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 624
+   },
+   "piece": {
+    "calls": 6,
+    "tris": 557
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 904
+   },
+   "env:iron": {
+    "calls": 1,
+    "tris": 672
+   },
+   "env:flame": {
+    "calls": 1,
+    "tris": 80
+   },
+   "env:moss": {
+    "calls": 1,
+    "tris": 392
+   },
+   "env:rock": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:cloth": {
+    "calls": 1,
+    "tris": 12
+   },
+   "env:snow": {
+    "calls": 1,
+    "tris": 720
+   },
+   "env:bark": {
+    "calls": 1,
+    "tris": 280
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 64
+   },
+   "env:woodLight": {
+    "calls": 1,
+    "tris": 40
+   },
+   "env:berry": {
+    "calls": 1,
+    "tris": 4160
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 12464
+   },
+   "env:model": {
+    "calls": 5,
+    "tris": 74182
+   },
+   "cluster-item": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 22765
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 180
+   },
+   "contact-shadow": {
+    "calls": 2,
+    "tris": 4
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 58
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 76
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 1024"
+  ],
+  "programs": 41,
+  "compiled": 0,
+  "memory": {
+   "geometries": 150,
+   "textures": 137,
+   "heapMB": 632.4,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 180.1,
+    "textures": 226.4,
+    "geometry": 20.2,
+    "total": 462.7
+   }
+  }
+ },
+ "s8/low": {
+  "total": {
+   "calls": 165,
+   "tris": 236294
+  },
+  "passes": {
+   "scene 1": {
+    "calls": 165,
+    "tris": 236294
+   }
+  },
+  "categories": {
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 13,
+    "tris": 332
+   },
+   "static-batch": {
+    "calls": 25,
+    "tris": 62905
+   },
+   "ring-floor:planks": {
+    "calls": 3,
+    "tris": 659
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 732
+   },
+   "output_unwrapped": {
+    "calls": 7,
+    "tris": 17928
+   },
+   "crate-wall": {
+    "calls": 1,
+    "tris": 4894
+   },
+   "wreck-heap": {
+    "calls": 1,
+    "tris": 967
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 33739
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 61349
+   },
+   "env:kit": {
+    "calls": 6,
+    "tris": 4260
+   },
+   "obstacle-litter": {
+    "calls": 2,
+    "tris": 60
+   },
+   "env:atmosphere": {
+    "calls": 6,
+    "tris": 818
+   },
+   "env:wood": {
+    "calls": 1,
+    "tris": 844
+   },
+   "env:woodDark": {
+    "calls": 1,
+    "tris": 2380
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 540
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 288
+   },
+   "env:iron": {
+    "calls": 1,
+    "tris": 512
+   },
+   "env:flame": {
+    "calls": 1,
+    "tris": 80
+   },
+   "piece": {
+    "calls": 4,
+    "tris": 317
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 44
+   },
+   "env:bark": {
+    "calls": 1,
+    "tris": 352
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 64
+   },
+   "env:woodLight": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 3062
+   },
+   "env:cloth": {
+    "calls": 1,
+    "tris": 60
+   },
+   "env:berry": {
+    "calls": 1,
+    "tris": 105
+   },
+   "env:model": {
+    "calls": 4,
+    "tris": 32514
+   },
+   "cluster-item": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 6263
+   },
+   "shadow-bake": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 98
+   },
+   "contact-shadow": {
+    "calls": 2,
+    "tris": 4
+   },
+   "env:ambient": {
+    "calls": 2,
+    "tris": 0
+   }
+  },
+  "shadowMaps": [],
+  "programs": 37,
+  "compiled": 0,
+  "memory": {
+   "geometries": 144,
+   "textures": 131,
+   "heapMB": 419.9,
+   "gpuMB": {
+    "canvas": 16,
+    "targets": 0,
+    "textures": 65.8,
+    "geometry": 13.1,
+    "total": 94.9
+   }
+  }
+ },
+ "s17/high": {
+  "total": {
+   "calls": 224,
+   "tris": 769967
+  },
+  "passes": {
+   "shadow": {
+    "calls": 89,
+    "tris": 389423
+   },
+   "scene 1": {
+    "calls": 130,
+    "tris": 380539
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "categories": {
+   "env:glass-window (shadow)": {
+    "calls": 1,
+    "tris": 62760
+   },
+   "env:glass-window-glass (shadow)": {
+    "calls": 1,
+    "tris": 360
+   },
+   "env:glass-wall (shadow)": {
+    "calls": 1,
+    "tris": 43036
+   },
+   "env:glass-sconce (shadow)": {
+    "calls": 1,
+    "tris": 8280
+   },
+   "env:glass-sconce-glass (shadow)": {
+    "calls": 1,
+    "tris": 120
+   },
+   "env:stone (shadow)": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:stoneLight (shadow)": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 432
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 156
+   },
+   "env:model (shadow)": {
+    "calls": 8,
+    "tris": 107621
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 276
+   },
+   "glass-furnace_1 (shadow)": {
+    "calls": 2,
+    "tris": 3992
+   },
+   "glass-furnace_2 (shadow)": {
+    "calls": 2,
+    "tris": 196
+   },
+   "glass-workbench (shadow)": {
+    "calls": 1,
+    "tris": 1204
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 5,
+    "tris": 15782
+   },
+   "glass-crystals-2 (shadow)": {
+    "calls": 1,
+    "tris": 527
+   },
+   "glass-crystals (shadow)": {
+    "calls": 1,
+    "tris": 641
+   },
+   "wind-up-key (shadow)": {
+    "calls": 2,
+    "tris": 9016
+   },
+   "blueprint (shadow)": {
+    "calls": 1,
+    "tris": 1756
+   },
+   "trap-glassstatic (shadow)": {
+    "calls": 1,
+    "tris": 718
+   },
+   "static-batch (shadow)": {
+    "calls": 6,
+    "tris": 14368
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 29,
+    "tris": 64509
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 11,
+    "tris": 220
+   },
+   "static-batch": {
+    "calls": 8,
+    "tris": 14386
+   },
+   "glass-crystals": {
+    "calls": 1,
+    "tris": 641
+   },
+   "glass-workbench": {
+    "calls": 1,
+    "tris": 1204
+   },
+   "glass-crystals-2": {
+    "calls": 1,
+    "tris": 527
+   },
+   "glass-furnace_1": {
+    "calls": 2,
+    "tris": 3992
+   },
+   "glass-furnace_2": {
+    "calls": 2,
+    "tris": 196
+   },
+   "output_unwrapped": {
+    "calls": 3,
+    "tris": 10416
+   },
+   "trap-glassstatic": {
+    "calls": 1,
+    "tris": 718
+   },
+   "wind-up-key": {
+    "calls": 2,
+    "tris": 9016
+   },
+   "blueprint": {
+    "calls": 1,
+    "tris": 1756
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 35473
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 64621
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 62760
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 360
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 43036
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 8280
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 120
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:atmosphere": {
+    "calls": 5,
+    "tris": 734
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 432
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 156
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 372
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 8,
+    "tris": 107621
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 10648
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 142
+   },
+   "contact-shadow": {
+    "calls": 4,
+    "tris": 8
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 1362
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 92
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 154
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 36
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 2048",
+   "PointLight 512",
+   "PointLight 512"
+  ],
+  "programs": 56,
+  "compiled": 0,
+  "memory": {
+   "geometries": 124,
+   "textures": 116,
+   "heapMB": 577.4,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 300.1,
+    "textures": 250.5,
+    "geometry": 22.8,
+    "total": 609.4
+   }
+  }
+ },
+ "s17/medium": {
+  "total": {
+   "calls": 220,
+   "tris": 707685
+  },
+  "passes": {
+   "shadow": {
+    "calls": 89,
+    "tris": 358330
+   },
+   "scene 1": {
+    "calls": 130,
+    "tris": 349354
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "categories": {
+   "env:glass-window (shadow)": {
+    "calls": 1,
+    "tris": 62760
+   },
+   "env:glass-window-glass (shadow)": {
+    "calls": 1,
+    "tris": 360
+   },
+   "env:glass-wall (shadow)": {
+    "calls": 1,
+    "tris": 43036
+   },
+   "env:glass-sconce (shadow)": {
+    "calls": 1,
+    "tris": 8280
+   },
+   "env:glass-sconce-glass (shadow)": {
+    "calls": 1,
+    "tris": 120
+   },
+   "env:stone (shadow)": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:stoneLight (shadow)": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 432
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 156
+   },
+   "env:model (shadow)": {
+    "calls": 8,
+    "tris": 76528
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 276
+   },
+   "glass-furnace_1 (shadow)": {
+    "calls": 2,
+    "tris": 3992
+   },
+   "glass-furnace_2 (shadow)": {
+    "calls": 2,
+    "tris": 196
+   },
+   "glass-workbench (shadow)": {
+    "calls": 1,
+    "tris": 1204
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 5,
+    "tris": 15782
+   },
+   "glass-crystals-2 (shadow)": {
+    "calls": 1,
+    "tris": 527
+   },
+   "glass-crystals (shadow)": {
+    "calls": 1,
+    "tris": 641
+   },
+   "wind-up-key (shadow)": {
+    "calls": 2,
+    "tris": 9016
+   },
+   "blueprint (shadow)": {
+    "calls": 1,
+    "tris": 1756
+   },
+   "trap-glassstatic (shadow)": {
+    "calls": 1,
+    "tris": 718
+   },
+   "static-batch (shadow)": {
+    "calls": 6,
+    "tris": 14368
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 29,
+    "tris": 64509
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 11,
+    "tris": 220
+   },
+   "static-batch": {
+    "calls": 8,
+    "tris": 14386
+   },
+   "glass-crystals": {
+    "calls": 1,
+    "tris": 641
+   },
+   "glass-workbench": {
+    "calls": 1,
+    "tris": 1204
+   },
+   "glass-crystals-2": {
+    "calls": 1,
+    "tris": 527
+   },
+   "glass-furnace_1": {
+    "calls": 2,
+    "tris": 3992
+   },
+   "glass-furnace_2": {
+    "calls": 2,
+    "tris": 196
+   },
+   "wind-up-key": {
+    "calls": 2,
+    "tris": 9016
+   },
+   "output_unwrapped": {
+    "calls": 3,
+    "tris": 10416
+   },
+   "trap-glassstatic": {
+    "calls": 1,
+    "tris": 718
+   },
+   "blueprint": {
+    "calls": 1,
+    "tris": 1756
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 35473
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 64621
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 62760
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 360
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 43036
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 8280
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 120
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:atmosphere": {
+    "calls": 5,
+    "tris": 734
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 432
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 156
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 372
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 8,
+    "tris": 76528
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 10696
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 118
+   },
+   "contact-shadow": {
+    "calls": 4,
+    "tris": 8
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 1362
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 56
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 74
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 36
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 1024"
+  ],
+  "programs": 43,
+  "compiled": 0,
+  "memory": {
+   "geometries": 124,
+   "textures": 107,
+   "heapMB": 635.6,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 180.1,
+    "textures": 250.4,
+    "geometry": 22.8,
+    "total": 489.3
+   }
+  }
+ },
+ "s17/low": {
+  "total": {
+   "calls": 125,
+   "tris": 246289
+  },
+  "passes": {
+   "scene 1": {
+    "calls": 125,
+    "tris": 246289
+   }
+  },
+  "categories": {
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 11,
+    "tris": 220
+   },
+   "static-batch": {
+    "calls": 7,
+    "tris": 9546
+   },
+   "glass-crystals": {
+    "calls": 1,
+    "tris": 619
+   },
+   "glass-workbench": {
+    "calls": 1,
+    "tris": 834
+   },
+   "glass-crystals-2": {
+    "calls": 1,
+    "tris": 525
+   },
+   "glass-furnace_1": {
+    "calls": 2,
+    "tris": 2670
+   },
+   "glass-furnace_2": {
+    "calls": 2,
+    "tris": 96
+   },
+   "output_unwrapped": {
+    "calls": 3,
+    "tris": 7968
+   },
+   "blueprint": {
+    "calls": 1,
+    "tris": 1278
+   },
+   "wind-up-key": {
+    "calls": 2,
+    "tris": 6736
+   },
+   "trap-glassstatic": {
+    "calls": 1,
+    "tris": 392
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 24807
+   },
+   "monsters": {
+    "calls": 45,
+    "tris": 45353
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 58080
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 330
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 42108
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 7720
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 120
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 624
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 432
+   },
+   "env:atmosphere": {
+    "calls": 4,
+    "tris": 534
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 156
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 228
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 8,
+    "tris": 29903
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 3088
+   },
+   "shadow-bake": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 80
+   },
+   "contact-shadow": {
+    "calls": 4,
+    "tris": 8
+   },
+   "plates": {
+    "calls": 7,
+    "tris": 1362
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 36
+   },
+   "env:ambient": {
+    "calls": 2,
+    "tris": 0
+   }
+  },
+  "shadowMaps": [],
+  "programs": 39,
+  "compiled": 0,
+  "memory": {
+   "geometries": 111,
+   "textures": 100,
+   "heapMB": 682.1,
+   "gpuMB": {
+    "canvas": 16,
+    "targets": 0,
+    "textures": 72.6,
+    "geometry": 18.7,
+    "total": 107.3
+   }
+  }
+ },
+ "s18/high": {
+  "total": {
+   "calls": 188,
+   "tris": 725218
+  },
+  "passes": {
+   "shadow": {
+    "calls": 77,
+    "tris": 372265
+   },
+   "scene 1": {
+    "calls": 106,
+    "tris": 352948
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "categories": {
+   "env:glass-window (shadow)": {
+    "calls": 1,
+    "tris": 66944
+   },
+   "env:glass-window-glass (shadow)": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:glass-wall (shadow)": {
+    "calls": 1,
+    "tris": 46004
+   },
+   "env:glass-sconce (shadow)": {
+    "calls": 1,
+    "tris": 9108
+   },
+   "env:glass-sconce-glass (shadow)": {
+    "calls": 1,
+    "tris": 132
+   },
+   "env:stone (shadow)": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:stoneLight (shadow)": {
+    "calls": 1,
+    "tris": 840
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 192
+   },
+   "env:model (shadow)": {
+    "calls": 8,
+    "tris": 75251
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 240
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 7,
+    "tris": 21148
+   },
+   "bookshelf (shadow)": {
+    "calls": 6,
+    "tris": 26184
+   },
+   "piece (shadow)": {
+    "calls": 1,
+    "tris": 844
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 1,
+    "tris": 3310
+   },
+   "static-batch (shadow)": {
+    "calls": 7,
+    "tris": 22548
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 17,
+    "tris": 45415
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 10,
+    "tris": 296
+   },
+   "static-batch": {
+    "calls": 9,
+    "tris": 22576
+   },
+   "bookshelf": {
+    "calls": 6,
+    "tris": 26184
+   },
+   "output_unwrapped": {
+    "calls": 5,
+    "tris": 14993
+   },
+   "monsters": {
+    "calls": 20,
+    "tris": 38693
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 35473
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 66944
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 46004
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 9108
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 132
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 840
+   },
+   "env:atmosphere": {
+    "calls": 5,
+    "tris": 780
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 192
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 360
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 24
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 8,
+    "tris": 75251
+   },
+   "piece": {
+    "calls": 1,
+    "tris": 844
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 3310
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 8444
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 134
+   },
+   "contact-shadow": {
+    "calls": 9,
+    "tris": 18
+   },
+   "plates": {
+    "calls": 3,
+    "tris": 516
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 110
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 158
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 72
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 2048",
+   "PointLight 512",
+   "PointLight 512"
+  ],
+  "programs": 53,
+  "compiled": 0,
+  "memory": {
+   "geometries": 106,
+   "textures": 97,
+   "heapMB": 630,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 300.1,
+    "textures": 258.5,
+    "geometry": 24.5,
+    "total": 619.1
+   }
+  }
+ },
+ "s18/medium": {
+  "total": {
+   "calls": 183,
+   "tris": 726541
+  },
+  "passes": {
+   "shadow": {
+    "calls": 77,
+    "tris": 373425
+   },
+   "scene 1": {
+    "calls": 105,
+    "tris": 353115
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "categories": {
+   "env:glass-window (shadow)": {
+    "calls": 1,
+    "tris": 66944
+   },
+   "env:glass-window-glass (shadow)": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:glass-wall (shadow)": {
+    "calls": 1,
+    "tris": 46004
+   },
+   "env:glass-sconce (shadow)": {
+    "calls": 1,
+    "tris": 9108
+   },
+   "env:glass-sconce-glass (shadow)": {
+    "calls": 1,
+    "tris": 132
+   },
+   "env:stone (shadow)": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:stoneLight (shadow)": {
+    "calls": 1,
+    "tris": 840
+   },
+   "env:stoneDark (shadow)": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:ore (shadow)": {
+    "calls": 1,
+    "tris": 192
+   },
+   "env:model (shadow)": {
+    "calls": 8,
+    "tris": 76411
+   },
+   "env:atmosphere (shadow)": {
+    "calls": 2,
+    "tris": 240
+   },
+   "room (shadow)": {
+    "calls": 9,
+    "tris": 108
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 7,
+    "tris": 21148
+   },
+   "bookshelf (shadow)": {
+    "calls": 6,
+    "tris": 26184
+   },
+   "piece (shadow)": {
+    "calls": 1,
+    "tris": 844
+   },
+   "obstacle-cluster (shadow)": {
+    "calls": 1,
+    "tris": 3310
+   },
+   "static-batch (shadow)": {
+    "calls": 7,
+    "tris": 22548
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 17,
+    "tris": 45415
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 10,
+    "tris": 296
+   },
+   "static-batch": {
+    "calls": 9,
+    "tris": 22576
+   },
+   "bookshelf": {
+    "calls": 6,
+    "tris": 26184
+   },
+   "output_unwrapped": {
+    "calls": 5,
+    "tris": 14993
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 35473
+   },
+   "monsters": {
+    "calls": 20,
+    "tris": 38693
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 66944
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 384
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 46004
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 9108
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 132
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 840
+   },
+   "env:atmosphere": {
+    "calls": 5,
+    "tris": 780
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 192
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 360
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 24
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 7,
+    "tris": 75884
+   },
+   "piece": {
+    "calls": 1,
+    "tris": 844
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 3310
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 8076
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 142
+   },
+   "contact-shadow": {
+    "calls": 9,
+    "tris": 18
+   },
+   "plates": {
+    "calls": 3,
+    "tris": 516
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 68
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 94
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 72
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 1024"
+  ],
+  "programs": 40,
+  "compiled": 0,
+  "memory": {
+   "geometries": 106,
+   "textures": 88,
+   "heapMB": 674,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 180.1,
+    "textures": 242.4,
+    "geometry": 24.5,
+    "total": 483
+   }
+  }
+ },
+ "s18/low": {
+  "total": {
+   "calls": 101,
+   "tris": 255277
+  },
+  "passes": {
+   "scene 1": {
+    "calls": 101,
+    "tris": 255277
+   }
+  },
+  "categories": {
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 10,
+    "tris": 296
+   },
+   "static-batch": {
+    "calls": 8,
+    "tris": 16140
+   },
+   "bookshelf": {
+    "calls": 6,
+    "tris": 15564
+   },
+   "output_unwrapped": {
+    "calls": 5,
+    "tris": 11150
+   },
+   "heroes": {
+    "calls": 4,
+    "tris": 24807
+   },
+   "monsters": {
+    "calls": 20,
+    "tris": 33918
+   },
+   "env:glass-window": {
+    "calls": 1,
+    "tris": 61952
+   },
+   "env:glass-window-glass": {
+    "calls": 1,
+    "tris": 352
+   },
+   "env:glass-wall": {
+    "calls": 1,
+    "tris": 45012
+   },
+   "env:glass-sconce": {
+    "calls": 1,
+    "tris": 8492
+   },
+   "env:glass-sconce-glass": {
+    "calls": 1,
+    "tris": 132
+   },
+   "env:stone": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:stoneLight": {
+    "calls": 1,
+    "tris": 840
+   },
+   "env:stoneDark": {
+    "calls": 1,
+    "tris": 528
+   },
+   "env:atmosphere": {
+    "calls": 4,
+    "tris": 612
+   },
+   "env:ore": {
+    "calls": 1,
+    "tris": 192
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 204
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 24
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 48
+   },
+   "env:model": {
+    "calls": 8,
+    "tris": 28962
+   },
+   "piece": {
+    "calls": 1,
+    "tris": 586
+   },
+   "obstacle-cluster": {
+    "calls": 1,
+    "tris": 1632
+   },
+   "env:scatter": {
+    "calls": 1,
+    "tris": 2624
+   },
+   "shadow-bake": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 72
+   },
+   "contact-shadow": {
+    "calls": 9,
+    "tris": 18
+   },
+   "plates": {
+    "calls": 3,
+    "tris": 516
+   },
+   "rule-marks": {
+    "calls": 2,
+    "tris": 72
+   },
+   "env:ambient": {
+    "calls": 2,
+    "tris": 0
+   }
+  },
+  "shadowMaps": [],
+  "programs": 36,
+  "compiled": 0,
+  "memory": {
+   "geometries": 76,
+   "textures": 80,
+   "heapMB": 496.4,
+   "gpuMB": {
+    "canvas": 16,
+    "targets": 0,
+    "textures": 71.5,
+    "geometry": 20.2,
+    "total": 107.7
+   }
+  }
+ },
+ "s20/high": {
+  "total": {
+   "calls": 189,
+   "tris": 625348
+  },
+  "passes": {
+   "shadow": {
+    "calls": 71,
+    "tris": 313534
+   },
+   "scene 1": {
+    "calls": 113,
+    "tris": 311809
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "categories": {
+   "env:rockDark (shadow)": {
+    "calls": 1,
+    "tris": 12392
+   },
+   "env:rock (shadow)": {
+    "calls": 1,
+    "tris": 12900
+   },
+   "env:crystal (shadow)": {
+    "calls": 1,
+    "tris": 992
+   },
+   "env:env-rocks (shadow)": {
+    "calls": 16,
+    "tris": 131320
+   },
+   "env:model (shadow)": {
+    "calls": 5,
+    "tris": 39996
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 2,
+    "tris": 5640
+   },
+   "room (shadow)": {
+    "calls": 3,
+    "tris": 108
+   },
+   "glass-crystals (shadow)": {
+    "calls": 4,
+    "tris": 2564
+   },
+   "crystal-heart (shadow)": {
+    "calls": 1,
+    "tris": 2246
+   },
+   "static-batch (shadow)": {
+    "calls": 3,
+    "tris": 15980
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 24,
+    "tris": 36839
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 184
+   },
+   "static-batch": {
+    "calls": 9,
+    "tris": 17860
+   },
+   "glass-crystals": {
+    "calls": 4,
+    "tris": 2564
+   },
+   "output_unwrapped": {
+    "calls": 1,
+    "tris": 2957
+   },
+   "crystal-heart": {
+    "calls": 1,
+    "tris": 2246
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 52613
+   },
+   "monsters": {
+    "calls": 35,
+    "tris": 42620
+   },
+   "env:rockDark": {
+    "calls": 1,
+    "tris": 12392
+   },
+   "env:rock": {
+    "calls": 1,
+    "tris": 12900
+   },
+   "env:crystal": {
+    "calls": 1,
+    "tris": 992
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 8
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:env-rocks": {
+    "calls": 10,
+    "tris": 97554
+   },
+   "env:model": {
+    "calls": 5,
+    "tris": 39996
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 25183
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 530
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 338
+   },
+   "contact-shadow": {
+    "calls": 7,
+    "tris": 14
+   },
+   "plates": {
+    "calls": 2,
+    "tris": 534
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 84
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 164
+   },
+   "post": {
+    "calls": 5,
+    "tris": 5
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 2048",
+   "PointLight 512",
+   "PointLight 512"
+  ],
+  "programs": 56,
+  "compiled": 0,
+  "memory": {
+   "geometries": 107,
+   "textures": 87,
+   "heapMB": 624.7,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 300.1,
+    "textures": 159.8,
+    "geometry": 29.1,
+    "total": 525
+   }
+  }
+ },
+ "s20/medium": {
+  "total": {
+   "calls": 159,
+   "tris": 543492
+  },
+  "passes": {
+   "shadow": {
+    "calls": 55,
+    "tris": 255782
+   },
+   "scene 1": {
+    "calls": 103,
+    "tris": 287709
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "categories": {
+   "env:rockDark (shadow)": {
+    "calls": 1,
+    "tris": 12212
+   },
+   "env:rock (shadow)": {
+    "calls": 1,
+    "tris": 12732
+   },
+   "env:crystal (shadow)": {
+    "calls": 1,
+    "tris": 992
+   },
+   "env:env-rocks (shadow)": {
+    "calls": 1,
+    "tris": 82450
+   },
+   "env:model (shadow)": {
+    "calls": 4,
+    "tris": 31462
+   },
+   "output_unwrapped (shadow)": {
+    "calls": 2,
+    "tris": 5640
+   },
+   "room (shadow)": {
+    "calls": 3,
+    "tris": 108
+   },
+   "glass-crystals (shadow)": {
+    "calls": 4,
+    "tris": 2564
+   },
+   "crystal-heart (shadow)": {
+    "calls": 1,
+    "tris": 2246
+   },
+   "static-batch (shadow)": {
+    "calls": 3,
+    "tris": 15980
+   },
+   "heroes (shadow)": {
+    "calls": 10,
+    "tris": 52557
+   },
+   "monsters (shadow)": {
+    "calls": 24,
+    "tris": 36839
+   },
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 184
+   },
+   "static-batch": {
+    "calls": 9,
+    "tris": 17860
+   },
+   "glass-crystals": {
+    "calls": 4,
+    "tris": 2564
+   },
+   "output_unwrapped": {
+    "calls": 1,
+    "tris": 2957
+   },
+   "crystal-heart": {
+    "calls": 1,
+    "tris": 2246
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 52613
+   },
+   "monsters": {
+    "calls": 35,
+    "tris": 42620
+   },
+   "env:rockDark": {
+    "calls": 1,
+    "tris": 12212
+   },
+   "env:rock": {
+    "calls": 1,
+    "tris": 12732
+   },
+   "env:crystal": {
+    "calls": 1,
+    "tris": 992
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 8
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 82450
+   },
+   "env:model": {
+    "calls": 4,
+    "tris": 31462
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 25279
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 512
+   },
+   "floor-shade": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 256
+   },
+   "contact-shadow": {
+    "calls": 7,
+    "tris": 14
+   },
+   "plates": {
+    "calls": 2,
+    "tris": 534
+   },
+   "env:ambient": {
+    "calls": 4,
+    "tris": 58
+   },
+   "env:morok": {
+    "calls": 1,
+    "tris": 80
+   },
+   "post": {
+    "calls": 1,
+    "tris": 1
+   }
+  },
+  "shadowMaps": [
+   "DirectionalLight 1024"
+  ],
+  "programs": 41,
+  "compiled": 0,
+  "memory": {
+   "geometries": 92,
+   "textures": 78,
+   "heapMB": 559.5,
+   "gpuMB": {
+    "canvas": 36,
+    "targets": 180.1,
+    "textures": 143.7,
+    "geometry": 22.9,
+    "total": 382.7
+   }
+  }
+ },
+ "s20/low": {
+  "total": {
+   "calls": 101,
+   "tris": 152666
+  },
+  "passes": {
+   "scene 1": {
+    "calls": 101,
+    "tris": 152666
+   }
+  },
+  "categories": {
+   "env:ground": {
+    "calls": 1,
+    "tris": 2
+   },
+   "room": {
+    "calls": 4,
+    "tris": 184
+   },
+   "static-batch": {
+    "calls": 7,
+    "tris": 12112
+   },
+   "glass-crystals": {
+    "calls": 4,
+    "tris": 2476
+   },
+   "output_unwrapped": {
+    "calls": 1,
+    "tris": 2874
+   },
+   "crystal-heart": {
+    "calls": 1,
+    "tris": 1206
+   },
+   "heroes": {
+    "calls": 18,
+    "tris": 33739
+   },
+   "monsters": {
+    "calls": 35,
+    "tris": 31008
+   },
+   "env:rockDark": {
+    "calls": 1,
+    "tris": 11948
+   },
+   "obstacle-litter": {
+    "calls": 3,
+    "tris": 358
+   },
+   "env:rock": {
+    "calls": 1,
+    "tris": 7608
+   },
+   "env:crystal": {
+    "calls": 1,
+    "tris": 992
+   },
+   "env:shadow": {
+    "calls": 1,
+    "tris": 8
+   },
+   "env:glow": {
+    "calls": 1,
+    "tris": 72
+   },
+   "env:env-rocks": {
+    "calls": 1,
+    "tris": 24698
+   },
+   "env:model": {
+    "calls": 4,
+    "tris": 15049
+   },
+   "env:scatter": {
+    "calls": 2,
+    "tris": 7244
+   },
+   "env:atmosphere": {
+    "calls": 2,
+    "tris": 406
+   },
+   "shadow-bake": {
+    "calls": 1,
+    "tris": 2
+   },
+   "env:contact-shadows": {
+    "calls": 1,
+    "tris": 132
+   },
+   "contact-shadow": {
+    "calls": 7,
+    "tris": 14
+   },
+   "plates": {
+    "calls": 2,
+    "tris": 534
+   },
+   "env:ambient": {
+    "calls": 2,
+    "tris": 0
+   }
+  },
+  "shadowMaps": [],
+  "programs": 37,
+  "compiled": 0,
+  "memory": {
+   "geometries": 90,
+   "textures": 75,
+   "heapMB": 522.8,
+   "gpuMB": {
+    "canvas": 16,
+    "targets": 0,
+    "textures": 45.1,
+    "geometry": 11.6,
+    "total": 72.7
+   }
+  }
+ }
+}
