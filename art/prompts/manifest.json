@@ -3585,6 +3585,81 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "rough-marsh-1",
+      "nameUk": "Складна місцевість: очерет і осока в багні, варіант 1",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 105,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-marsh-1/rough-marsh-1.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-marsh-2",
+      "nameUk": "Складна місцевість: очерет і осока в багні, варіант 2",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 106,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-marsh-2/rough-marsh-2.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-marsh-3",
+      "nameUk": "Складна місцевість: очерет і осока в багні, варіант 3",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 107,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-marsh-3/rough-marsh-3.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }
