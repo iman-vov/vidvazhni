@@ -86,6 +86,7 @@ export const HEIGHT: Record<string, number> = {
   'crate-wall': 1.37,
   'workbench-forge': 1.5,
   'logs-fallen': 0.59,
+  'wreck-heap': 1.14,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -133,6 +134,7 @@ const FOOT: Record<string, [number, number, number, number]> = {
   'crate-wall': [-1.57, 1.57, -0.43, 0.43],
   'workbench-forge': [-1.67, 1.67, -0.47, 0.47],
   'logs-fallen': [-0.89, 0.89, -0.7, 0.7],
+  'wreck-heap': [-0.81, 0.81, -0.68, 0.68],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
@@ -580,6 +582,11 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
           i += 2;
         }
       }
+    } else if (orient.wreck && fam === 'goods') {
+      // The room's wreck on one hex: a rack fallen onto a crate, a smashed crate, a barrel on its
+      // side, a slit sack (Blender), turned any way.
+      const c = centreOf(group[0]!);
+      placed = [{ spec: S('wreck-heap'), piece: 'wreck-heap', x: c.x, z: c.z, y: 0, rot: rnd() * Math.PI * 2, scale: 1, tip: 'none', lean: 0, leanDir: 0, box: footprint('wreck-heap', 1, 'none') }];
     } else {
       placed = placeRecipe(singleRecipe(pieces.get(group[0]!)!, edge, rnd), region, group.map(centreOf), rnd, orient, [], playable);
     }

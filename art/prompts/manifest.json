@@ -4202,6 +4202,31 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "wreck-heap",
+      "nameUk": "Розгром на гекс: перекинутий стелаж на ящику, розбитий ящик, бочка на боці, розпоротий мішок",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 129,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/wreck-heap/wreck-heap.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 500,
+        "max": 4000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }
