@@ -21,7 +21,10 @@
       "obstacles": [
         { "hex": [3, 1], "model": "campfire" },
         { "hex": [1, 0], "model": "barrel" },
-        { "hex": [5, 2], "model": "crate" }
+        { "hex": [5, 2], "model": "crate" },
+        { "hex": [3, -1], "model": "table" },
+        { "hex": [3, 0], "model": "table" },
+        { "hex": [3, 2], "model": "crate-stack" }
       ],
       "doors": [{ "hex": [6, -2], "to": "s8.storeroom-north" }, { "hex": [6, 1], "to": "s8.storeroom-south" }],
       "spawns": [
