@@ -17,7 +17,7 @@
         [4, 0], [4, 1], [5, 0], [5, 1], [6, -1], [6, 0], [7, -1], [7, 0],
         [8, -1]
       ],
-      "obstacles": [{ "hex": [2, 1], "model": "rock" }],
+      "obstacles": [{ "hex": [2, 1], "model": "rock" }, { "hex": [6, 0], "model": "rock" }],
       "doors": [{ "hex": [8, -1], "to": "s5.heart" }],
       "spawns": [
         { "monster": "shadow-wraith", "hex": [4, 0], "by": { "3": "normal", "4": "normal" } },
