@@ -21,7 +21,7 @@ import type { Partition } from './environment/walls';
 import { buildLayout } from './environment/layout';
 import { walledRuns } from './environment/plan';
 import { environmentFor } from './environment/data';
-import { roughRimTexture, surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture, trapPlateTexture } from './surfaces';
+import { roughRimTexture, surfaceOf, surfaceRoughness, surfaceTexture, terrainOverlayTexture } from './surfaces';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { patchWater, setWaterMap } from './environment/life';
 import { batchSignature, batchStatic, freeMergedParts, mergeStaticParts, unbatch } from './mergeParts';
@@ -59,6 +59,43 @@ function gridHexGeometry(radius: number): THREE.BufferGeometry {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('aRim', new THREE.Float32BufferAttribute(rim, 1));
+  g.setIndex(index);
+  return g;
+}
+
+/** The ground patch under difficult and hazardous terrain: a soft blob whose ragged edge wanders
+ *  from a little inside the hex to past its rim (0.82–1.16), fading out over its outer third
+ *  (vertex alpha), so terrain lies on the land rather than filling a hex. Turned per hex. */
+function terrainPatchGeometry(): THREE.BufferGeometry {
+  const seg = 36;
+  const rnd = (() => {
+    let s = 7331;
+    return () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  })();
+  const w = Array.from({ length: 4 }, (_, i) => ({ k: 2 + i * 1.7 + rnd(), p: rnd() * Math.PI * 2, a: 0.07 / (1 + i * 0.6) }));
+  const edge = (a: number) => 1 + w.reduce((t, x) => t + x.a * Math.sin(Math.round(x.k) * a + x.p), 0);
+  const pos = [0, 0, 0];
+  const col = [1, 1, 1, 1];
+  const rings: [number, number][] = [[0.62, 1], [0.86, 0.55], [1, 0]];
+  for (const [f, alpha] of rings)
+    for (let i = 0; i < seg; i++) {
+      const a = (i / seg) * Math.PI * 2;
+      const r = HEX_SIZE * (0.06 + 0.94 * edge(a)) * f * (f === 1 ? 1 + 0.06 * (rnd() - 0.5) : 1);
+      pos.push(Math.cos(a) * r, 0, Math.sin(a) * r);
+      col.push(1, 1, 1, alpha);
+    }
+  const index: number[] = [];
+  for (let i = 0; i < seg; i++) index.push(0, 1 + ((i + 1) % seg), 1 + i);
+  for (let ring = 0; ring + 1 < rings.length; ring++)
+    for (let i = 0; i < seg; i++) {
+      const a = 1 + ring * seg + i;
+      const b = 1 + ring * seg + ((i + 1) % seg);
+      index.push(a, b, b + seg, a, b + seg, a + seg);
+    }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
   g.setIndex(index);
   return g;
 }
@@ -333,6 +370,10 @@ export class TileLayer {
   private surfaceTextures = new Map<SurfaceId, THREE.Texture>();
   private textures: THREE.Texture[] = [];
   private readonly overlayGeometry: THREE.BufferGeometry;
+  /** Difficult and hazardous ground: a ragged patch past the hex rim (terrainPatchGeometry). */
+  private readonly patchGeometry = terrainPatchGeometry();
+  /** The rim marks of difficult hexes, shown only while a move is being picked (setTerrainMarks). */
+  private terrainMarks = false;
   private quality: GraphicsQuality;
   /** Surface of each hex of the scenario (room data, per-hex overrides, the location's default). */
   private surfaceByHex = new Map<HexKey, SurfaceId>();
@@ -377,6 +418,8 @@ export class TileLayer {
   propGlow: ((key: string, height: number) => THREE.Object3D | null) | null = null;
   /** The difficult-terrain clump model for a hex (by the location's region), or null. */
   roughModel: ((hex: Hex) => string | null) | null = null;
+  /** The region's trap set model for a hex (trapModelFor), or null to use the location's snare. */
+  trapModel: ((hex: Hex) => string | null) | null = null;
   /** Where a turning mirror (s19) sends the beam in a state: it is drawn facing that hex. */
   mirrorAim: ((objectId: string, state: string | undefined) => Hex | null) | null = null;
   /** The beam (s19): one thin bar per leg, rebuilt when its path changes. */
@@ -392,6 +435,14 @@ export class TileLayer {
     this.gridGeometry = gridHexGeometry(HEX_SIZE);
     // Terrain over a whole hex (flat-top: a corner at +X).
     this.overlayGeometry = new THREE.CircleGeometry(HEX_SIZE, 6).rotateX(-Math.PI / 2);
+  }
+
+  /** Shows the rim marks of difficult hexes (while a move is being picked) or hides them: the
+   *  board itself shows terrain only by its props and ground patches. */
+  setTerrainMarks(on: boolean): void {
+    if (on === this.terrainMarks) return;
+    this.terrainMarks = on;
+    for (const room of this.rooms.values()) room.plates.forEach((mesh, i) => room.plateKeys[i] === 'overlay:difficult-rim' && (mesh.visible = on));
   }
 
   get revealed(): string[] {
@@ -434,7 +485,7 @@ export class TileLayer {
       this.textures.push(tex);
       m = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: 0.95, ...OVER_PATCH_OFFSET });
     } else if (key.startsWith('overlay:')) {
-      const terrain = key.slice(8) as Overlay;
+      const terrain = key.slice(8) as Overlay | 'trap' | 'scorch';
       if (terrain === 'water') {
         const fallback = noiseTexture('#5a8a96');
         this.textures.push(fallback);
@@ -454,10 +505,11 @@ export class TileLayer {
         patchWater(water, 'hex', this.quality !== 'low');
         m = water;
       } else {
-        const tex = terrainOverlayTexture(terrain, this.quality);
+        // A trap's ground is difficult terrain's, darker: dug and trodden.
+        const tex = terrainOverlayTexture(terrain === 'trap' ? 'difficult' : terrain, this.quality);
         this.textures.push(tex);
-        const overlay = worldUvMaterial(tex, '#ffffff');
-        Object.assign(overlay, { transparent: true, depthWrite: false, roughness: 0.9, ...OVER_PATCH_OFFSET });
+        const overlay = worldUvMaterial(tex, terrain === 'trap' ? '#a89884' : '#ffffff');
+        Object.assign(overlay, { transparent: true, depthWrite: false, roughness: 0.9, vertexColors: true, ...OVER_PATCH_OFFSET });
         if (terrain === 'hazardous') {
           overlay.emissive.set('#ff5a20');
           overlay.emissiveIntensity = 0.55;
@@ -653,12 +705,16 @@ export class TileLayer {
     group.name = `room:${id}`;
     const room: RoomView = { id, group, plates: [], plateHexes: [], plateY: [], plateKeys: [], edges: null, edgeDisposables: [], props: new THREE.Group() };
     const m = new THREE.Matrix4();
-    const add = (key: string, geometry: THREE.BufferGeometry, list: Hex[], y: number, order: number) => {
+    const add = (key: string, geometry: THREE.BufferGeometry, list: Hex[], y: number, order: number, turned = false) => {
       if (!list.length) return;
       const mesh = new THREE.InstancedMesh(geometry, this.material(key), list.length);
       list.forEach(([q, r], i) => {
         const { x, z } = hexToWorld(q, r);
-        m.makeTranslation(x, y, z);
+        // A patch is turned and sized a little per hex, so neighbours never repeat its outline.
+        if (turned) {
+          const v = hexVariation(q * 3 + 1, r * 7 - 2);
+          m.makeRotationY(v.rot).scale(new THREE.Vector3(v.scale, 1, v.scale)).setPosition(x, y, z);
+        } else m.makeTranslation(x, y, z);
         mesh.setMatrixAt(i, m);
       });
       mesh.receiveShadow = true;
@@ -702,9 +758,20 @@ export class TileLayer {
         }
         list.push(...off.values());
       }
-      add(`overlay:${terrain}`, this.overlayGeometry, list, OVERLAY_Y[terrain], 1);
-      if (terrain === 'difficult') add('overlay:difficult-rim', this.overlayGeometry, list, ROUGH_RIM_Y, 1);
+      if (terrain === 'water') add(`overlay:${terrain}`, this.overlayGeometry, list, OVERLAY_Y[terrain], 1);
+      else {
+        // Hazardous ground: soot under the glowing cracks, its own layer so only the cracks glow.
+        if (terrain === 'hazardous') add('overlay:scorch', this.patchGeometry, list, OVERLAY_Y.difficult, 1, true);
+        add(`overlay:${terrain}`, this.patchGeometry, list, OVERLAY_Y[terrain], 1, true);
+      }
+      if (terrain === 'difficult' && list.length) {
+        add('overlay:difficult-rim', this.overlayGeometry, list, ROUGH_RIM_Y, 1);
+        room.plates[room.plates.length - 1]!.visible = this.terrainMarks;
+      }
     }
+    // A trap lies on its own ragged patch of disturbed ground (its model has no plate); the patch
+    // stays when the trap is sprung, until the room is built again.
+    add('overlay:trap', this.patchGeometry, tiles.filter(([, t]) => t.trap).map(([k]) => parseHexKey(k)), OVERLAY_Y.difficult, 1, true);
     add('grid', this.gridGeometry, tiles.map(([k]) => parseHexKey(k)), GRID_Y, 2);
     group.add(room.props);
     this.root.add(group);
@@ -1112,11 +1179,15 @@ export class TileLayer {
     return this.makeSimple(`${k}:rough`, hex, room, model, part);
   }
 
-  /** A trap: the location's snare model (a bear trap) on a plate with spikes round its rim, larger
-   *  than the snare alone so it reads from across the board. */
+  /** A trap: the region's trap set (stakes, spikes or caltrops round the snare, out to the hex rim
+   *  so a figure on it never hides it), turned per hex; elsewhere the location's snare model with
+   *  stakes round it. No plate: the board marks nothing flat. */
   private makeTrap(k: HexKey, hex: Hex, room: string): PropView {
-    const view = this.makeSimple(`${k}:trap`, hex, room, 'trap', this.propParts.trap());
-    view.object.add(this.propParts.trapBase());
+    const part = this.propParts.trap();
+    const model = this.trapModel?.(hex) ?? null;
+    if (model) part.rotation.y = hexVariation(hex[0] * 2 + 5, hex[1] * 3 + 1).rot;
+    const view = this.makeSimple(`${k}:trap`, hex, room, model ?? 'trap', part);
+    if (!model) view.object.add(this.propParts.trapStakes());
     return view;
   }
 
@@ -1300,6 +1371,7 @@ export class TileLayer {
     this.plateGeometry.dispose();
     this.gridGeometry.dispose();
     this.overlayGeometry.dispose();
+    this.patchGeometry.dispose();
     this.boxGeometry.dispose();
     this.blockTexture.dispose();
     this.wallMaterial.dispose();
@@ -1367,7 +1439,7 @@ function doorDirection(hex: Hex, tile: Tile, s: GameState): THREE.Vector3 {
   return acc.normalize();
 }
 
-/** Six spikes round a trap's plate, leaning in a little: one geometry. */
+/** Six stakes round a trap, leaning in a little: one geometry. */
 function trapSpikes(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
   for (let i = 0; i < 6; i++) {
@@ -1407,10 +1479,8 @@ class PropParts {
   private readonly trapRing = this.keep(new THREE.TorusGeometry(0.3, 0.04, 6, 20).rotateX(Math.PI / 2));
   private readonly toothGeo = this.keep(new THREE.ConeGeometry(0.035, 0.12, 4));
   private readonly runeGeo = this.keep(new THREE.DodecahedronGeometry(0.28));
-  // A trap's plate (most of the hex) with spikes round its rim, and the loose stones and a stick on
-  // difficult terrain: matte, low, never as tall as an obstacle.
-  private readonly trapPlateGeo = this.keep(new THREE.CircleGeometry(0.74, 6).rotateX(-Math.PI / 2));
-  private readonly trapPlateMat = this.keep(new THREE.MeshStandardMaterial({ map: this.keep(trapPlateTexture('high')), roughness: 0.85, metalness: 0.1, alphaTest: 0.5 }));
+  // A trap's stakes round its rim, and the loose stones and a stick on difficult terrain: matte,
+  // low, never as tall as an obstacle.
   private readonly spikeGeo = this.keep(trapSpikes());
   private readonly spikeMat = this.keep(new THREE.MeshStandardMaterial({ color: '#b3aa98', roughness: 0.7, metalness: 0.2 }));
   private readonly stoneGeo = this.keep(new THREE.DodecahedronGeometry(0.12, 0));
@@ -1553,14 +1623,10 @@ class PropParts {
     return { frame, wings };
   }
 
-  /** What stays under a trap's snare model: the plate and its spikes. */
-  trapBase(): THREE.Group {
+  /** The stakes round a location's snare where it has no trap set. */
+  trapStakes(): THREE.Group {
     const g = new THREE.Group();
-    g.name = 'trap-base';
-    const plate = new THREE.Mesh(this.trapPlateGeo, this.trapPlateMat);
-    plate.position.y = 0.012;
-    plate.receiveShadow = true;
-    g.add(plate);
+    g.name = 'trap-stakes';
     g.add(new THREE.Mesh(this.spikeGeo, this.spikeMat));
     return g;
   }

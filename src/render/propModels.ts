@@ -108,9 +108,33 @@ export function roughModelFor(environmentId: string | null | undefined, q: numbe
   return `rough-${set}-${1 + Math.floor(h * ROUGH_VARIANTS)}`;
 }
 
+/** Location → trap set (art/blender/terrain-props): a snare among leaves and stakes in the forest
+ *  and the marsh, a spiked pit in caves and mines, caltrops round a sprung plate in town, glass
+ *  spikes in the Glass Town. Locations without one keep their `trap` prop (a bear trap). */
+export const TRAP_SETS: Readonly<Record<string, string>> = {
+  'thorn-path': 'forest',
+  'flooded-mill': 'forest',
+  'dark-depths': 'cave',
+  'mine-tunnel': 'cave',
+  'gloom-heart': 'cave',
+  'mountain-pass': 'cave',
+  cellar: 'town',
+  copperdale: 'town',
+  'old-forge': 'town',
+  watchtower: 'town',
+  'glass-town': 'glass',
+  'glass-heights': 'glass',
+};
+
+/** The trap model of a location, or null when it has no set. */
+export function trapModelFor(environmentId: string | null | undefined): string | null {
+  const set = environmentId ? TRAP_SETS[environmentId] : undefined;
+  return set ? `trap-${set}` : null;
+}
+
 /** Models shown at their authored size and origin rather than fitted to a height and centred. */
 export function anchoredModel(model: string): boolean {
-  return model.startsWith('rough-');
+  return model.startsWith('rough-') || /^trap-(forest|cave|town|glass)$/.test(model);
 }
 
 const cache = new StampedCache<PropPrototype | null>();

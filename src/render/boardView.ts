@@ -31,7 +31,7 @@ import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slid
 import { listModels } from './models';
 import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
-import { loadPropPrototype, roughModelFor } from './propModels';
+import { loadPropPrototype, roughModelFor, trapModelFor } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
@@ -624,6 +624,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   tiles.propModel = (key, height) => environment.propModel(key, height);
   tiles.propGlow = (key, height) => environment.propGlow(key, height);
   tiles.roughModel = (hex) => roughModelFor(environment.def?.id, hex[0], hex[1]);
+  tiles.trapModel = () => trapModelFor(environment.def?.id);
   tiles.boundaryFactory = (kind, frames, low) => environment.boundary(kind, frames, low);
   tiles.dividerFactory = (rooms, frames) => environment.divider(rooms, frames);
   tiles.pieceFactory = (id) => environment.makePiece(id);
@@ -1548,6 +1549,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     // Only hexes of revealed rooms (a stale highlight must not float over the dark).
     const onBoard = tiles.hexKeys();
     highlightPlan = planHighlights(highlights, (h) => onBoard.has(hexKey(h)));
+    // Difficult hexes get their rim marks only while a move is being picked.
+    tiles.setTerrainMarks(!!highlights.reachable?.length);
     for (const m of [fills, frames, dots, edges, lines]) {
       if (!m) continue;
       scene.remove(m);

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ENVIRONMENTS } from '../../src/render/environment';
 import { footRing, hexBand } from '../../src/render/figureView';
 import { activeFigure } from '../../src/render/highlightPlan';
-import { anchoredModel, fitToHeight, hexVariation, propModelFor, ROUGH_SETS, ROUGH_VARIANTS, roughModelFor } from '../../src/render/propModels';
+import { anchoredModel, fitToHeight, hexVariation, propModelFor, ROUGH_SETS, ROUGH_VARIANTS, roughModelFor, TRAP_SETS, trapModelFor } from '../../src/render/propModels';
 import type { GameState } from '../../src/rules/state';
 
 /** Prop model ids the art manifest plans (art/prompts/manifest.json, kind "prop") plus flour-sack. */
@@ -92,6 +92,18 @@ describe('prop models', () => {
     }
     expect(roughModelFor('thorn-path', 3, -2)).toBe(roughModelFor('thorn-path', 3, -2));
     expect(anchoredModel('barrel')).toBe(false);
+  });
+
+  it('a trap gets the set of its region, a planned anchored model; elsewhere the location snare', () => {
+    expect(trapModelFor('no-such-place')).toBeNull();
+    expect(trapModelFor(undefined)).toBeNull();
+    for (const id of Object.keys(TRAP_SETS)) expect(ENVIRONMENTS.some((e) => e.id === id)).toBe(true);
+    for (const set of new Set(Object.values(TRAP_SETS))) {
+      expect(PLANNED.has(`trap-${set}`)).toBe(true);
+      expect(anchoredModel(`trap-${set}`)).toBe(true);
+    }
+    expect(trapModelFor('glass-town')).toBe('trap-glass');
+    expect(anchoredModel('bear-trap')).toBe(false);
   });
 });
 

@@ -351,7 +351,7 @@ def sheet_rows(out_dir, rows=('forest', 'marsh', 'cave', 'town', 'glass'), ys=(0
         if o.name.startswith('ref-hex'):
             o.data.materials.clear()
             o.data.materials.append(ground)
-        part = o.name.startswith('rough-') and o.name.split('-')[-1][:1] == 'p'
+        part = o.name.startswith(('rough-', 'trap-')) and o.name.split('-')[-1][:1] == 'p'
         hide = o.name.endswith('-hi') or '-hi-' in o.name or o.name.endswith('-v1') or part or o.name == 'ref-fig'
         o.hide_render = hide
     cam = bpy.data.objects.get('sheet-cam')
@@ -380,7 +380,9 @@ def sheet_rows(out_dir, rows=('forest', 'marsh', 'cave', 'town', 'glass'), ys=(0
     out = []
     for name, y in zip(rows, ys):
         d = Vector((0, -math.cos(elev), math.sin(elev)))
-        cam.location = Vector((0, y, 0.05)) + d * 10
+        # the trap row has four hexes (x -2.2 .. 4.4), the others three
+        cam.data.ortho_scale = 9.1 if name == 'trap' else 6.9
+        cam.location = Vector((1.1 if name == 'trap' else 0, y, 0.05)) + d * 10
         cam.rotation_euler = (math.pi / 2 - elev, 0, 0)
         sc.render.filepath = os.path.join(out_dir, 'row-%s.png' % name)
         bpy.ops.render.render(write_still=True)

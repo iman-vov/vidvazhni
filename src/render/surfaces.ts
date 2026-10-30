@@ -630,17 +630,38 @@ export function surfaceTexture(id: SurfaceId, quality: GraphicsQuality, url: Tex
   return tex;
 }
 
-/** Overlay painted over difficult hexes (scree, tufts and twigs) and hazardous ones (glowing cracks
- *  and embers): transparent where the surface should show. */
-export function terrainOverlayTexture(terrain: 'difficult' | 'hazardous', quality: GraphicsQuality): THREE.Texture {
+/** Overlay painted over difficult hexes (trodden earth, scree, tufts and twigs) and hazardous ones
+ *  (glowing cracks and embers; `scorch` is the soot under them, apart so it does not glow):
+ *  transparent where the surface should show. */
+export function terrainOverlayTexture(terrain: 'difficult' | 'hazardous' | 'scorch', quality: GraphicsQuality): THREE.Texture {
   const size = quality === 'low' ? 256 : 512;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
-  const rnd = seeded(terrain === 'difficult' ? 4242 : 911);
-  if (terrain === 'difficult') {
+  const rnd = seeded(terrain === 'difficult' ? 4242 : terrain === 'scorch' ? 913 : 911);
+  // Under the bits, a mottled ground of trodden earth (or soot): the patch (boardTiles) fades it out
+  // past the hex rim, so it shows as a worn stretch of land, not a hex.
+  for (let i = 0; i < (terrain === 'hazardous' ? 0 : 70); i++) {
+    const x = rnd() * size;
+    const y = rnd() * size;
+    const r = size * (0.07 + rnd() * 0.12);
+    const a = (terrain === 'difficult' ? 0.3 : 0.32) + rnd() * 0.16;
+    tiled(size, x, y, r, (cx, cy) => {
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, terrain === 'difficult' ? `rgba(62,44,26,${a})` : `rgba(34,22,16,${a})`);
+      g.addColorStop(0.6, terrain === 'difficult' ? `rgba(70,50,30,${a * 0.6})` : `rgba(34,22,16,${a * 0.6})`);
+      g.addColorStop(1, 'rgba(60,44,28,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+  if (terrain === 'scorch') {
+    // Soot only.
+  } else if (terrain === 'difficult') {
     // Loose stones and clods.
-    for (let i = 0; i < 160; i++) {
+    for (let i = 0; i < 230; i++) {
       const x = rnd() * size;
       const y = rnd() * size;
       const r = size * (0.006 + rnd() * 0.016);
@@ -773,49 +794,6 @@ export function roughRimTexture(quality: GraphicsQuality): THREE.Texture {
     }
   }
   ctx.restore();
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
-}
-
-/** A trap's plate (hex-local UVs): dark iron with a rust-red rim, pale rivets and spikes painted
- *  towards the centre, where the snare sits. Flat and matte, no glow: it reads from across the
- *  board as «danger here», unlike an obstacle (a prop) or terrain (a fill over the whole hex). */
-export function trapPlateTexture(quality: GraphicsQuality): THREE.Texture {
-  const size = quality === 'low' ? 128 : 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  const r = size * 0.48;
-  hexPath(ctx, size, r);
-  ctx.fillStyle = '#9a4a2c';
-  ctx.fill();
-  hexPath(ctx, size, r * 0.8);
-  ctx.fillStyle = '#2f2a26';
-  ctx.fill();
-  // Spikes: pale triangles from the inner rim towards the centre.
-  ctx.fillStyle = '#b8ae9c';
-  for (let i = 0; i < 12; i++) {
-    const a = ((i + 0.5) / 12) * Math.PI * 2;
-    const w = 0.16;
-    const base = r * 0.74;
-    const tip = r * 0.42;
-    ctx.beginPath();
-    ctx.moveTo(size / 2 + Math.cos(a - w) * base, size / 2 + Math.sin(a - w) * base);
-    ctx.lineTo(size / 2 + Math.cos(a) * tip, size / 2 + Math.sin(a) * tip);
-    ctx.lineTo(size / 2 + Math.cos(a + w) * base, size / 2 + Math.sin(a + w) * base);
-    ctx.closePath();
-    ctx.fill();
-  }
-  // Rivets on the rim's corners.
-  ctx.fillStyle = '#e0d6c2';
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.arc(size / 2 + Math.cos(a) * r * 0.88, size / 2 + Math.sin(a) * r * 0.88, size * 0.018, 0, Math.PI * 2);
-    ctx.fill();
-  }
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;

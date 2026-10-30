@@ -3885,6 +3885,106 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "trap-forest",
+      "nameUk": "Пастка: капкан під листям у колі загострених кілків (ліс і болото)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 117,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/trap-forest/trap-forest.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "trap-cave",
+      "nameUk": "Пастка: яма з кілками під гнилими дошками (печери й шахти)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 118,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/trap-cave/trap-cave.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "trap-town",
+      "nameUk": "Пастка: натискна плита з зубцями, рогульки й розтяжка (місто й кузня)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 119,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/trap-town/trap-town.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "trap-glass",
+      "nameUk": "Пастка: вінець скляних зубів на вапняку (Скляне місто)",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 120,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/trap-glass/trap-glass.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }
