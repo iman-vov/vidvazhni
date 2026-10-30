@@ -31,12 +31,13 @@ import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slid
 import { listModels } from './models';
 import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
-import { loadPropPrototype, roughModelFor, trapModelFor } from './propModels';
+import { loadPropPrototype, roughModelFor, trapDust, trapModelFor } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
 import { nextAssetGeneration, releaseUnusedAssets } from './assetRelease';
 import { applyShadowFlags, bakeCaster, fitSunShadow, fitSunToView, markLampCasters, passLampMaps, setupLampShadows, SHADOW_TIERS } from './shadows';
+import { fader, poseSnap, SNAP_HIT, SNAP_SECONDS, snapLength, snapParts } from './trapSnap';
 import type { BoardHighlights, BoardView, BoardViewOptions } from './view';
 import { iconSvg } from '../ui/icons/svg';
 
@@ -1048,18 +1049,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         return spawn(step.figureId, ctx);
       case 'loot':
         return loot(step.heroId, step.coins, ctx, step.chest);
-      case 'trap': {
-        const fv = figures.get(step.figureId);
-        if (!fv) return;
-        const key = `${hexKey(step.hex)}:trap`;
-        const p = tiles.prop(key);
-        if (p) {
-          await anim.tween(TIMING.trap, (k) => p.object.scale.set(1 + Math.sin(k * Math.PI) * 0.5, 1 - k * 0.6, 1 + Math.sin(k * Math.PI) * 0.5));
-          tiles.removeProp(key);
-        }
-        void effects.puff(fv.root.position.clone().setY(PLATE_HEIGHT + 0.15), '#8a8f99', { count: 6, size: 0.35, seconds: 0.6, rise: 0.3 });
-        return;
-      }
+      case 'trap':
+        return springTrap(step.hex);
       case 'die': {
         // «Карти з X»: the roll in a small d12 badge over the figure.
         const fv = figures.get(step.figureId);
@@ -1074,6 +1065,47 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
         return;
       }
     }
+  }
+
+  /** A trap snapping shut (trapSnap.ts) under whoever sprang it, with a puff of dust at the hit:
+   *  it lies shut a while, then fades, without holding the queue. A trap with no moving parts
+   *  (the bear trap) is squashed flat instead. */
+  async function springTrap(hex: Hex): Promise<void> {
+    const key = `${hexKey(hex)}:trap`;
+    const { x, z } = hexToWorld(hex[0], hex[1]);
+    const dust = () => void effects.puff(new THREE.Vector3(x, PLATE_HEIGHT + 0.08, z), trapDust(environment.def?.id), { count: 7, size: 0.32, seconds: 0.55, rise: 0.25 });
+    const p = tiles.prop(key);
+    if (!p) return dust();
+    const parts = snapParts(p.object);
+    if (!parts.length) {
+      await anim.tween(TIMING.trap, (k) => p.object.scale.set(1 + Math.sin(k * Math.PI) * 0.5, 1 - k * 0.6, 1 + Math.sin(k * Math.PI) * 0.5));
+      tiles.removeProp(key);
+      return dust();
+    }
+    tiles.holdSprung(key);
+    const length = snapLength(parts);
+    let hit = false;
+    await anim.tween(
+      length,
+      (k) => {
+        poseSnap(parts, k * length);
+        if (!hit && k * length >= SNAP_SECONDS * SNAP_HIT) {
+          hit = true;
+          dust();
+        }
+      },
+      { ease: linear },
+    );
+    shadowsChanged();
+    void (async () => {
+      await anim.wait(TIMING.trapSprung);
+      if (tiles.prop(key) !== p) return;
+      const fade = fader(p.object);
+      await anim.tween(0.4, (k) => fade.set(1 - k));
+      tiles.removeProp(key);
+      fade.dispose();
+      shadowsChanged();
+    })();
   }
 
   function turnTo(fv: FigureView, yaw: number, seconds: number): Promise<void> {

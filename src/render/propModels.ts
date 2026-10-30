@@ -132,6 +132,13 @@ export function trapModelFor(environmentId: string | null | undefined): string |
   return set ? `trap-${set}` : null;
 }
 
+/** The dust a trap of a location kicks up as it springs: soil, grit, stone dust, glass chips. */
+const TRAP_DUST: Readonly<Record<string, string>> = { forest: '#7a6648', cave: '#77706a', town: '#8a8274', glass: '#b9cfd2' };
+
+export function trapDust(environmentId: string | null | undefined): string {
+  return TRAP_DUST[(environmentId && TRAP_SETS[environmentId]) || ''] ?? '#8a8f99';
+}
+
 /** Models shown at their authored size and origin rather than fitted to a height and centred. */
 export function anchoredModel(model: string): boolean {
   return model.startsWith('rough-') || /^trap-(forest|cave|town|glass)$/.test(model);

@@ -356,6 +356,8 @@ export class TileLayer {
   /** Each built room's non-normal terrain (`hex:terrain …`), to notice a change mid-game. */
   private roomTerrain = new Map<string, string>();
   private readonly props = new Map<string, PropView>();
+  /** Sprung traps: the engine took them off their tiles, but they lie shut until they fade. */
+  private readonly sprung = new Set<string>();
   /** Per room (and its walls): what batchObstacles merged, and what it was merged from. */
   private readonly batches = new Map<string, { sig: string; batch: THREE.Group | null }>();
   private readonly plateGeometry: THREE.BufferGeometry;
@@ -978,7 +980,7 @@ export class TileLayer {
       }
     }
     for (const [key, p] of this.props) {
-      if (seen.has(key) || (onlyRoom && p.room !== onlyRoom)) continue;
+      if (seen.has(key) || this.sprung.has(key) || (onlyRoom && p.room !== onlyRoom)) continue;
       this.dropProp(key, p);
     }
   }
@@ -1029,12 +1031,19 @@ export class TileLayer {
   }
 
   removeProp(key: string): void {
+    this.sprung.delete(key);
     const p = this.props.get(key);
     if (p) this.dropProp(key, p);
   }
 
+  /** Keeps a sprung trap on the board after its tile lost it, until removeProp. */
+  holdSprung(key: string): void {
+    if (this.props.has(key)) this.sprung.add(key);
+  }
+
   /** Takes a prop off the board for good, with the geometry its parts were merged into. */
   private dropProp(key: string, p: PropView): void {
+    this.sprung.delete(key);
     p.object.removeFromParent();
     freeMergedParts(p.object);
     this.props.delete(key);
