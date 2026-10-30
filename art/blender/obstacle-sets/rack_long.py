@@ -28,16 +28,16 @@ def step_frame():
     # bearers across the depth at every level and post line, and long rails front and back on top
     for z in LEVELS:
         for x in XS:
-            k.add(lambda bm, hi, x=x, z=z: box(bm, hi, (x, 0, z - 0.03), (P + 0.012, DD - 0.004, 0.05), 0.004), 'wood', PINE, 1)
+            k.add(lambda bm, hi, x=x, z=z: box(bm, hi, (x, 0, z - 0.03), (P + 0.012, DD - 0.004, 0.05), 0.004 if hi else 0.0), 'wood', PINE, 1)
     for y in YS:
-        k.add(lambda bm, hi, y=y: box(bm, hi, (0, y, H - 0.025), (L, P - 0.006, 0.05), 0.004), 'wood', PINE, 0)
+        k.add(lambda bm, hi, y=y: box(bm, hi, (0, y, H - 0.025), (L, P - 0.006, 0.05), 0.004 if hi else 0.0), 'wood', PINE, 0)
     # shelf decks: three planks each with 6 mm gaps, a little proud of the posts at the ends
     for i, z in enumerate(LEVELS):
         pw = (DD - 0.012) / 3
         for j in range(3):
             y = -DD / 2 + pw / 2 + j * (pw + 0.006)
             def plank(bm, hi, y=y, z=z, j=j, i=i):
-                box(bm, hi, (0, y, z + PT / 2), (L - 0.01, pw, PT), 0.003)
+                box(bm, hi, (0, y, z + PT / 2), (L - 0.01, pw, PT), 0.003 if hi else 0.0)
             k.add(plank, 'wood', [PINE, PINE2, PINE][j], 0)
     # X braces in the back of both bays (two crossing slats), and on both ends
     def slat(bm, hi, a, b, w=0.05, t=0.016):
@@ -59,7 +59,7 @@ def step_frame():
     for x in XS:
         for y in YS:
             for z in LEVELS[1:3]:
-                k.add(lambda bm, hi, x=x, y=y, z=z: box(bm, hi, (x, y + (0.033 if y > 0 else -0.033), z - 0.03), (0.04, 0.003, 0.07), 0.001), 'iron', IRON, 0)
+                k.add(lambda bm, hi, x=x, y=y, z=z: box(bm, hi, (x, y + (0.033 if y > 0 else -0.033), z - 0.03), (0.04, 0.003, 0.07), 0.001 if hi else 0.0), 'iron', IRON, 0)
     return k.finish('rk-frame')
 
 
@@ -143,3 +143,43 @@ def step_goods(level):
             if rnd.random() < 0.18:
                 x += rnd.uniform(0.08, 0.16)
     return k.finish('rk-goods-%d' % level)
+
+
+def step_top():
+    """A plank deck on the top rails and what is stored on it, as the board camera sees it: a crate
+    with a loose lid, a wicker basket, a cloth bolt, a coil of rope and a stack of empty sacks."""
+    k = Kit(80)
+    rnd = random.Random(81)
+    zt = H
+    pw = (DD - 0.012) / 3
+    for j in range(3):
+        y = -DD / 2 + pw / 2 + j * (pw + 0.006)
+        k.add(lambda bm, hi, y=y: box(bm, hi, (0, y, zt + PT / 2), (L - 0.01, pw, PT), 0.003 if hi else 0.0), 'wood', [PINE2, PINE, PINE2][j], 0)
+    z0 = zt + PT
+    small_crate(k, rnd, -0.55, 0.0, z0)
+    # the crate's lid, slid half off
+    k.add(lambda bm, hi: box(bm, hi, (-0.5, 0.03, z0 + 0.21), (0.3, 0.24, 0.016), 0.003), 'wood', PINE2, 0)
+    # wicker basket: a tapered tub with a rim
+    def basket(bm, hi):
+        prof = [(0.0, 0), (0.1, 0), (0.13, 0.13), (0.14, 0.14), (0.125, 0.14), (0.1, 0.02), (0.0, 0.02)]
+        lathe(bm, hi, [(r, z0 + z) for r, z in prof], (-0.12, 0.0, 0), seg=10, seg_hi=32)
+    k.add(basket, 'rope', '#A88A56', 2)
+    bolt(k, rnd, 0.22, 0.0, z0)
+    # coil of rope: a flat torus
+    def coil(bm, hi):
+        n, m = (24, 8) if hi else (10, 5)
+        R, r = 0.1, 0.025
+        rings = []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            rings.append([bm.verts.new(Vector((0.48 + (R + r * math.cos(b)) * math.cos(a), (R + r * math.cos(b)) * math.sin(a), z0 + r + r * math.sin(b))))
+                          for b in [2 * math.pi * j / m for j in range(m)]])
+        for i in range(n):
+            A, B = rings[i], rings[(i + 1) % n]
+            for j in range(m):
+                bm.faces.new((A[j], A[(j + 1) % m], B[(j + 1) % m], B[j]))
+    k.add(coil, 'rope', '#B89A64', 2)
+    # folded empty sacks
+    for i in range(3):
+        k.add(lambda bm, hi, i=i: box(bm, hi, (0.72, -0.02 + i * 0.01, z0 + 0.012 + i * 0.022), (0.24 - i * 0.02, 0.3 - i * 0.03, 0.022), 0.006), 'cloth', '#B8A47A', 2)
+    return k.finish('rk-top')

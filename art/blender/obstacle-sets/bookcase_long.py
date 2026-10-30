@@ -152,3 +152,49 @@ def step_books(side, shelf):
             x = lean(k, rnd, z0, x, hmin, hmax * 0.9)
     POST = Matrix.Identity(4)
     return k.finish('bcl-books-%s%d' % ('f' if side < 0 else 'b', shelf))
+
+
+def step_top():
+    """The top as the board camera sees it: two stacks of books lying flat, a lidded document box
+    with brass corners, two rolled scrolls and a brass candlestick with a stub of candle."""
+    global POST
+    POST = Matrix.Identity(4)
+    k = Kit(60)
+    rnd = random.Random(61)
+    zt = TOP + 0.035
+    # stacks: lying flat, spines to either face
+    stack(k, rnd, zt, -0.72, 3, 0.24, 0.27, 0.19, 0.23, ycen=-0.1)
+    stack(k, rnd, zt, -0.36, 2, 0.21, 0.24, 0.17, 0.2, ycen=0.12)
+    # crests on both ends of the top: a low board with an arched top edge
+    for sx in (-1, 1):
+        def crest(bm, hi, sx=sx):
+            n = 8 if hi else 4
+            pts = [(-DD / 2 - 0.02, 0.0)] + [(y, 0.035 + z) for y, z in arch(-DD / 2 - 0.02, DD / 2 + 0.02, 0.0, 0.05, n)] + [(DD / 2 + 0.02, 0.0)]
+            pts = [(y, zt + z) for y, z in pts]
+            prism(bm, hi, pts, 'x', sx * (L / 2 + 0.005) - 0.012, sx * (L / 2 + 0.005) + 0.012, bev=0.004)
+        k.add(crest, 'wood', OAK, 0)
+    # document box with a lid, brass corner plates and a hasp
+    bx, by, bw, bd, bh = 0.18, 0.05, 0.3, 0.22, 0.12
+    k.add(lambda bm, hi: box(bm, hi, (bx, by, zt + bh / 2), (bw, bd, bh), 0.004), 'wood', '#5A3A24', 2)
+    k.add(lambda bm, hi: box(bm, hi, (bx, by, zt + bh + 0.012), (bw + 0.012, bd + 0.012, 0.024), 0.004), 'wood', '#4A3020', 0)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            k.add(lambda bm, hi, sx=sx, sy=sy: box(bm, hi, (bx + sx * (bw / 2 - 0.01), by + sy * (bd / 2 + 0.004), zt + bh + 0.012), (0.03, 0.004, 0.028), 0.001), 'brass', '#B08A3E', 0)
+    k.add(lambda bm, hi: box(bm, hi, (bx, by - bd / 2 - 0.006, zt + bh - 0.01), (0.03, 0.004, 0.05), 0.001), 'brass', '#B08A3E', 0)
+    # two rolled scrolls with ribbon ties
+    for sx, sy, a in ((0.5, -0.12, 0.25), (0.56, 0.08, -0.15)):
+        def scroll(bm, hi, sx=sx, sy=sy, a=a):
+            before = set(bm.faces)
+            cyl(bm, hi, (0, 0, 0), 0.028, 0.34, 'x', 10 if hi else 6)
+            f = _new_faces(bm, before)
+            move(bm, f, Matrix.Translation((sx, sy, zt + 0.028)) @ Matrix.Rotation(a, 4, 'Z'))
+        k.add(scroll, 'paper', PAGE, 0)
+        k.add(lambda bm, hi, sx=sx, sy=sy: cyl(bm, hi, (sx, sy, zt + 0.028), 0.031, 0.02, 'x', 8 if hi else 6), 'cloth', '#7A2E28', 0, levels=('hi',))
+    # brass candlestick with a burnt-down candle
+    cx, cy = 0.76, -0.16
+    def stick(bm, hi):
+        prof = [(0.0, 0), (0.045, 0), (0.045, 0.008), (0.018, 0.02), (0.012, 0.09), (0.03, 0.1), (0.03, 0.11), (0.0, 0.11)]
+        lathe(bm, hi, [(r, zt + z) for r, z in prof], (cx, cy, 0), seg=8, seg_hi=24)
+    k.add(stick, 'brass', '#B08A3E', 1)
+    k.add(lambda bm, hi: cyl(bm, hi, (cx, cy, zt + 0.15), 0.016, 0.08, 'z', 8 if hi else 6), 'cloth', '#E8DCC0', 0)
+    return k.finish('bcl-top')
