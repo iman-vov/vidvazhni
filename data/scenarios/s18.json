@@ -60,8 +60,8 @@
       ],
       "coins": [[16, -8]],
       "chests": [
-        { "hex": [10, -5], "id": "s18.page-1", "loot": { "coins": 1 } },
-        { "hex": [12, -2], "id": "s18.page-2", "loot": { "coins": 1 } },
+        { "hex": [9, -3], "id": "s18.page-1", "loot": { "coins": 1 } },
+        { "hex": [11, -1], "id": "s18.page-2", "loot": { "coins": 1 } },
         { "hex": [14, -7], "id": "s18.page-3", "loot": { "coins": 1 } }
       ],
       "objects": [
