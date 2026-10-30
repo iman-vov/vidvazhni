@@ -3660,6 +3660,81 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "rough-cave-1",
+      "nameUk": "Складна місцевість: осип каміння, варіант 1",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 108,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-cave-1/rough-cave-1.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-cave-2",
+      "nameUk": "Складна місцевість: осип каміння, варіант 2",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 109,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-cave-2/rough-cave-2.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-cave-3",
+      "nameUk": "Складна місцевість: осип каміння, варіант 3",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 110,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-cave-3/rough-cave-3.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }
