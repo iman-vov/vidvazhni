@@ -191,7 +191,10 @@ export function loadPropPrototype(spec: Required<PropModelSpec>, quality: Graphi
   const key = `${spec.model}@${quality}:${spec.height.toFixed(3)}:${spec.rotY}:${spec.stack}`;
   let p = cache.get(key);
   if (!p) {
-    p = loadModel(spec.model, { quality })
+    // High draws prop models with the medium tier's textures (512, same mesh): a prop is a few dozen
+    // to a hundred pixels tall at the normal zoom, and its three 1024 maps took ~16 MB of GPU memory
+    // per model (~170 MB on a furnished board).
+    p = loadModel(spec.model, { quality: quality === 'high' ? 'medium' : quality })
       .then(async (model) => {
         const inner = model.scene;
         const meshes: THREE.Mesh[] = [];
