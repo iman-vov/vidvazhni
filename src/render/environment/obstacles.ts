@@ -11,6 +11,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { RoomKind, ScenarioDef } from '../../rules/content';
 import { hexKey, neighbors, parseHexKey, type HexKey } from '../../rules/hex';
 import { hexToWorld, worldToHex } from '../hexLayout';
+import { mergeStaticParts } from '../mergeParts';
 import { HEX_INNER, seededRandom } from './layout';
 import MODEL_BOUNDS from './modelBounds.json';
 import { PALETTE_DEFAULTS, pieceMeta, type MaterialKey, type Part } from './pieces';
@@ -33,6 +34,9 @@ export interface ClusterItem {
   leanDir: number;
   /** Which of the kit's variants (litter). */
   variant?: number;
+  /** A second unit beside it along its own X, one thing with it (a row of shelves): the two stand
+   *  `dx` apart about the item's position, the second `scale` times the first's size. */
+  twin?: { dx: number; scale: number };
 }
 
 export interface ClusterPlan {
@@ -73,6 +77,8 @@ export const HEIGHT: Record<string, number> = {
   mushrooms: 0.22,
   log: 0.3,
   'timber-stack': 0.42,
+  shelf: 1.25,
+  bookshelf: 1.35,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -105,7 +111,22 @@ const FOOT: Record<string, [number, number, number, number]> = {
   'obstacle-tree': [-0.26, 0.26, -0.26, 0.26],
   boulder: [-0.42, 0.42, -0.38, 0.38],
   'snow-rock': [-0.4, 0.4, -0.36, 0.36],
+  // Shelves stand back to back in a row: a unit is about half a hex long.
+  shelf: [-0.49, 0.49, -0.31, 0.01],
+  bookshelf: [-0.47, 0.47, -0.2, 0.2],
 };
+
+/** Things that lie as nature or a fall left them (rocks, piles, trees): any turn. Everything else
+ *  is made and set down by people, square to the room (0/90° and a few degrees). */
+const NATURAL: ReadonlySet<string> = new Set(['boulder', 'snow-rock', 'stalagmite', 'rock', 'rubble-heap', 'ore-pile', 'coal-pile', 'rubble', 'obstacle-tree', 'stump', 'fern', 'mushrooms', 'crystals', 'campfire', 'pillar', 'sack', 'sacks']);
+/** Most a made thing is off square, outside a knocked-about (wreck) group: about 3°. */
+const SQUARE_JITTER = 0.055;
+/** Most things standing on the floor of one obstacle hex. */
+const FLOOR_PER_HEX = 3;
+/** Most hexes one cluster spans. */
+const MAX_GROUP = 5;
+/** How close an overhanging item may come to the centre of a free neighbouring hex (a figure). */
+const FIGURE_CLEAR = 0.58;
 
 interface Spec {
   p: string;
@@ -164,6 +185,9 @@ const SINGLE: Record<string, Spec[][]> = {
   bunk: [[S('bunk'), S('stool', { near: 0 }), S('sack', { near: 0, tip: 'side' })]],
   hut: [[S('hut', { centre: true }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.7, 0.8], near: 0 })]],
   campfire: [[S('campfire', { centre: true }), S('log', { s: [0.5, 0.6], near: 0 }), S('stump', { s: [0.8, 0.9], near: 0 })]],
+  // Shelves are set out as a row (placeShelves), not from a recipe.
+  shelf: [[S('shelf')]],
+  bookshelf: [[S('bookshelf')]],
 };
 
 /** Set pieces across two touching obstacle hexes. */
@@ -198,7 +222,8 @@ const FAMILY: Record<string, string> = {
   crate: 'goods',
   'crate-stack': 'goods',
   'crate-broken': 'goods',
-  table: 'goods',
+  // Tables join tables (a long table), not the crates beside them.
+  table: 'table',
   sacks: 'goods',
   sack: 'goods',
   'keg-rack': 'goods',
@@ -207,6 +232,8 @@ const FAMILY: Record<string, string> = {
   'snow-rock': 'rock',
   stalagmite: 'rock',
   hut: 'hut',
+  shelf: 'shelf',
+  bookshelf: 'shelf',
 };
 
 /** Set pieces for goods by the location's look, and for the other families. */
@@ -228,7 +255,7 @@ function goodsSets(edge: EdgeStyle, kind: RoomKind | undefined): string[] {
   if (kind !== 'indoor') return GOODS_SETS[edge];
   return edge === 'mine' || edge === 'forge' ? GOODS_SETS[edge] : ['long-table', 'barrel-pile', 'crate-pile'];
 }
-const FAMILY_SETS: Record<string, string[]> = { tree: ['trees-log'], rock: ['outcrop'], hut: ['yard'] };
+const FAMILY_SETS: Record<string, string[]> = { tree: ['trees-log'], rock: ['outcrop'], hut: ['yard'], table: ['long-table'] };
 
 /** Litter on the floor by location look, and what certain things add. */
 // The litter shapes are the Blender scatter kit's (assets/models/scatter-kit, scatter_kit.py):
@@ -289,8 +316,11 @@ interface Placed {
   lean: number;
   leanDir: number;
   variant?: number;
+  twin?: ClusterItem['twin'];
   /** Footprint box in its own frame (scaled, after a tip onto its side). */
   box: [number, number, number, number];
+  /** What it is stacked on. */
+  under?: Placed;
 }
 
 /** Set pieces modelled in Blender (assets/models/cluster-kit, art/blender/cluster-kit/cluster_kit.py):
@@ -405,53 +435,92 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       roomOf.set(k, room.id);
     }
   }
-  // Pairs of touching obstacle hexes of one family in one room share a set piece.
+  // Touching obstacle hexes of one family in one room are one thing (a row of shelves, a pile of
+  // crates and barrels, a ridge of rocks): connected runs of up to MAX_GROUP hexes.
   const keys = [...pieces.keys()].sort();
   const taken = new Set<HexKey>();
   const groups: HexKey[][] = [];
   for (const k of keys) {
     if (taken.has(k)) continue;
     taken.add(k);
+    const group = [k];
     const fam = FAMILY[pieces.get(k)!];
-    const mate = fam
-      ? neighbors(parseHexKey(k))
-          .map((n) => hexKey(n))
-          .sort()
-          .find((n) => !taken.has(n) && pieces.has(n) && roomOf.get(n) === roomOf.get(k) && FAMILY[pieces.get(n)!] === fam)
-      : undefined;
-    if (mate) taken.add(mate);
-    groups.push(mate ? [k, mate] : [k]);
+    for (let i = 0; fam && i < group.length; i++) {
+      for (const n of neighbors(parseHexKey(group[i]!))
+        .map((h) => hexKey(h))
+        .sort()) {
+        if (group.length >= MAX_GROUP) break;
+        if (taken.has(n) || !pieces.has(n) || roomOf.get(n) !== roomOf.get(k) || FAMILY[pieces.get(n)!] !== fam) continue;
+        taken.add(n);
+        group.push(n);
+      }
+    }
+    groups.push(group);
+  }
+  const centreOf = (k: HexKey) => hexToWorld(...parseHexKey(k));
+
+  // At most one group of made things per room may be knocked about (toppled, leaning, at odd
+  // angles), and only some rooms have one; the rest stands square.
+  const wreck = new Set<number>();
+  for (const room of scenario.rooms) {
+    const made = groups.map((g, i) => ({ g, i })).filter(({ g }) => roomOf.get(g[0]!) === room.id && !NATURAL.has(pieces.get(g[0]!)!) && FAMILY[pieces.get(g[0]!)!] !== 'shelf');
+    const rnd = seededRandom(`${scenario.id}:wreck:${room.id}`);
+    if (made.length && rnd() < 0.6) wreck.add(made[Math.floor(rnd() * made.length)]!.i);
   }
 
   const usedSets: { set: string; x: number; z: number }[] = [];
-  for (const group of groups) {
-    const edge = def.rooms?.[roomOf.get(group[0]!)!]?.edge ?? def.edge;
+  for (const [gi, group] of groups.entries()) {
+    const room = roomOf.get(group[0]!)!;
+    const edge = def.rooms?.[room]?.edge ?? def.edge;
     const rnd = seededRandom(`${scenario.id}:obstacles:${group.join('|')}`);
     const region = new Set(group);
-    const centres = group.map((k) => {
-      const [q, r] = parseHexKey(k);
-      return hexToWorld(q, r);
-    });
-    let recipe: Spec[];
-    if (group.length > 1) {
-      const fam = FAMILY[pieces.get(group[0]!)!]!;
+    const fam = FAMILY[pieces.get(group[0]!)!];
+    // The group's line (or, for one hex, the row it makes with the same thing nearby in its room),
+    // snapped to the room's square when it is close to it.
+    const line = groupAxis(group.map(centreOf)) ?? rowAxis(group[0]!, pieces, roomOf);
+    // A lone shelf faces the room (its back to the far wall); other lone things take any quarter turn.
+    const base = line !== null ? snapSquare(line) : fam === 'shelf' ? 0 : Math.floor(rnd() * 4) * (Math.PI / 2);
+    const orient: Orient = { base, axis: line ?? base, wreck: wreck.has(gi) };
+    let placed: Placed[];
+    if (fam === 'shelf') {
+      placed = placeShelves(group, pieces, orient, rnd);
+    } else if (group.length > 1) {
       // Two tables side by side are always one long table with its stools.
       const tables = group.every((k) => pieces.get(k) === 'table');
-      const options = tables ? ['long-table'] : fam === 'goods' ? goodsSets(edge, kindOf.get(roomOf.get(group[0]!)!)) : FAMILY_SETS[fam]!;
-      const mid = { x: (centres[0]!.x + centres[1]!.x) / 2, z: (centres[0]!.z + centres[1]!.z) / 2 };
+      // Goods of one kind make one pile of it; mixed goods (a crate stack, a barrel, a crate stack)
+      // stay what they are, each on its hex, set out square to one line ('row').
+      const same = group.every((k) => pieces.get(k) === pieces.get(group[0]!));
+      const options = tables ? ['long-table'] : fam === 'goods' ? (same ? goodsSets(edge, kindOf.get(room)).filter((o) => o !== 'long-table') : ['row']) : FAMILY_SETS[fam!]!;
+      const centres = group.map(centreOf);
+      const mid = centres.reduce((a, c) => ({ x: a.x + c.x / centres.length, z: a.z + c.z / centres.length }), { x: 0, z: 0 });
       // Not the same set piece as one close by, when the location has another.
       const near = new Set(usedSets.filter((u) => Math.hypot(u.x - mid.x, u.z - mid.z) < 6).map((u) => u.set));
       const order = options.map((o) => ({ o, k: rnd() })).sort((a, b) => a.k - b.k).map((x) => x.o);
       const set = order.find((o) => !near.has(o)) ?? order[0]!;
       usedSets.push({ set, ...mid });
-      recipe = COMPOSITE[set]!;
+      // One set piece the length of the group: its hexes along the line in pairs, every pair the
+      // same set, an odd one out its own hex's things, all square to one line.
+      const along = [...group].sort((a, b) => proj(centreOf(a), orient.axis) - proj(centreOf(b), orient.axis));
+      placed = [];
+      for (let i = 0; i < along.length; i += 2) {
+        const seg = along.slice(i, i + 2);
+        if (set === 'row') {
+          for (const k of seg) placed.push(...placeRecipe(singleRecipe(pieces.get(k)!, edge, rnd), region, [centreOf(k)], rnd, orient, placed, playable));
+          continue;
+        }
+        const recipe = seg.length === 2 ? COMPOSITE[set]! : singleRecipe(pieces.get(seg[0]!)!, edge, rnd);
+        placed.push(...placeRecipe(recipe, region, seg.map(centreOf), rnd, orient, placed, playable));
+      }
     } else {
-      const piece = pieces.get(group[0]!)!;
-      const list = SINGLE[`${piece}@${edge}`] ?? SINGLE[piece]!;
-      recipe = list[Math.floor(rnd() * list.length)]!;
+      placed = placeRecipe(singleRecipe(pieces.get(group[0]!)!, edge, rnd), region, group.map(centreOf), rnd, orient, [], playable);
     }
-    const placed = placeRecipe(recipe, region, centres, rnd);
-    const litter = placeLitter(placed, edge, playable, blocked, rnd);
+    // One thing or a small pile: at most FLOOR_PER_HEX things on the floor, 2 more for every further
+    // hex of a group (the recipes put the main things first); what stood on a dropped one goes too.
+    let floor = 0;
+    placed = placed.filter((p) => p.y > 0 || ++floor <= FLOOR_PER_HEX + 2 * (group.length - 1));
+    placed = placed.filter((p) => !p.under || placed.includes(p.under));
+    // Shelves and tables are where people keep things in order: swept, no litter.
+    const litter = fam === 'shelf' || fam === 'table' ? [] : placeLitter(placed, edge, playable, blocked, rnd);
     for (const k of group) plans.set(k, { items: [], litter: [] });
     const toHex = (p: Placed, list: 'items' | 'litter', home?: HexKey) => {
       const k = home ?? hexKey(worldToHex(p.x, p.z));
@@ -459,23 +528,13 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       const key = plans.has(k) ? k : group[0]!;
       const [q, r] = parseHexKey(key);
       const c = hexToWorld(q, r);
-      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
+      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}), ...(p.twin ? { twin: p.twin } : {}) });
     };
     // A stacked item goes with the hex of the one it stands on.
-    for (const p of placed) toHex(p, 'items', p.spec.on !== undefined ? hexKey(worldToHex(placed[p.spec.on]!.x, placed[p.spec.on]!.z)) : undefined);
-    // Litter belongs to the nearest obstacle hex of the group (it may lie in a free hex beside it).
-    for (const p of litter) {
-      let best = group[0]!;
-      let bd = Infinity;
-      group.forEach((k, i) => {
-        const d = Math.hypot(p.x - centres[i]!.x, p.z - centres[i]!.z);
-        if (d < bd) {
-          bd = d;
-          best = k;
-        }
-      });
-      toHex(p, 'litter', best);
-    }
+    for (const p of placed) toHex(p, 'items', p.under ? hexKey(worldToHex(p.under.x, p.under.z)) : undefined);
+    // The group's litter all goes with its first hex (it may lie by another hex of the group, or in a
+    // free hex beside it): one merged mesh per material for the group, not for every hex.
+    for (const p of litter) toHex(p, 'litter', group[0]!);
   }
   return plans;
 }
@@ -484,20 +543,119 @@ function between(rnd: () => number, [a, b]: [number, number]): number {
   return a + (b - a) * rnd();
 }
 
-/** Places a recipe's items inside the region (a set of hex keys), never overlapping each other. */
-function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; z: number }[], rnd: () => number): Placed[] {
+/** How a group's things are turned: the room's square or the group's line, and whether this is
+ *  the room's one knocked-about group. */
+interface Orient {
+  /** Turn of the made things (0/90° of the room, or the group's line when that is off square). */
+  base: number;
+  /** The group's line, for things that lie along it (a long table, a cart, a log). */
+  axis: number;
+  wreck: boolean;
+}
+
+/** Direction of a group's longest stretch (three.js turn of local +X onto it), or null for one hex. */
+function groupAxis(centres: { x: number; z: number }[]): number | null {
+  if (centres.length < 2) return null;
+  let best = [centres[0]!, centres[1]!];
+  let d = -1;
+  for (const a of centres) {
+    for (const b of centres) {
+      const dd = Math.hypot(a.x - b.x, a.z - b.z);
+      if (dd > d + 1e-6) {
+        d = dd;
+        best = a.x < b.x || (a.x === b.x && a.z < b.z) ? [a, b] : [b, a];
+      }
+    }
+  }
+  return Math.atan2(-(best[1]!.z - best[0]!.z), best[1]!.x - best[0]!.x);
+}
+
+/** A lone hex's row: the line to the nearest hex within 2 steps in its room with the same thing on
+ *  it (a library's shelves set out in rows), or null. */
+function rowAxis(k: HexKey, pieces: Map<HexKey, string>, roomOf: Map<HexKey, string>): number | null {
+  const [q, r] = parseHexKey(k);
+  let best: HexKey | null = null;
+  let bd = Infinity;
+  for (const [o, piece] of [...pieces].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    if (o === k || piece !== pieces.get(k) || roomOf.get(o) !== roomOf.get(k)) continue;
+    const [oq, or] = parseHexKey(o);
+    const d = (Math.abs(oq - q) + Math.abs(or - r) + Math.abs(oq + or - q - r)) / 2;
+    if (d <= 2 && d < bd) {
+      bd = d;
+      best = o;
+    }
+  }
+  return best ? groupAxis([hexToWorld(q, r), hexToWorld(...parseHexKey(best))]) : null;
+}
+
+/** A line's turn, snapped onto the room's square (0/90°) when it is within 20° of it. */
+function snapSquare(a: number): number {
+  const q = Math.round(a / (Math.PI / 2)) * (Math.PI / 2);
+  return Math.abs(a - q) < 0.35 ? q : a;
+}
+
+/** Position of a point along a turn's +X. */
+function proj(c: { x: number; z: number }, axis: number): number {
+  return c.x * Math.cos(axis) - c.z * Math.sin(axis);
+}
+
+function singleRecipe(piece: string, edge: EdgeStyle, rnd: () => number): Spec[] {
+  const list = SINGLE[`${piece}@${edge}`] ?? SINGLE[piece]!;
+  return list[Math.floor(rnd() * list.length)]!;
+}
+
+/** Shelves as a wall: where shelf hexes touch, two units side by side along the line on every hex
+ *  (one item, `twin`), so the row reads as one long shelf; the two differ a little in size, never a
+ *  copy. A lone shelf hex is one unit, square to its row. */
+function placeShelves(group: HexKey[], pieces: Map<HexKey, string>, orient: Orient, rnd: () => number): Placed[] {
+  const out: Placed[] = [];
+  for (const k of group) {
+    const c = hexToWorld(...parseHexKey(k));
+    const piece = pieces.get(k)!;
+    const [a, b] = rnd() < 0.5 ? [0.95, 1.03] : [1.03, 0.95];
+    const [x0, x1, z0, z1] = footprint(piece, a, 'none');
+    if (group.length === 1) {
+      out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot: orient.base + between(rnd, [-0.02, 0.02]), scale: a, tip: 'none', lean: 0, leanDir: 0, box: [x0, x1, z0, z1] });
+      continue;
+    }
+    const unit = x1 - x0;
+    const dx = (unit + unit * (b / a)) / 2 + 0.02;
+    const box: Placed['box'] = [-dx / 2 + x0, dx / 2 + x1 * (b / a), z0, z1];
+    out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot: orient.base + between(rnd, [-0.02, 0.02]), scale: a, tip: 'none', lean: 0, leanDir: 0, box, twin: { dx, scale: b / a } });
+  }
+  return out;
+}
+
+/** A made thing's turn: the group's square, a quarter turn of it, a few degrees off. */
+function squareTurn(orient: Orient, rnd: () => number): number {
+  return orient.base + Math.floor(rnd() * 4) * (Math.PI / 2) + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]);
+}
+
+/** Places a recipe's items inside the region (a set of hex keys), never overlapping each other or
+ *  `others` (the rest of the group). Made things stand square (`orient`) unless the group is the
+ *  room's wreck; things may overhang a free neighbouring hex's rim, never where its figure stands. */
+function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; z: number }[], rnd: () => number, orient: Orient, others: Placed[], playable: Set<HexKey>): Placed[] {
   const placed: Placed[] = [];
   const regionHas = (x: number, z: number) => region.has(hexKey(worldToHex(x, z)));
-  const axis = centres.length > 1 ? Math.atan2(-(centres[1]!.z - centres[0]!.z), centres[1]!.x - centres[0]!.x) : rnd() * Math.PI * 2;
+  const fits = (x: number, z: number) => {
+    const k = hexKey(worldToHex(x, z));
+    if (region.has(k)) return true;
+    if (!playable.has(k)) return false;
+    const c = hexToWorld(...parseHexKey(k));
+    return Math.hypot(x - c.x, z - c.z) > FIGURE_CLEAR;
+  };
+  const axis = centres.length > 1 ? Math.atan2(-(centres[1]!.z - centres[0]!.z), centres[1]!.x - centres[0]!.x) : orient.axis;
   const mid = centres.reduce((a, c) => ({ x: a.x + c.x / centres.length, z: a.z + c.z / centres.length }), { x: 0, z: 0 });
   for (const spec of recipe) {
     if (spec.chance !== undefined && rnd() > spec.chance) continue;
-    const scale = between(rnd, spec.s ?? [0.87, 1.15]);
-    const tip: ClusterItem['tip'] = spec.tip ?? 'none';
+    const natural = NATURAL.has(spec.p);
+    let scale = between(rnd, spec.s ?? [0.87, 1.15]);
+    // Outside the wreck, made things stand; a barrel may lie on its side, as barrels are stored.
+    const tip: ClusterItem['tip'] = orient.wreck || natural || (spec.tip === 'side' && spec.p === 'barrel') ? (spec.tip ?? 'none') : 'none';
     const lean = tip === 'lean' ? between(rnd, [0.14, 0.26]) : 0;
     const leanDir = rnd() * Math.PI * 2;
     const variant = KIT_PIECES.has(spec.p) ? Math.floor(rnd() * KIT_VARIANTS) : undefined;
-    const box = footprint(spec.p, scale, tip, variant);
+    let box = footprint(spec.p, scale, tip, variant);
     const h = heightOf(spec.p, variant) * scale;
     if (spec.on !== undefined) {
       const base = placed[placedIndex(placed, recipe, spec.on)];
@@ -505,19 +663,31 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
       const top = base.tip === 'side' ? (base.box[1] - base.box[0]) * 0.95 : heightOf(base.piece, base.variant) * base.scale * 0.97;
       const a = rnd() * Math.PI * 2;
       const d = between(rnd, [0.03, 0.09]);
-      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot: base.rot + between(rnd, [-0.7, 0.7]), scale, tip, lean, leanDir, box, variant });
+      // A crate on a crate sits square on it (a quarter turn); only in a wreck is it askew.
+      const rot = orient.wreck ? base.rot + between(rnd, [-0.7, 0.7]) : base.rot + Math.floor(rnd() * 4) * (Math.PI / 2) + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]);
+      placed.push({ spec, piece: spec.p, x: base.x + Math.cos(a) * d, z: base.z + Math.sin(a) * d, y: base.y + top, rot, scale, tip, lean, leanDir, box, variant, under: base });
       continue;
     }
+    // Never a copy beside a copy: the same thing in the group is a size apart.
+    const floor = [...others, ...placed].filter((p) => p.y === 0 && p.piece === spec.p);
+    for (let i = 0, up = rnd() < 0.5; i < 6; i++) {
+      const twin = floor.find((p) => Math.abs(p.scale - scale) < 0.07);
+      if (!twin) break;
+      scale = twin.scale + (up ? 0.08 : -0.08);
+    }
+    box = footprint(spec.p, scale, tip, variant);
     const target = spec.near !== undefined ? placed[placedIndex(placed, recipe, spec.near)] : undefined;
     let done: Placed | null = null;
     for (let attempt = 0; attempt < 140 && !done; attempt++) {
       const strict = attempt < 70;
       let x: number;
       let z: number;
-      let rot = rnd() * Math.PI * 2;
+      let rot = natural || orient.wreck ? rnd() * Math.PI * 2 : squareTurn(orient, rnd);
+      // Logs lie the way the group runs, as if they fell together.
+      if (spec.p === 'log') rot = axis + between(rnd, [-0.25, 0.25]);
       if (spec.along) {
-        // Along the pair's line, a little off straight, anywhere along it.
-        rot = axis + between(rnd, [-0.22, 0.22]) + (rnd() < 0.5 ? Math.PI : 0);
+        // Along the pair's line, a few degrees off straight, anywhere along it.
+        rot = axis + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]) + (rnd() < 0.5 ? Math.PI : 0);
         const t = between(rnd, [-0.35, 0.35]);
         x = mid.x + (centres[1] ? (centres[1].x - centres[0]!.x) * t : 0) + between(rnd, [-0.12, 0.12]);
         z = mid.z + (centres[1] ? (centres[1].z - centres[0]!.z) * t : 0) + between(rnd, [-0.12, 0.12]);
@@ -542,11 +712,12 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
         const d = Math.sqrt(rnd()) * 0.55;
         x = c.x + Math.cos(a) * d;
         z = c.z + Math.sin(a) * d;
-        if (!placed.length && centres.length === 1 && d < 0.12) continue;
+        if (!placed.length && !others.length && centres.length === 1 && d < 0.12) continue;
       }
       const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box, variant };
-      if (!outline(cand, strict ? 0.04 : 0.02).every((v) => regionHas(v.x, v.z))) continue;
-      if (placed.some((p) => p.y === 0 && overlaps(p, cand, strict ? 0.02 : 0.08))) continue;
+      if (!regionHas(x, z)) continue;
+      if (!outline(cand, strict ? 0.04 : 0.02).every((v) => fits(v.x, v.z))) continue;
+      if ([...others, ...placed].some((p) => p.y === 0 && overlaps(p, cand, strict ? 0.02 : 0.08))) continue;
       // Tall things toward the camera side of the cluster (+Z), so they hide no free hex behind.
       if (strict && h > 0.9 && !regionHas(x, z - 0.4)) continue;
       done = cand;
@@ -632,6 +803,18 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
   const root = new THREE.Group();
   root.name = 'obstacle-cluster';
   root.matrixAutoUpdate = false;
+  // What never moves is one mesh per material, not one per part (a draw call each); the merged
+  // geometry is the location's to free with the rest (mergeParts marks it its own).
+  const merge = (o: THREE.Object3D) => {
+    mergeStaticParts(o);
+    o.traverse((c) => {
+      if (c.userData['mergedGeometry']) ctx.track((c as THREE.Mesh).geometry);
+    });
+    return o;
+  };
+  // The cluster's contact shadows, one mesh between them.
+  const shadows = new THREE.Group();
+  shadows.name = 'contact-shadows';
   for (const it of plan.items) {
     const holder = new THREE.Group();
     holder.name = `cluster-item:${it.piece}:${it.tip}`;
@@ -648,7 +831,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
     const meta = pieceMeta(it.piece);
     if (placeholder && meta) {
       placeholder.scale.setScalar(it.h / meta.height);
-      body.add(placeholder);
+      body.add(merge(paired(placeholder, it)));
     }
     if (kitPiece) {
       // A Blender kit piece at life size: shown once the kit has loaded, in the location's colours.
@@ -673,12 +856,15 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
       });
     }
     settle(tilt, it.tip === 'side');
-    if (it.y === 0) {
-      const box = footprint(it.piece, it.scale, it.tip, it.variant);
-      const blob = ctx.shadow(Math.max(box[1] - box[0], box[3] - box[2]) / 2);
+    const foot = footprint(it.piece, it.scale, it.tip, it.variant);
+    const reach = Math.max(foot[1] - foot[0], foot[3] - foot[2]) / 2;
+    // A contact shadow under the bigger things only (each is a draw call); a stool or a small crate
+    // beside them sits in theirs.
+    if (it.y === 0 && reach >= 0.3 && FAMILY[it.piece] !== 'shelf') {
+      const blob = ctx.shadow(reach);
       if (blob) {
         blob.position.set(it.x, 0.004, it.z);
-        root.add(blob);
+        shadows.add(blob);
       }
     }
     root.add(holder);
@@ -703,16 +889,29 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
           }
         });
         body.clear();
-        body.add(model);
+        body.add(paired(model, it));
         settle(tilt, it.tip === 'side');
         ctx.onChange();
       });
     }
   }
+  if (shadows.children.length) root.add(merge(shadows));
   const litter = buildLitter(plan.litter.slice(0, Math.round(plan.litter.length * ctx.litter)), ctx);
   if (litter) root.add(litter);
   root.updateMatrix();
   return root;
+}
+
+/** An item's thing, and its twin beside it when it has one, as one group. */
+function paired(o: THREE.Object3D, it: ClusterItem): THREE.Object3D {
+  if (!it.twin) return o;
+  const group = new THREE.Group();
+  const second = o.clone();
+  o.position.x -= it.twin.dx / 2;
+  second.position.x += it.twin.dx / 2;
+  second.scale.multiplyScalar(it.twin.scale);
+  group.add(o, second);
+  return group;
 }
 
 function firstMesh(o: THREE.Object3D): THREE.Mesh | undefined {

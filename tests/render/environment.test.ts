@@ -184,13 +184,15 @@ describe('showcase cellar (s1)', () => {
     // One look per barrel obstacle (the cellar's other furniture keeps its own model).
     const barrels = content.scenarios.s1!.rooms.flatMap((r) => r.obstacles ?? []).filter((o) => o.model === 'barrel');
     expect(looks.size).toBe(barrels.length);
-    expect(new Set(looks.values()).size).toBeGreaterThanOrEqual(4);
+    expect(new Set(looks.values()).size).toBeGreaterThanOrEqual(3);
+    // Touching barrels in one room are one thing: one look.
+    const roomOf = new Map(content.scenarios.s1!.rooms.flatMap((r) => (r.obstacles ?? []).map((o) => [`${o.hex[0]},${o.hex[1]}` as string, r.id] as const)));
     for (const [k, look] of looks) {
       const [q, r] = k.split(',').map(Number) as [number, number];
       for (const [k2, look2] of looks) {
         const [q2, r2] = k2.split(',').map(Number) as [number, number];
         const d = (Math.abs(q - q2) + Math.abs(r - r2) + Math.abs(q + r - q2 - r2)) / 2;
-        if (k !== k2 && d <= 2) expect(look2, `${k} ${k2}`).not.toBe(look);
+        if (d === 1 && roomOf.get(k as string) === roomOf.get(k2 as string)) expect(look2, `${k} ${k2}`).toBe(look);
       }
     }
   });

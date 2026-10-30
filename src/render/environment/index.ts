@@ -11,7 +11,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { BoundaryKind, RoomKind, ScenarioDef } from '../../rules/content';
-import { hexKey, parseHexKey, type HexKey } from '../../rules/hex';
+import { hexKey, neighbors, parseHexKey, type HexKey } from '../../rules/hex';
 import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../boardTiles';
 import { blobShadowTexture } from '../contactShadow';
 import { HEX_SIZE, hexToWorld } from '../hexLayout';
@@ -380,7 +380,8 @@ export class BoardEnvironment {
     const blobMaterial = this.clusterShadow;
     return buildCluster(plan, {
       makePiece: (piece) => this.makePiece(piece),
-      propSpec: (piece, height) => (this.def?.propModels?.[piece] ? propModelFor(this.def, [piece], this.available, height) : null),
+      // The location's model for a piece, or for a thing with no stand-in of its own (a bookshelf) its own model.
+      propSpec: (piece, height) => (this.def?.propModels?.[piece] || !pieceMeta(piece) ? propModelFor(this.def, [piece], this.available, height) : null),
       loadProp: (spec) => loadPropPrototype(spec, quality).then((proto) => (proto ? proto.object.clone() : null)),
       loadKit: () => loadLocationKit('scatter-kit', quality),
       loadClusterKit: () => loadLocationKit('cluster-kit', quality),
@@ -1361,7 +1362,18 @@ export function assignObstacleLooks(scenario: ScenarioDef, def: Pick<Environment
   if (!def.obstacles) return out;
   const all = scenario.rooms.flatMap((r) => r.obstacles ?? []).filter((o) => o.model && def.obstacles![o.model]?.length);
   all.sort((a, b) => a.hex[0] - b.hex[0] || a.hex[1] - b.hex[1]);
+  // Touching hexes of one model in one room are one thing: they share the look of the first.
+  const roomOf = new Map(scenario.rooms.flatMap((r) => (r.obstacles ?? []).map((o) => [hexKey(o.hex), r.id] as const)));
+  const modelOf = new Map(all.map((o) => [hexKey(o.hex), o.model!]));
   for (const o of all) {
+    const k = hexKey(o.hex);
+    const mate = neighbors(o.hex)
+      .map((n) => hexKey(n))
+      .find((n) => out.has(n) && modelOf.get(n) === o.model && roomOf.get(n) === roomOf.get(k));
+    if (mate) {
+      out.set(k, out.get(mate)!);
+      continue;
+    }
     const list = def.obstacles[o.model!]!;
     const rnd = seededRandom(`${def.id}:${scenario.id}:${o.hex[0]},${o.hex[1]}`);
     const order = list.map((look) => ({ look, k: rnd() })).sort((a, b) => a.k - b.k).map((x) => x.look);

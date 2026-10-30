@@ -21,6 +21,9 @@ function plan(s: ScenarioDef) {
   return planObstacles(s, def, (model, k) => looks.get(k) ?? ({ tree: 'obstacle-tree', rock: 'boulder', bed: 'bunk' } as Record<string, string>)[model] ?? model);
 }
 
+/** A hex of shelves: they stand on the hex's line, a lone one in its middle. */
+const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => it.piece === 'shelf' || it.piece === 'bookshelf');
+
 describe('obstacle clusters', () => {
   it('is the same every time for a scenario', () => {
     for (const s of scenarios) expect(JSON.stringify([...plan(s)])).toBe(JSON.stringify([...plan(s)]));
@@ -34,14 +37,15 @@ describe('obstacle clusters', () => {
       for (const o of obstacles) {
         const p = plans.get(hexKey(o.hex));
         if (!p) continue;
-        // A hex of a set piece may hold little of it itself; the pair together holds several things.
+        // A hex of a set piece may hold little of it itself; with its neighbours it holds a pile or a row.
         const mate = Math.max(0, ...neighbors(o.hex).map((n) => plans.get(hexKey(n))?.items.length ?? 0));
-        expect(p.items.length + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(3);
+        // One thing (a shelf square in its row) or a small pile.
+        expect(p.items.reduce((n, it) => n + (it.twin ? 2 : 1), 0) + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(isShelves(p) ? 1 : 2);
         // Nothing stands alone in the middle: the first thing is off the centre or has company.
-        for (const it of p.items) if (Math.hypot(it.x, it.z) < 0.05) expect(p.items.length).toBeGreaterThan(1);
+        for (const it of p.items) if (Math.hypot(it.x, it.z) < 0.05 && !isShelves(p)) expect(p.items.length).toBeGreaterThan(1);
       }
       const all = [...plans.values()].flatMap((p) => p.items);
-      expect(all.length, s.id).toBeGreaterThanOrEqual(plans.size * 2);
+      expect(all.reduce((n, it) => n + (it.twin ? 2 : 1), 0), s.id).toBeGreaterThanOrEqual(plans.size * 1.5);
     }
   });
 
@@ -63,7 +67,9 @@ describe('obstacle clusters', () => {
   it('lays litter beside obstacles', () => {
     for (const s of scenarios) {
       const plans = plan(s);
-      expect([...plans.values()].reduce((n, p) => n + p.litter.length, 0), s.id).toBeGreaterThanOrEqual(plans.size * 2);
+      // A group's litter lies with its first hex; shelves and tables have none.
+      const kept = [...plans.values()].filter((p) => !isShelves(p) && !p.items.some((it) => it.piece === 'table' || it.piece === 'long-table')).length;
+      expect([...plans.values()].reduce((n, p) => n + p.litter.length, 0), s.id).toBeGreaterThanOrEqual(kept);
     }
   });
 
@@ -73,5 +79,42 @@ describe('obstacle clusters', () => {
     const pair = ['6,-3', '6,-2'].map((k) => plans.get(k)!);
     expect(pair.every(Boolean)).toBe(true);
     expect(pair[0]!.items.length + pair[1]!.items.length).toBeGreaterThanOrEqual(4);
+  });
+
+  const NATURAL = new Set(['boulder', 'snow-rock', 'stalagmite', 'rock', 'rubble-heap', 'ore-pile', 'coal-pile', 'rubble', 'obstacle-tree', 'stump', 'fern', 'mushrooms', 'crystals', 'campfire', 'pillar', 'sack', 'sacks', 'log']);
+  const quarter = (a: number) => Math.abs(a - Math.round(a / (Math.PI / 2)) * (Math.PI / 2));
+
+  it('stands made things square: on a hex they are 0/90° of each other, a few degrees off, except in one wreck per room at most', () => {
+    for (const s of scenarios) {
+      const plans = plan(s);
+      for (const room of s.rooms) {
+        let askew = 0;
+        for (const o of room.obstacles ?? []) {
+          const made = (plans.get(hexKey(o.hex))?.items ?? []).filter((it) => !NATURAL.has(it.piece) && it.piece !== 'long-table' && it.piece !== 'cart' && it.piece !== 'chair');
+          if (made.length < 2) continue;
+          const off = made.some((it) => it.tip === 'lean' || made.some((m) => quarter(m.rot - it.rot) > 0.12));
+          if (off) askew++;
+        }
+        // A wreck spans its group's hexes (up to 5).
+        expect(askew, `${s.id} ${room.id}`).toBeLessThanOrEqual(5);
+      }
+    }
+  });
+
+  it('never sets a copy beside a copy: the same thing on the floor of a hex differs in size', () => {
+    for (const s of scenarios) {
+      for (const [k, p] of plan(s)) {
+        const floor = p.items.filter((it) => it.y === 0);
+        for (const a of floor) for (const b of floor) if (a !== b && a.piece === b.piece) expect(Math.abs(a.scale - b.scale), `${s.id} ${k} ${a.piece}`).toBeGreaterThan(0.05);
+      }
+    }
+  });
+
+  it('turns a run of touching goods into one pile across up to five hexes', () => {
+    const s4 = scenarios.find((s) => s.id === 's4')!;
+    const plans = plan(s4);
+    // The upper tier's crate stacks and barrel [12,-6] [12,-5] [12,-4] are one pile of goods, square to one line.
+    const items = ['12,-6', '12,-5', '12,-4'].flatMap((k) => plans.get(k)?.items ?? []);
+    expect(items.length).toBeGreaterThanOrEqual(5);
   });
 });
