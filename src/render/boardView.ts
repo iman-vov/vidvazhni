@@ -23,7 +23,7 @@ import { BoardEnvironment, type EnvironmentStats } from './environment';
 import { BoardOverlay, CONDITION_ICONS, conditionIconSvg, FigureBadge, type OverlayItem } from './boardOverlay';
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
-import { animateGlows, createFigureParts, disposeFigureParts, FigureView } from './figureView';
+import { animateGlows, createFigureParts, disposeFigureParts, FigureView, FULL_DETAIL_PX } from './figureView';
 
 import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
@@ -31,7 +31,7 @@ import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slid
 import { listModels } from './models';
 import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
-import { loadPropPrototype, roughModelFor, trapDust, trapModelFor } from './propModels';
+import { loadPropPrototype, PROP_FULL_PX, roughModelFor, setPropDetail, trapDust, trapModelFor } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
@@ -160,6 +160,8 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
   container.appendChild(root);
 
   let renderer = makeRenderer(quality);
+  const drawSize = new THREE.Vector2();
+  const viewDir = new THREE.Vector3();
   root.appendChild(renderer.domElement);
   const overlay = new BoardOverlay(root);
 
@@ -531,6 +533,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       fv.spinGlow(t);
     }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
+    pickDetail();
     if (shadowsDirty) refreshShadows();
     // The sun's map covers what the view shows (and what throws shadows into it), not the whole board.
     if (sun.castShadow) fitSunToView(sun, camera.camera, SHADOW_TIERS[quality].radius, SUN_VIEW_MARGIN);
@@ -545,6 +548,19 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
       }
       resetShows = shows;
     }
+  }
+
+  /** Figures and prop models small on screen draw their simplified meshes (FigureView.setDetail,
+   *  setPropDetail); zoomed in close, the full ones. */
+  function pickDetail(): void {
+    const cam = camera.camera;
+    cam.updateMatrixWorld();
+    const pxPerUnit = renderer.getDrawingBufferSize(drawSize).y / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2));
+    for (const fv of figures.values()) fv.setDetail((fv.height * pxPerUnit) / Math.max(0.1, cam.position.distanceTo(fv.root.position)) >= FULL_DETAIL_PX);
+    // Props by the zoom: the distance to the ground at the view's centre.
+    const down = -cam.getWorldDirection(viewDir).y;
+    const toGround = down > 0.05 ? (cam.position.y - PLATE_HEIGHT) / down : cam.position.y;
+    setPropDetail(scene, pxPerUnit / Math.max(0.1, toGround) >= PROP_FULL_PX);
   }
 
   /** Rings on the water around figures standing in it. */

@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import type { EnvironmentDef, PropModelSpec } from './environment/types';
 import { onAssetRelease, partsInUse, partsOf, StampedCache } from './assetRelease';
-import { loadModel } from './models';
+import { loadModel, lowDetailGeometries } from './models';
 import type { GraphicsQuality } from './quality';
 
 export interface PropPrototype {
@@ -147,7 +147,44 @@ export function anchoredModel(model: string): boolean {
 const cache = new StampedCache<PropPrototype | null>();
 // Prototypes of earlier boards that nothing drawn shares geometry or materials with; their model's
 // GPU copies go with the model (models.ts).
-onAssetRelease((used) => cache.release((proto) => !!proto && partsInUse(partsOf(proto.object), used), () => {}));
+onAssetRelease((used) =>
+  cache.release(
+    (proto) => !!proto && partsInUse(partsOf(proto.object), used),
+    (proto) => proto && prototypes.delete(proto.object),
+  ),
+);
+
+/**
+ * Prop LOD. Every prop model's meshes have the low tier's simplified geometry as a second level
+ * (models.ts lowDetailGeometries): drawn while props are small on screen (the normal zoom and a
+ * focus zoom-in), the full one once the player zooms in close. Swapping is a geometry change on
+ * the meshes that draw a prop model (clones, instanced props), so nothing is rebuilt.
+ */
+const lowOf = new WeakMap<THREE.BufferGeometry, THREE.BufferGeometry>();
+const fullOf = new WeakMap<THREE.BufferGeometry, THREE.BufferGeometry>();
+/** Loaded prototypes, swapped along so that new copies start at the current level. */
+const prototypes = new Set<THREE.Object3D>();
+let propsLow = true;
+/** Screen size (device pixels) of one world unit at the view's centre from which props draw their
+ *  full meshes. At the normal zoom on a tablet a unit is ~100 px. */
+export const PROP_FULL_PX = 240;
+
+function swapDetail(root: THREE.Object3D, low: boolean): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const g = (low ? lowOf : fullOf).get(mesh.geometry);
+    if (g) mesh.geometry = g;
+  });
+}
+
+/** Full prop meshes (zoomed in close) or simplified ones, for everything under `scene`. */
+export function setPropDetail(scene: THREE.Object3D, full: boolean): void {
+  if (propsLow === !full) return;
+  propsLow = !full;
+  swapDetail(scene, propsLow);
+  for (const p of prototypes) swapDetail(p, propsLow);
+}
 
 /** Loads and normalises a prop model (cached per model, height, turn and quality); null if it fails. */
 export function loadPropPrototype(spec: Required<PropModelSpec>, quality: GraphicsQuality): Promise<PropPrototype | null> {
@@ -155,8 +192,18 @@ export function loadPropPrototype(spec: Required<PropModelSpec>, quality: Graphi
   let p = cache.get(key);
   if (!p) {
     p = loadModel(spec.model, { quality })
-      .then((model) => {
+      .then(async (model) => {
         const inner = model.scene;
+        const meshes: THREE.Mesh[] = [];
+        inner.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh);
+        });
+        const low = model.quality === 'low' ? null : await lowDetailGeometries(spec.model, meshes);
+        low?.forEach((g, i) => {
+          const full = meshes[i]!.geometry;
+          lowOf.set(full, g);
+          fullOf.set(g, full);
+        });
         inner.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(inner);
         if (box.isEmpty()) return null;
@@ -179,7 +226,10 @@ export function loadPropPrototype(spec: Required<PropModelSpec>, quality: Graphi
           copy.scale.setScalar(1 - 0.06 * i);
           object.add(copy);
         }
+        // Sized by the full meshes above; drawn at the current level from here on.
+        if (propsLow) swapDetail(object, true);
         object.updateMatrixWorld(true);
+        prototypes.add(object);
         return { spec, object, radius: fit.radius };
       })
       .catch(() => null);

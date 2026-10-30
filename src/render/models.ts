@@ -257,6 +257,30 @@ export async function attachWeapon(model: Model, weaponId: string, opts: AttachO
   });
 }
 
+/**
+ * Detail levels: the low tier's simplified meshes (about half the triangles, error under 1 % of the
+ * model's size) stand in for the full ones while a model is small on screen, where the two look the
+ * same. Pairs every mesh of `meshes` (a loaded model's meshes, in traversal order) with the
+ * geometry of the same mesh in the low tier; null when the model has no low tier, is already low,
+ * or the tiers' meshes do not match (another count or other vertex attributes).
+ */
+export async function lowDetailGeometries(id: string, meshes: readonly THREE.Mesh[]): Promise<THREE.BufferGeometry[] | null> {
+  if (resolveTier(id, 'low') !== 'low' || !meshes.length) return null;
+  let gltf: GLTF;
+  try {
+    gltf = await loadGltf(id, 'low');
+  } catch {
+    return null;
+  }
+  const low: THREE.BufferGeometry[] = [];
+  gltf.scene.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) low.push((o as THREE.Mesh).geometry);
+  });
+  const layout = (g: THREE.BufferGeometry) => Object.keys(g.attributes).sort().join();
+  if (low.length !== meshes.length || meshes.some((m, i) => m.geometry === low[i] || layout(m.geometry) !== layout(low[i]!))) return null;
+  return low;
+}
+
 /** Parents any object to a bone of the model. Throws if the bone does not exist. */
 export function attachToBone(model: Model, object: THREE.Object3D, boneName: string, opts: AttachOptions = {}): THREE.Object3D {
   const bone = findBone(model.scene, boneName);

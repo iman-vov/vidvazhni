@@ -16,7 +16,7 @@ import { PLATE_HEIGHT } from './boardTiles';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
 import { blobShadowTexture } from './contactShadow';
 import { HOVER_HEIGHT, hoverBob } from './motion';
-import { attachWeapon, loadModel, type Model } from './models';
+import { attachWeapon, loadModel, lowDetailGeometries, type Model } from './models';
 import type { GraphicsQuality } from './quality';
 import { applyRestyle, restyledScale } from './restyle';
 
@@ -25,6 +25,9 @@ const CLIP_SECONDS: Record<string, number> = { attack: 1.0, hit: 0.7, death: 1.3
 /** Fraction of the attack clip at which the blow lands or the shot leaves. */
 const ATTACK_IMPACT = 0.45;
 const MAX_TIME_SCALE = 3.2;
+/** Screen height (device pixels) from which a figure draws its full mesh; smaller, it draws the
+ *  low tier's (figure LOD, setDetail). At the normal zoom on a tablet a figure is ~110 px tall. */
+export const FULL_DETAIL_PX = 260;
 
 const heightCache = new Map<string, number>();
 
@@ -218,6 +221,10 @@ export class FigureView {
   private ownTextures: THREE.Texture[] = [];
   private ownGeometries: THREE.BufferGeometry[] = [];
   private loadToken = 0;
+  /** The model's meshes with their full and simplified geometry (figure LOD, setDetail). */
+  private lod: { mesh: THREE.Mesh; full: THREE.BufferGeometry; low: THREE.BufferGeometry }[] = [];
+  private wantLow = false;
+  private showsLow = false;
   /** Rest height of the content inside the body (flying figures hover above it). */
   private contentBaseY = 0;
   private clock = 0;
@@ -385,7 +392,9 @@ export class FigureView {
     const token = ++this.loadToken;
     let model: Model;
     try {
-      model = await loadModel(this.look.modelId, { quality });
+      // High draws figures with the medium tier's textures (1024, same mesh): at a figure's size on
+      // the board they look the same as 2048, which took ~64 MB of GPU memory per model.
+      model = await loadModel(this.look.modelId, { quality: quality === 'high' ? 'medium' : quality });
     } catch {
       return;
     }
@@ -395,9 +404,11 @@ export class FigureView {
     const scale = modelScale(this.look.height, measured);
     // Own material copies, so fading, greying and outlining one figure leaves the others alone.
     const materials: THREE.Material[] = [];
+    const meshes: THREE.Mesh[] = [];
     model.scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      meshes.push(mesh);
       mesh.castShadow = castShadow;
       mesh.frustumCulled = false; // skinned bounds do not follow the clips
       const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -416,7 +427,16 @@ export class FigureView {
     const old = this.model;
     this.model = model;
     this.placeholder = null;
+    this.lod = [];
+    this.showsLow = false;
     this.setContent(model.scene, materials);
+    if (model.quality !== 'low') {
+      void lowDetailGeometries(model.id, meshes).then((low) => {
+        if (!low || this.model !== model) return;
+        this.lod = meshes.map((mesh, i) => ({ mesh, full: mesh.geometry, low: low[i]! }));
+        this.applyDetail();
+      });
+    }
     this.setYaw(this.yaw);
     this.height = this.look.height;
     this.proxy.scale.y = this.height + 0.2;
@@ -445,6 +465,27 @@ export class FigureView {
         // Weapon without bones in this rig: leave it off.
       }
     }
+  }
+
+  /** Full mesh while the figure is big on screen, the low tier's simplified one while it is small
+   *  (they look the same there): half the triangles in the scene and in the sun's map. */
+  setDetail(full: boolean): void {
+    this.wantLow = !full;
+    this.applyDetail();
+  }
+
+  private applyDetail(): void {
+    const low = this.wantLow && this.lod.length > 0;
+    if (low === this.showsLow) return;
+    this.showsLow = low;
+    const swap = new Map<THREE.BufferGeometry, THREE.BufferGeometry>();
+    for (const l of this.lod) {
+      const g = low ? l.low : l.full;
+      swap.set(l.mesh.geometry, g);
+      l.mesh.geometry = g;
+    }
+    // The target outline draws the body's geometry too.
+    for (const o of this.outlines) o.geometry = swap.get(o.geometry) ?? o.geometry;
   }
 
   setCastShadow(on: boolean): void {
