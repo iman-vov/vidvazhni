@@ -36,7 +36,12 @@
         [14, -5], [14, -4], [14, -3], [15, -7], [15, -6], [15, -5], [15, -4], [15, -3],
         [16, -8], [16, -7], [16, -6], [16, -5], [16, -4], [17, -6]
       ],
-      "obstacles": [{ "hex": [10, -3], "model": "bookshelf" }],
+      "obstacles": [
+        { "hex": [10, -3], "model": "bookshelf" },
+        { "hex": [10, -1], "model": "bookshelf" },
+        { "hex": [12, -6], "model": "bookshelf" },
+        { "hex": [12, -4], "model": "bookshelf" }
+      ],
       "doors": [{ "hex": [17, -6], "to": "s18.gallery" }],
       "spawns": [
         {
