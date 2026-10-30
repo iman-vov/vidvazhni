@@ -80,6 +80,9 @@ export const HEIGHT: Record<string, number> = {
   'weapon-rack': 1.1,
   'bookcase-long': 1.46,
   'rack-long': 1.5,
+  'ridge-snow': 0.82,
+  'ridge-cave': 1.0,
+  'ridge-forest': 0.85,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -120,16 +123,22 @@ const FOOT: Record<string, [number, number, number, number]> = {
   // touching hexes meet end to end.
   'bookcase-long': [-0.86, 0.86, -0.32, 0.32],
   'rack-long': [-0.85, 0.85, -0.25, 0.25],
+  // A ridge of rock lies over two hexes, its middle on their shared edge.
+  'ridge-snow': [-1.52, 1.52, -0.56, 0.56],
+  'ridge-cave': [-1.52, 1.52, -0.56, 0.56],
+  'ridge-forest': [-1.52, 1.52, -0.56, 0.56],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
 /** Shelf pieces shown as one hex-long unit (Blender, art/blender/obstacle-sets) that meets the next
  *  end to end. */
 const LONG_UNIT: Record<string, string> = { bookshelf: 'bookcase-long', shelf: 'rack-long' };
+/** Which ridge of rock (Blender, art/blender/obstacle-sets/rock_ridge.py) a location's edge gets. */
+const RIDGE: Partial<Record<EdgeStyle, string>> = { cliff: 'snow', glass: 'cave', cave: 'cave', mine: 'cave', forest: 'forest', shore: 'forest' };
 
 /** Things that lie as nature or a fall left them (rocks, piles, trees): any turn. Everything else
  *  is made and set down by people, square to the room (0/90° and a few degrees). */
-const NATURAL: ReadonlySet<string> = new Set(['boulder', 'snow-rock', 'stalagmite', 'rock', 'rubble-heap', 'ore-pile', 'coal-pile', 'rubble', 'obstacle-tree', 'stump', 'fern', 'mushrooms', 'crystals', 'campfire', 'pillar', 'sack', 'sacks']);
+const NATURAL: ReadonlySet<string> = new Set(['ridge-snow', 'ridge-cave', 'ridge-forest', 'boulder', 'snow-rock', 'stalagmite', 'rock', 'rubble-heap', 'ore-pile', 'coal-pile', 'rubble', 'obstacle-tree', 'stump', 'fern', 'mushrooms', 'crystals', 'campfire', 'pillar', 'sack', 'sacks']);
 /** Most a made thing is off square, outside a knocked-about (wreck) group: about 3°. */
 const SQUARE_JITTER = 0.055;
 /** Most things standing on the floor of one obstacle hex. */
@@ -525,6 +534,14 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
         const seg = along.slice(i, i + 2);
         if (set === 'row') {
           for (const k of seg) placed.push(...placeRecipe(singleRecipe(pieces.get(k)!, edge, rnd), region, [centreOf(k)], rnd, orient, placed, playable));
+          continue;
+        }
+        if (fam === 'rock' && seg.length === 2) {
+          // Two touching rock hexes are one ridge of the region's rock across both (Blender).
+          const [a, b] = seg.map(centreOf) as [{ x: number; z: number }, { x: number; z: number }];
+          const piece = `ridge-${RIDGE[edge] ?? 'cave'}`;
+          const rot = Math.atan2(-(b.z - a.z), b.x - a.x) + (rnd() < 0.5 ? Math.PI : 0);
+          placed.push({ spec: S(piece), piece, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: 0, rot, scale: 1, tip: 'none', lean: 0, leanDir: 0, box: footprint(piece, 1, 'none') });
           continue;
         }
         const recipe = seg.length === 2 ? COMPOSITE[set]! : singleRecipe(pieces.get(seg[0]!)!, edge, rnd);

@@ -4040,6 +4040,85 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "ridge-snow",
+      "nameUk": "Гряда каміння на 2 гекси: граніт зі снігом",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 123,
+      "wave": 7,
+      "scenarios": [
+        16
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/ridge-snow/ridge-snow.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 500,
+        "max": 3000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "ridge-cave",
+      "nameUk": "Гряда каміння на 2 гекси: темна печерна скеля з кристалами",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 124,
+      "wave": 7,
+      "scenarios": [
+        9
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/ridge-cave/ridge-cave.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 500,
+        "max": 3000
+      },
+      "textureMax": 1024,
+      "attachTo": null
+    },
+    {
+      "id": "ridge-forest",
+      "nameUk": "Гряда каміння на 2 гекси: камінь з мохом, хмиз і папороть",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 125,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/ridge-forest/ridge-forest.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 500,
+        "max": 3000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }
