@@ -72,8 +72,24 @@ function tilesWith(s: GameState, has: (t: GameState['board']['tiles'][string]) =
     .map(([k]) => parseHexKey(k));
 }
 
-/** Where the acting hero should head, by the scenario goal; null = no goal-specific target. */
+/** Keys a monster dropped for doors still locked (s8's office key from the cultist). */
+function floorKeys(s: GameState): Hex[] {
+  const locked = new Set(Object.values(s.board.tiles).flatMap((t) => (t.door?.key && !t.door.open ? [t.door.key] : [])));
+  return locked.size > 0 ? tilesWith(s, (t) => !!t.questItems?.some((k) => locked.has(k))) : [];
+}
+
+/** Where the acting hero should head; null = no target (the plain «nearest monster, then doors» pull). */
 function goalTargets(s: GameState, content: Content, me: HeroState): Hex[] | null {
+  const byGoal = targetsByGoal(s, content, me);
+  if (byGoal || Object.values(s.figures).some((f) => f.kind === 'monster')) return byGoal;
+  // With the fight over, a dropped key comes before the doors: nothing pulled to it, and in s8 the
+  // party stood at the locked office door, the key a step or two behind, till its decks ran out.
+  const keys = floorKeys(s);
+  return keys.length > 0 ? keys : null;
+}
+
+/** Where the acting hero should head, by the scenario goal; null = no goal-specific target. */
+function targetsByGoal(s: GameState, content: Content, me: HeroState): Hex[] | null {
   const goal = goalOf(s, content);
   const monsters = Object.values(s.figures).filter((f) => f.kind === 'monster').map((f) => f.hex);
   const unlit = scenarioObjects(s).filter((o) => o.kind === 'brazier' && o.state === 'unlit').map((o) => o.hex);
@@ -259,10 +275,10 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
     if (boss) v -= away(boss.hex);
     else if (monsters.length > 0) v -= Math.min(...monsters.map((m) => away(m.hex)));
     else {
-      const doors = Object.entries(s.board.tiles)
-        .filter(([, t]) => t.door && !t.door.open)
-        .map(([k]) => distance(parseHexKey(k), me.hex));
-      if (doors.length > 0) v -= 2 * Math.min(...doors);
+      // Walking steps here too: across s8's barrels the office door is 3 hexes from the north
+      // storeroom by the straight line and a dozen steps round, and the warden stood there for good.
+      const doors = tilesWith(s, (t) => !!t.door && !t.door.open);
+      if (doors.length > 0) v -= 2 * (content ? pathDistance(s, content, doors, me.hex) : Math.min(...doors.map((d) => distance(d, me.hex))));
     }
   }
   return v;
