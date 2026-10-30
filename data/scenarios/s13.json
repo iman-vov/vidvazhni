@@ -36,7 +36,10 @@
         { "hex": [7, 3], "model": "rock" },
         { "hex": [2, 1], "model": "cocoon" },
         { "hex": [6, -1], "model": "cocoon" },
-        { "hex": [8, -3], "model": "cocoon" }
+        { "hex": [8, -3], "model": "cocoon" },
+        { "hex": [5, 0], "model": "fallen-log" },
+        { "hex": [1, 4], "model": "fallen-log" },
+        { "hex": [7, 1], "model": "fallen-log" }
       ],
       "spawns": [
         { "monster": "night-moth", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
