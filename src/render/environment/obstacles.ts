@@ -79,6 +79,8 @@ export const HEIGHT: Record<string, number> = {
   'timber-stack': 0.42,
   shelf: 1.25,
   bookshelf: 1.35,
+  pallet: 0.12,
+  'weapon-rack': 1.1,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -114,6 +116,8 @@ const FOOT: Record<string, [number, number, number, number]> = {
   // Shelves stand back to back in a row: a unit is about half a hex long.
   shelf: [-0.49, 0.49, -0.31, 0.01],
   bookshelf: [-0.47, 0.47, -0.2, 0.2],
+  pallet: [-0.46, 0.46, -0.4, 0.4],
+  'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
 /** Things that lie as nature or a fall left them (rocks, piles, trees): any turn. Everything else
@@ -142,6 +146,9 @@ interface Spec {
   centre?: boolean;
   /** Lies along the line between the hexes of a set piece. */
   along?: boolean;
+  /** Set out on purpose beside item `near`: at [x, z] in that item's own frame, turned `turn` more
+   *  (quarter turns). A stool at a table's side, a crate by a shelf, a trough by an anvil. */
+  at?: [number, number, number?];
 }
 
 const S = (p: string, o: Omit<Spec, 'p'> = {}): Spec => ({ p, ...o });
@@ -149,23 +156,28 @@ const SMALL: [number, number] = [0.6, 0.74];
 
 /** Cluster recipes for one hex, by the piece the location stands on it; one is picked per hex. */
 const SINGLE: Record<string, Spec[][]> = {
+  // Made things are a furniture group set out on purpose around the main thing (`at`, in its frame):
+  // what people would really put there, square to it.
   barrel: [
-    [S('barrel', { s: [1, 1.12] }), S('barrel', { s: [0.72, 0.84], near: 0 }), S('crate', { s: SMALL, near: 0 })],
-    [S('barrel'), S('barrel', { near: 0, tip: 'side', s: [0.8, 0.9] }), S('sack', { near: 0 })],
-    [S('barrel', { s: [1.02, 1.14] }), S('barrel', { s: [0.8, 0.9], near: 0, tip: 'lean' }), S('crate', { s: SMALL, near: 1 })],
+    [S('barrel', { s: [1, 1.08] }), S('barrel', { s: [0.9, 0.96], near: 0, at: [0.68, 0.04] }), S('crate', { s: SMALL, near: 0, at: [0.1, 0.6] })],
+    [S('barrel'), S('barrel', { near: 0, tip: 'side', s: [0.8, 0.88], at: [0.05, 0.62, 1] }), S('sack', { near: 0, at: [-0.6, 0.12] })],
   ],
   crate: [
-    [S('crate', { s: [1.02, 1.16] }), S('crate', { s: SMALL, on: 0 }), S('barrel', { s: [0.74, 0.88], near: 0 })],
-    [S('crate'), S('crate', { s: [0.68, 0.8], near: 0, tip: 'lean' }), S('sack', { near: 0 })],
+    [S('pallet'), S('crate', { s: [0.92, 1], on: 0 }), S('crate', { s: SMALL, on: 1 }), S('barrel', { s: [0.74, 0.84], near: 0, at: [0.78, 0.05] })],
+    [S('crate', { s: [1.02, 1.12] }), S('crate', { s: SMALL, on: 0 }), S('crate', { s: [0.82, 0.9], near: 0, at: [0.66, 0.02] })],
   ],
-  table: [[S('table'), S('stool', { near: 0 }), S('stool', { near: 0, tip: 'side' }), S('barrel', { s: [0.6, 0.7], near: 0, chance: 0.5 })]],
-  'crate-stack': [[S('crate-stack'), S('barrel', { s: [0.78, 0.9], near: 0 }), S('sack', { near: 0 })]],
-  sacks: [[S('sacks'), S('crate', { s: SMALL, near: 0 }), S('sack', { near: 0, tip: 'side' })]],
-  sack: [[S('sacks'), S('sack', { near: 0 }), S('crate', { s: SMALL, near: 0 })]],
-  'keg-rack': [[S('keg-rack'), S('barrel', { s: [0.78, 0.9], near: 0 }), S('stool', { near: 0 })]],
-  'crate-broken': [[S('crate-broken'), S('crate', { s: [0.74, 0.88], near: 0 }), S('barrel', { s: [0.8, 0.9], near: 0, tip: 'side' })]],
-  'quench-trough': [[S('quench-trough'), S('barrel', { s: [0.74, 0.86], near: 0 }), S('coal-pile', { s: SMALL, near: 0 })]],
-  anvil: [[S('anvil'), S('crate', { s: SMALL, near: 0 }), S('ore-pile', { s: SMALL, near: 0 })]],
+  // A table with its stools at the sides, a third at the end now and then.
+  table: [[S('table'), S('stool', { near: 0, at: [0, 0.52] }), S('stool', { s: [0.9, 0.96], near: 0, at: [0, -0.52] }), S('stool', { near: 0, chance: 0.4, at: [0.66, 0] })]],
+  // A stack of crates on its pallet, a sack against it.
+  'crate-stack': [[S('pallet', { s: [1.04, 1.1] }), S('crate-stack', { s: [0.86, 0.94], on: 0 }), S('sack', { near: 0, at: [0.1, 0.6] })]],
+  sacks: [[S('sacks'), S('sack', { near: 0, at: [0.52, 0.1] }), S('crate', { s: SMALL, near: 0, at: [-0.56, 0.05] })]],
+  sack: [[S('sacks'), S('sack', { near: 0, at: [0.52, 0.1] }), S('crate', { s: SMALL, near: 0, at: [-0.56, 0.05] })]],
+  'keg-rack': [[S('keg-rack'), S('barrel', { s: [0.78, 0.9], near: 0, at: [0.78, -0.1] }), S('stool', { near: 0, at: [0, 0.62] })]],
+  'crate-broken': [[S('crate-broken'), S('crate', { s: [0.74, 0.88], near: 0, at: [0.62, 0] }), S('barrel', { s: [0.8, 0.9], near: 0, tip: 'side', at: [0, 0.6, 1] })]],
+  // The smith's corner: the trough with a barrel of water and the coal by it.
+  'quench-trough': [[S('quench-trough'), S('barrel', { s: [0.74, 0.86], near: 0, at: [0.72, 0] }), S('coal-pile', { s: SMALL, near: 0, at: [-0.66, 0.1] })]],
+  // An anvil with its tool rack behind and a crate of stock beside.
+  anvil: [[S('anvil'), S('weapon-rack', { s: [0.82, 0.9], near: 0, at: [0, -0.5] }), S('crate', { s: SMALL, near: 0, at: [0.6, 0.15] })]],
   'obstacle-tree': [
     [S('obstacle-tree'), S('stump', { near: 0 }), S('fern', { near: 0 }), S('mushrooms', { near: 0 }), S('fern', { s: SMALL, near: 1, chance: 0.6 })],
     [S('obstacle-tree'), S('boulder', { s: [0.42, 0.56], near: 0 }), S('fern', { near: 0 }), S('log', { s: [0.45, 0.55], near: 0 }), S('fern', { s: SMALL, near: 1, chance: 0.6 })],
@@ -182,7 +194,8 @@ const SINGLE: Record<string, Spec[][]> = {
   'rubble-heap': [[S('rubble-heap', { s: [1.02, 1.15] }), S('boulder', { s: [0.36, 0.46], near: 0 }), S('timber-stack', { s: [0.5, 0.6], near: 0, chance: 0.7 }), S('rubble', { s: [1, 1.25], near: 0 })]],
   'ore-pile': [[S('ore-pile', { s: [1.05, 1.15] }), S('ore-pile', { s: SMALL, near: 0 }), S('rubble', { near: 0 })]],
   'coal-pile': [[S('coal-pile', { s: [1.05, 1.15] }), S('coal-pile', { s: SMALL, near: 0 }), S('barrel', { s: [0.7, 0.8], near: 0 })]],
-  bunk: [[S('bunk'), S('stool', { near: 0 }), S('sack', { near: 0, tip: 'side' })]],
+  // A bunk with a stool at its foot and a kit bag by it.
+  bunk: [[S('bunk'), S('stool', { near: 0, at: [0.48, 0.5] }), S('sack', { near: 0, at: [-0.46, 0.52] })]],
   hut: [[S('hut', { centre: true }), S('timber-stack', { s: [0.55, 0.65], near: 0 }), S('barrel', { s: [0.7, 0.8], near: 0 })]],
   campfire: [[S('campfire', { centre: true }), S('log', { s: [0.5, 0.6], near: 0 }), S('stump', { s: [0.8, 0.9], near: 0 })]],
   // Shelves are set out as a row (placeShelves), not from a recipe.
@@ -615,7 +628,19 @@ function placeShelves(group: HexKey[], pieces: Map<HexKey, string>, orient: Orie
     const [a, b] = rnd() < 0.5 ? [0.95, 1.03] : [1.03, 0.95];
     const [x0, x1, z0, z1] = footprint(piece, a, 'none');
     if (group.length === 1) {
-      out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot: orient.base + between(rnd, [-0.02, 0.02]), scale: a, tip: 'none', lean: 0, leanDir: 0, box: [x0, x1, z0, z1] });
+      // A freestanding shelf with a crate of its stock at one end.
+      const rot = orient.base + between(rnd, [-0.02, 0.02]);
+      out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot, scale: a, tip: 'none', lean: 0, leanDir: 0, box: [x0, x1, z0, z1] });
+      const first = rnd() < 0.5 ? -1 : 1;
+      const cs = between(rnd, SMALL);
+      for (const side of [first, -first]) {
+        const lx = side * (x1 + 0.2);
+        const x = c.x + lx * Math.cos(rot) + 0.08 * Math.sin(rot);
+        const z = c.z - lx * Math.sin(rot) + 0.08 * Math.cos(rot);
+        if (hexKey(worldToHex(x, z)) !== k) continue;
+        out.push({ spec: S('crate'), piece: 'crate', x, z, y: 0, rot: rot + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]), scale: cs, tip: 'none', lean: 0, leanDir: 0, box: footprint('crate', cs, 'none') });
+        break;
+      }
       continue;
     }
     const unit = x1 - x0;
@@ -646,6 +671,8 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
   };
   const axis = centres.length > 1 ? Math.atan2(-(centres[1]!.z - centres[0]!.z), centres[1]!.x - centres[0]!.x) : orient.axis;
   const mid = centres.reduce((a, c) => ({ x: a.x + c.x / centres.length, z: a.z + c.z / centres.length }), { x: 0, z: 0 });
+  // A furniture group stands about its hex's middle, its things set out round the main one.
+  const arranged = recipe.some((s) => s.at);
   for (const spec of recipe) {
     if (spec.chance !== undefined && rnd() > spec.chance) continue;
     const natural = NATURAL.has(spec.p);
@@ -685,7 +712,18 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
       let rot = natural || orient.wreck ? rnd() * Math.PI * 2 : squareTurn(orient, rnd);
       // Logs lie the way the group runs, as if they fell together.
       if (spec.p === 'log') rot = axis + between(rnd, [-0.25, 0.25]);
-      if (spec.along) {
+      if (spec.at && target && attempt < 4) {
+        // Set out where it belongs beside its main thing (the other side on a second try), square
+        // to it; a little off now and then, as people put things down.
+        const [ax, az, turn = 0] = spec.at;
+        const lx = (attempt % 2 ? -ax : ax) + between(rnd, [-0.04, 0.04]);
+        const lz = az + between(rnd, [-0.04, 0.04]);
+        const c = Math.cos(target.rot);
+        const s = Math.sin(target.rot);
+        x = target.x + lx * c + lz * s;
+        z = target.z - lx * s + lz * c;
+        rot = orient.wreck ? rnd() * Math.PI * 2 : natural ? rot : target.rot + turn * (Math.PI / 2) + Math.floor(rnd() * 2) * Math.PI + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]);
+      } else if (spec.along) {
         // Along the pair's line, a few degrees off straight, anywhere along it.
         rot = axis + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]) + (rnd() < 0.5 ? Math.PI : 0);
         const t = between(rnd, [-0.35, 0.35]);
@@ -709,10 +747,10 @@ function placeRecipe(recipe: Spec[], region: Set<HexKey>, centres: { x: number; 
         // Anywhere in the region; the first thing of a single hex sits off its centre.
         const c = centres[Math.floor(rnd() * centres.length)]!;
         const a = rnd() * Math.PI * 2;
-        const d = Math.sqrt(rnd()) * 0.55;
+        const d = arranged && !placed.length ? between(rnd, [0.03, 0.16]) : Math.sqrt(rnd()) * 0.55;
         x = c.x + Math.cos(a) * d;
         z = c.z + Math.sin(a) * d;
-        if (!placed.length && !others.length && centres.length === 1 && d < 0.12) continue;
+        if (!arranged && !placed.length && !others.length && centres.length === 1 && d < 0.12) continue;
       }
       const cand: Placed = { spec, piece: spec.p, x, z, y: 0, rot, scale, tip, lean, leanDir, box, variant };
       if (!regionHas(x, z)) continue;

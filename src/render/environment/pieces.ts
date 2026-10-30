@@ -863,6 +863,16 @@ const PIECES: Record<string, PieceDef> = {
       }
     },
   },
+  // A pallet under stacked goods: three runners and a deck of five boards.
+  pallet: {
+    kind: 'prop',
+    height: 0.12,
+    radius: 0.48,
+    build: (b) => {
+      for (const z of [-0.32, 0, 0.32]) b.box('woodDark', [0.92, 0.06, 0.1], [0, 0.03, z]);
+      for (const x of [-0.38, -0.19, 0, 0.19, 0.38]) b.box('wood', [0.15, 0.04, 0.78], [x, 0.08, 0]);
+    },
+  },
   stool: {
     kind: 'prop',
     height: 0.45,
