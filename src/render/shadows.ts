@@ -27,8 +27,10 @@ export interface ShadowTier {
 
 export const SHADOW_TIERS: Record<GraphicsQuality, ShadowTier> = {
   low: { mode: 'baked', mapSize: 0, radius: 0, casters: 'all', lamps: 0, reeds: true },
-  medium: { mode: 'realtime', mapSize: 1024, radius: 1.5, casters: 'big', lamps: 0, reeds: true },
-  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'all', lamps: 2, reeds: false },
+  medium: { mode: 'realtime', mapSize: 1024, radius: 1.5, casters: 'big', lamps: 0, reeds: false },
+  // Only the big things cast on high too: a pebble's or a cup's shadow is a few pixels from the board
+  // camera, and every small caster was drawn a second time into the sun's map.
+  high: { mode: 'realtime', mapSize: 2048, radius: 3, casters: 'big', lamps: 2, reeds: false },
 };
 
 /** Layer of the things a lamp's shadow is drawn from: the static casters, not the figures (a lamp's
@@ -37,6 +39,9 @@ export const LAMP_LAYER = 3;
 
 /** The marsh's swaying reed blades (environment/marsh.ts names them env:marsh:<node>:soft). */
 const SWAYING_REEDS = /^env:marsh:reeds[\w-]*:soft$/;
+/** The floor scatter (environment/scatter.ts): centimetre-high bits, one batch per look, whose
+ *  batch-wide bounds would read as big. */
+const FLOOR_SCATTER = /^env:scatter:/;
 
 /** Height (m) below which a mesh counts as flat: it casts nothing (floors, decals, a coin). */
 const FLAT = 0.012;
@@ -57,7 +62,7 @@ const scale = new THREE.Vector3();
 /** How a mesh casts: not at all (see-through, glowing, flat, a contact blob), as a small thing
  *  (litter, pebbles, a cup), or as a big one (a figure, a barrel, a wall). */
 export function casterSize(mesh: THREE.Mesh): 'none' | 'small' | 'big' {
-  if (!mesh.isMesh || mesh.name === 'contact-shadow' || !solid(mesh)) return 'none';
+  if (!mesh.isMesh || mesh.name === 'contact-shadow' || FLOOR_SCATTER.test(mesh.name) || !solid(mesh)) return 'none';
   const g = mesh.geometry;
   if (!g.boundingBox) g.computeBoundingBox();
   if (!g.boundingBox || g.boundingBox.isEmpty()) return 'none';
