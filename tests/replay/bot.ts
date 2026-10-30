@@ -14,7 +14,6 @@ import { apply } from '../../src/rules/engine';
 import { distance, parseHexKey, type Hex } from '../../src/rules/hex';
 import { activeGoal, counterLeft, goalZone, inZone, npcId, objectState } from '../../src/rules/objectives';
 import { objectHex, WIND_UP_KEY } from '../../src/rules/allies';
-import { BOOKSHELF, SHELF_ASLEEP } from '../../src/rules/books';
 import { mirrorBroken, turnsBetween } from '../../src/rules/mirrors';
 import { NPC_LEAD } from '../../src/rules/scenarioRules';
 import { isDoorLocked, legalActionResults, legalActions, scenarioObjects } from '../../src/rules/queries';
@@ -227,11 +226,11 @@ export function score(s: GameState, heroId?: string, content?: Content): number 
   }
   // s16: a broken mirror costs the secondary goal.
   if (mirrorBroken(s)) v -= 15;
-  // s18: a hero ending its turn next to a sleeping shelf raises the alarm.
-  for (const o of scenarioObjects(s)) {
-    if (o.kind !== BOOKSHELF || o.state !== SHELF_ASLEEP) continue;
-    for (const f of Object.values(s.figures)) if (f.kind === 'hero' && !f.exhausted && !f.conditions.invisible && distance(f.hex, o.hex) === 1) v -= 25;
-  }
+  // s18's sleeping shelves cost nothing here. Waking one raises the alarm once (a wraith more, the
+  // hall wakes), but no walking route crosses the stacks without ending a turn next to a shelf, and
+  // a greedy turn never pays a one-off 25 for the 1 a step of the monster pull: the pair stood in
+  // front of the shelves till its decks ran out (0/8). The straight-line pull hid that by luck: it
+  // led along the bottom row, where a jump card clears the row's end without touching a shelf.
   if (goal?.type === 'protect') {
     const tile = Object.values(s.board.tiles).find((t) => t.object?.id === goal.object);
     v += 10 * (tile?.breakable?.hp ?? 0);
