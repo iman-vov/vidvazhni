@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ENVIRONMENTS } from '../../src/render/environment';
 import { footRing, hexBand } from '../../src/render/figureView';
 import { activeFigure } from '../../src/render/highlightPlan';
-import { fitToHeight, hexVariation, propModelFor } from '../../src/render/propModels';
+import { anchoredModel, fitToHeight, hexVariation, propModelFor, ROUGH_SETS, ROUGH_VARIANTS, roughModelFor } from '../../src/render/propModels';
 import type { GameState } from '../../src/rules/state';
 
 /** Prop model ids the art manifest plans (art/prompts/manifest.json, kind "prop") plus flour-sack. */
@@ -75,6 +75,23 @@ describe('prop models', () => {
         expect(v.rot).toBeLessThan(Math.PI * 2);
       }
     }
+  });
+
+  it('difficult terrain gets the clump of its region, a planned model, all variants in use', () => {
+    expect(roughModelFor('no-such-place', 0, 0)).toBeNull();
+    expect(roughModelFor(null, 0, 0)).toBeNull();
+    for (const id of Object.keys(ROUGH_SETS)) expect(ENVIRONMENTS.some((e) => e.id === id)).toBe(true);
+    const seen = new Set<string>();
+    for (let q = -6; q <= 6; q++) for (let r = -6; r <= 6; r++) seen.add(roughModelFor('thorn-path', q, r)!);
+    expect(seen.size).toBe(ROUGH_VARIANTS);
+    for (const set of new Set(Object.values(ROUGH_SETS))) {
+      for (let v = 1; v <= ROUGH_VARIANTS; v++) {
+        expect(PLANNED.has(`rough-${set}-${v}`)).toBe(true);
+        expect(anchoredModel(`rough-${set}-${v}`)).toBe(true);
+      }
+    }
+    expect(roughModelFor('thorn-path', 3, -2)).toBe(roughModelFor('thorn-path', 3, -2));
+    expect(anchoredModel('barrel')).toBe(false);
   });
 });
 

@@ -3810,6 +3810,81 @@
       },
       "textureMax": null,
       "attachTo": null
+    },
+    {
+      "id": "rough-glass-1",
+      "nameUk": "Складна місцевість: скло й рами на вапняку, варіант 1",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 114,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-glass-1/rough-glass-1.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-glass-2",
+      "nameUk": "Складна місцевість: скло й рами на вапняку, варіант 2",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 115,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-glass-2/rough-glass-2.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
+    },
+    {
+      "id": "rough-glass-3",
+      "nameUk": "Складна місцевість: скло й рами на вапняку, варіант 3",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 116,
+      "wave": 7,
+      "scenarios": [],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/terrain-props/terrain-props.blend",
+      "modelFile": "assets/models/rough-glass-3/rough-glass-3.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 800,
+        "max": 2000
+      },
+      "textureMax": null,
+      "attachTo": null
     }
   ]
 }
