@@ -24,6 +24,7 @@ import { BoardOverlay, CONDITION_ICONS, conditionIconSvg, FigureBadge, type Over
 import { PLATE_HEIGHT, TileLayer } from './boardTiles';
 import { isFogCreature, lookOf, PROJECTILE } from './figureLook';
 import { animateGlows, createFigureParts, disposeFigureParts, FigureView, FULL_DETAIL_PX } from './figureView';
+import { updateInstanceCulling } from './instanceCull';
 
 import { activeFigure, CELL_COLORS, planHighlights, type HighlightPlan } from './highlightPlan';
 import { HEX_SIZE, hexToWorld, worldToHex } from './hexLayout';
@@ -534,6 +535,7 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     }
     if (effects.hasOrbs) effects.placeOrbs((id) => orbPoint(id), animDt, movingOrbs);
     pickDetail();
+    updateInstanceCulling(scene, camera.camera);
     if (shadowsDirty) refreshShadows();
     // The sun's map covers what the view shows (and what throws shadows into it), not the whole board.
     if (sun.castShadow) fitSunToView(sun, camera.camera, SHADOW_TIERS[quality].radius, SUN_VIEW_MARGIN);

@@ -69,8 +69,9 @@ function batchable(mesh: THREE.Mesh): boolean {
   if (!mesh.isMesh || Array.isArray(mesh.material)) return false;
   if ((mesh as THREE.InstancedMesh).isInstancedMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh) return false;
   const m = mesh.material;
-  // See-through and glowing things keep their own draw (sorting, additive blending).
-  if (m.transparent || m.blending !== THREE.NormalBlending) return false;
+  // See-through and glowing things keep their own draw (sorting, additive blending), except the soft
+  // contact shadows under props: flat on the floor and all alike, so their order does not matter.
+  if ((m.transparent && mesh.name !== 'contact-shadow') || m.blending !== THREE.NormalBlending) return false;
   const g = mesh.geometry;
   if (Object.keys(g.morphAttributes).length) return false;
   return !Object.values(g.attributes).some((a) => (a as THREE.InterleavedBufferAttribute).isInterleavedBufferAttribute);

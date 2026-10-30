@@ -16,6 +16,7 @@ import { noiseTexture, PLATE_HEIGHT, textureUrl, TEXTURE_WORLD_SIZE } from '../b
 import { blobShadowTexture } from '../contactShadow';
 import { HEX_SIZE, hexToWorld } from '../hexLayout';
 import { surfaceTexture } from '../surfaces';
+import { cullInstances } from '../instanceCull';
 import { listModels } from '../models';
 import { loadPropPrototype, propModelFor, prototypeMeshes, type PropPrototype } from '../propModels';
 import type { ColorGrade } from '../post';
@@ -996,6 +997,7 @@ export class BoardEnvironment {
         mesh.name = `env:model:${proto.spec.model}`;
         const spin = SPIN[proto.spec.model];
         if (spin) this.spinners.push(new Spinner(mesh, places, part.matrix, spin));
+        else cullInstances(mesh, 3); // tall: their shadows reach farther into the view
         // Modelled props are few and instanced: they cast shadows wherever figures do.
         mesh.castShadow = shadows || this.quality !== 'low';
         mesh.receiveShadow = true;
@@ -1125,6 +1127,9 @@ export class BoardEnvironment {
           return !look.unlit && look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto);
         },
       );
+      built.root.traverse((o) => {
+        if ((o as THREE.InstancedMesh).isInstancedMesh) cullInstances(o as THREE.InstancedMesh);
+      });
       this.root.add(built.root);
       this.disposables.push(built);
       this.scatter = built;

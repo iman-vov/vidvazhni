@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { floorDetail, type FloorDetail } from '../floorDetail';
+import { cullInstances } from '../instanceCull';
 import type { GraphicsQuality } from '../quality';
 import { sampleField, type Field } from './field';
 import { distanceToFootprint, hidesBoard, seededRandom, valueNoise, type EnvLayout } from './layout';
@@ -373,6 +374,8 @@ export function buildMarsh(
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
+      // Clumps out of view are left out of the draw (most of the marsh at the normal zoom).
+      cullInstances(mesh);
       mesh.name = `env:marsh:${node}:${look}`;
       mesh.receiveShadow = true;
       root.add(mesh);
