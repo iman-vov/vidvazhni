@@ -108,8 +108,9 @@ export interface MarshSpot {
   room: string | null;
 }
 
-/** Share of the extras per quality (reeds are the heaviest thing around the board). */
-const QUALITY_SHARE: Record<GraphicsQuality, number> = { low: 0.5, medium: 0.8, high: 1 };
+/** Share of the extras per quality (reeds are the heaviest thing around the board: ~900 triangles
+ *  a clump, a few hundred clumps on a marsh map). */
+const QUALITY_SHARE: Record<GraphicsQuality, number> = { low: 0.35, medium: 0.55, high: 1 };
 
 /** Extras (beyond the clumps standing in for the old pieces) per floor-detail level. */
 const AMOUNT: Record<FloorDetail, number> = { off: 0.3, few: 0.6, many: 1 };

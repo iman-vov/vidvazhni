@@ -1127,9 +1127,6 @@ export class BoardEnvironment {
           return !look.unlit && look.sway ? this.swayMaterial(proto, { amp: look.sway }) : this.material(proto);
         },
       );
-      built.root.traverse((o) => {
-        if ((o as THREE.InstancedMesh).isInstancedMesh) cullInstances(o as THREE.InstancedMesh);
-      });
       this.root.add(built.root);
       this.disposables.push(built);
       this.scatter = built;
