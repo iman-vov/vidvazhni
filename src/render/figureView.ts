@@ -16,18 +16,23 @@ import { PLATE_HEIGHT } from './boardTiles';
 import { HEX_SIZE, hexToWorld } from './hexLayout';
 import { blobShadowTexture } from './contactShadow';
 import { HOVER_HEIGHT, hoverBob } from './motion';
-import { attachWeapon, loadModel, lowDetailGeometries, type Model } from './models';
+import { attachWeapon, loadModel, type Model } from './models';
 import type { GraphicsQuality } from './quality';
 import { applyRestyle, restyledScale } from './restyle';
+import { simplified, simplifierReady } from './simplify';
 
 /** Desired seconds for one-shot clips on the board (Meshy clips run 1.6–5 s). */
 const CLIP_SECONDS: Record<string, number> = { attack: 1.0, hit: 0.7, death: 1.3, cast: 1.0 };
 /** Fraction of the attack clip at which the blow lands or the shot leaves. */
 const ATTACK_IMPACT = 0.45;
 const MAX_TIME_SCALE = 3.2;
-/** Screen height (device pixels) from which a figure draws its full mesh; smaller, it draws the
- *  low tier's (figure LOD, setDetail). At the normal zoom on a tablet a figure is ~110 px tall. */
+/** Screen height (device pixels) from which a figure draws its full mesh; smaller, it draws a
+ *  simplified copy (figure LOD, setDetail). At the normal zoom on a tablet a figure is ~110 px tall. */
 export const FULL_DETAIL_PX = 260;
+/** How far the simplified copy may stray, as a fraction of the model's size (simplify.ts): ~1 px
+ *  at the normal zoom. (The models' own low tier is lighter, but its shading breaks up on the
+ *  figures: dark patches on the arms.) */
+const LOD_ERROR = 0.01;
 
 const heightCache = new Map<string, number>();
 
@@ -431,9 +436,9 @@ export class FigureView {
     this.showsLow = false;
     this.setContent(model.scene, materials);
     if (model.quality !== 'low') {
-      void lowDetailGeometries(model.id, meshes).then((low) => {
-        if (!low || this.model !== model) return;
-        this.lod = meshes.map((mesh, i) => ({ mesh, full: mesh.geometry, low: low[i]! }));
+      void simplifierReady.then(() => {
+        if (this.model !== model) return;
+        this.lod = meshes.map((mesh) => ({ mesh, full: mesh.geometry, low: simplified(mesh.geometry, LOD_ERROR) })).filter((l) => l.low !== l.full);
         this.applyDetail();
       });
     }
@@ -467,8 +472,8 @@ export class FigureView {
     }
   }
 
-  /** Full mesh while the figure is big on screen, the low tier's simplified one while it is small
-   *  (they look the same there): half the triangles in the scene and in the sun's map. */
+  /** Full mesh while the figure is big on screen, a simplified copy while it is small (they look
+   *  the same there): fewer triangles in the scene and in the sun's map. */
   setDetail(full: boolean): void {
     this.wantLow = !full;
     this.applyDetail();

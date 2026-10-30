@@ -32,7 +32,7 @@ import { flyPose, JUMP_CROUCH, JUMP_LAND, jumpHeight, jumpPose, leanAngles, slid
 import { listModels } from './models';
 import { reducedMotion, setBoardWater, setWaterRipples } from './environment/life';
 import { BoardPost } from './post';
-import { loadPropPrototype, PROP_FULL_PX, roughModelFor, setPropDetail, trapDust, trapModelFor } from './propModels';
+import { loadPropPrototype, roughModelFor, trapDust, trapModelFor } from './propModels';
 import { castsShadow, getGraphicsQuality, onGraphicsQualityChange, rendererPreset, type GraphicsQuality } from './quality';
 import { ShadowBake } from './shadowBake';
 import { capturePerf, readMemory, type PerfBreakdown } from './perfStats';
@@ -162,7 +162,6 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
 
   let renderer = makeRenderer(quality);
   const drawSize = new THREE.Vector2();
-  const viewDir = new THREE.Vector3();
   root.appendChild(renderer.domElement);
   const overlay = new BoardOverlay(root);
 
@@ -552,18 +551,13 @@ export function createBoardView(container: HTMLElement, opts: BoardViewOptions =
     }
   }
 
-  /** Figures and prop models small on screen draw their simplified meshes (FigureView.setDetail,
-   *  setPropDetail); zoomed in close, the full ones. */
+  /** Figures small on screen draw a simplified copy of their meshes (FigureView.setDetail); zoomed
+   *  in close, the full ones. */
   function pickDetail(): void {
     const cam = camera.camera;
     cam.updateMatrixWorld();
     const pxPerUnit = renderer.getDrawingBufferSize(drawSize).y / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2));
     for (const fv of figures.values()) fv.setDetail((fv.height * pxPerUnit) / Math.max(0.1, cam.position.distanceTo(fv.root.position)) >= FULL_DETAIL_PX);
-    // Props by the zoom: the distance to the ground at the view's centre.
-    const down = -cam.getWorldDirection(viewDir).y;
-    const toGround = down > 0.05 ? (cam.position.y - PLATE_HEIGHT) / down : cam.position.y;
-    // The obstacles' merged batch is built from the props' meshes: again, at the new level.
-    if (setPropDetail(scene, pxPerUnit / Math.max(0.1, toGround) >= PROP_FULL_PX)) shadowsDirty = true;
   }
 
   /** Rings on the water around figures standing in it. */

@@ -1,6 +1,6 @@
-// Lighter copies of kit geometry for things that are small on screen. The shared rock kit's stones
-// are ~1500 triangles each whatever their size, and a pebble-sized chunk beside a boulder is drawn
-// with as many as the boulder. meshoptimizer simplifies a copy down to an error relative to the
+// Lighter copies of geometry for things that are small on screen: the figures at the normal zoom
+// (figureView.ts) and the shared rock kit's stones (~1500 triangles each whatever their size, so a
+// pebble-sized chunk beside a boulder was drawn with as many as the boulder). meshoptimizer simplifies a copy down to an error relative to the
 // shape's own size (so a chunk a fifth of a stone's height may lose more), weighing normals and
 // UVs so the facets keep their shading and the texture stays put. Seams stay closed: the
 // 'Permissive' mode, which collapses across them, saves twice as much but opened cracks in the
