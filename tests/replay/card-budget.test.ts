@@ -28,8 +28,11 @@ const MIN_SLACK = 0.25;
 const MAX_DECK_LOSSES = 0.1;
 /** Bot games (of SEEDS) lost to an empty deck after the balance pass of 2026-10-24; may not grow.
  *  s5: 4 → 5 with the stronger bot of 2026-10-29 (docs/design/bot-strength.md): it wins 1 of 6
- *  (was 0) and no longer loses to wounds, so the other seeds now end on the deck. */
-const KNOWN_DECK_LOSSES: Record<string, number> = { s3: 2, s5: 5 };
+ *  (was 0) and no longer loses to wounds, so the other seeds now end on the deck.
+ *  s4: 0 → 1 with the board obstacles of 2026-10-29 (ea61022, on purpose: one way through the
+ *  barracks, the shard chest 5 steps off instead of 3). Seed 5 already won on its last card; with
+ *  the rogue down to wounds the archer now runs dry on the way back, every monster dead. */
+const KNOWN_DECK_LOSSES: Record<string, number> = { s3: 2, s4: 1, s5: 5 };
 
 const PARTIES: Record<string, [string, string]> = {
   s1: ['warden', 'wind-archer'],
