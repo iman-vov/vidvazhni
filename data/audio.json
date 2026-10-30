@@ -305,7 +305,9 @@
     "mine-tunnel": "caves",
     "old-forge": "caves",
     "dark-depths": "caves",
-    "gloom-heart": "gloom"
+    "gloom-heart": "gloom",
+    "glass-town": "village",
+    "glass-heights": "forest"
   },
   "battle": "battle",
   "stingers": {
@@ -430,6 +432,26 @@
       "wind": {
         "gain": 0.04,
         "freq": 350
+      }
+    },
+    "glass-town": {
+      "drone": {
+        "freq": 62,
+        "gain": 0.012,
+        "cutoff": 420
+      },
+      "crackle": {
+        "gain": 0.02
+      }
+    },
+    "glass-heights": {
+      "wind": {
+        "gain": 0.06,
+        "freq": 520
+      },
+      "birds": {
+        "gain": 0.02,
+        "rate": 0.3
       }
     }
   }
