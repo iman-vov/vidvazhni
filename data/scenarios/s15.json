@@ -46,7 +46,8 @@
         { "hex": [8, 2], "model": "cocoon" },
         { "hex": [13, 0], "model": "cocoon" },
         { "hex": [14, -6], "model": "cocoon" },
-        { "hex": [7, -1], "model": "cocoon" }
+        { "hex": [7, -1], "model": "cocoon" },
+        { "hex": [8, 1], "model": "rock" }
       ],
       "spawns": [
         { "monster": "mist-queen", "hex": [11, -1], "by": { "2": "normal", "3": "normal", "4": "normal" } }
