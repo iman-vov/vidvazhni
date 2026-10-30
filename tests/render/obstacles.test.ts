@@ -22,7 +22,7 @@ function plan(s: ScenarioDef) {
 }
 
 /** A hex holding one big thing: a case or rack in its middle, or (with its neighbour) a ridge of rock. */
-const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => ['shelf', 'bookshelf', 'bookcase-long', 'rack-long', 'crate-wall'].includes(it.piece) || it.piece.startsWith('ridge-'));
+const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => ['shelf', 'bookshelf', 'bookcase-long', 'rack-long', 'crate-wall', 'workbench-forge'].includes(it.piece) || it.piece.startsWith('ridge-'));
 
 describe('obstacle clusters', () => {
   it('is the same every time for a scenario', () => {
@@ -40,7 +40,7 @@ describe('obstacle clusters', () => {
         // A hex of a set piece may hold little of it itself; with its neighbours it holds a pile or a row.
         const mate = Math.max(0, ...neighbors(o.hex).map((n) => plans.get(hexKey(n))?.items.length ?? 0));
         // One big thing (a case in its row, a ridge over this hex and the next) or a small pile.
-        const big = isShelves(p) || neighbors(o.hex).some((n) => plans.get(hexKey(n))?.items.some((it) => it.piece.startsWith('ridge-') || it.piece === 'crate-wall'));
+        const big = isShelves(p) || neighbors(o.hex).some((n) => plans.get(hexKey(n))?.items.some((it) => it.piece.startsWith('ridge-') || it.piece === 'crate-wall' || it.piece === 'workbench-forge'));
         expect(p.items.length + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(big ? 1 : 2);
         // Nothing stands alone in the middle: the first thing is off the centre or has company.
         for (const it of p.items) if (Math.hypot(it.x, it.z) < 0.05 && !isShelves(p)) expect(p.items.length).toBeGreaterThan(1);

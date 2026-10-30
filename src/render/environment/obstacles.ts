@@ -84,6 +84,7 @@ export const HEIGHT: Record<string, number> = {
   'ridge-cave': 1.0,
   'ridge-forest': 0.85,
   'crate-wall': 1.37,
+  'workbench-forge': 1.5,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -129,6 +130,7 @@ const FOOT: Record<string, [number, number, number, number]> = {
   'ridge-cave': [-1.52, 1.52, -0.56, 0.56],
   'ridge-forest': [-1.52, 1.52, -0.56, 0.56],
   'crate-wall': [-1.57, 1.57, -0.43, 0.43],
+  'workbench-forge': [-1.67, 1.67, -0.47, 0.47],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
@@ -258,6 +260,8 @@ const FAMILY: Record<string, string> = {
   sacks: 'goods',
   sack: 'goods',
   'keg-rack': 'goods',
+  anvil: 'goods',
+  'quench-trough': 'goods',
   'obstacle-tree': 'tree',
   boulder: 'rock',
   'snow-rock': 'rock',
@@ -517,10 +521,12 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
     } else if (group.length > 1) {
       // Two tables side by side are always one long table with its stools.
       const tables = group.every((k) => pieces.get(k) === 'table');
-      // Goods of one kind make one pile of it; mixed goods (a crate stack, a barrel, a crate stack)
-      // stay what they are, each on its hex, set out square to one line ('row').
+      // Barrels, crates or sacks of one kind make one pile of them; mixed goods (a crate stack, a
+      // barrel, a crate stack) and other things (troughs, anvils) stay what they are, each on its hex,
+      // set out square to one line ('row').
       const same = group.every((k) => pieces.get(k) === pieces.get(group[0]!));
-      const options = tables ? ['long-table'] : fam === 'goods' ? (same ? goodsSets(edge, kindOf.get(room)).filter((o) => o !== 'long-table') : ['row']) : FAMILY_SETS[fam!]!;
+      const piled = same && ['barrel', 'crate', 'crate-stack', 'sacks', 'sack'].includes(pieces.get(group[0]!)!);
+      const options = tables ? ['long-table'] : fam === 'goods' ? (piled ? goodsSets(edge, kindOf.get(room)).filter((o) => o !== 'long-table') : ['row']) : FAMILY_SETS[fam!]!;
       const centres = group.map(centreOf);
       const mid = centres.reduce((a, c) => ({ x: a.x + c.x / centres.length, z: a.z + c.z / centres.length }), { x: 0, z: 0 });
       // Not the same set piece as one close by, when the location has another.
@@ -533,12 +539,15 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       const along = [...group].sort((a, b) => proj(centreOf(a), orient.axis) - proj(centreOf(b), orient.axis));
       placed = [];
       // Two touching hexes of rock are one ridge of the region's rock, two of the same crates one
-      // stack of crates on pallets (Blender, laid along the pair), wherever they stand in the group.
+      // stack of crates on pallets, two anvils a smith's bench (Blender, laid along the pair),
+      // wherever they stand in the group.
       const big = (x: HexKey, y: HexKey | undefined): string | null => {
         if (!y || !neighbors(parseHexKey(x)).some((h) => hexKey(h) === y)) return null;
         if (fam === 'rock') return `ridge-${RIDGE[edge] ?? 'cave'}`;
         const px = pieces.get(x)!;
-        return fam === 'goods' && px === pieces.get(y) && (px === 'crate' || px === 'crate-stack') ? 'crate-wall' : null;
+        if (fam !== 'goods' || px !== pieces.get(y)) return null;
+        // Two anvils side by side are one smith's working place: a bench with its vise and tools.
+        return px === 'crate' || px === 'crate-stack' ? 'crate-wall' : px === 'anvil' ? 'workbench-forge' : null;
       };
       for (let i = 0; i < along.length; ) {
         const k = along[i]!;
