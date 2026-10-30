@@ -49,7 +49,8 @@
         { "hex": [12, -3], "model": "mine-support" },
         { "hex": [6, -2], "model": "rubble" },
         { "hex": [11, -4], "model": "mine-support" },
-        { "hex": [13, -5], "model": "rubble" }
+        { "hex": [13, -5], "model": "rubble" },
+        { "hex": [9, -2], "model": "mine-support" }
       ],
       "traps": [{ "hex": [11, -3] }],
       "doors": [{ "hex": [15, -5], "to": "s6.lift" }, { "hex": [10, -1], "to": "s6.cart-niche" }],
