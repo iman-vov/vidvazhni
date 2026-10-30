@@ -19,6 +19,7 @@
         [4, 2], [5, -2], [5, -1], [5, 0], [5, 1], [5, 2], [6, -1]
       ],
       "terrain": [{ "hex": [2, 0], "terrain": "hazardous" }, { "hex": [2, 2], "terrain": "hazardous" }],
+      "obstacles": [{ "hex": [4, 0], "model": "table" }],
       "doors": [{ "hex": [6, -1], "to": "s17.storeroom" }],
       "spawns": [
         { "monster": "gremlin", "hex": [4, -1], "by": { "2": "normal", "3": "elite", "4": "elite" } },
@@ -40,7 +41,11 @@
         [9, -3], [9, -2], [9, -1], [9, 0], [10, -4], [10, -3], [10, -2], [10, -1],
         [11, -4], [11, -3], [11, -2], [11, -1], [12, -4]
       ],
-      "obstacles": [{ "hex": [8, -3], "model": "crate-stack" }],
+      "obstacles": [
+        { "hex": [8, -3], "model": "crate-stack" },
+        { "hex": [8, -2], "model": "shelf" },
+        { "hex": [8, -1], "model": "shelf" }
+      ],
       "doors": [{ "hex": [12, -4], "to": "s17.stairs" }],
       "spawns": [
         {
@@ -90,6 +95,7 @@
         [18, -9], [18, -8], [18, -7], [18, -6], [19, -9], [19, -8], [19, -7], [19, -6]
       ],
       "obstacles": [{ "hex": [16, -8], "model": "blueprint" }],
+      "traps": [{ "hex": [18, -7] }],
       "spawns": [
         { "monster": "night-moth", "hex": [17, -7], "by": { "2": "normal", "3": "elite", "4": "elite" } },
         { "monster": "night-moth", "hex": [18, -6], "by": { "3": "normal", "4": "normal" } },
