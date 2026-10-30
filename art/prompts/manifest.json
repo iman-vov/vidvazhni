@@ -4119,6 +4119,34 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "crate-wall",
+      "nameUk": "Штабель ящиків на 2 гекси: піддони, ящики з рамами й розкосами, відкритий ящик яблук, ліхтар, накладні",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 126,
+      "wave": 7,
+      "scenarios": [
+        8,
+        10
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/crate-wall/crate-wall.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 1000,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

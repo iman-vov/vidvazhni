@@ -83,6 +83,7 @@ export const HEIGHT: Record<string, number> = {
   'ridge-snow': 0.82,
   'ridge-cave': 1.0,
   'ridge-forest': 0.85,
+  'crate-wall': 1.37,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -127,6 +128,7 @@ const FOOT: Record<string, [number, number, number, number]> = {
   'ridge-snow': [-1.52, 1.52, -0.56, 0.56],
   'ridge-cave': [-1.52, 1.52, -0.56, 0.56],
   'ridge-forest': [-1.52, 1.52, -0.56, 0.56],
+  'crate-wall': [-1.57, 1.57, -0.43, 0.43],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
 
@@ -530,22 +532,30 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       // same set, an odd one out its own hex's things, all square to one line.
       const along = [...group].sort((a, b) => proj(centreOf(a), orient.axis) - proj(centreOf(b), orient.axis));
       placed = [];
-      for (let i = 0; i < along.length; i += 2) {
-        const seg = along.slice(i, i + 2);
-        if (set === 'row') {
-          for (const k of seg) placed.push(...placeRecipe(singleRecipe(pieces.get(k)!, edge, rnd), region, [centreOf(k)], rnd, orient, placed, playable));
-          continue;
-        }
-        if (fam === 'rock' && seg.length === 2) {
-          // Two touching rock hexes are one ridge of the region's rock across both (Blender).
-          const [a, b] = seg.map(centreOf) as [{ x: number; z: number }, { x: number; z: number }];
-          const piece = `ridge-${RIDGE[edge] ?? 'cave'}`;
+      // Two touching hexes of rock are one ridge of the region's rock, two of the same crates one
+      // stack of crates on pallets (Blender, laid along the pair), wherever they stand in the group.
+      const big = (x: HexKey, y: HexKey | undefined): string | null => {
+        if (!y || !neighbors(parseHexKey(x)).some((h) => hexKey(h) === y)) return null;
+        if (fam === 'rock') return `ridge-${RIDGE[edge] ?? 'cave'}`;
+        const px = pieces.get(x)!;
+        return fam === 'goods' && px === pieces.get(y) && (px === 'crate' || px === 'crate-stack') ? 'crate-wall' : null;
+      };
+      for (let i = 0; i < along.length; ) {
+        const k = along[i]!;
+        const n = along[i + 1];
+        const piece = big(k, n);
+        if (piece) {
+          const [a, b] = [centreOf(k), centreOf(n!)];
           const rot = Math.atan2(-(b.z - a.z), b.x - a.x) + (rnd() < 0.5 ? Math.PI : 0);
           placed.push({ spec: S(piece), piece, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: 0, rot, scale: 1, tip: 'none', lean: 0, leanDir: 0, box: footprint(piece, 1, 'none') });
-          continue;
+          i += 2;
+        } else if (set === 'row' || !n) {
+          placed.push(...placeRecipe(singleRecipe(pieces.get(k)!, edge, rnd), region, [centreOf(k)], rnd, orient, placed, playable));
+          i += 1;
+        } else {
+          placed.push(...placeRecipe(COMPOSITE[set]!, region, [centreOf(k), centreOf(n)], rnd, orient, placed, playable));
+          i += 2;
         }
-        const recipe = seg.length === 2 ? COMPOSITE[set]! : singleRecipe(pieces.get(seg[0]!)!, edge, rnd);
-        placed.push(...placeRecipe(recipe, region, seg.map(centreOf), rnd, orient, placed, playable));
       }
     } else {
       placed = placeRecipe(singleRecipe(pieces.get(group[0]!)!, edge, rnd), region, group.map(centreOf), rnd, orient, [], playable);
