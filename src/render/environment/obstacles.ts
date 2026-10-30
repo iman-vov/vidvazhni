@@ -34,9 +34,6 @@ export interface ClusterItem {
   leanDir: number;
   /** Which of the kit's variants (litter). */
   variant?: number;
-  /** A second unit beside it along its own X, one thing with it (a row of shelves): the two stand
-   *  `dx` apart about the item's position, the second `scale` times the first's size. */
-  twin?: { dx: number; scale: number };
 }
 
 export interface ClusterPlan {
@@ -82,6 +79,7 @@ export const HEIGHT: Record<string, number> = {
   pallet: 0.12,
   'weapon-rack': 1.1,
   'bookcase-long': 1.46,
+  'rack-long': 1.5,
 };
 
 /** Footprint box [x0, x1, z0, z1] in the piece's own frame at its meta height, where it is not a
@@ -121,8 +119,13 @@ const FOOT: Record<string, [number, number, number, number]> = {
   // A library case as long as its hex is across (Blender, art/blender/obstacle-sets): cases on
   // touching hexes meet end to end.
   'bookcase-long': [-0.86, 0.86, -0.32, 0.32],
+  'rack-long': [-0.85, 0.85, -0.25, 0.25],
   'weapon-rack': [-0.45, 0.45, -0.25, 0.0],
 };
+
+/** Shelf pieces shown as one hex-long unit (Blender, art/blender/obstacle-sets) that meets the next
+ *  end to end. */
+const LONG_UNIT: Record<string, string> = { bookshelf: 'bookcase-long', shelf: 'rack-long' };
 
 /** Things that lie as nature or a fall left them (rocks, piles, trees): any turn. Everything else
  *  is made and set down by people, square to the room (0/90° and a few degrees). */
@@ -333,7 +336,6 @@ interface Placed {
   lean: number;
   leanDir: number;
   variant?: number;
-  twin?: ClusterItem['twin'];
   /** Footprint box in its own frame (scaled, after a tip onto its side). */
   box: [number, number, number, number];
   /** What it is stacked on. */
@@ -545,7 +547,7 @@ export function planObstacles(scenario: ScenarioDef, def: Pick<EnvironmentDef, '
       const key = plans.has(k) ? k : group[0]!;
       const [q, r] = parseHexKey(key);
       const c = hexToWorld(q, r);
-      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}), ...(p.twin ? { twin: p.twin } : {}) });
+      plan[list].push({ piece: p.piece, x: p.x - c.x, y: p.y, z: p.z - c.z, rot: p.rot, scale: p.scale, h: heightOf(p.piece, p.variant) * p.scale, tip: p.tip, lean: p.lean, leanDir: p.leanDir, ...(p.variant !== undefined ? { variant: p.variant } : {}) });
     };
     // A stacked item goes with the hex of the one it stands on.
     for (const p of placed) toHex(p, 'items', p.under ? hexKey(worldToHex(p.under.x, p.under.z)) : undefined);
@@ -623,47 +625,17 @@ function singleRecipe(piece: string, edge: EdgeStyle, rnd: () => number): Spec[]
   return list[Math.floor(rnd() * list.length)]!;
 }
 
-/** Shelves as a wall: where shelf hexes touch, two units side by side along the line on every hex
- *  (one item, `twin`), so the row reads as one long shelf; the two differ a little in size, never a
- *  copy. A lone shelf hex is one unit, square to its row. */
+/** Shelves as a wall: every shelf hex is one hex-long unit along the row (LONG_UNIT), so units on
+ *  touching hexes meet end to end as one long case or rack; every other one is turned round, so a
+ *  row shows both faces, never the same face twice. */
 function placeShelves(group: HexKey[], pieces: Map<HexKey, string>, orient: Orient, rnd: () => number): Placed[] {
-  const out: Placed[] = [];
   const along = [...group].sort((a, b) => proj(hexToWorld(...parseHexKey(a)), orient.base) - proj(hexToWorld(...parseHexKey(b)), orient.base));
-  for (const k of group) {
+  return group.map((k) => {
     const c = hexToWorld(...parseHexKey(k));
-    const piece = pieces.get(k)!;
-    if (piece === 'bookshelf') {
-      // A library case fills its hex along the row, end to end with the next; every other one is
-      // turned round, so the row shows both faces' books, never the same face twice in a row.
-      const turn = along.indexOf(k) % 2 ? Math.PI : 0;
-      const box = footprint('bookcase-long', 1, 'none');
-      out.push({ spec: S('bookcase-long'), piece: 'bookcase-long', x: c.x, z: c.z, y: 0, rot: orient.base + turn + between(rnd, [-0.01, 0.01]), scale: 1, tip: 'none', lean: 0, leanDir: 0, box });
-      continue;
-    }
-    const [a, b] = rnd() < 0.5 ? [0.95, 1.03] : [1.03, 0.95];
-    const [x0, x1, z0, z1] = footprint(piece, a, 'none');
-    if (group.length === 1) {
-      // A freestanding shelf with a crate of its stock at one end.
-      const rot = orient.base + between(rnd, [-0.02, 0.02]);
-      out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot, scale: a, tip: 'none', lean: 0, leanDir: 0, box: [x0, x1, z0, z1] });
-      const first = rnd() < 0.5 ? -1 : 1;
-      const cs = between(rnd, SMALL);
-      for (const side of [first, -first]) {
-        const lx = side * (x1 + 0.2);
-        const x = c.x + lx * Math.cos(rot) + 0.08 * Math.sin(rot);
-        const z = c.z - lx * Math.sin(rot) + 0.08 * Math.cos(rot);
-        if (hexKey(worldToHex(x, z)) !== k) continue;
-        out.push({ spec: S('crate'), piece: 'crate', x, z, y: 0, rot: rot + between(rnd, [-SQUARE_JITTER, SQUARE_JITTER]), scale: cs, tip: 'none', lean: 0, leanDir: 0, box: footprint('crate', cs, 'none') });
-        break;
-      }
-      continue;
-    }
-    const unit = x1 - x0;
-    const dx = (unit + unit * (b / a)) / 2 + 0.02;
-    const box: Placed['box'] = [-dx / 2 + x0, dx / 2 + x1 * (b / a), z0, z1];
-    out.push({ spec: S(piece), piece, x: c.x, z: c.z, y: 0, rot: orient.base + between(rnd, [-0.02, 0.02]), scale: a, tip: 'none', lean: 0, leanDir: 0, box, twin: { dx, scale: b / a } });
-  }
-  return out;
+    const unit = LONG_UNIT[pieces.get(k)!]!;
+    const turn = along.indexOf(k) % 2 ? Math.PI : 0;
+    return { spec: S(unit), piece: unit, x: c.x, z: c.z, y: 0, rot: orient.base + turn + between(rnd, [-0.01, 0.01]), scale: 1, tip: 'none', lean: 0, leanDir: 0, box: footprint(unit, 1, 'none') };
+  });
 }
 
 /** A made thing's turn: the group's square, a quarter turn of it, a few degrees off. */
@@ -884,7 +856,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
     const meta = pieceMeta(it.piece);
     if (placeholder && meta) {
       placeholder.scale.setScalar(it.h / meta.height);
-      body.add(merge(paired(placeholder, it)));
+      body.add(merge(placeholder));
     }
     if (kitPiece) {
       // A Blender kit piece at life size: shown once the kit has loaded, in the location's colours.
@@ -942,7 +914,7 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
           }
         });
         body.clear();
-        body.add(paired(model, it));
+        body.add(model);
         settle(tilt, it.tip === 'side');
         ctx.onChange();
       });
@@ -953,18 +925,6 @@ export function buildCluster(plan: ClusterPlan, ctx: ClusterContext): THREE.Grou
   if (litter) root.add(litter);
   root.updateMatrix();
   return root;
-}
-
-/** An item's thing, and its twin beside it when it has one, as one group. */
-function paired(o: THREE.Object3D, it: ClusterItem): THREE.Object3D {
-  if (!it.twin) return o;
-  const group = new THREE.Group();
-  const second = o.clone();
-  o.position.x -= it.twin.dx / 2;
-  second.position.x += it.twin.dx / 2;
-  second.scale.multiplyScalar(it.twin.scale);
-  group.add(o, second);
-  return group;
 }
 
 function firstMesh(o: THREE.Object3D): THREE.Mesh | undefined {

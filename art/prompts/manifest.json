@@ -4012,6 +4012,34 @@
       },
       "textureMax": 1024,
       "attachTo": null
+    },
+    {
+      "id": "rack-long",
+      "nameUk": "Комірний стелаж на гекс: банки, пляшки, глечики, ящички; ряди стикуються в один",
+      "kind": "prop",
+      "styleBlock": null,
+      "promptFile": null,
+      "conceptDir": null,
+      "conceptFiles": [],
+      "order": 122,
+      "wave": 7,
+      "scenarios": [
+        17,
+        19
+      ],
+      "descriptionSource": "docs/design/board-obstacles.md",
+      "meshy": null,
+      "source": "blender",
+      "blendFile": "art/blender/obstacle-sets/obstacle-sets.blend",
+      "modelFile": "assets/models/rack-long/rack-long.glb",
+      "rig": "none",
+      "animations": [],
+      "triangleBudget": {
+        "min": 2000,
+        "max": 6000
+      },
+      "textureMax": 1024,
+      "attachTo": null
     }
   ]
 }

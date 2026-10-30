@@ -22,7 +22,7 @@ function plan(s: ScenarioDef) {
 }
 
 /** A hex of shelves: they stand on the hex's line, a lone one in its middle. */
-const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => it.piece === 'shelf' || it.piece === 'bookshelf' || it.piece === 'bookcase-long');
+const isShelves = (p: { items: { piece: string }[] }) => p.items.some((it) => it.piece === 'shelf' || it.piece === 'bookshelf' || it.piece === 'bookcase-long' || it.piece === 'rack-long');
 
 describe('obstacle clusters', () => {
   it('is the same every time for a scenario', () => {
@@ -40,12 +40,12 @@ describe('obstacle clusters', () => {
         // A hex of a set piece may hold little of it itself; with its neighbours it holds a pile or a row.
         const mate = Math.max(0, ...neighbors(o.hex).map((n) => plans.get(hexKey(n))?.items.length ?? 0));
         // One thing (a shelf square in its row) or a small pile.
-        expect(p.items.reduce((n, it) => n + (it.twin ? 2 : 1), 0) + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(isShelves(p) ? 1 : 2);
+        expect(p.items.length + mate, `${s.id} ${o.hex}`).toBeGreaterThanOrEqual(isShelves(p) ? 1 : 2);
         // Nothing stands alone in the middle: the first thing is off the centre or has company.
         for (const it of p.items) if (Math.hypot(it.x, it.z) < 0.05 && !isShelves(p)) expect(p.items.length).toBeGreaterThan(1);
       }
       const all = [...plans.values()].flatMap((p) => p.items);
-      expect(all.reduce((n, it) => n + (it.twin ? 2 : 1), 0), s.id).toBeGreaterThanOrEqual(plans.size * 1.5);
+      expect(all.length, s.id).toBeGreaterThanOrEqual(plans.size);
     }
   });
 
